@@ -1,0 +1,102 @@
+{
+  "course": "Probability Theory",
+  "code": "M_Pr",
+  "chapters": [
+    {
+      "id": 1,
+      "file": "M_Pr_Ch1.html",
+      "title": "Introduction & Sample Space",
+      "status": "live",
+      "difficulty": "Beginner",
+      "mcq": 2
+    },
+    {
+      "id": 2,
+      "file": "M_Pr_Ch2.html",
+      "title": "Random Experiments & Classical Probability",
+      "status": "live",
+      "difficulty": "Beginner",
+      "mcq": 3
+    },
+    {
+      "id": 3,
+      "file": "M_Pr_Ch3.html",
+      "title": "Sigma-Fields, Measures & Probability Spaces",
+      "status": "live",
+      "difficulty": "Intermediate",
+      "mcq": 3
+    },
+    {
+      "id": 4,
+      "file": "M_Pr_Ch4.html",
+      "title": "Probability Axioms",
+      "status": "coming-soon",
+      "difficulty": "Intermediate",
+      "mcq": 4
+    },
+    {
+      "id": 5,
+      "file": "M_Pr_Ch5.html",
+      "title": "Conditional Probability",
+      "status": "coming-soon",
+      "difficulty": "Intermediate",
+      "mcq": 4
+    },
+    {
+      "id": 6,
+      "file": "M_Pr_Ch6.html",
+      "title": "Bayes' Theorem",
+      "status": "coming-soon",
+      "difficulty": "Intermediate",
+      "mcq": 3
+    },
+    {
+      "id": 7,
+      "file": "M_Pr_Ch7.html",
+      "title": "Random Variables",
+      "status": "coming-soon",
+      "difficulty": "Intermediate",
+      "mcq": 4
+    },
+    {
+      "id": 8,
+      "file": "M_Pr_Ch8.html",
+      "title": "Discrete Distributions",
+      "status": "coming-soon",
+      "difficulty": "Advanced",
+      "mcq": 5
+    },
+    {
+      "id": 9,
+      "file": "M_Pr_Ch9.html",
+      "title": "Continuous Distributions",
+      "status": "coming-soon",
+      "difficulty": "Advanced",
+      "mcq": 5
+    },
+    {
+      "id": 10,
+      "file": "M_Pr_Ch10.html",
+      "title": "Moments & Expectations",
+      "status": "coming-soon",
+      "difficulty": "Advanced",
+      "mcq": 4
+    },
+    {
+      "id": 11,
+      "file": "M_Pr_Ch11.html",
+      "title": "Laws of Large Numbers",
+      "status": "coming-soon",
+      "difficulty": "Advanced",
+      "mcq": 3
+    },
+    {
+      "id": 12,
+      "file": "M_Pr_Ch12.html",
+      "title": "Central Limit Theorem",
+      "status": "coming-soon",
+      "difficulty": "Advanced",
+      "mcq": 4
+    }
+  ]
+}
