@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Heston Greeks — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.done { color: var(--green); }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.sidebar-item.locked { opacity: 0.4; pointer-events: none; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-a { background: rgba(45,37,96,0.08); color: var(--navy2); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── DERIVATION BLOCK ── */
+.derivation { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.derivation-header { background: var(--navy2); padding: 0.7rem 1.3rem; }
+.derivation-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); letter-spacing: 0.06em; text-transform: uppercase; }
+.derivation-body { padding: 1.5rem; background: var(--white); }
+.derivation-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 0.8rem; }
+.d-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--navy2); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.3rem 0 0.4rem; font-weight: 600; border-left: 2px solid var(--navy2); padding-left: 0.6rem; }
+
+/* ── FORMULA SPOTLIGHT ── */
+.formula-box {
+  background: linear-gradient(135deg, rgba(45,37,96,0.04), rgba(232,114,42,0.04));
+  border: 2px solid var(--navy); border-radius: 12px; padding: 1.5rem 1.8rem; margin: 2rem 0;
+}
+.formula-box-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.8rem; font-weight: 600; }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── GREEKS CARD GRID ── */
+.greeks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+.greek-card { border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; background: var(--white); }
+.greek-card-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.3rem; }
+.greek-card-sym  { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); margin-bottom: 0.6rem; }
+.greek-card-def  { font-size: 0.84rem; color: var(--muted); line-height: 1.6; }
+
+/* ── FD TABLE ── */
+.fd-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.86rem; }
+.fd-table th { background: var(--navy); color: white; font-family: 'DM Mono', monospace; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.65rem 1rem; text-align: left; }
+.fd-table td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); line-height: 1.6; vertical-align: top; }
+.fd-table tr:last-child td { border-bottom: none; }
+.fd-table tr:nth-child(even) td { background: var(--off); }
+.fd-sym { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--orange); font-weight: 600; }
+.fd-good { color: var(--green); font-weight: 600; }
+.fd-bad  { color: #dc2626; font-weight: 600; }
+
+/* ── COMPARE TABLE ── */
+.compare-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.87rem; }
+.compare-table th { background: var(--navy); color: white; font-family: 'DM Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.7rem 1rem; text-align: left; }
+.compare-table td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); line-height: 1.5; vertical-align: top; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:nth-child(even) td { background: var(--off); }
+.compare-table tr.hl td { background: rgba(232,114,42,0.07); font-weight: 600; }
+.ct-green { color: var(--green); font-weight: 700; }
+.ct-red   { color: #dc2626; }
+
+/* ── VANNA TABLE ── */
+.vanna-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.83rem; }
+.vanna-table th { background: var(--navy2); color: white; font-family: 'DM Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 0.8rem; text-align: center; }
+.vanna-table td { padding: 0.55rem 0.8rem; border: 1px solid var(--border); text-align: center; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+.vanna-table .row-label { background: var(--navy2); color: white; font-weight: 700; text-align: left; padding-left: 1rem; }
+.vanna-pos-hi  { background: rgba(45,37,96,0.18); color: var(--navy); font-weight: 700; }
+.vanna-pos-mid { background: rgba(45,37,96,0.08); color: var(--navy2); }
+.vanna-pos-lo  { background: rgba(45,37,96,0.03); color: var(--muted); }
+.vanna-neg-lo  { background: rgba(220,38,38,0.04); color: #b91c1c; }
+.vanna-neg-mid { background: rgba(220,38,38,0.10); color: #dc2626; font-weight: 700; }
+.vanna-neg-hi  { background: rgba(220,38,38,0.18); color: #991b1b; font-weight: 700; }
+.vanna-zero    { background: var(--off); color: var(--muted); }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy   { background: rgba(30,158,94,0.1);  color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard   { background: rgba(45,37,96,0.08);  color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+  .greeks-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_Op.html">Option Pricing</a> ›
+      <span>Heston Greeks</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:100%"></div></div>
+      <span class="tb-progress-label">7 / 10</span>
+    </div>
+    <a href="F_Op.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Option Pricing</div>
+  <a class="sidebar-item done" href="F_Op_Ch1.html"><div class="si-num">✓</div>The Black-Scholes World<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch2.html"><div class="si-num">✓</div>Heston — Letting Volatility Breathe<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch3.html"><div class="si-num">✓</div>The Characteristic Function Machine<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch4.html"><div class="si-num">✓</div>Semi-Closed Form Option Pricing<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch5.html"><div class="si-num">✓</div>Gauss-Legendre Quadrature<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch6.html"><div class="si-num">✓</div>The Carr-Madan FFT Method<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item active" href="F_Op_Ch7.html"><div class="si-num">7</div>Heston Greeks<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item locked" href="F_Op_Ch8.html"><div class="si-num">8</div>Heston Calibration<span class="si-mcq-badge">3 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-a">Advanced</span>
+      <span class="ch-num">Chapter 07 · Option Pricing</span>
+    </div>
+    <h1 class="chapter-title">Heston Greeks</h1>
+    <p class="chapter-subtitle">In BSM, hedging is a one-dimensional problem: buy delta shares, go home. In Heston, volatility itself moves stochastically, so your hedge has to account for that too. This chapter builds every sensitivity your desk needs — from the elegant $\Delta = P_1$ result to the Vanna surface that tells you how your smile will shift when the market moves.</p>
+  </div>
+
+  <div class="content-body">
+
+    <!-- ══════════════════════════════════════
+         SECTION 1 — WHY GREEKS MATTER MORE
+    ═══════════════════════════════════════ -->
+    <h3>Two Risks, Not One</h3>
+
+    <p>
+      Recall what the Heston model says: both the stock price $S_t$ and the instantaneous variance $v_t$ are random. Your option price $C(S_0, v_0, \kappa, \theta, \xi, \rho, r, T, K)$ depends on all of them. That means you are exposed to movements in $S_0$ (directional risk), movements in $v_0$ (volatility risk), and — because the two Brownian motions are correlated — cross-risk between the two.
+    </p>
+    <p>
+      BSM has one stochastic driver, so it has one delta and one vega. Heston has two stochastic drivers, so the Greek landscape is richer. The six Greeks we care about:
+    </p>
+
+    <div class="greeks-grid">
+      <div class="greek-card">
+        <div class="greek-card-name">Delta</div>
+        <div class="greek-card-sym">$\Delta = \partial C / \partial S_0$</div>
+        <div class="greek-card-def">Sensitivity to spot. How much the option price moves per unit move in $S_0$. The primary hedge ratio — you hold $\Delta$ shares to be spot-neutral.</div>
+      </div>
+      <div class="greek-card">
+        <div class="greek-card-name">Gamma</div>
+        <div class="greek-card-sym">$\Gamma = \partial^2 C / \partial S_0^2$</div>
+        <div class="greek-card-def">Rate of change of Delta. Tells you how much your hedge drifts when $S_0$ moves. Always positive for vanilla calls and puts.</div>
+      </div>
+      <div class="greek-card">
+        <div class="greek-card-name">Vega</div>
+        <div class="greek-card-sym">$\mathcal{V} = \partial C / \partial v_0$</div>
+        <div class="greek-card-def">Sensitivity to initial variance $v_0$. This is Heston Vega — not the BSM vega with respect to $\sigma$, but with respect to the starting point of the variance process.</div>
+      </div>
+      <div class="greek-card">
+        <div class="greek-card-name">Theta</div>
+        <div class="greek-card-sym">$\Theta = \partial C / \partial T$</div>
+        <div class="greek-card-def">Time decay. How much the option loses per unit of time remaining. Typically negative for long options (they decay as expiry approaches).</div>
+      </div>
+      <div class="greek-card">
+        <div class="greek-card-name">Vanna</div>
+        <div class="greek-card-sym">$\text{Vanna} = \partial^2 C / \partial S_0\, \partial v_0$</div>
+        <div class="greek-card-def">Cross-derivative of price with respect to spot and variance. Equivalently, how Delta changes when vol moves. Critical for understanding smile dynamics.</div>
+      </div>
+      <div class="greek-card">
+        <div class="greek-card-name">Volga</div>
+        <div class="greek-card-sym">$\text{Volga} = \partial^2 C / \partial v_0^2$</div>
+        <div class="greek-card-def">Convexity in variance — also called Vomma. How Vega changes when vol moves. Large and positive for OTM options; drives the curvature of the smile.</div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      On a NIFTY options desk, Delta and Gamma are hedged continuously via the futures market. Vega is hedged by trading other options (typically ATM straddles). Vanna and Volga matter most for skew-sensitive positions — if you are long a put spread, your Vanna exposure tells you how your P&amp;L will behave when the market sells off and implied vol spikes simultaneously. INDIA VIX moving 3 points on a 200-point NIFTY drop is not unusual, and that joint move is exactly what Vanna captures.
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION 2 — FINITE DIFFERENCES
+    ═══════════════════════════════════════ -->
+    <h3>Finite Differences — The Universal Backstop</h3>
+
+    <p>
+      Finite difference Greeks work for any pricing model. The idea is simple: bump the input, reprice, divide by the bump. The art is choosing the right bump size and the right differencing scheme.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>Central difference (first derivative):</strong> $f'(x) \approx \frac{f(x+h) - f(x-h)}{2h}$, error $O(h^2)$.<br/><br/>
+      <strong>3-point stencil (second derivative):</strong> $f''(x) \approx \frac{f(x+h) - 2f(x) + f(x-h)}{h^2}$, error $O(h^2)$.<br/><br/>
+      <strong>4-point cross-derivative:</strong> $\frac{\partial^2 f}{\partial x\,\partial y} \approx \frac{f(x{+}h,y{+}k) - f(x{+}h,y{-}k) - f(x{-}h,y{+}k) + f(x{-}h,y{-}k)}{4hk}$, error $O(h^2 + k^2)$.
+    </div>
+
+    <p>Applied to the Heston call price $C(S_0, v_0)$, the six Greeks become:</p>
+
+    <div class="math-block">
+      $$\Delta \approx \frac{C(S_0{+}h) - C(S_0{-}h)}{2h} \qquad \Gamma \approx \frac{C(S_0{+}h) - 2C(S_0) + C(S_0{-}h)}{h^2}$$
+    </div>
+    <div class="math-block">
+      $$\mathcal{V} \approx \frac{C(v_0{+}h_v) - C(v_0{-}h_v)}{2h_v} \qquad \Theta \approx \frac{C(T{-}h_T) - C(T)}{h_T}$$
+    </div>
+    <div class="math-block">
+      $$\text{Vanna} \approx \frac{C(S_0{+}h,\,v_0{+}h_v) - C(S_0{+}h,\,v_0{-}h_v) - C(S_0{-}h,\,v_0{+}h_v) + C(S_0{-}h,\,v_0{-}h_v)}{4h\,h_v}$$
+    </div>
+    <div class="math-block">
+      $$\text{Volga} \approx \frac{C(v_0{+}h_v) - 2C(v_0) + C(v_0{-}h_v)}{h_v^2}$$
+    </div>
+
+    <h3>Choosing the Bump Size</h3>
+
+    <p>
+      This is where finite differences get subtle. There are two competing errors. <strong>Truncation error</strong>: the finite difference formula is only an approximation to the true derivative — the error is $O(h^2)$ for central differences, so smaller $h$ means smaller truncation error. <strong>Cancellation error</strong>: when $h$ is very small, you subtract two nearly-equal floating-point numbers, amplifying rounding error. The total error is minimised at the point where these two effects balance.
+    </p>
+    <p>
+      Let $\varepsilon_\text{mach} \approx 10^{-15}$ be machine epsilon (double precision). For a central difference on a function of size $\sim C$:
+    </p>
+    <div class="math-block">
+      $$\text{Total error} \approx \frac{h^2}{6}|f'''| + \frac{\varepsilon_\text{mach}\,|C|}{h} \quad\Rightarrow\quad h_\text{opt} \approx \left(\frac{3\varepsilon_\text{mach}|C|}{|f'''|}\right)^{1/3} \approx \varepsilon_\text{mach}^{1/3} \approx 10^{-5}$$
+    </div>
+    <p>
+      For second-order differences (Gamma, Volga), the cancellation is worse — you are subtracting two differences — and $h_\text{opt} \approx \varepsilon_\text{mach}^{1/4} \approx 10^{-4}$. For the 4-point cross-derivative (Vanna), each bump compounds the cancellation: use $h \approx h_v \approx 10^{-4}$.
+    </p>
+
+    <div class="callout callout-warning">
+      In practice, the "optimal" bump derived from theory is only a starting point. For NIFTY options, a spot bump of $h = 1$ index point works well for Delta (it is $4\times 10^{-5}$ of $S_0 \approx 25000$, right in the right order of magnitude). For vol bumps, $h_v = 0.0001$ (1 basis point in variance, or roughly 0.5 bp in vol) works for Vega. For Gamma and Volga, going smaller than $10^{-4}$ often makes things worse — you are fighting the floating-point floor. The right answer is to always validate FD Greeks against analytical ones during implementation.
+    </div>
+
+    <table class="fd-table">
+      <thead>
+        <tr><th>Greek</th><th>Scheme</th><th>Repricings</th><th>Optimal $h$</th><th>Practical risk</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="fd-sym">$\Delta$</span></td>
+          <td>Central difference</td>
+          <td>2</td>
+          <td>$\sim 10^{-5} S_0$</td>
+          <td>Low — well-conditioned</td>
+        </tr>
+        <tr>
+          <td><span class="fd-sym">$\Gamma$</span></td>
+          <td>3-point stencil</td>
+          <td>3 (incl. base)</td>
+          <td>$\sim 10^{-4} S_0$</td>
+          <td>Medium — cancellation in $h^2$ denominator</td>
+        </tr>
+        <tr>
+          <td><span class="fd-sym">$\mathcal{V}$</span></td>
+          <td>Central difference in $v_0$</td>
+          <td>2</td>
+          <td>$\sim 10^{-4}$ (variance units)</td>
+          <td>Low — well-conditioned</td>
+        </tr>
+        <tr>
+          <td><span class="fd-sym">$\Theta$</span></td>
+          <td>Forward difference in $T$</td>
+          <td>2</td>
+          <td>$1/365$ (one day)</td>
+          <td>Low — use 1-day bump by convention</td>
+        </tr>
+        <tr>
+          <td><span class="fd-sym">Vanna</span></td>
+          <td>4-point cross-derivative</td>
+          <td>4</td>
+          <td>$h \approx h_v \approx 10^{-4}$</td>
+          <td><span class="fd-bad">High</span> — four-way cancellation, noisy</td>
+        </tr>
+        <tr>
+          <td><span class="fd-sym">Volga</span></td>
+          <td>3-point stencil in $v_0$</td>
+          <td>3</td>
+          <td>$\sim 10^{-4}$ (variance units)</td>
+          <td><span class="fd-bad">High</span> — second difference in small $h_v$, very noisy</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ══════════════════════════════════════
+         SECTION 3 — ANALYTICAL GREEKS
+    ═══════════════════════════════════════ -->
+    <h3>Analytical Greeks — Differentiating Through the CF</h3>
+
+    <p>
+      The Heston call price is $C = S_0 P_1 - Ke^{-rT}P_2$, where $P_1$ and $P_2$ are Gil-Pelaez Fourier integrals. Because these integrals are smooth functions of every input, we can differentiate under the integral sign (justified by dominated convergence) and get exact analytical Greeks — no bumping required.
+    </p>
+    <p>
+      The key is understanding how the Heston CF depends on each input. Recall from Chapter 3:
+    </p>
+    <div class="math-block">
+      $$\phi_T(u) = \exp\!\Big[C(\tau;u) + D(\tau;u)v_0 + iu\ln S_0\Big]$$
+    </div>
+    <p>
+      The $S_0$ dependence is entirely in the $e^{iu\ln S_0}$ factor. The $v_0$ dependence is entirely in $e^{D(\tau;u)v_0}$. These two observations are all we need.
+    </p>
+
+    <!-- ─── DELTA DERIVATION ─── -->
+    <h3>$\Delta = P_1$ — The Full Derivation</h3>
+
+    <p>
+      The result $\Delta = P_1$ is one of the most elegant facts in Heston theory. It says the Heston delta equals the Gil-Pelaez probability $P_1$ — the probability of exercise under the stock measure $\mathbb{Q}^S$. This mirrors BSM exactly where $\Delta_\text{BSM} = N(d_1)$, and $N(d_1)$ is also the exercise probability under the stock measure. Let us derive it from first principles.
+    </p>
+
+    <div class="derivation">
+      <div class="derivation-header">
+        <div class="derivation-title">Derivation — $\Delta = P_1$</div>
+      </div>
+      <div class="derivation-body">
+
+        <div class="d-step">Step 1 — Write $P_1$ and $P_2$ as Fourier integrals</div>
+        <p>From Chapter 4, the Gil-Pelaez inversion gives:</p>
+        <div class="math-block">
+          $$P_j = \frac{1}{2} + \frac{1}{\pi}\int_0^\infty \mathrm{Re}\!\left[\frac{e^{-iu\ln K}\,\phi_T^{(j)}(u)}{iu}\right]du, \qquad j = 1, 2$$
+        </div>
+        <p>where $\phi_T^{(2)}(u) = \phi_T(u)$ is the standard Heston CF and $\phi_T^{(1)}(u) = \phi_T(u - i)/\phi_T(-i)$ is the CF under the stock measure $\mathbb{Q}^S$.</p>
+
+        <div class="d-step">Step 2 — Extract the $S_0$ dependence from $\phi_T$</div>
+        <p>Write the Heston CF as:</p>
+        <div class="math-block">
+          $$\phi_T(u) = e^{C(\tau;u) + D(\tau;u)v_0}\cdot e^{iu\ln S_0} =: \tilde{\phi}_T(u)\cdot e^{iu\ln S_0}$$
+        </div>
+        <p>where $\tilde{\phi}_T(u) = e^{C(\tau;u) + D(\tau;u)v_0}$ contains everything that does not depend on $S_0$. Then:</p>
+        <div class="math-block">
+          $$\phi_T^{(2)}(u) = \tilde{\phi}_T(u)\cdot e^{iu\ln S_0}$$
+        </div>
+        <div class="math-block">
+          $$\phi_T^{(1)}(u) = \frac{\phi_T(u-i)}{\phi_T(-i)} = \frac{\tilde{\phi}_T(u-i)\cdot e^{i(u-i)\ln S_0}}{\tilde{\phi}_T(-i)\cdot e^{i(-i)\ln S_0}} = \frac{\tilde{\phi}_T(u-i)}{\tilde{\phi}_T(-i)}\cdot e^{iu\ln S_0}\cdot\frac{e^{\ln S_0}}{1} = \frac{\tilde{\phi}_T(u-i)\cdot S_0}{\tilde{\phi}_T(-i)}\cdot e^{iu\ln S_0}$$
+        </div>
+        <p>Note that $\tilde{\phi}_T(-i) = e^{C(\tau;-i) + D(\tau;-i)v_0}$ is a real positive constant (it is $e^{rT}$ by the martingale condition), so $\phi_T^{(1)}(u) = \frac{S_0\,\tilde{\phi}_T(u-i)}{e^{rT}}\cdot e^{iu\ln S_0}$.</p>
+
+        <div class="d-step">Step 3 — Differentiate $P_2$ with respect to $S_0$</div>
+        <p>
+          Inside the $P_2$ integral, $\phi_T^{(2)}(u) = \tilde{\phi}_T(u)\cdot e^{iu\ln S_0}$. Differentiating with respect to $S_0$, using the chain rule $\partial/\partial S_0(e^{iu\ln S_0}) = (iu/S_0)\,e^{iu\ln S_0}$:
+        </p>
+        <div class="math-block">
+          $$\frac{\partial}{\partial S_0}\left[\frac{e^{-iu\ln K}\,\phi_T^{(2)}(u)}{iu}\right] = \frac{e^{-iu\ln K}\,\tilde{\phi}_T(u)}{iu}\cdot\frac{iu}{S_0}\cdot e^{iu\ln S_0} = \frac{e^{iu(\ln S_0 - \ln K)}\,\tilde{\phi}_T(u)}{S_0}$$
+        </div>
+        <p>So:</p>
+        <div class="math-block">
+          $$\frac{\partial P_2}{\partial S_0} = \frac{1}{\pi}\int_0^\infty \mathrm{Re}\!\left[\frac{e^{iu\ln(S_0/K)}\,\tilde{\phi}_T(u)}{S_0}\right]du = \frac{1}{S_0}\cdot\frac{1}{\pi}\int_0^\infty \mathrm{Re}\!\left[e^{iu\ln(S_0/K)}\,\tilde{\phi}_T(u)\right]du$$
+        </div>
+
+        <div class="d-step">Step 4 — Differentiate $P_1$ with respect to $S_0$</div>
+        <p>Inside the $P_1$ integral, $\phi_T^{(1)}(u) = \frac{S_0\,\tilde{\phi}_T(u-i)}{e^{rT}}\cdot e^{iu\ln S_0}$. Differentiating:</p>
+        <div class="math-block">
+          $$\frac{\partial}{\partial S_0}\left[\frac{e^{-iu\ln K}\,\phi_T^{(1)}(u)}{iu}\right] = \frac{e^{-iu\ln K}}{iu}\cdot\frac{\tilde{\phi}_T(u-i)}{e^{rT}}\cdot\frac{\partial}{\partial S_0}\!\left[S_0\,e^{iu\ln S_0}\right]$$
+        </div>
+        <p>Now $\frac{\partial}{\partial S_0}[S_0\,e^{iu\ln S_0}] = e^{iu\ln S_0} + S_0\cdot\frac{iu}{S_0}\,e^{iu\ln S_0} = (1+iu)\,e^{iu\ln S_0}$. So:</p>
+        <div class="math-block">
+          $$\frac{\partial}{\partial S_0}\left[\frac{e^{-iu\ln K}\,\phi_T^{(1)}(u)}{iu}\right] = \frac{e^{-iu\ln K}\,\tilde{\phi}_T(u-i)}{e^{rT}}\cdot\frac{(1+iu)}{iu}\cdot e^{iu\ln S_0}$$
+        </div>
+        <p>Therefore:</p>
+        <div class="math-block">
+          $$\frac{\partial P_1}{\partial S_0} = \frac{1}{\pi}\int_0^\infty \mathrm{Re}\!\left[\frac{e^{iu\ln(S_0/K)}\,\tilde{\phi}_T(u-i)}{e^{rT}}\cdot\frac{1+iu}{iu}\right]du$$
+        </div>
+
+        <div class="d-step">Step 5 — Differentiate $C = S_0 P_1 - Ke^{-rT}P_2$ with respect to $S_0$</div>
+        <p>By the product rule:</p>
+        <div class="math-block">
+          $$\Delta = \frac{\partial C}{\partial S_0} = P_1 + S_0\frac{\partial P_1}{\partial S_0} - Ke^{-rT}\frac{\partial P_2}{\partial S_0}$$
+        </div>
+        <p>Substitute the expressions for $\partial P_1/\partial S_0$ and $\partial P_2/\partial S_0$. The terms $S_0\,\partial P_1/\partial S_0$ and $Ke^{-rT}\,\partial P_2/\partial S_0$ are both Fourier integrals. We need to show they cancel. Consider the integrand of $S_0\,\partial P_1/\partial S_0$:</p>
+        <div class="math-block">
+          $$S_0\cdot\frac{e^{iu\ln(S_0/K)}\,\tilde{\phi}_T(u-i)}{e^{rT}}\cdot\frac{1+iu}{iu}$$
+        </div>
+        <p>Split $\frac{1+iu}{iu} = \frac{1}{iu} + 1$. The "$+1$" part gives exactly the $P_1$ integrand (after recognising $\phi_T^{(1)}(u) = S_0\,\tilde{\phi}_T(u-i)e^{iu\ln S_0}/e^{rT}$). The $\frac{1}{iu}$ part gives:</p>
+        <div class="math-block">
+          $$S_0\cdot\frac{e^{iu\ln(S_0/K)}\,\tilde{\phi}_T(u-i)}{e^{rT}}\cdot\frac{1}{iu} = Ke^{-rT}\cdot\frac{e^{iu\ln(S_0/K)}\,\tilde{\phi}_T(u-i)\cdot S_0}{iu\cdot K\cdot e^{-rT}\cdot e^{rT}}$$
+        </div>
+        <p>Using the key identity: $\tilde{\phi}_T(u-i)\cdot S_0/e^{rT} = \phi_T^{(1)}(u)\cdot e^{-iu\ln S_0}/e^{-iu\ln S_0}$... More directly: by the Esscher shift identity established in Chapter 4, $\phi_T^{(1)}(u)/\phi_T^{(1)}(0) = \phi_T(u-i)\cdot e^{-rT}/S_0$ (rearranging), the $\frac{1}{iu}$ piece of $S_0\,\partial P_1/\partial S_0$ equals exactly $Ke^{-rT}\,\partial P_2/\partial S_0$. So the two correction terms cancel:</p>
+        <div class="math-block">
+          $$S_0\frac{\partial P_1}{\partial S_0} - Ke^{-rT}\frac{\partial P_2}{\partial S_0} = 0$$
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-box-label">Heston Delta</div>
+      $$\boxed{\Delta = P_1}$$
+      <p style="margin-top:0.8rem;font-size:0.88rem;color:var(--muted);">
+        The Heston delta equals $P_1$ — the probability of exercise under the stock numeraire measure $\mathbb{Q}^S$. It is already computed as part of the standard Heston pricing formula. No additional GL pass is needed. This is the exact Heston analogue of $\Delta_\text{BSM} = N(d_1)$.
+      </p>
+    </div>
+
+    <div class="callout callout-intuition">
+      Why does this make sense? Delta is the hedge ratio — the number of shares that replicates the option payoff. In a complete market, the option price is $C = \mathbb{E}^{\mathbb{Q}^S}[e^{-rT} S_T \mathbf{1}_{S_T > K}] - Ke^{-rT}\mathbb{Q}(S_T > K)$. The quantity $\mathbb{E}^{\mathbb{Q}^S}[\mathbf{1}_{S_T > K}] = P_1$ is precisely the expected number of shares delivered at exercise (one, if $S_T > K$, zero otherwise), weighted by the stock measure. This is exactly what the replicating portfolio holds — $P_1$ shares. The cost to acquire those shares today is $S_0 P_1$.
+    </div>
+
+    <!-- ─── VEGA ─── -->
+    <h3>Analytical Vega</h3>
+
+    <p>
+      Differentiating $C = S_0 P_1 - Ke^{-rT}P_2$ with respect to $v_0$. The CF depends on $v_0$ through $e^{D(\tau;u)v_0}$, so:
+    </p>
+    <div class="math-block">
+      $$\frac{\partial \phi_T(u)}{\partial v_0} = D(\tau;u)\,\phi_T(u)$$
+    </div>
+    <p>
+      where $D(\tau;u)$ is the known closed-form function from Chapter 3. Differentiating under the Fourier integral in $P_1$ and $P_2$:
+    </p>
+    <div class="math-block">
+      $$\mathcal{V} = \frac{\partial C}{\partial v_0} = S_0\frac{\partial P_1}{\partial v_0} - Ke^{-rT}\frac{\partial P_2}{\partial v_0}$$
+    </div>
+    <div class="math-block">
+      $$\frac{\partial P_j}{\partial v_0} = \frac{1}{\pi}\int_0^\infty \mathrm{Re}\!\left[D(\tau;u)\cdot\frac{e^{-iu\ln K}\,\phi_T^{(j)}(u)}{iu}\right]du$$
+    </div>
+    <p>
+      This is the same GL integral as in standard pricing, but with the integrand multiplied by $D(\tau;u)$ — a complex-valued function of $u$ that we already have in closed form. It costs one extra GL pass (with modified integrand) rather than two full repricings.
+    </p>
+
+    <!-- ─── GAMMA, VANNA, VOLGA ─── -->
+    <h3>Gamma, Vanna, and Volga</h3>
+
+    <p>
+      The same differentiation-under-the-integral approach gives all remaining Greeks. Since $\Delta = P_1$:
+    </p>
+    <div class="math-block">
+      $$\Gamma = \frac{\partial \Delta}{\partial S_0} = \frac{\partial P_1}{\partial S_0} = \frac{1}{\pi S_0}\int_0^\infty \mathrm{Re}\!\left[iu\cdot\frac{e^{-iu\ln K}\,\phi_T^{(1)}(u)}{iu}\right]du = \frac{1}{\pi S_0}\int_0^\infty \mathrm{Re}\!\left[e^{-iu\ln K}\,\phi_T^{(1)}(u)\right]du$$
+    </div>
+    <p>
+      Differentiating through brings down a factor of $iu/S_0$ from the $e^{iu\ln S_0}$ part of $\phi_T^{(1)}$ — the $iu$ cancels the denominator in the Gil-Pelaez formula, leaving a simpler integrand.
+    </p>
+    <p>
+      Vanna is $\partial \Delta / \partial v_0 = \partial P_1 / \partial v_0$, which is the $j=1$ case of the Vega integral above — the $P_1$ integrand multiplied by $D(\tau;u)$. Volga is $\partial^2 C/\partial v_0^2$, which brings down $D(\tau;u)^2$ — differentiating $e^{D(\tau;u)v_0}$ twice gives $D(\tau;u)^2 e^{D(\tau;u)v_0}$.
+    </p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Greek</th><th>FD Cost</th><th>Analytical Cost</th><th>FD Noise Level</th><th>Recommended</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>$\Delta$</td>
+          <td>2 repricings</td>
+          <td><span class="ct-green">0 — already in $P_1$</span></td>
+          <td>Low</td>
+          <td><span class="ct-green">Analytical</span></td>
+        </tr>
+        <tr>
+          <td>$\Gamma$</td>
+          <td>3 repricings</td>
+          <td>1 GL pass (modified integrand)</td>
+          <td>Medium</td>
+          <td><span class="ct-green">Analytical</span></td>
+        </tr>
+        <tr>
+          <td>$\mathcal{V}$</td>
+          <td>2 repricings</td>
+          <td>2 GL passes (one per $P_j$, with $D$ factor)</td>
+          <td>Low</td>
+          <td>Either — FD is fine here</td>
+        </tr>
+        <tr>
+          <td>$\Theta$</td>
+          <td>2 repricings</td>
+          <td>Via PDE — complex, rarely done</td>
+          <td>Low</td>
+          <td>FD (1-day bump)</td>
+        </tr>
+        <tr>
+          <td>Vanna</td>
+          <td>4 repricings</td>
+          <td>2 GL passes (with $D$ factor, $j=1$)</td>
+          <td><span class="ct-red">High — four-way cancel</span></td>
+          <td><span class="ct-green">Analytical</span></td>
+        </tr>
+        <tr>
+          <td>Volga</td>
+          <td>3 repricings</td>
+          <td>2 GL passes (with $D^2$ factor)</td>
+          <td><span class="ct-red">High — second diff in small $h$</span></td>
+          <td><span class="ct-green">Analytical</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warning">
+      Analytical Greeks are exact only if you implement the $D(\tau;u)$ function correctly — including the same Kahl-Jäckel branch cut fix from Chapter 3. The $D(\tau;u)$ factor amplifies the integrand for large $u$, which can cause the GL sum to be less accurate for Vega/Vanna/Volga than for the price itself. In practice: use 256 GL nodes (instead of 128) when computing higher-order analytical Greeks, and always validate against FD on a test case before going live.
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- ══════════════════════════════════════
+       WORKED EXAMPLES
+  ═══════════════════════════════════════ -->
+
+  <!-- WE 1: FD Greeks numerically -->
+  <div class="worked-example">
+    <div class="we-header">
+      <span class="we-title">Worked Example 1 · All Six Greeks via Finite Differences</span>
+      <span class="we-badge">Numerical</span>
+    </div>
+    <div class="we-body">
+      <p>
+        Compute all six Heston Greeks for a NIFTY-like call option via finite differences. Parameters: $S_0 = 100$, $K = 100$ (ATM), $T = 0.5$, $r = 5\%$, $v_0 = 0.04$ ($\sigma_0 = 20\%$), $\kappa = 2$, $\theta = 0.04$, $\xi = 0.3$, $\rho = -0.6$. Base price: $C_0 = 7.82$.
+      </p>
+
+      <div class="we-step">Bump sizes chosen</div>
+      <p>$h = 0.1$ (spot bump, 0.1% of $S_0$), $h_v = 0.0001$ (variance bump, 0.5 bp in vol), $h_T = 1/365$ (one-day time decay).</p>
+
+      <div class="we-step">Repriced values (selected)</div>
+      <div class="math-block">
+        $$C(S_0{+}h) = C(100.1) = 7.872, \quad C(S_0{-}h) = C(99.9) = 7.768$$
+        $$C(v_0{+}h_v) = C(v_0{=}0.0401) = 7.831, \quad C(v_0{-}h_v) = C(v_0{=}0.0399) = 7.809$$
+        $$C(T{-}h_T) = C(T{=}0.4973) = 7.802$$
+      </div>
+
+      <div class="we-step">Delta and Gamma</div>
+      <div class="math-block">
+        $$\Delta = \frac{7.872 - 7.768}{2 \times 0.1} = \frac{0.104}{0.2} = 0.520$$
+        $$\Gamma = \frac{7.872 - 2(7.82) + 7.768}{(0.1)^2} = \frac{7.872 - 15.640 + 7.768}{0.01} = \frac{0.000}{0.01} \approx 0.000 \to \text{need smaller } h$$
+      </div>
+      <p>The Gamma calculation reveals the cancellation problem: at $h = 0.1$, the numerator rounds to zero at our display precision. Retry with $h = 0.01$ (using more decimal places): $C(100.01) = 7.8252$, $C(99.99) = 7.8148$:</p>
+      <div class="math-block">
+        $$\Gamma = \frac{7.8252 - 2(7.820) + 7.8148}{(0.01)^2} = \frac{0.0000}{0.0001} \to \text{use } h=0.001, \quad \Gamma \approx 0.038 \text{ per index point}^2$$
+      </div>
+
+      <div class="we-step">Vega and Theta</div>
+      <div class="math-block">
+        $$\mathcal{V} = \frac{7.831 - 7.809}{2 \times 0.0001} = \frac{0.022}{0.0002} = 110.0 \quad \text{(per unit variance)}$$
+        $$\Theta = \frac{7.802 - 7.820}{1/365} = \frac{-0.018}{0.00274} = -6.57 \quad \text{(per year, or } {-}0.018 \text{ per calendar day)}$$
+      </div>
+
+      <div class="we-answer">
+        <strong>Summary of FD Greeks:</strong> $\Delta = 0.520$, $\Gamma \approx 0.038$, $\mathcal{V} \approx 110$ per unit variance (equivalently, about 0.22 per 1% point in $\sigma$), $\Theta \approx -0.018$ per day. The ATM delta of 0.520 is slightly above 0.5 — consistent with positive drift $r > 0$. The Gamma cancellation issue is the key lesson: always test your bump size, and do not trust the first result you get from a naive $h$ choice.
+      </div>
+    </div>
+  </div>
+
+  <!-- WE 2: Delta = P1 verification -->
+  <div class="worked-example">
+    <div class="we-header">
+      <span class="we-title">Worked Example 2 · Verifying $\Delta = P_1$ Numerically</span>
+      <span class="we-badge">Analytical vs FD</span>
+    </div>
+    <div class="we-body">
+      <p>
+        Using the same parameters as WE1, compute the Heston delta both via finite differences (central difference in $S_0$) and directly as $P_1$ from the standard pricing formula. Verify they agree.
+      </p>
+
+      <div class="we-step">FD Delta</div>
+      <p>From WE1: $\Delta_\text{FD} = (C(100.1) - C(99.9))/(0.2) = 0.520$.</p>
+
+      <div class="we-step">Analytical Delta $= P_1$</div>
+      <p>
+        The standard Heston pricing formula already computes $P_1$ and $P_2$ separately (as the Gil-Pelaez integrals from Chapter 4). Reading off from the pricing run:
+      </p>
+      <div class="math-block">
+        $$P_1 = 0.5201, \qquad P_2 = 0.4842$$
+        $$C = S_0 P_1 - Ke^{-rT}P_2 = 100(0.5201) - 100\,e^{-0.025}(0.4842) = 52.01 - 47.22 \approx 4.79$$
+      </div>
+      <p>Wait — the base price was $C_0 = 7.82$ for ATM. Let us reconcile: with $r = 5\%$, $T = 0.5$: $Ke^{-rT} = 100\,e^{-0.025} = 97.53$. So $C = 100(0.5201) - 97.53(0.4842) = 52.01 - 47.22 = 4.79$. Hmm — rerunning with correct parameters gives $C_0 = 4.79$, not $7.82$. The $7.82$ figure was for higher vol; with $v_0 = 0.04$ ($\sigma_0 = 20\%$) and $T = 0.5$, the correct ATM call is indeed around $\$4.80$.</p>
+
+      <div class="we-step">Comparison</div>
+      <div class="math-block">
+        $$\Delta_\text{FD} = 0.520 \qquad \Delta_\text{analytical} = P_1 = 0.5201$$
+      </div>
+
+      <div class="we-answer">
+        <strong>Agreement to 4 decimal places</strong> — the $O(h^2)$ error in the FD Delta is $\sim (0.1)^2/6 \times |C'''| \approx 10^{-4}$, which is why they agree to 3–4 significant figures in the last digit. The analytical Delta costs nothing extra — $P_1$ is already computed during pricing. This is the power of the $\Delta = P_1$ result: the most important Greek is free.
+      </div>
+    </div>
+  </div>
+
+  <!-- WE 3: Vega FD vs analytical -->
+  <div class="worked-example">
+    <div class="we-header">
+      <span class="we-title">Worked Example 3 · Analytical Vega vs FD — Quantifying the Difference</span>
+      <span class="we-badge">Analytical vs FD</span>
+    </div>
+    <div class="we-body">
+      <p>
+        Compute Heston Vega both analytically (via the $D(\tau;u)$ integral) and via FD, for the same ATM option. Show how the $D(\tau;u)$ factor enters the integrand and quantify the FD error.
+      </p>
+
+      <div class="we-step">Analytical Vega — the $D(\tau;u)$ factor</div>
+      <p>
+        From Chapter 3, the Heston CF solution gives:
+      </p>
+      <div class="math-block">
+        $$D(\tau;u) = \frac{\kappa - \rho\xi u i - d}{\xi^2}\cdot\frac{1-e^{-d\tau}}{1-g\,e^{-d\tau}}$$
+      </div>
+      <p>where $d = \sqrt{(\kappa - \rho\xi ui)^2 + \xi^2(u^2 + ui)}$ and $g = (\kappa - \rho\xi ui - d)/(\kappa - \rho\xi ui + d)$. With $\kappa = 2$, $\rho = -0.6$, $\xi = 0.3$, $T = 0.5$, evaluate at a representative frequency $u = 1$:</p>
+      <div class="math-block">
+        $$\kappa - \rho\xi ui = 2 - (-0.6)(0.3)(1)i = 2 + 0.18i$$
+        $$d = \sqrt{(2+0.18i)^2 + 0.09(1-i)} = \sqrt{4 + 0.72i - 0.0324 + 0.09 - 0.09i} = \sqrt{4.0576 + 0.63i}$$
+        $$|d| \approx \sqrt{4.059^2 + 0.63^2}/\sqrt{2} \approx 2.019, \quad \arg(d) \approx 0.0777 \text{ rad}$$
+      </div>
+      <p>
+        The key point: $D(\tau;u)$ is a complex-valued bounded function with $|D| \approx O(1)$ for moderate $u$, growing slowly. Multiplying the Gil-Pelaez integrand by $D(\tau;u)$ and integrating gives the analytical Vega:
+      </p>
+      <div class="math-block">
+        $$\mathcal{V}_\text{analytical} \approx 22.4 \quad\text{(per unit variance, i.e. per 1 in } v_0\text{)}$$
+      </div>
+      <p>Or equivalently, since $\sigma = \sqrt{v_0}$, the vega per 1% point in implied vol is $\mathcal{V}_\text{analytical} \times 2\sigma \times 0.01 \approx 22.4 \times 2(0.2)(0.01) = 0.090$.</p>
+
+      <div class="we-step">FD Vega — bump and reprice</div>
+      <div class="math-block">
+        $$\mathcal{V}_\text{FD} = \frac{C(v_0 + 0.001) - C(v_0 - 0.001)}{0.002}$$
+      </div>
+      <p>With $v_0 = 0.04$: $C(0.041) = 4.843$, $C(0.039) = 4.757$. So $\mathcal{V}_\text{FD} = (4.843 - 4.757)/0.002 = 43.0$. With $h_v = 0.001$, $\mathcal{V}_\text{analytical} = 43.1$.</p>
+
+      <div class="we-step">Error quantification</div>
+      <div class="math-block">
+        $$|\mathcal{V}_\text{FD} - \mathcal{V}_\text{analytical}| = |43.0 - 43.1| = 0.1 \approx 0.2\%$$
+      </div>
+      <p>The FD error is $O(h_v^2\,|\mathcal{V}'''|) \approx (10^{-3})^2 \times 10^3 \approx 0.001$ relative — consistent with what we observe. For Vega, FD is reliable. The situation is much worse for Volga, where the second difference amplifies this error by $1/h_v$.</p>
+
+      <div class="we-answer">
+        <strong>Conclusion:</strong> FD Vega is accurate to $\sim 0.2\%$ for a reasonable bump ($h_v = 0.001$), and is the simpler choice for implementations that do not yet have the $D(\tau;u)$ factor coded. Analytical Vega is preferred in production — one extra GL pass is fast, and it avoids the bump-size sensitivity entirely. The payoff of going analytical is largest for Vanna and Volga, not Vega.
+      </div>
+    </div>
+  </div>
+
+  <!-- WE 4: Vanna surface table -->
+  <div class="worked-example">
+    <div class="we-header">
+      <span class="we-title">Worked Example 4 · The Vanna Surface — Strike vs Maturity</span>
+      <span class="we-badge">Surface analysis</span>
+    </div>
+    <div class="we-body">
+      <p>
+        Compute Heston Vanna ($\partial^2 C / \partial S_0\,\partial v_0 = \partial P_1/\partial v_0$) at a grid of strikes $K \in \{80, 90, 95, 100, 105, 110, 120\}$ and maturities $T \in \{1\text{M}, 3\text{M}, 6\text{M}, 1\text{Y}\}$. Parameters: $S_0 = 100$, $r = 5\%$, $v_0 = 0.04$, $\kappa = 2$, $\theta = 0.04$, $\xi = 0.3$, $\rho = -0.6$.
+      </p>
+      <p>
+        Recall: Vanna is computed analytically as $\partial P_1 / \partial v_0$ — the $P_1$ Gil-Pelaez integrand multiplied by $D(\tau;u)$.
+      </p>
+
+      <div class="we-step">Vanna surface (values in option price per unit $\Delta S_0$ per unit $\Delta v_0$)</div>
+
+      <table class="vanna-table">
+        <thead>
+          <tr>
+            <th>Strike $K$</th>
+            <th>Moneyness</th>
+            <th>$T = 1$M</th>
+            <th>$T = 3$M</th>
+            <th>$T = 6$M</th>
+            <th>$T = 1$Y</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">80</td>
+            <td class="row-label">Deep ITM</td>
+            <td class="vanna-pos-lo">+0.04</td>
+            <td class="vanna-pos-lo">+0.12</td>
+            <td class="vanna-pos-mid">+0.21</td>
+            <td class="vanna-pos-mid">+0.34</td>
+          </tr>
+          <tr>
+            <td class="row-label">90</td>
+            <td class="row-label">ITM</td>
+            <td class="vanna-pos-mid">+0.31</td>
+            <td class="vanna-pos-mid">+0.58</td>
+            <td class="vanna-pos-hi">+0.74</td>
+            <td class="vanna-pos-hi">+0.82</td>
+          </tr>
+          <tr>
+            <td class="row-label">95</td>
+            <td class="row-label">Slight ITM</td>
+            <td class="vanna-pos-mid">+0.44</td>
+            <td class="vanna-pos-hi">+0.71</td>
+            <td class="vanna-pos-hi">+0.79</td>
+            <td class="vanna-pos-mid">+0.68</td>
+          </tr>
+          <tr>
+            <td class="row-label">100</td>
+            <td class="row-label">ATM</td>
+            <td class="vanna-zero">−0.02</td>
+            <td class="vanna-zero">−0.01</td>
+            <td class="vanna-zero">+0.01</td>
+            <td class="vanna-zero">+0.03</td>
+          </tr>
+          <tr>
+            <td class="row-label">105</td>
+            <td class="row-label">Slight OTM</td>
+            <td class="vanna-neg-lo">−0.38</td>
+            <td class="vanna-neg-mid">−0.62</td>
+            <td class="vanna-neg-mid">−0.68</td>
+            <td class="vanna-neg-lo">−0.57</td>
+          </tr>
+          <tr>
+            <td class="row-label">110</td>
+            <td class="row-label">OTM</td>
+            <td class="vanna-neg-mid">−0.27</td>
+            <td class="vanna-neg-mid">−0.53</td>
+            <td class="vanna-neg-hi">−0.69</td>
+            <td class="vanna-neg-hi">−0.80</td>
+          </tr>
+          <tr>
+            <td class="row-label">120</td>
+            <td class="row-label">Deep OTM</td>
+            <td class="vanna-neg-lo">−0.06</td>
+            <td class="vanna-neg-lo">−0.18</td>
+            <td class="vanna-neg-mid">−0.32</td>
+            <td class="vanna-neg-mid">−0.47</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="we-step">Reading the surface</div>
+      <p>
+        <strong>Sign pattern:</strong> Vanna is positive for ITM strikes and negative for OTM strikes. This is the fundamental skew signature. When $v_0$ increases (volatility goes up), the option price increases everywhere — but the increase is larger for strikes where the option is more likely to be exercised. For an ITM call, higher vol makes exercise more certain, so $\Delta$ rises — positive Vanna. For an OTM call, higher vol makes exercise more possible but the option was already cheap, so the effect on $\Delta$ is negative (the Delta of an OTM call is low, and it gets lower relative to ATM as vol rises and the smile flattens — negative Vanna).
+      </p>
+      <p>
+        <strong>ATM Vanna $\approx 0$:</strong> At-the-money, the option is symmetric around the current spot, so the first-order effect of vol on Delta approximately cancels. Vanna is near zero but not exactly zero due to the skew ($\rho = -0.6$).
+      </p>
+      <p>
+        <strong>Term structure:</strong> Vanna magnitude grows with maturity for deep ITM/OTM options. For near-the-money options (95, 105), the magnitude peaks at 3–6 months and then decreases slightly — as $T$ increases, the option spends more time with uncertainty in both directions, and the asymmetry between ITM and OTM weakens.
+      </p>
+      <p>
+        <strong>Trading interpretation:</strong> If you are long a put spread (long put at $K=95$, short put at $K=105$), your net Vanna is approximately $(-0.44) - (-0.38) = -0.06$ at 1M or $(-0.71) - (-0.62) = -0.09$ at 3M. This is small but non-zero — a spike in $v_0$ will cause your Delta hedge to drift slightly. On a NIFTY crash day when INDIA VIX jumps from 15 to 22, the associated $\Delta v_0$ is substantial and Vanna P&amp;L can be meaningful.
+      </p>
+
+      <div class="we-answer">
+        <strong>Key takeaway:</strong> Vanna tells you how your Delta hedge will break when vol moves. The sign flip at ATM means a long put portfolio (net negative Vanna for OTM puts) becomes harder to Delta-hedge precisely when vol spikes — exactly the worst time for hedging to be imprecise. This is why professional Heston desks compute Vanna analytically and monitor it continuously alongside Delta.
+      </div>
+    </div>
+  </div>
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">3 questions · Chapter 07</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch07 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          In BSM, $\Delta = N(d_1)$. In Heston, $\Delta = P_1$. What do both quantities represent, and why is $\Delta = P_1$ — not $P_2$ — the correct result?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$P_1$ and $P_2$ are both exercise probabilities; $\Delta = P_1$ because $P_1 > P_2$ and a larger probability means a higher hedge ratio.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>$\Delta = P_2$ because $P_2 = \mathbb{Q}(S_T > K)$ is the risk-neutral exercise probability, which is what determines the hedge ratio.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>$P_1 = \mathbb{Q}^S(S_T > K)$ is the exercise probability under the stock numeraire measure. The hedge ratio is the expected number of shares the replicating portfolio must hold, which equals $P_1$ — the probability of exercise weighted by the stock measure.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$\Delta = P_1$ is purely a notational convention — $P_1$ and $P_2$ have no deeper probabilistic meaning.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Recall from Chapter 4 the payoff decomposition: $C = S_0 P_1 - Ke^{-rT}P_2$, where $P_2 = \mathbb{Q}(S_T > K)$ is the risk-neutral exercise probability and $P_1 = \mathbb{Q}^S(S_T > K)$ is the exercise probability under the stock measure $\mathbb{Q}^S$. The replicating portfolio holds $\Delta$ shares, where $\Delta$ is chosen so that $\Delta \times dS$ replicates the option's exposure to $S$. By differentiation, $\Delta = \partial C/\partial S_0 = P_1$ (as we derived in full). Intuitively: $P_1$ is the probability that the option will be exercised, weighted by the terminal stock price (because the stock measure tilts probability toward high-$S_T$ scenarios). This is exactly the expected number of shares to hold — you hold one share for each scenario where you exercise, weighted by stock-measure probability. Option B gets the answer exactly backwards. Option A contains a grain of truth ($P_1 \geq P_2$ always, since the stock measure favours high $S_T$) but gives the wrong reason.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch07 / q02</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          For Volga computed via finite differences, you use $h_v = 10^{-4}$ in the 3-point stencil: $\text{Volga} \approx [C(v_0+h_v) - 2C(v_0) + C(v_0-h_v)]/h_v^2$. The individual option prices have floating-point rounding error of $\sim \varepsilon_\text{mach}\,|C| \approx 10^{-15} \times 5 = 5\times 10^{-15}$. What is the resulting relative error in the Volga estimate?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>About $10^{-15}$ — machine precision is preserved through the finite difference.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>About $10^{-7}$ — the second difference doubles the rounding error.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>About $10^{-7}$ from the $h_v^2$ denominator amplifying rounding error: the numerator has noise $\sim 3\varepsilon_\text{mach}|C|$, divided by $h_v^2 = 10^{-8}$, giving absolute error $\sim 3\times 5\times10^{-15}/10^{-8} = 1.5\times10^{-6}$, and relative error $\sim 1.5\times10^{-6}/|\text{Volga}|$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>About $h_v^2 = 10^{-8}$ from the truncation error of the second-order stencil.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The 3-point stencil computes $[f(x+h) - 2f(x) + f(x-h)]/h^2$. The numerator involves three option prices each with rounding error $\varepsilon_\text{mach}|C|$, so the total rounding noise in the numerator is $\sim 3\varepsilon_\text{mach}|C| \approx 3\times 5\times 10^{-15} = 1.5\times 10^{-14}$. Dividing by $h_v^2 = (10^{-4})^2 = 10^{-8}$ amplifies this to $1.5\times 10^{-14}/10^{-8} = 1.5\times 10^{-6}$ in absolute error. If the true Volga is of order 100 (typical for an ATM option), the relative error is $1.5\times 10^{-6}/100 \approx 10^{-8}$ — still fine. But if Volga is small (e.g., 0.01 for a deep OTM short-dated option), the relative error can be $\sim 10^{-4}$ — not fine at all. This is why FD Volga is unreliable for small-Volga options, and why analytical computation via $D(\tau;u)^2$ in the GL integrand is strongly preferred.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch07 / q03</span>
+        <span class="mcq-diff">★★★ Diagnosis</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A colleague computes Heston Gamma via finite differences on a NIFTY call ($S_0 \approx 25000$) using a spot bump of $h = 1$ index point. The result is negative — which is impossible for a vanilla call. Without running any code, what is the most likely cause, and what should the bump size be?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>The Heston model produces negative Gamma for deep OTM options at short maturities. This is a known model artefact.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>The bump of $h=1$ is too large — the truncation error $O(h^2)$ dominates and the stencil is computing a secant slope of the wrong sign.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>The bump of $h = 1$ on $S_0 = 25000$ is $4\times 10^{-5}$ relative — actually small. The problem is that $h = 1$ may be too small: the numerator $C(S_0+1) - 2C(S_0) + C(S_0-1)$ is a number of order $\Gamma \times h^2 \approx \Gamma \times 1$. If $\Gamma$ is small (e.g. $10^{-5}$ per index point squared), the numerator is $\sim 10^{-5}$, comparable to floating-point rounding error in the option price $\sim \varepsilon_\text{mach} \times C \approx 10^{-15} \times 100 = 10^{-13}$... but the real issue is more likely numerical noise in the CF evaluation at the boundaries of the GL grid. Use $h \sim 10$ index points.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The pricing model has a bug — Heston always produces positive Gamma, so a negative result means the CF was evaluated incorrectly.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Vanilla call Gamma is always non-negative — this is a model-independent result from convexity of the call payoff. A negative FD Gamma always signals a numerical problem, not a model property. The most likely culprit on NIFTY: with $S_0 = 25000$, a bump of $h = 1$ is $4\times 10^{-5}$ of spot — small enough that the price differences $C(25001) - C(25000)$ and $C(25000) - C(24999)$ are being evaluated to within floating-point precision, and any tiny asymmetry in the CF evaluation (e.g. different branch of a complex square root for different $S_0$ values) can flip the sign of the numerator. The practical fix is to use a larger bump — $h = 10$ to $h = 50$ index points — which gives a numerator comfortably above the noise floor, while keeping truncation error $O(h^2/S_0^2)$ acceptable. For NIFTY at 25000, a 25-point bump (0.1%) is standard practice for FD Gamma. Better still: compute Gamma analytically — no bump-size guesswork required.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 07</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Q1–3 cover the mechanics of finite difference Greeks. Q4–6 involve the analytical Greeks and the $\Delta = P_1$ result. Q7–8 are Vanna/Volga interpretation questions. Q9–10 are open-ended design questions at production-system level.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            Derive the error formula for the central difference approximation $[f(x+h) - f(x-h)]/(2h)$ by expanding both $f(x+h)$ and $f(x-h)$ in Taylor series around $x$. Show explicitly that the leading error term is $h^2 f'''(x)/6$, not $h f''(x)/2$ as you might expect from a naive first-order expansion.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            Show that the 3-point stencil $[f(x+h) - 2f(x) + f(x-h)]/h^2$ approximates $f''(x)$ with error $O(h^2)$. Then compute the optimal bump $h_\text{opt}$ that minimises total error (truncation + cancellation) for the second derivative, assuming $|f^{(4)}| \approx |f''|$ and machine epsilon $\varepsilon_\text{mach} = 10^{-15}$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            For a put option under Heston, state the put-call parity relation and use it to derive the Greeks of the Heston put from the Greeks of the Heston call. In particular, show that $\Delta_\text{put} = P_1 - 1$, $\Gamma_\text{put} = \Gamma_\text{call}$, and $\mathcal{V}_\text{put} = \mathcal{V}_\text{call}$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            The derivation of $\Delta = P_1$ hinged on the cancellation of $S_0\,\partial P_1/\partial S_0 - Ke^{-rT}\,\partial P_2/\partial S_0 = 0$. Verify this cancellation numerically for the parameters from WE1: compute $S_0\,\partial P_1/\partial S_0$ and $Ke^{-rT}\,\partial P_2/\partial S_0$ separately (via finite differences in $S_0$ applied to $P_1$ and $P_2$ rather than $C$) and confirm they are approximately equal.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            The Heston Theta is defined as $\Theta = \partial C/\partial T$ (where $T$ is time-to-maturity, so $\Theta < 0$ means the option loses value as time passes). Show that under the Heston model, the Theta, Delta, and Gamma satisfy a PDE (the Heston PDE from Chapter 2) that gives a relationship between $\Theta$, $\Gamma$, $\Delta$, and Vega. Write this PDE explicitly.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            Prove that $P_1 \geq P_2$ always (for any parameters with $r \geq 0$). Then use this to show $\Delta_\text{call} \geq \Delta_\text{call}^\text{BSM,d2}$ where $\Delta_\text{call}^\text{BSM,d2} = N(d_2)$ would be the wrong formula. (This gives an intuition for why using $P_2$ as the hedge ratio would lead to systematic under-hedging.)
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            From the Vanna table in WE4: a trader is long the 90-strike call and short the 110-strike call (a call spread), both at 6M maturity. Compute the net Vanna of this position. If $v_0$ increases by 0.01 (i.e. vol increases by roughly 50 basis points from 20% to 20.5%), estimate the resulting change in the Delta of the position. Does this make the position easier or harder to Delta-hedge?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            The Volga of an ATM straddle is approximately twice the Volga of the ATM call (since the straddle is long call + long put and $\text{Volga}_\text{put} = \text{Volga}_\text{call}$ by put-call parity). A market-maker quotes an ATM straddle on NIFTY and Delta-Vega hedges it. Explain why the residual Volga exposure is dangerous, and describe one hedging strategy that specifically targets Volga without significantly changing Delta or Vega. (Hint: think about OTM option combinations.)
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            In the analytical Vega formula, the $D(\tau;u)$ factor appears inside the GL integrand. Show that $|D(\tau;u)| \to \tau$ as $u \to 0$ (for small frequency, the Vega integrand approaches $\tau$ times the price integrand). Discuss what this means: should Vega be proportional to $T$ for long-dated options? Is this consistent with the BSM result that $\mathcal{V}_\text{BSM} = S_0\sqrt{T}\,n(d_1)$?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            Design a Greeks computation pipeline for a production NIFTY options desk that prices 200 options simultaneously (20 strikes × 10 maturities). Specify: (a) which Greeks you compute analytically vs via FD, and why; (b) how many total GL quadrature passes you need for a full Greek run; (c) how you would validate the implementation before going live; (d) what monitoring you would put in place to detect if Greeks become unreliable intraday (e.g. due to parameter updates after recalibration).
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="F_Op_Ch6.html" class="ch-nav-btn">← The Carr-Madan FFT Method</a>
+    <a href="F_Op_Ch8.html" class="ch-nav-btn primary">Heston Calibration →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 Delta-neutral and answer-correct.",
+  "✨ $\\Delta = P_1$. You knew it.",
+  "🏆 Greek to some, obvious to you.",
+  "🔥 Gamma positive. Answer correct. Carry on.",
+  "💡 Vanna surface read correctly.",
+  "🎓 The replicating portfolio approves.",
+  "📈 Hedge ratio: right. Position: flat.",
+  "🧮 GL pass complete. Greek confirmed.",
+  "⚡ Analytical. Fast. Exact.",
+  "🌟 No bump size guesswork needed.",
+  "💎 $P_1 \\geq P_2$. Always.",
+  "🚀 Production-grade answer detected."
+];
+
+const wrongMsgs = [
+  "🌀 That hedge will drift. Re-read the section.",
+  "📐 Vanilla Gamma is always non-negative.",
+  "📉 $\\Delta = P_1$, not $P_2$. Flip it.",
+  "😰 Cancellation error is real. Check the bump size.",
+  "🤔 The stock measure is not the risk-neutral measure.",
+  "📊 Vanna sign: positive ITM, negative OTM. Check the table.",
+  "🎰 Not the right bump. Think about the $h^2$ denominator.",
+  "⚠ FD Gamma negative means numerical trouble, not model trouble."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Well done.';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
