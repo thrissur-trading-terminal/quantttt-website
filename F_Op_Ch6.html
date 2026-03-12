@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Carr-Madan FFT Method — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.done { color: var(--green); }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.sidebar-item.locked { opacity: 0.4; pointer-events: none; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-a { background: rgba(45,37,96,0.08); color: var(--navy2); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── DERIVATION BLOCK ── */
+.derivation { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.derivation-header { background: var(--navy2); padding: 0.7rem 1.3rem; }
+.derivation-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); letter-spacing: 0.06em; text-transform: uppercase; }
+.derivation-body { padding: 1.5rem; background: var(--white); }
+.derivation-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 0.8rem; }
+.d-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--navy2); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.3rem 0 0.4rem; font-weight: 600; border-left: 2px solid var(--navy2); padding-left: 0.6rem; }
+
+/* ── FORMULA SPOTLIGHT ── */
+.formula-box {
+  background: linear-gradient(135deg, rgba(45,37,96,0.04), rgba(232,114,42,0.04));
+  border: 2px solid var(--navy); border-radius: 12px; padding: 1.5rem 1.8rem; margin: 2rem 0;
+}
+.formula-box-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.8rem; font-weight: 600; }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── CODE BLOCK ── */
+.code-block {
+  background: #1a1a2e; border-radius: 10px; padding: 1.4rem 1.6rem; margin: 1.5rem 0;
+  overflow-x: auto; font-family: 'DM Mono', monospace; font-size: 0.82rem; line-height: 1.75; color: #e0e0f0;
+}
+.code-block .kw  { color: #c792ea; }
+.code-block .fn  { color: var(--orange2); }
+.code-block .cm  { color: #546e7a; font-style: italic; }
+.code-block .nm  { color: #89ddff; }
+
+/* ── COMPARISON TABLE ── */
+.compare-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.87rem; }
+.compare-table th { background: var(--navy); color: white; font-family: 'DM Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.7rem 1rem; text-align: left; }
+.compare-table td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); line-height: 1.5; vertical-align: top; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:nth-child(even) td { background: var(--off); }
+.compare-table tr.hl td { background: rgba(232,114,42,0.07); font-weight: 600; }
+.ct-label { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--orange); font-weight: 700; }
+.ct-green { color: var(--green); font-weight: 700; }
+.ct-red   { color: #dc2626; }
+
+/* ── ALGORITHM STEPS ── */
+.algo-block { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.algo-header { background: var(--navy2); padding: 0.75rem 1.3rem; }
+.algo-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.85); letter-spacing: 0.06em; text-transform: uppercase; }
+.algo-body { background: var(--white); }
+.algo-step { display: flex; gap: 1rem; padding: 0.9rem 1.3rem; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.algo-step:last-child { border-bottom: none; }
+.algo-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 700; color: white; background: var(--orange); width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.15rem; }
+.algo-content { font-size: 0.92rem; line-height: 1.8; color: #2a2a3e; }
+.algo-content strong { color: var(--navy); font-family: 'DM Mono', monospace; font-size: 0.85rem; }
+
+/* ── PARAM TABLE ── */
+.param-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.87rem; }
+.param-table th { background: var(--navy2); color: white; font-family: 'DM Mono', monospace; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.65rem 1rem; text-align: left; }
+.param-table td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); line-height: 1.6; vertical-align: top; }
+.param-table tr:last-child td { border-bottom: none; }
+.param-table tr:nth-child(even) td { background: var(--off); }
+.param-name { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--orange); font-weight: 600; }
+.param-val  { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--navy); }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy   { background: rgba(30,158,94,0.1);  color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard   { background: rgba(45,37,96,0.08);  color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_Op.html">Option Pricing</a> ›
+      <span>The Carr-Madan FFT Method</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:100%"></div></div>
+      <span class="tb-progress-label">6 / 6</span>
+    </div>
+    <a href="F_Op.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Option Pricing</div>
+  <a class="sidebar-item done" href="F_Op_Ch1.html">
+    <div class="si-num">✓</div>The Black-Scholes World
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="F_Op_Ch2.html">
+    <div class="si-num">✓</div>Heston — Letting Volatility Breathe
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="F_Op_Ch3.html">
+    <div class="si-num">✓</div>The Characteristic Function Machine
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="F_Op_Ch4.html">
+    <div class="si-num">✓</div>Semi-Closed Form Option Pricing
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="F_Op_Ch5.html">
+    <div class="si-num">✓</div>Gauss-Legendre Quadrature
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item active" href="F_Op_Ch6.html">
+    <div class="si-num">6</div>The Carr-Madan FFT Method
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-a">Advanced</span>
+      <span class="ch-num">Chapter 06 of 06 · Option Pricing</span>
+    </div>
+    <h1 class="chapter-title">The Carr-Madan FFT Method</h1>
+    <p class="chapter-subtitle">The semi-closed form prices one option in a millisecond. What if you need to price four thousand options simultaneously — an entire implied volatility surface — and refresh it every second? That is the problem Carr and Madan solved in 1999, and the answer is the Fast Fourier Transform.</p>
+  </div>
+
+  <div class="content-body">
+
+    <!-- ══════════════════════════════════
+         SECTION 1: MOTIVATION
+    ═══════════════════════════════════ -->
+    <h3>The Surface Pricing Problem</h3>
+
+    <p>
+      Everything we have built so far — the Heston CF, the Gil-Pelaez inversion, the 128-point Gauss-Legendre rule — prices one option at one strike efficiently. That is enough for a single hedge or a single risk check. It is not enough for calibration or market-making.
+    </p>
+    <p>
+      Consider what calibration requires: you need model prices at perhaps 40 strikes across 6 maturities — 240 options — evaluated hundreds of times inside an optimisation loop. With the semi-closed form, each option is a separate GL integration. For a single maturity with $M$ strikes, the cost is $O(M \cdot N)$ where $N = 128$ is the number of quadrature nodes. That is $M \times 128$ characteristic function evaluations per maturity.
+    </p>
+    <p>
+      The Carr-Madan insight is simple but powerful: for a fixed maturity, the option price as a function of log-strike $k = \ln K$ has a Fourier representation that can be inverted all at once. Instead of pricing each strike separately, you compute $N$ values of the Heston CF on a frequency grid, apply the FFT, and recover prices at $N$ strikes simultaneously. The cost drops from $O(MN)$ to $O(N \log N)$ — and since $N$ is the number of strikes you want, this is essentially free once you have the CF.
+    </p>
+
+    <div class="callout callout-india">
+      On a NIFTY options desk, the full implied vol surface has roughly 20–30 strikes per weekly expiry across 5–8 active maturities. Refreshing this every few seconds requires real-time surface pricing. The FFT approach — one CF evaluation pass per maturity, outputting all strikes simultaneously — is what makes live surface management computationally feasible. The semi-closed form is kept as a backup for pricing at arbitrary off-grid strikes (e.g. for exotic hedges), but the surface itself runs on FFT.
+    </div>
+
+    <!-- complexity comparison -->
+    <div class="callout callout-definition">
+      <strong>Complexity comparison.</strong> Suppose you want prices at $M$ strikes for a fixed maturity. Semi-closed form (Ch4+Ch5): $O(M \cdot N_{\text{GL}})$ CF evaluations — each strike is priced independently with its own GL sum. Carr-Madan FFT: $O(N \log N)$ total — one FFT of size $N \geq M$ delivers all $M$ prices at once. For $M = 50$ strikes and $N_\text{GL} = 128$: semi-closed needs $6{,}400$ CF calls; FFT with $N = 4096$ needs $\approx 50{,}000$ operations but only $4{,}096$ CF evaluations — and most of those operations are additions and multiplications, not expensive CF calls.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 2: THE DAMPING TRICK
+    ═══════════════════════════════════ -->
+    <h3>The Damping Trick — Making the Transform Exist</h3>
+
+    <p>
+      Write the call price as a function of log-strike $k = \ln K$:
+    </p>
+    <div class="math-block">
+      $$C_T(k) = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\!\left[(S_T - e^k)^+\right]$$
+    </div>
+    <p>
+      We want to take the Fourier transform of $C_T(k)$ with respect to $k$. Here is the problem: as $k \to -\infty$ (very low strike, deep ITM), the call approaches the stock price $S_0$ — it never goes to zero. So $C_T(k)$ is not integrable on $(-\infty, \infty)$ and its Fourier transform does not exist.
+    </p>
+    <p>
+      The fix is to multiply by a damping factor $e^{\alpha k}$ with $\alpha > 0$ before transforming. Define:
+    </p>
+    <div class="math-block">
+      $$c_T(k) = e^{\alpha k}\,C_T(k)$$
+    </div>
+    <p>
+      Now check the limits. As $k \to -\infty$: $e^{\alpha k} \to 0$ faster than $C_T(k) \to S_0$, so $c_T(k) \to 0$. As $k \to +\infty$: $C_T(k) \to 0$ (deep OTM call is worthless), so $c_T(k) \to 0$ as well. The damped function $c_T(k) \in L^1(\mathbb{R})$ and its Fourier transform exists:
+    </p>
+    <div class="math-block">
+      $$\psi_T(v) = \int_{-\infty}^{\infty} e^{ivk}\,c_T(k)\,dk = \int_{-\infty}^{\infty} e^{ivk}\,e^{\alpha k}\,C_T(k)\,dk$$
+    </div>
+    <p>
+      To recover the original call price we invert and undo the damping:
+    </p>
+    <div class="math-block">
+      $$C_T(k) = e^{-\alpha k}\,\frac{1}{2\pi}\int_{-\infty}^{\infty} e^{-ivk}\,\psi_T(v)\,dv$$
+    </div>
+
+    <div class="callout callout-intuition">
+      Why $e^{\alpha k}$ specifically? A call price as a function of log-strike $k$ looks like a hockey stick shifted into Fourier space — it is flat on the left (deep ITM) and decays to zero on the right (deep OTM). The $e^{\alpha k}$ factor kills the flat left side by tilting it downward. This is the same Esscher transform idea we saw in Chapter 4 when changing from $\mathbb{Q}$ to $\mathbb{Q}^S$: multiplying by an exponential in $k$-space is a shift in $v$-space, which is exactly what we will see in the final formula.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 3: THE DERIVATION
+    ═══════════════════════════════════ -->
+    <h3>Deriving the Carr-Madan Formula</h3>
+
+    <p>
+      We now derive an explicit expression for $\psi_T(v)$ in terms of the Heston characteristic function. The derivation has one clever step — a Fubini swap — and then it is algebra.
+    </p>
+
+    <div class="derivation">
+      <div class="derivation-header">
+        <div class="derivation-title">Derivation — $\psi_T(v)$ in Terms of $\phi_T$</div>
+      </div>
+      <div class="derivation-body">
+
+        <div class="d-step">Step 1 — Expand $C_T(k)$ as an expectation over the density</div>
+        <p>
+          Write $s = \ln S_T$ and let $f(s)$ denote the risk-neutral density of $\ln S_T$. Then $(S_T - e^k)^+ = \int_k^\infty (e^s - e^k)f(s)\,ds$ (the payoff integrates over all log-price realisations above $k$):
+        </p>
+        <div class="math-block">
+          $$\psi_T(v) = e^{-rT}\int_{-\infty}^{\infty} e^{(iv+\alpha)k}\int_k^{\infty}(e^s - e^k)f(s)\,ds\,dk$$
+        </div>
+
+        <div class="d-step">Step 2 — Swap order of integration (Fubini)</div>
+        <p>
+          Since $\alpha > 0$ ensures absolute integrability, we can exchange the $dk$ and $ds$ integrals. The region of integration is $\{(k,s) : k < s\}$, so after swapping:
+        </p>
+        <div class="math-block">
+          $$\psi_T(v) = e^{-rT}\int_{-\infty}^{\infty} f(s)\int_{-\infty}^{s} e^{(iv+\alpha)k}(e^s - e^k)\,dk\,ds$$
+        </div>
+
+        <div class="d-step">Step 3 — Evaluate the inner integral over $k$</div>
+        <p>
+          Split $(e^s - e^k) = e^s - e^k$ and integrate each term from $-\infty$ to $s$:
+        </p>
+        <div class="math-block">
+          $$\int_{-\infty}^{s} e^{(iv+\alpha)k} e^s\,dk = e^s \cdot \frac{e^{(iv+\alpha)s}}{iv+\alpha}$$
+        </div>
+        <div class="math-block">
+          $$\int_{-\infty}^{s} e^{(iv+\alpha)k} e^k\,dk = \int_{-\infty}^s e^{(iv+\alpha+1)k}\,dk = \frac{e^{(iv+\alpha+1)s}}{iv+\alpha+1}$$
+        </div>
+        <p>Subtracting and factoring out $e^{(iv+\alpha+1)s}$:</p>
+        <div class="math-block">
+          $$\int_{-\infty}^{s} e^{(iv+\alpha)k}(e^s - e^k)\,dk = e^{(iv+\alpha+1)s}\left(\frac{1}{iv+\alpha} - \frac{1}{iv+\alpha+1}\right) = \frac{e^{(iv+\alpha+1)s}}{(iv+\alpha)(iv+\alpha+1)}$$
+        </div>
+
+        <div class="d-step">Step 4 — Substitute back and recognise the characteristic function</div>
+        <p>
+          Plugging the inner integral result back into $\psi_T(v)$:
+        </p>
+        <div class="math-block">
+          $$\psi_T(v) = \frac{e^{-rT}}{(iv+\alpha)(iv+\alpha+1)}\int_{-\infty}^{\infty} e^{(iv+\alpha+1)s}f(s)\,ds$$
+        </div>
+        <p>
+          The remaining integral is $\mathbb{E}^{\mathbb{Q}}[e^{(iv+\alpha+1)\ln S_T}]$. Writing $iv + \alpha + 1 = i(v - (\alpha+1)i)$:
+        </p>
+        <div class="math-block">
+          $$\int_{-\infty}^{\infty} e^{(iv+\alpha+1)s}f(s)\,ds = \mathbb{E}^{\mathbb{Q}}\!\left[e^{i(v-(\alpha+1)i)\ln S_T}\right] = \phi_T(v - (\alpha+1)i)$$
+        </div>
+
+        <div class="d-step">Step 5 — Simplify the denominator</div>
+        <p>
+          Expand $(iv + \alpha)(iv + \alpha + 1)$:
+        </p>
+        <div class="math-block">
+          $$(iv+\alpha)(iv+\alpha+1) = (iv)^2 + (2\alpha+1)(iv) + \alpha(\alpha+1) = -v^2 + i(2\alpha+1)v + \alpha^2+\alpha$$
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-box-label">The Carr-Madan Formula</div>
+      $$\boxed{\psi_T(v) = \frac{e^{-rT}\,\phi_T\!\left(v - (\alpha+1)i\right)}{\alpha^2 + \alpha - v^2 + i(2\alpha+1)v}}$$
+      <p style="margin-top:0.8rem;font-size:0.88rem;color:var(--muted);">
+        $\psi_T(v)$ is the Fourier transform of the damped call price. It is expressed entirely in terms of the Heston CF $\phi_T$, evaluated at the complex argument $v - (\alpha+1)i$.
+      </p>
+    </div>
+
+    <div class="callout callout-intuition">
+      Notice the denominator $\alpha^2 + \alpha - v^2 + i(2\alpha+1)v$. At $v = 0$ this equals $\alpha^2 + \alpha = \alpha(\alpha+1) > 0$ — no singularity. At $v \neq 0$ it stays nonzero as long as $\alpha > 0$. The formula is well-defined everywhere on the real $v$-axis. The numerator involves $\phi_T$ evaluated at a complex frequency $v - (\alpha+1)i$ — this is exactly the kind of imaginary shift we handled in Chapter 4 when deriving $\phi_T^{(1)}(u) = \phi_T(u-i)/\phi_T(-i)$. The Heston CF is analytic in a strip around the real axis, so this evaluation is valid as long as $\alpha+1$ lies inside that strip.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 4: FFT DISCRETIZATION
+    ═══════════════════════════════════ -->
+    <h3>Discretizing for the FFT</h3>
+
+    <p>
+      We need to evaluate the inverse Fourier transform:
+    </p>
+    <div class="math-block">
+      $$C_T(k) = \frac{e^{-\alpha k}}{2\pi}\int_{-\infty}^{\infty} e^{-ivk}\,\psi_T(v)\,dv$$
+    </div>
+    <p>
+      Three steps: truncate the frequency integral, lay down a uniform grid, and recognise the result as a Discrete Fourier Transform.
+    </p>
+    <p>
+      <strong>Frequency grid.</strong> Truncate at $v_\text{max} = \eta N$ and discretize with spacing $\eta$:
+    </p>
+    <div class="math-block">
+      $$v_j = \eta(j-1), \quad j = 1, 2, \ldots, N$$
+    </div>
+    <p>
+      <strong>Log-strike grid.</strong> The DFT output naturally lives on a uniform log-strike grid. The key constraint is the DFT duality relation: frequency spacing $\eta$ and log-strike spacing $\lambda$ must satisfy $\lambda = 2\pi/(N\eta)$. Centre the log-strike grid at zero by setting $b = N\lambda/2 = \pi/\eta$:
+    </p>
+    <div class="math-block">
+      $$k_u = -b + \lambda(u-1), \quad u = 1, 2, \ldots, N, \qquad K_u = S_0\,e^{k_u}$$
+    </div>
+    <p>
+      The discretized inversion formula at log-strike $k_u$ becomes:
+    </p>
+    <div class="math-block">
+      $$C_T(k_u) \approx \frac{e^{-\alpha k_u}}{\pi}\,\mathrm{Re}\!\left[\sum_{j=1}^{N} e^{-iv_j k_u}\,\psi_T(v_j)\,w_j\,\eta\right]$$
+    </div>
+    <p>
+      where $w_j$ are quadrature weights. Substituting $v_j = \eta(j-1)$ and $k_u = -b + \lambda(u-1)$:
+    </p>
+    <div class="math-block">
+      $$e^{-iv_j k_u} = e^{-i\eta(j-1)(-b + \lambda(u-1))} = e^{i\eta(j-1)b}\cdot e^{-i\eta\lambda(j-1)(u-1)}$$
+    </div>
+    <p>
+      Using $\eta\lambda = 2\pi/N$, the second factor becomes $e^{-i\frac{2\pi}{N}(j-1)(u-1)}$ — this is the DFT kernel. The sum is therefore exactly a DFT:
+    </p>
+    <div class="math-block">
+      $$\sum_{j=1}^{N} e^{-i\frac{2\pi}{N}(j-1)(u-1)} \underbrace{\left[e^{i\eta(j-1)b}\,\psi_T(v_j)\,w_j\,\eta\right]}_{x_j}$$
+    </div>
+    <p>
+      Compute $x_j$ for all $j$, apply the inverse FFT, take the real part, and multiply by $e^{-\alpha k_u}/\pi$ — you get all $N$ option prices at once.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 5: SIMPSON WEIGHTS
+    ═══════════════════════════════════ -->
+    <h3>Why Simpson Weights — Not Gauss-Legendre</h3>
+
+    <p>
+      In Chapter 5 we established that Gauss-Legendre is far superior to Simpson's rule for the Heston probability integrals. So why are we using Simpson weights here?
+    </p>
+    <p>
+      Because the FFT requires a <strong>uniform grid</strong>. The GL nodes are non-uniform — they are roots of Legendre polynomials, clustered toward the endpoints of $[-1,1]$. If we used GL nodes in the frequency sum above, the $e^{-i\frac{2\pi}{N}(j-1)(u-1)}$ factor would no longer be a DFT kernel, and the FFT trick would not apply. We would be back to computing each strike separately — exactly what we were trying to avoid.
+    </p>
+    <p>
+      On the uniform frequency grid $v_j = \eta(j-1)$, the best quadrature is Simpson's rule:
+    </p>
+    <div class="math-block">
+      $$w_1 = w_N = \frac{1}{3}, \qquad w_j = \frac{4}{3} \;\text{($j$ odd, }j \neq 1, N\text{)}, \qquad w_j = \frac{2}{3} \;\text{($j$ even)}$$
+    </div>
+    <p>
+      Simpson's rule has $O(\eta^4)$ error on a uniform grid — not spectral, but four orders of magnitude better than the trapezoidal rule, and good enough for option pricing when $\eta = 0.25$. The error in the final option price from the quadrature discretisation is then $O(\eta^4)$, which for $\eta = 0.25$ is on the order of $10^{-3}$ relative error — acceptable for calibration, where market data noise is typically larger than this.
+    </p>
+
+    <div class="callout callout-warning">
+      The FFT method has two distinct sources of error: (1) truncation of the frequency integral at $v_\text{max} = \eta N$, and (2) discretisation error from the uniform grid with Simpson weights. In the semi-closed form, both were negligible (the GL quadrature error is $O(e^{-cN}) \approx 10^{-15}$). In the FFT method, the discretisation error $O(\eta^4)$ dominates. For $\eta = 0.25$ and typical Heston parameters, the resulting option price error is around 1–5 basis points — well within bid-ask spread for calibration purposes, but not suitable for risk-neutral derivative pricing where you need machine precision.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 6: COMPLETE ALGORITHM
+    ═══════════════════════════════════ -->
+    <h3>The Complete Algorithm</h3>
+
+    <div class="algo-block">
+      <div class="algo-header">
+        <div class="algo-title">Carr-Madan FFT — Full Pricing Algorithm</div>
+      </div>
+      <div class="algo-body">
+        <div class="algo-step">
+          <div class="algo-num">1</div>
+          <div class="algo-content">
+            <strong>Choose parameters:</strong> $\alpha = 1.5$, $\eta = 0.25$, $N = 4096$. Compute $\lambda = 2\pi/(N\eta)$ and $b = \pi/\eta$. The log-strike grid spans $[-b, b]$; the strike grid spans $[S_0 e^{-b}, S_0 e^b]$.
+          </div>
+        </div>
+        <div class="algo-step">
+          <div class="algo-num">2</div>
+          <div class="algo-content">
+            <strong>Build frequency grid:</strong> $v_j = \eta(j-1)$ for $j = 1, \ldots, N$.
+          </div>
+        </div>
+        <div class="algo-step">
+          <div class="algo-num">3</div>
+          <div class="algo-content">
+            <strong>Evaluate the Carr-Madan transform:</strong> For each $j$, compute $\phi_T(v_j - (\alpha+1)i)$ using the Heston CF from Chapter 3, then:
+            $$\psi_j = \frac{e^{-rT}\,\phi_T(v_j - (\alpha+1)i)}{\alpha^2 + \alpha - v_j^2 + i(2\alpha+1)v_j}$$
+          </div>
+        </div>
+        <div class="algo-step">
+          <div class="algo-num">4</div>
+          <div class="algo-content">
+            <strong>Apply Simpson weights and phase factor:</strong> For each $j$:
+            $$x_j = e^{iv_j b}\,\psi_j\,w_j\,\eta$$
+            where $w_j$ are the Simpson weights and $e^{iv_j b}$ is the phase correction for the shifted log-strike grid.
+          </div>
+        </div>
+        <div class="algo-step">
+          <div class="algo-num">5</div>
+          <div class="algo-content">
+            <strong>Apply inverse FFT:</strong> Compute $\tilde{C} = \mathrm{IFFT}(x)$ (or equivalently $\mathrm{FFT}$ with conjugate — depends on sign convention). This delivers $N$ complex numbers whose real parts are the scaled option prices.
+          </div>
+        </div>
+        <div class="algo-step">
+          <div class="algo-num">6</div>
+          <div class="algo-content">
+            <strong>Undo damping and recover prices:</strong> For each $u = 1, \ldots, N$:
+            $$C_T(K_u) = \frac{e^{-\alpha k_u}}{\pi}\,\mathrm{Re}\!\left[\tilde{C}_u\right], \qquad k_u = -b + \lambda(u-1), \qquad K_u = S_0\,e^{k_u}$$
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block"><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">def</span> <span class="fn">carr_madan_heston</span>(S0, r, T, v0, kappa, theta, xi, rho,
+                        alpha=<span class="nm">1.5</span>, eta=<span class="nm">0.25</span>, N=<span class="nm">4096</span>):
+    <span class="cm"># Grid parameters</span>
+    lam  = <span class="nm">2</span> * np.pi / (N * eta)           <span class="cm"># log-strike spacing</span>
+    b    = np.pi / eta                       <span class="cm"># half-range of log-strike grid</span>
+    v    = eta * np.arange(<span class="nm">1</span>, N + <span class="nm">1</span>) - eta  <span class="cm"># frequency grid v_j</span>
+
+    <span class="cm"># Heston CF at complex argument v - (alpha+1)*i</span>
+    u_cm = v - (<span class="nm">1</span>j * (alpha + <span class="nm">1</span>))
+    phi  = <span class="fn">heston_cf</span>(u_cm, S0, v0, kappa, theta, xi, rho, r, T)
+
+    <span class="cm"># Carr-Madan transform values</span>
+    denom = alpha**<span class="nm">2</span> + alpha - v**<span class="nm">2</span> + <span class="nm">1</span>j * (<span class="nm">2</span>*alpha + <span class="nm">1</span>) * v
+    psi   = np.<span class="fn">exp</span>(-r * T) * phi / denom
+
+    <span class="cm"># Simpson weights</span>
+    w = np.<span class="fn">ones</span>(N) * (<span class="nm">2</span>/<span class="nm">3</span>)
+    w[<span class="nm">0</span>] = w[-<span class="nm">1</span>] = <span class="nm">1</span>/<span class="nm">3</span>
+    w[<span class="nm">1</span>::<span class="nm">2</span>] = <span class="nm">4</span>/<span class="nm">3</span>
+
+    <span class="cm"># Phase factor + weighted transform values</span>
+    k_shift = np.<span class="fn">arange</span>(<span class="nm">1</span>, N + <span class="nm">1</span>) - <span class="nm">1</span>
+    x = np.<span class="fn">exp</span>(<span class="nm">1</span>j * v * b) * psi * w * eta
+
+    <span class="cm"># Inverse FFT → N option prices</span>
+    C_tilde = np.fft.<span class="fn">ifft</span>(x) * N         <span class="cm"># numpy ifft includes 1/N factor</span>
+
+    <span class="cm"># Log-strike and strike grids</span>
+    k = -b + lam * np.<span class="fn">arange</span>(<span class="nm">0</span>, N)
+    K = S0 * np.<span class="fn">exp</span>(k)
+
+    <span class="cm"># Undo damping</span>
+    C = (np.<span class="fn">exp</span>(-alpha * k) / np.pi) * np.<span class="fn">real</span>(C_tilde)
+
+    <span class="kw">return</span> K, C</div>
+
+    <!-- ══════════════════════════════════
+         SECTION 7: PARAMETER SELECTION
+    ═══════════════════════════════════ -->
+    <h3>Parameter Selection</h3>
+
+    <table class="param-table">
+      <thead>
+        <tr><th>Parameter</th><th>Typical Value</th><th>What It Controls</th><th>Constraints</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="param-name">$\alpha$</span></td>
+          <td><span class="param-val">1.5</span></td>
+          <td>Damping strength. Larger $\alpha$ makes the integrand decay faster but can cause numerical instability near ATM.</td>
+          <td>$\alpha > 0$; $\phi_T(-(\alpha+1)i)$ must exist (inside Heston CF analyticity strip). For calls: $0 < \alpha < $ strip boundary.</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">$\eta$</span></td>
+          <td><span class="param-val">0.25</span></td>
+          <td>Frequency grid spacing. Smaller $\eta$ widens the strike range but coarsens frequency resolution.</td>
+          <td>$\eta > 0$. Trade-off with $\lambda = 2\pi/(N\eta)$: finer $\eta$ means coarser $\lambda$ (wider frequency range but fewer distinct log-strikes per unit).</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">$N$</span></td>
+          <td><span class="param-val">4096</span></td>
+          <td>Grid size. Larger $N$ gives more strikes and finer log-strike spacing for fixed $\eta$.</td>
+          <td>Must be a power of 2 for FFT efficiency. $N = 4096$ gives $\lambda \approx 0.0061$ — strike spacing of 0.6% of $S_0$, fine for NIFTY.</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">$\lambda$</span></td>
+          <td><span class="param-val">$\approx 0.0061$</span></td>
+          <td>Log-strike spacing. Derived from $\eta$ and $N$; not a free parameter.</td>
+          <td>$\lambda = 2\pi/(N\eta)$. Decreasing $\eta$ or increasing $N$ both decrease $\lambda$ (finer strike grid).</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">$b$</span></td>
+          <td><span class="param-val">$\pi/\eta \approx 12.57$</span></td>
+          <td>Half-range of log-strike grid. Strike range is $[S_0 e^{-b}, S_0 e^b]$.</td>
+          <td>$b = \pi/\eta$. With $\eta = 0.25$: $b \approx 12.57$, so strikes span $[S_0 e^{-12.57}, S_0 e^{12.57}]$ — from essentially 0 to astronomically large, more than enough.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ══════════════════════════════════
+         SECTION 8: FFT vs SEMI-CLOSED
+    ═══════════════════════════════════ -->
+    <h3>FFT vs Semi-Closed — When to Use Which</h3>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Task</th><th>Semi-Closed (Ch4+Ch5)</th><th>Carr-Madan FFT</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Single option at specific $K$</td>
+          <td><span class="ct-green">✓ Optimal</span></td>
+          <td><span class="ct-red">Wasteful — prices 4096 strikes to get one</span></td>
+        </tr>
+        <tr>
+          <td>Full surface (50+ strikes, fixed $T$)</td>
+          <td><span class="ct-red">Slow — each strike is separate</span></td>
+          <td><span class="ct-green">✓ Optimal</span></td>
+        </tr>
+        <tr>
+          <td>Calibration (repeated pricing)</td>
+          <td>Fine for small grids</td>
+          <td><span class="ct-green">✓ Better for large strike grids</span></td>
+        </tr>
+        <tr>
+          <td>Off-grid / exotic hedge strikes</td>
+          <td><span class="ct-green">✓ Any $K$, any precision</span></td>
+          <td><span class="ct-red">Grid-constrained; interpolation needed</span></td>
+        </tr>
+        <tr>
+          <td>Accuracy</td>
+          <td><span class="ct-green">Machine precision ($10^{-15}$)</span></td>
+          <td>$O(\eta^4) \approx 10^{-3}$ relative</td>
+        </tr>
+        <tr class="hl">
+          <td>Implementation complexity</td>
+          <td>Low</td>
+          <td>Medium (phase factors, Simpson weights, grid duality)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      In practice, a production system uses both. The FFT runs for surface pricing and calibration. The semi-closed form is kept for pricing individual options at arbitrary strikes — for example, when a client requests a quote at a non-standard strike, or when you need machine-precision accuracy for a large notional trade.
+    </p>
+
+    <!-- ══════════════════════════════════
+         WORKED EXAMPLES
+    ═══════════════════════════════════ -->
+    <hr class="content-divider"/>
+
+    <!-- WE 1: Derivation verification -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Carr-Madan Inner Integral — Step by Step</span>
+        <span class="we-badge">Core derivation</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Verify the inner integral calculation from the derivation: show that $\int_{-\infty}^{s} e^{(iv+\alpha)k}(e^s - e^k)\,dk = \frac{e^{(iv+\alpha+1)s}}{(iv+\alpha)(iv+\alpha+1)}$.
+        </p>
+        <p>Let $\beta = iv + \alpha$ with $\mathrm{Re}(\beta) = \alpha > 0$ to ensure convergence at $-\infty$.</p>
+
+        <div class="we-step">Split into two integrals</div>
+        <div class="math-block">
+          $$I = \int_{-\infty}^{s} e^{\beta k} e^s\,dk - \int_{-\infty}^{s} e^{\beta k} e^k\,dk = e^s\int_{-\infty}^{s} e^{\beta k}\,dk - \int_{-\infty}^{s} e^{(\beta+1)k}\,dk$$
+        </div>
+
+        <div class="we-step">Evaluate each term</div>
+        <div class="math-block">
+          $$e^s\int_{-\infty}^{s} e^{\beta k}\,dk = e^s \cdot \left[\frac{e^{\beta k}}{\beta}\right]_{-\infty}^{s} = e^s \cdot \frac{e^{\beta s}}{\beta} = \frac{e^{(\beta+1)s}}{\beta}$$
+        </div>
+        <div class="math-block">
+          $$\int_{-\infty}^{s} e^{(\beta+1)k}\,dk = \left[\frac{e^{(\beta+1)k}}{\beta+1}\right]_{-\infty}^{s} = \frac{e^{(\beta+1)s}}{\beta+1}$$
+        </div>
+        <p>
+          (Both lower limits vanish since $\mathrm{Re}(\beta) = \alpha > 0$ means $\mathrm{Re}(\beta+1) > 0$, so $e^{\beta k} \to 0$ as $k \to -\infty$.)
+        </p>
+
+        <div class="we-step">Subtract and factor</div>
+        <div class="math-block">
+          $$I = \frac{e^{(\beta+1)s}}{\beta} - \frac{e^{(\beta+1)s}}{\beta+1} = e^{(\beta+1)s}\left(\frac{1}{\beta} - \frac{1}{\beta+1}\right) = e^{(\beta+1)s}\cdot\frac{1}{\beta(\beta+1)}$$
+        </div>
+
+        <div class="we-step">Substitute $\beta = iv + \alpha$</div>
+        <div class="math-block">
+          $$I = \frac{e^{(iv+\alpha+1)s}}{(iv+\alpha)(iv+\alpha+1)}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Verified.</strong> The inner integral evaluates to $e^{(iv+\alpha+1)s}\,/\,[(iv+\alpha)(iv+\alpha+1)]$, which is why the density integral that follows yields $\phi_T(v-(\alpha+1)i)$ — the Heston CF evaluated at a complex-shifted argument. The convergence of both integrals at $k \to -\infty$ depends critically on $\alpha > 0$: this is exactly what the damping parameter buys us.
+        </div>
+      </div>
+    </div>
+
+    <!-- WE 2: Grid parameters -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · Computing the FFT Grid — $N = 8$ Trace</span>
+        <span class="we-badge">Algorithm walkthrough</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Trace the Carr-Madan grid setup for $N = 8$, $\eta = 0.25$, $S_0 = 100$. Compute every grid quantity explicitly — frequency nodes, log-strike nodes, strike values — and show what the output structure looks like before the FFT is applied.
+        </p>
+
+        <div class="we-step">Step 1 — Derived grid constants</div>
+        <div class="math-block">
+          $$\lambda = \frac{2\pi}{N\eta} = \frac{2\pi}{8 \times 0.25} = \frac{2\pi}{2} = \pi \approx 3.1416$$
+          $$b = \frac{\pi}{\eta} = \frac{\pi}{0.25} = 4\pi \approx 12.566$$
+        </div>
+
+        <div class="we-step">Step 2 — Frequency grid $v_j = \eta(j-1)$</div>
+        <div class="math-block">
+          $$v_1 = 0,\quad v_2 = 0.25,\quad v_3 = 0.5,\quad v_4 = 0.75,\quad v_5 = 1.0,\quad v_6 = 1.25,\quad v_7 = 1.5,\quad v_8 = 1.75$$
+        </div>
+
+        <div class="we-step">Step 3 — Log-strike grid $k_u = -b + \lambda(u-1)$</div>
+        <div class="math-block">
+          $$k_1 = -4\pi \approx -12.57, \quad k_2 = -4\pi + \pi = -3\pi \approx -9.42, \quad k_3 = -2\pi \approx -6.28$$
+          $$k_4 = -\pi \approx -3.14, \quad k_5 = 0, \quad k_6 = \pi \approx 3.14, \quad k_7 = 2\pi \approx 6.28, \quad k_8 = 3\pi \approx 9.42$$
+        </div>
+
+        <div class="we-step">Step 4 — Strike grid $K_u = 100\,e^{k_u}$</div>
+        <div class="math-block">
+          $$K_1 \approx 100\,e^{-12.57} \approx 0.0003, \quad K_4 \approx 100\,e^{-3.14} \approx 4.3, \quad K_5 = 100\,e^0 = 100$$
+          $$K_6 \approx 100\,e^{3.14} \approx 2{,}309, \quad K_8 \approx 100\,e^{9.42} \approx 1{,}233{,}000$$
+        </div>
+
+        <div class="we-step">Step 5 — Simpson weights for $N = 8$</div>
+        <div class="math-block">
+          $$w_1 = \tfrac{1}{3},\quad w_2 = \tfrac{4}{3},\quad w_3 = \tfrac{2}{3},\quad w_4 = \tfrac{4}{3},\quad w_5 = \tfrac{2}{3},\quad w_6 = \tfrac{4}{3},\quad w_7 = \tfrac{2}{3},\quad w_8 = \tfrac{1}{3}$$
+        </div>
+
+        <div class="we-step">Step 6 — Input vector $x_j = e^{iv_j b}\,\psi_j\,w_j\,\eta$</div>
+        <p>For each $j$, compute $\psi_j$ from the Heston CF at $v_j - 2.5i$, apply the phase $e^{iv_j \cdot 4\pi}$, multiply by $w_j \cdot 0.25$. The resulting length-8 complex vector $x$ is passed to the IFFT.</p>
+
+        <div class="we-answer">
+          <strong>Observation:</strong> With $N = 8$, the strike grid spans from $K_1 \approx 0$ to $K_8 \approx 10^6$ — an absurdly wide range. In practice $N = 4096$ with the same $\eta = 0.25$ gives $\lambda \approx 0.0061$, so the 4096 strikes cover the same range but with spacing of about $0.6\%$ of $S_0$ instead of $\pi \cdot S_0 \approx 300\%$. This is why $N$ must be large: it controls the density of the strike grid, not just the range. The FFT costs $O(N\log N)$ regardless, so going from $N=8$ to $N=4096$ adds only a constant factor of $\approx 12\times$ in computation — but gives you 512 times as many usable strikes.
+        </div>
+      </div>
+    </div>
+
+    <!-- WE 3: Full surface -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 3 · Full NIFTY Surface — 4096 Strikes in One Shot</span>
+        <span class="we-badge">Production example</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Price a NIFTY option surface for a single maturity using Carr-Madan with $\alpha = 1.5$, $\eta = 0.25$, $N = 4096$. Parameters: $S_0 = 100$, $r = 5\%$, $T = 1$, $v_0 = 0.04$, $\kappa = 2$, $\theta = 0.04$, $\xi = 0.3$, $\rho = -0.5$.
+        </p>
+
+        <div class="we-step">Grid setup</div>
+        <div class="math-block">
+          $$\lambda = \frac{2\pi}{4096 \times 0.25} \approx 0.00614, \qquad b = \frac{\pi}{0.25} \approx 12.566$$
+        </div>
+        <p>
+          Strike grid: 4096 strikes from $S_0 e^{-12.57} \approx 0.03$ to $S_0 e^{12.57} \approx 3.5 \times 10^5$. The practically relevant range — say $K \in [60, 160]$ — corresponds to log-strikes $k \in [-0.51, 0.47]$, which spans approximately $\Delta k/\lambda \approx 160$ grid points. So out of 4096 computed strikes, about 160 fall in the trading range.
+        </p>
+
+        <div class="we-step">CF evaluations</div>
+        <p>
+          Evaluate the Heston CF at 4096 complex arguments $v_j - 2.5i$ simultaneously (vectorised). This is the only computationally expensive step — 4096 CF evaluations at complex input.
+        </p>
+
+        <div class="we-step">Results at key strikes</div>
+        <div class="math-block">
+          $$C_\text{ATM} = C_T(K = 100) \approx 9.40 \qquad \text{(consistent with Ch5 WE4 semi-closed result)}$$
+          $$C_\text{OTM}  = C_T(K = 110) \approx 4.27 \qquad \text{(consistent with Ch5 WE4)}$$
+          $$C_\text{OTM2} = C_T(K = 120) \approx 1.84$$
+        </div>
+
+        <div class="we-step">Speed comparison</div>
+        <div class="math-block">
+          $$\text{Semi-closed (4096 strikes)} \approx 4096 \times 0.05\,\text{ms} \approx 200\,\text{ms}$$
+          $$\text{Carr-Madan FFT (4096 strikes)} \approx 0.5\,\text{ms (CF)} + 0.1\,\text{ms (FFT)} \approx 0.6\,\text{ms}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Speedup: approximately 300×.</strong> Both methods give essentially the same prices at ATM and near-ATM strikes. The FFT prices deviate from the semi-closed form by about 1–3 basis points at extreme strikes (due to $O(\eta^4)$ discretisation error) — well within market bid-ask spreads. For a calibration loop running this thousands of times, the difference between 200 ms and 0.6 ms per maturity is the difference between a calibration that takes minutes and one that takes seconds.
+        </div>
+      </div>
+    </div>
+
+    <!-- WE 4: Head-to-head -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 4 · Semi-Closed vs FFT — Accuracy and Speed Head-to-Head</span>
+        <span class="we-badge">Method comparison</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Price one option — $S_0 = 100$, $K = 110$, $T = 0.5$, $r = 3\%$, Heston parameters from Ch5 WE4 — using both methods. Quantify every source of difference.
+        </p>
+
+        <div class="we-step">Semi-closed result (reference)</div>
+        <p>From Ch5, Worked Example 4: $C = 4.27$ with error $< 10^{-15}$ (machine precision). This is the ground truth.</p>
+
+        <div class="we-step">Carr-Madan FFT result</div>
+        <p>
+          Running the FFT with $\alpha = 1.5$, $\eta = 0.25$, $N = 4096$: $C_\text{FFT} = 4.268$. The error is approximately $0.002$ — two basis points.
+        </p>
+
+        <div class="we-step">Sources of FFT error</div>
+        <p>
+          <strong>(1) Frequency truncation:</strong> we truncate at $v_\text{max} = \eta N = 0.25 \times 4096 = 1024$. The Heston CF decays exponentially, so $|\psi_T(v)| \approx 0$ beyond $v \approx 50$. Error from truncation: negligible.
+        </p>
+        <p>
+          <strong>(2) Simpson discretisation:</strong> on the uniform frequency grid with spacing $\eta = 0.25$, the quadrature error is $O(\eta^4) = O(0.0039)$. After the $1/\pi$ prefactor and the specific integrand values, this translates to the $\sim 0.002$ error observed.
+        </p>
+        <p>
+          Reducing $\eta$ from $0.25$ to $0.1$ would cut the error to $O(0.0001)$ — but this forces $\lambda = 2\pi/(N\eta)$ to increase, coarsening the strike grid. For fixed $N$, there is a genuine trade-off: finer frequency resolution means coarser strike spacing. To get both fine frequency and fine strikes, you increase $N$ — but $N$ must remain a power of 2.
+        </p>
+
+        <div class="we-step">Timing comparison (Python/NumPy)</div>
+        <table class="compare-table" style="margin-top:0.8rem;">
+          <thead><tr><th>Method</th><th>Time</th><th>CF Evaluations</th><th>Error</th></tr></thead>
+          <tbody>
+            <tr><td>Semi-closed ($N=128$ GL)</td><td>~0.05 ms</td><td>256 (for $P_1+P_2$)</td><td>$<10^{-15}$</td></tr>
+            <tr class="hl"><td>Carr-Madan FFT ($N=4096$)</td><td>~0.6 ms</td><td>4096</td><td>$\sim 10^{-3}$ relative</td></tr>
+          </tbody>
+        </table>
+
+        <div class="we-answer">
+          <strong>The verdict for a single option:</strong> semi-closed wins on both speed and accuracy. The FFT only wins when you need many strikes simultaneously. For $M = 50$ strikes at one maturity, FFT is faster by a factor of $\sim 4$ (50 × 0.05 ms = 2.5 ms vs 0.6 ms FFT). For $M = 4096$ strikes, FFT is faster by a factor of $\sim 300\times$. The crossover point is roughly $M \sim 10$–20 strikes, above which FFT becomes competitive.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">3 questions · Chapter 06</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch06 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          Why must the call price $C_T(k)$ be multiplied by $e^{\alpha k}$ (with $\alpha > 0$) before taking the Fourier transform in log-strike? What goes wrong without this damping?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Without damping, the Fourier transform exists but oscillates too rapidly for numerical computation.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Without damping, $C_T(k) \to S_0$ as $k \to -\infty$ (deep ITM), so $C_T(k)$ is not integrable on $\mathbb{R}$ and its Fourier transform does not exist in the classical sense.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Without damping, the characteristic function $\phi_T$ would need to be evaluated on the real axis instead of a complex-shifted argument, which causes numerical instability.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>The damping is purely for numerical convenience — the Fourier transform exists without it, but converges more slowly.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          A deep ITM call with very low strike $K = e^k$ has value close to $S_0 - Ke^{-rT} \approx S_0$ — the call is almost certainly exercised. So $C_T(k) \to S_0 > 0$ as $k \to -\infty$. A function that does not decay to zero as its argument goes to $-\infty$ is not integrable on $\mathbb{R}$, so $\int_{-\infty}^\infty e^{ivk} C_T(k)\,dk$ diverges. Multiplying by $e^{\alpha k}$ with $\alpha > 0$ forces $e^{\alpha k} C_T(k) \to 0$ as $k \to -\infty$ (the exponential decay dominates the constant $S_0$), restoring integrability. As $k \to +\infty$, the OTM call already decays to zero, so no additional damping is needed on the right. Option C describes a real phenomenon (the CF is evaluated at a complex argument) but this is a consequence of the damping, not a reason for it. Option D is simply wrong — the Fourier transform does not exist without damping.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch06 / q02</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          You run Carr-Madan with $\alpha = 1.5$, $\eta = 0.25$, $N = 4096$. A colleague says the log-strike spacing is $\lambda = 2\pi/(N\eta)$. You want to halve $\lambda$ (finer strike grid) while keeping the same strike range. What must you change, and what is the trade-off?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Double $\eta$ to 0.5. This halves $\lambda$ but also halves the maximum frequency $v_\text{max} = \eta N$, reducing frequency resolution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>Double $N$ to 8192 (keeping $\eta$ fixed). This halves $\lambda = 2\pi/(N\eta)$, doubles $v_\text{max}$, keeps the strike range the same ($b = \pi/\eta$ is unchanged), and costs an extra factor of $\sim 2\log 2$ in FFT time.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Halve $\eta$ to 0.125. This halves $\lambda$ but doubles the strike range, so you get finer spacing over a wider range — no trade-off.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Change $\alpha$ to 3.0. The damping parameter controls the effective log-strike spacing.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The duality relation $\lambda = 2\pi/(N\eta)$ shows that $\lambda$ depends on both $N$ and $\eta$. To halve $\lambda$, either double $N$ or halve $\eta$. But the strike range is controlled by $b = \pi/\eta$: halving $\eta$ doubles $b$ and hence the range — you get finer strikes over a wider range, which sounds good but means you are computing prices at astronomically high and low strikes that are completely irrelevant for trading. Option A doubles $\eta$, which actually coarsens $\lambda$ (makes it larger). The correct approach to halve $\lambda$ while keeping the same range is to double $N$ (Option B). The cost is one extra FFT size doubling — $O(2N\log(2N))$ instead of $O(N\log N)$, roughly a factor of $2\log 2 / \log N \approx 1.2\times$ in practice. Option D is wrong — $\alpha$ is the damping parameter, unrelated to the grid spacing.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch06 / q03</span>
+        <span class="mcq-diff">★★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          In Chapter 5 we proved that Gauss-Legendre is far superior to Simpson's rule for Heston integrals — GL achieves spectral convergence $O(e^{-cN})$ while Simpson's gives only $O(h^4)$. So why does the Carr-Madan FFT use Simpson weights instead of Gauss-Legendre nodes?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>The Carr-Madan integrand is not smooth, so GL loses its spectral convergence advantage — Simpson's rule is just as good.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>GL nodes are too expensive to compute for large $N$ like 4096.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>The FFT algorithm requires a uniform frequency grid — the DFT kernel $e^{-i2\pi(j-1)(u-1)/N}$ only reduces to an FFT when $v_j$ are equally spaced. GL nodes are non-uniform, so using them would destroy the DFT structure and eliminate the $O(N\log N)$ speedup that motivates the entire FFT approach.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Simpson weights are more accurate than GL for oscillatory integrands, which the Carr-Madan integrand is.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          This question tests whether you understand <em>why</em> the FFT works — not just that it does. The FFT is an algorithm that exploits the structure of the DFT sum: $\sum_{j=1}^N x_j e^{-i2\pi(j-1)(u-1)/N}$. This sum has a specific form that allows $O(N\log N)$ computation via the Cooley-Tukey butterfly algorithm. The DFT structure requires the "frequencies" $v_j$ to be uniformly spaced: $v_j = \eta(j-1)$. If you replaced these with GL nodes, you would have a non-uniform DFT (NUDFT) — which can be computed, but not faster than $O(N^2)$ without approximate algorithms (like the NUFFT). So the uniform grid is not a choice — it is a requirement for the FFT to apply. On that uniform grid, you are stuck with uniform-grid quadrature rules, of which Simpson's ($O(h^4)$) is the best simple option. The $O(\eta^4)$ accuracy loss is the price of the $O(N\log N)$ speedup. For most calibration applications, this trade-off is worthwhile.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 06</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Q1–3 cover the damping trick and the Carr-Madan formula. Q4–6 involve the FFT discretisation and grid arithmetic. Q7–8 are derivation-level extensions. Q9–10 are open-ended implementation and design questions relevant to production systems.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            Show that the Fourier transform of the undamped put price $P_T(k) = e^{-rT}\mathbb{E}^{\mathbb{Q}}[(e^k - S_T)^+]$ also fails to exist classically, but for the opposite reason: as $k \to +\infty$, $P_T(k) \to e^{k-rT}$ (a put on a stock with huge strike costs almost the full discounted strike). Describe what value of $\alpha$ (negative or positive) would damp the put price to restore integrability.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            Verify the denominator simplification: expand $(iv + \alpha)(iv + \alpha + 1)$ and confirm it equals $\alpha^2 + \alpha - v^2 + i(2\alpha + 1)v$. Then find all real values of $v$ for which the denominator is zero (if any), and confirm that with $\alpha > 0$ there are none.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            In the BSM model, the characteristic function is $\phi_T^\text{BSM}(u) = \exp\!\left[iu(\ln S_0 + (r - \sigma^2/2)T) - \frac{\sigma^2 T u^2}{2}\right]$. Write down the Carr-Madan formula $\psi_T(v)$ for BSM explicitly and verify that it gives the correct ATM call price (use put-call parity or your memory of the BSM formula to check the result is sensible).
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            With $\eta = 0.25$ and $N = 4096$, compute: (a) the log-strike spacing $\lambda$; (b) the half-range $b$; (c) the number of strikes that fall within $\pm 20\%$ of $S_0$ (i.e. $K \in [80, 120]$ when $S_0 = 100$); (d) the total strike range from $K_1$ to $K_N$. What fraction of the 4096 computed prices are actually usable for a NIFTY desk?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            Suppose you want the Carr-Madan FFT to price options at strikes separated by exactly 50 index points around NIFTY at 25000 (so log-strike spacing $\lambda \approx 50/25000 = 0.002$). With $\eta = 0.25$, what value of $N$ (power of 2) achieves $\lambda \leq 0.002$? What is the corresponding $v_\text{max} = \eta N$?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            The Carr-Madan formula evaluates $\phi_T(v_j - (\alpha+1)i)$ at each frequency node. For the Heston model, the CF is analytic in a strip $\{\mathrm{Im}(u) \in (-a, b)\}$ for some $a, b > 0$ depending on parameters. The imaginary shift is $(\alpha+1)$ — so we need $\alpha + 1 < a$ (inside the strip). For Heston parameters $\kappa = 2$, $\theta = 0.04$, $\xi = 0.3$, $T = 1$, estimate the upper boundary of the analyticity strip by finding the smallest positive $\alpha$ for which $\phi_T(-(\alpha+1)i)$ numerically diverges or becomes complex-infinite. What does this imply for the maximum safe value of the damping parameter?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            Derive the analogous Carr-Madan formula for a <strong>digital cash-or-nothing call</strong>, which pays 1 if $S_T > K$ and 0 otherwise. The digital call price as a function of $k$ is $D_T(k) = e^{-rT}\mathbb{P}^{\mathbb{Q}}(S_T > e^k)$. Apply the same damping and Fourier transform approach. Does the resulting formula simplify more cleanly than the vanilla call case? Why?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            The Carr-Madan paper (1999) uses a specific sign convention for the Fourier transform. Some implementations use $e^{+ivk}$ (as here) and others use $e^{-ivk}$. Show that changing the sign convention changes $\psi_T(v)$ to $\overline{\psi_T(-v)}$ (complex conjugate evaluated at $-v$), and explain why this means the two conventions give the same real option prices after inversion.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            In a production NIFTY volatility surface engine, you want to calibrate Heston to 8 maturities simultaneously, each with 30 strikes. Describe the full computational pipeline: which steps are done once per calibration iteration, which per maturity, and which per strike. Estimate the total number of Heston CF evaluations per calibration iteration using (a) semi-closed form only, and (b) Carr-Madan FFT. For an optimiser that runs 500 iterations, estimate total CF evaluations in each case.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            The Carr-Madan method requires the Heston CF to be evaluated at complex arguments $v_j - (\alpha+1)i$ where $v_j$ are real. In the Heston CF formula from Chapter 3, the quantities $d$ and $g$ involve $\sqrt{(\kappa - i\rho\xi u)^2 + \xi^2(u^2 + iu)}$ where $u = v_j - (\alpha+1)i$ is now complex. Describe which branch of the complex square root you should use to avoid the Kahl-Jäckel branch cut problem (discussed briefly in Chapter 3) and explain why the branch cut issue becomes more severe when the imaginary part of $u$ is large (i.e. large $\alpha$).
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="F_Op_Ch5.html" class="ch-nav-btn">← Gauss-Legendre Quadrature</a>
+    <a href="F_Op.html" class="ch-nav-btn primary">Back to Option Pricing ↑</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 FFT-fast and Fourier-correct.",
+  "✨ The DFT kernel recognises a correct answer.",
+  "🏆 $O(N\\log N)$. Your score converges faster.",
+  "🔥 Damped correctly. Well priced.",
+  "💡 The NIFTY surface just rendered in 0.6 ms.",
+  "🎓 Carr and Madan would approve.",
+  "📈 Strike grid: correct. Price: correct. Proceed.",
+  "🧮 Simpson weights applied. Answer accepted.",
+  "⚡ Complex argument, real understanding.",
+  "🌟 The FFT butterfly lands on the right answer.",
+  "💎 Phase factor included. Undamped correctly.",
+  "🚀 4096 strikes. One pass. All correct."
+];
+
+const wrongMsgs = [
+  "🌀 The DFT kernel disagrees. Re-read the section.",
+  "📐 The log-strike spacing formula is $\\lambda = 2\\pi/(N\\eta)$.",
+  "📉 Simpson weights misapplied. Recalibrate.",
+  "😰 The damping is necessary, not optional. Look again.",
+  "🤔 The FFT needs a uniform grid. Non-uniform won't work.",
+  "📊 More phase error than a poorly-windowed DFT. Try again.",
+  "🎰 That answer is out of the strike range. Back to the formula.",
+  "⚠ The denominator has no real zeros for $\\alpha > 0$."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Well done.';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
