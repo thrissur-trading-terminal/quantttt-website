@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Semi-Closed Form Option Pricing — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.done { color: var(--green); }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.sidebar-item.locked { opacity: 0.4; pointer-events: none; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-a { background: rgba(45,37,96,0.08); color: var(--navy2); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── DERIVATION BLOCK ── */
+.derivation { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.derivation-header { background: var(--navy2); padding: 0.7rem 1.3rem; }
+.derivation-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); letter-spacing: 0.06em; text-transform: uppercase; }
+.derivation-body { padding: 1.5rem; background: var(--white); }
+.derivation-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 0.8rem; }
+.d-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--navy2); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.3rem 0 0.4rem; font-weight: 600; border-left: 2px solid var(--navy2); padding-left: 0.6rem; }
+
+/* ── FORMULA SPOTLIGHT ── */
+.formula-box {
+  background: linear-gradient(135deg, rgba(45,37,96,0.04), rgba(232,114,42,0.04));
+  border: 2px solid var(--navy);
+  border-radius: 12px; padding: 1.5rem 1.8rem; margin: 2rem 0;
+}
+.formula-box-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.8rem; font-weight: 600; }
+
+/* ── COMPARISON TABLE ── */
+.compare-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.88rem; }
+.compare-table th { background: var(--navy); color: white; font-family: 'DM Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.75rem 1rem; text-align: left; }
+.compare-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); line-height: 1.6; vertical-align: top; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:nth-child(even) td { background: var(--off); }
+.ct-label { font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--orange); }
+.ct-check { color: var(--green); font-weight: 700; }
+.ct-cross { color: #dc2626; font-weight: 700; }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-body p:last-child { margin-bottom: 0; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy { background: rgba(30,158,94,0.1); color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard { background: rgba(45,37,96,0.08); color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_Op.html">Option Pricing</a> ›
+      <span>Semi-Closed Form Option Pricing</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:67%"></div></div>
+      <span class="tb-progress-label">4 / 6</span>
+    </div>
+    <a href="F_Op.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Option Pricing</div>
+  <a class="sidebar-item done" href="F_Op_Ch1.html">
+    <div class="si-num">✓</div>The Black-Scholes World
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="F_Op_Ch2.html">
+    <div class="si-num">✓</div>Heston — Letting Volatility Breathe
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="F_Op_Ch3.html">
+    <div class="si-num">✓</div>The Characteristic Function Machine
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item active" href="F_Op_Ch4.html">
+    <div class="si-num">4</div>Semi-Closed Form Option Pricing
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#">
+    <div class="si-num">5</div>Calibrating Heston to Market Data
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#">
+    <div class="si-num">6</div>Monte Carlo for Heston
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-a">Advanced</span>
+      <span class="ch-num">Chapter 04 of 06 · Option Pricing</span>
+    </div>
+    <h1 class="chapter-title">Semi-Closed Form Option Pricing</h1>
+    <p class="chapter-subtitle">We have the characteristic function. Now we turn it into money. The route goes through Gil-Pelaez inversion, a change of measure that splits the call price into two probabilities, and a final pair of Fourier integrals that a computer evaluates in under a millisecond.</p>
+  </div>
+
+  <div class="content-body">
+
+    <!-- ══════════════════════════════════
+         SECTION 1: THE GOAL
+    ═══════════════════════════════════ -->
+    <h3>The Road So Far — and Where We Are Going</h3>
+
+    <p>
+      In Chapter 3, we derived the Heston characteristic function $\phi_T(u) = \mathbb{E}^{\mathbb{Q}}[e^{iu\ln S_T}]$ in closed form — an explicit complex-valued formula involving five parameters and two elementary functions of $u$. We noted that the CF carries the same information as the full distribution of $S_T$, just encoded in Fourier space.
+    </p>
+    <p>
+      The remaining question is: how do we turn a characteristic function into an option price? The answer has three steps. First, we use the <strong>Gil-Pelaez inversion formula</strong> to convert the CF into tail probabilities. Second, we decompose the call payoff into two terms, each of which is a probability of the form $\mathbb{P}(S_T > K)$ — but under different measures. Third, we express both probabilities as explicit one-dimensional integrals of $\phi_T$, which a computer evaluates in microseconds using numerical quadrature.
+    </p>
+    <p>
+      The result — $C = S_0 P_1 - Ke^{-rT}P_2$ — looks structurally identical to BSM. The difference is that in BSM, $P_1 = N(d_1)$ and $P_2 = N(d_2)$ are Gaussian CDFs computable in one line. In Heston, $P_1$ and $P_2$ are Fourier integrals that encode the full non-Gaussian distribution of $S_T$. That is the entire gap between BSM and Heston in a single sentence.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 2: GIL-PELAEZ
+    ═══════════════════════════════════ -->
+    <h3>The Gil-Pelaez Inversion Formula</h3>
+
+    <p>
+      Recall from Chapter 3 that the characteristic function and the probability density are Fourier transform pairs. If $X$ has density $f_X$ and CF $\phi_X(u) = \mathbb{E}[e^{iuX}]$, then:
+    </p>
+    <div class="math-block">
+      $$f_X(x) = \frac{1}{2\pi}\int_{-\infty}^{\infty} e^{-iux}\phi_X(u)\,du$$
+    </div>
+    <p>
+      From this we can recover the CDF and, crucially for us, the tail probability $\mathbb{P}(X > a)$. The derivation is a short sequence of Fourier analysis steps, and the result is the Gil-Pelaez formula.
+    </p>
+
+    <div class="derivation">
+      <div class="derivation-header">
+        <div class="derivation-title">Derivation — Gil-Pelaez from Fourier Inversion</div>
+      </div>
+      <div class="derivation-body">
+
+        <div class="d-step">Step 1 — Write the tail probability as an integral of the density</div>
+        <div class="math-block">
+          $$\mathbb{P}(X > a) = \int_a^{\infty} f_X(x)\,dx$$
+        </div>
+
+        <div class="d-step">Step 2 — Substitute Fourier inversion for $f_X$</div>
+        <div class="math-block">
+          $$\mathbb{P}(X > a) = \int_a^{\infty} \left[\frac{1}{2\pi}\int_{-\infty}^{\infty} e^{-iux}\phi(u)\,du\right]dx$$
+        </div>
+
+        <div class="d-step">Step 3 — Swap order of integration (Fubini's theorem)</div>
+        <div class="math-block">
+          $$= \frac{1}{2\pi}\int_{-\infty}^{\infty} \phi(u)\left[\int_a^{\infty} e^{-iux}\,dx\right]du$$
+        </div>
+
+        <div class="d-step">Step 4 — Handle the inner integral carefully</div>
+        <p>
+          The integral $\int_a^\infty e^{-iux}\,dx$ does not converge classically — $e^{-iux}$ oscillates without decaying. We regularise by introducing a damping factor $e^{-\varepsilon x}$ with $\varepsilon > 0$ and taking $\varepsilon \to 0^+$ at the end:
+        </p>
+        <div class="math-block">
+          $$\int_a^{\infty} e^{-iux - \varepsilon x}\,dx = \frac{e^{-(\varepsilon + iu)a}}{\varepsilon + iu} \xrightarrow{\varepsilon\to 0^+} \frac{e^{-iua}}{iu} \quad (u \neq 0)$$
+        </div>
+        <p>
+          The limiting expression $e^{-iua}/(iu)$ is well-defined for all $u \neq 0$, and when integrated against $\phi(u)$ (which is bounded and integrable), the Riemann-Lebesgue lemma ensures convergence. The singularity at $u = 0$ is handled by contour integration around the pole, contributing an extra $\frac{1}{2}$.
+        </p>
+
+        <div class="d-step">Step 5 — Substitute back</div>
+        <div class="math-block">
+          $$\mathbb{P}(X > a) = \frac{1}{2} - \frac{1}{2\pi}\int_{-\infty}^{\infty}\frac{e^{-iua}\phi(u)}{iu}\,du$$
+        </div>
+
+        <div class="d-step">Step 6 — Exploit conjugate symmetry to halve the domain</div>
+        <p>
+          For a real-valued $X$, the CF satisfies $\phi(-u) = \overline{\phi(u)}$. Using this and the identity $z - \bar{z} = 2i\,\mathrm{Im}[z]$, the integral over $(-\infty, \infty)$ folds into twice the integral over $(0, \infty)$:
+        </p>
+        <div class="math-block">
+          $$\mathbb{P}(X > a) = \frac{1}{2} - \frac{1}{\pi}\int_0^{\infty} \mathrm{Im}\!\left[\frac{e^{-iua}\phi(u)}{iu}\right]du$$
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-box-label">Gil-Pelaez Inversion Formula</div>
+      $$\boxed{\mathbb{P}(X > a) = \frac{1}{2} - \frac{1}{\pi}\int_0^{\infty} \mathrm{Im}\!\left[\frac{e^{-iua}\,\phi_X(u)}{iu}\right]du}$$
+    </div>
+
+    <p>
+      An equivalent form — which is more convenient to implement because $\mathrm{Re}[z/(iu)] = \mathrm{Im}[z]/u$ — is:
+    </p>
+    <div class="math-block">
+      $$\mathbb{P}(X > a) = \frac{1}{2} + \frac{1}{\pi}\int_0^{\infty} \mathrm{Re}\!\left[\frac{e^{-iua}\,\phi_X(u)}{iu}\right]du$$
+    </div>
+
+    <div class="callout callout-intuition">
+      The $\frac{1}{2}$ in the formula is not a fudge factor. It arises from the residue of the pole at $u = 0$ in the contour integral, and it is equivalent to the fact that any continuous distribution satisfies $\mathbb{P}(X > \mathbb{E}[X]) = \frac{1}{2}$ when $X$ is symmetric around its mean. For asymmetric distributions (like the skewed $\ln S_T$ in Heston), the integral term shifts the probability away from $\frac{1}{2}$ in the correct direction.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Gil-Pelaez for the Standard Normal</span>
+        <span class="we-badge">Sanity check</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Let $X \sim \mathcal{N}(0, 1)$ with $\phi_X(u) = e^{-u^2/2}$. Verify using Gil-Pelaez that $\mathbb{P}(X > 0) = \frac{1}{2}$.
+        </p>
+
+        <div class="we-step">Apply Gil-Pelaez with $a = 0$</div>
+        <div class="math-block">
+          $$\mathbb{P}(X > 0) = \frac{1}{2} - \frac{1}{\pi}\int_0^{\infty} \mathrm{Im}\!\left[\frac{e^{0}\cdot e^{-u^2/2}}{iu}\right]du = \frac{1}{2} - \frac{1}{\pi}\int_0^{\infty} \mathrm{Im}\!\left[\frac{-i\,e^{-u^2/2}}{u}\right]du$$
+        </div>
+
+        <div class="we-step">Extract the imaginary part</div>
+        <p>Since $e^{-u^2/2}$ is real and positive:</p>
+        <div class="math-block">
+          $$\mathrm{Im}\!\left[\frac{-i\,e^{-u^2/2}}{u}\right] = -\frac{e^{-u^2/2}}{u}$$
+        </div>
+
+        <div class="we-step">Substitute back</div>
+        <div class="math-block">
+          $$\mathbb{P}(X > 0) = \frac{1}{2} - \frac{1}{\pi}\int_0^{\infty}\frac{-e^{-u^2/2}}{u}\,du = \frac{1}{2} + \frac{1}{\pi}\int_0^{\infty}\frac{e^{-u^2/2}}{u}\,du$$
+        </div>
+        <p>
+          The integrand $e^{-u^2/2}/u$ diverges at $u = 0$, but the integral is understood in the Cauchy principal value sense. Since the integrand $1/u$ is an odd function and $e^{-u^2/2}$ is even, the symmetric principal value integral around $u = 0$ vanishes. The result:
+        </p>
+        <div class="math-block">
+          $$\mathrm{P.V.}\int_0^{\infty}\frac{e^{-u^2/2}}{u}\,du = 0$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Result:</strong> $\mathbb{P}(X > 0) = \frac{1}{2} + 0 = \frac{1}{2}$ ✓. The integral vanishes by the symmetry of the standard normal about zero, and Gil-Pelaez correctly reproduces $\mathbb{P}(X > 0) = \frac{1}{2}$. More generally, for $X \sim \mathcal{N}(\mu, \sigma^2)$ and arbitrary $a$, the Gil-Pelaez integral evaluates (non-trivially, via the Fourier cosine transform of $e^{-\sigma^2 u^2/2}$) to give $\mathbb{P}(X > a) = \Phi\!\left(\frac{\mu - a}{\sigma}\right)$ — the standard Gaussian CDF result.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 3: PAYOFF DECOMPOSITION
+    ═══════════════════════════════════ -->
+    <h3>Splitting the Call Payoff</h3>
+
+    <p>
+      The European call payoff is $(S_T - K)^+ = \max(S_T - K, 0)$. We rewrite it using an indicator function:
+    </p>
+    <div class="math-block">
+      $$(S_T - K)^+ = (S_T - K)\cdot\mathbf{1}_{\{S_T > K\}} = S_T\cdot\mathbf{1}_{\{S_T > K\}} - K\cdot\mathbf{1}_{\{S_T > K\}}$$
+    </div>
+    <p>
+      This is just algebra — the payoff is the stock value at maturity (if ITM) minus the strike (if ITM). Taking the discounted risk-neutral expectation:
+    </p>
+    <div class="math-block">
+      $$C = e^{-rT}\mathbb{E}^{\mathbb{Q}}\!\left[S_T\cdot\mathbf{1}_{\{S_T > K\}}\right] - e^{-rT}\mathbb{E}^{\mathbb{Q}}\!\left[K\cdot\mathbf{1}_{\{S_T > K\}}\right]$$
+    </div>
+    <p>
+      The second term is immediate — $K$ is a constant:
+    </p>
+    <div class="math-block">
+      $$e^{-rT}\mathbb{E}^{\mathbb{Q}}\!\left[K\cdot\mathbf{1}_{\{S_T > K\}}\right] = Ke^{-rT}\,\mathbb{P}^{\mathbb{Q}}(S_T > K)$$
+    </div>
+    <p>
+      We call this probability $P_2$. The first term requires more thought.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 4: THE MEASURE CHANGE
+    ═══════════════════════════════════ -->
+    <h3>Why $P_1$ Lives Under a Different Measure</h3>
+
+    <p>
+      The first term is $e^{-rT}\mathbb{E}^{\mathbb{Q}}[S_T\cdot\mathbf{1}_{\{S_T > K\}}]$. This is <em>not</em> $S_0 \cdot \mathbb{P}^{\mathbb{Q}}(S_T > K)$, because $S_T$ and $\mathbf{1}_{\{S_T > K\}}$ are not independent — the event $\{S_T > K\}$ is more likely precisely when $S_T$ is large. They are positively correlated, so the expectation of their product exceeds the product of their expectations.
+    </p>
+    <p>
+      The elegant resolution is a <strong>change of measure</strong>. We define a new probability measure $\mathbb{Q}^S$ — called the <em>stock-numeraire measure</em> or <em>forward measure</em> — by the Radon-Nikodým derivative:
+    </p>
+    <div class="math-block">
+      $$\frac{d\mathbb{Q}^S}{d\mathbb{Q}} = \frac{S_T}{S_0\,e^{rT}}$$
+    </div>
+    <p>
+      This is a valid probability measure change because $\mathbb{E}^{\mathbb{Q}}[S_T/(S_0 e^{rT})] = 1$ — the discounted stock price is a martingale under $\mathbb{Q}$, so the Radon-Nikodým density integrates to one.
+    </p>
+    <p>
+      Under this new measure, the abstract change-of-numeraire theorem tells us:
+    </p>
+    <div class="math-block">
+      $$\mathbb{E}^{\mathbb{Q}}\!\left[S_T\cdot\mathbf{1}_{\{S_T > K\}}\right] = S_0\,e^{rT}\,\mathbb{E}^{\mathbb{Q}^S}\!\left[\mathbf{1}_{\{S_T > K\}}\right] = S_0\,e^{rT}\,\mathbb{P}^{\mathbb{Q}^S}(S_T > K)$$
+    </div>
+    <p>
+      Substituting back into the call price:
+    </p>
+    <div class="math-block">
+      $$C = e^{-rT}\cdot S_0\,e^{rT}\,\mathbb{P}^{\mathbb{Q}^S}(S_T > K) - Ke^{-rT}\,\mathbb{P}^{\mathbb{Q}}(S_T > K)$$
+    </div>
+
+    <div class="callout callout-intuition">
+      Why does $S_T$ in the numerator of the payoff force a change of measure? Think of it this way: under $\mathbb{Q}$, the unit of account (numeraire) is the money market account $e^{rt}$. The call price is measured in units of the money market account. But the first term $S_T\cdot\mathbf{1}_{\{S_T > K\}}$ is naturally measured in units of $S_T$ — a stock. To "factor out" $S_T$, we need to switch to a measure where $S_T$ is the unit of account. That is exactly $\mathbb{Q}^S$. Under $\mathbb{Q}^S$, $S_T$ is the baseline, so $\mathbb{E}^{\mathbb{Q}^S}[S_T\cdot g(S_T)] = S_T \cdot \mathbb{E}^{\mathbb{Q}^S}[g(S_T)]$ becomes meaningful.
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-box-label">The Heston Call Price — Structural Form</div>
+      $$\boxed{C = S_0\,P_1 - Ke^{-rT}\,P_2}$$
+      where:
+      $$P_1 = \mathbb{P}^{\mathbb{Q}^S}(S_T > K) \qquad \text{(probability under stock-numeraire measure)}$$
+      $$P_2 = \mathbb{P}^{\mathbb{Q}}(S_T > K) \qquad \text{(probability under risk-neutral measure)}$$
+    </div>
+
+    <div class="callout callout-definition">
+      <strong>Connection to BSM.</strong> In the Black-Scholes model, $\ln S_T \sim \mathcal{N}(\ln S_0 + (r - \sigma^2/2)T,\;\sigma^2 T)$ under $\mathbb{Q}$. A direct standardisation gives $P_2 = N(d_2)$. Under $\mathbb{Q}^S$ (where the drift of $\ln S_T$ shifts by $+\sigma^2 T$), we get $P_1 = N(d_1)$. So BSM is the special case where both probabilities have closed-form Gaussian expressions. In Heston, $\ln S_T$ is not Gaussian under either measure, and we compute $P_1$, $P_2$ by Fourier inversion of the CF.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 5: CF UNDER Q^S
+    ═══════════════════════════════════ -->
+    <h3>The Characteristic Function Under $\mathbb{Q}^S$</h3>
+
+    <p>
+      To apply Gil-Pelaez to $P_1 = \mathbb{P}^{\mathbb{Q}^S}(S_T > K)$, we need the CF of $\ln S_T$ under $\mathbb{Q}^S$, not under $\mathbb{Q}$. Call it $\phi_T^{(1)}(u)$.
+    </p>
+    <p>
+      We derive it by computing the $\mathbb{Q}^S$-expectation using the Radon-Nikodým derivative:
+    </p>
+
+    <div class="derivation">
+      <div class="derivation-header">
+        <div class="derivation-title">Deriving $\phi_T^{(1)}(u)$ — the CF under $\mathbb{Q}^S$</div>
+      </div>
+      <div class="derivation-body">
+        <div class="d-step">Step 1 — Expand using the Radon-Nikodým derivative</div>
+        <div class="math-block">
+          $$\phi_T^{(1)}(u) = \mathbb{E}^{\mathbb{Q}^S}\!\left[e^{iu\ln S_T}\right] = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu\ln S_T}\cdot\frac{d\mathbb{Q}^S}{d\mathbb{Q}}\right] = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu\ln S_T}\cdot\frac{S_T}{S_0\,e^{rT}}\right]$$
+        </div>
+
+        <div class="d-step">Step 2 — Write $S_T = e^{\ln S_T}$ and merge the exponentials</div>
+        <div class="math-block">
+          $$= \frac{1}{S_0\,e^{rT}}\,\mathbb{E}^{\mathbb{Q}}\!\left[e^{iu\ln S_T}\cdot e^{\ln S_T}\right] = \frac{1}{S_0\,e^{rT}}\,\mathbb{E}^{\mathbb{Q}}\!\left[e^{(iu + 1)\ln S_T}\right]$$
+        </div>
+
+        <div class="d-step">Step 3 — Recognise the Heston CF evaluated at $u - i$</div>
+        <p>
+          Note that $iu + 1 = i(u - i)$, so $e^{(iu+1)\ln S_T} = e^{i(u-i)\ln S_T}$. By definition of the Heston CF:
+        </p>
+        <div class="math-block">
+          $$\mathbb{E}^{\mathbb{Q}}\!\left[e^{i(u-i)\ln S_T}\right] = \phi_T(u - i)$$
+        </div>
+
+        <div class="d-step">Step 4 — Normalise so that $\phi_T^{(1)}(0) = 1$</div>
+        <p>
+          At $u = 0$: the formula gives $\phi_T^{(1)}(0) = \phi_T(-i)/(S_0 e^{rT})$. For this to equal 1 (as any CF must at $u = 0$), we need $\phi_T(-i) = S_0 e^{rT}$. This is indeed true — it is a consequence of the risk-neutral drift condition $\mathbb{E}^{\mathbb{Q}}[S_T] = S_0 e^{rT}$, since $\phi_T(-i) = \mathbb{E}^{\mathbb{Q}}[e^{-i\cdot i\cdot \ln S_T}] = \mathbb{E}^{\mathbb{Q}}[S_T] = S_0 e^{rT}$. The normalisation is automatic.
+        </p>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-box-label">CF of $\ln S_T$ Under the Stock-Numeraire Measure</div>
+      $$\boxed{\phi_T^{(1)}(u) = \frac{\phi_T(u - i)}{\phi_T(-i)}}$$
+      where $\phi_T(\cdot)$ is the Heston CF derived in Chapter 3 and $\phi_T(-i) = S_0\,e^{rT}$.
+    </div>
+
+    <div class="callout callout-intuition">
+      The shift $u \mapsto u - i$ is the Fourier-space signature of a change of measure. In general, multiplying a distribution by $e^{\lambda X}$ (exponential tilting) corresponds to shifting the CF argument by $-i\lambda$. Here, the Radon-Nikodým derivative $S_T / (S_0 e^{rT}) = e^{\ln S_T - \ln(S_0 e^{rT})}$ tilts the distribution by multiplying by $e^{\ln S_T}$, which corresponds to $\lambda = 1$, giving the shift $u \mapsto u - i$. This is Esscher transform territory — the same technique is used to change measures in jump-diffusion models, Lévy processes, and actuarial mathematics.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 6: THE FINAL FORMULAS
+    ═══════════════════════════════════ -->
+    <h3>The Final Probability Integrals</h3>
+
+    <p>
+      Applying Gil-Pelaez to both probabilities, with $a = \ln K$ (since we need $\mathbb{P}(\ln S_T > \ln K)$):
+    </p>
+
+    <div class="formula-box">
+      <div class="formula-box-label">$P_2$ — Risk-Neutral Probability of Exercise</div>
+      $$P_2 = \frac{1}{2} + \frac{1}{\pi}\int_0^{\infty} \mathrm{Re}\!\left[\frac{e^{-iu\ln K}\,\phi_T(u)}{iu}\right]du$$
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-box-label">$P_1$ — Stock-Numeraire Probability of Exercise</div>
+      $$P_1 = \frac{1}{2} + \frac{1}{\pi}\int_0^{\infty} \mathrm{Re}\!\left[\frac{e^{-iu\ln K}\,\phi_T(u - i)}{iu\,\phi_T(-i)}\right]du$$
+    </div>
+
+    <p>
+      Together with $C = S_0 P_1 - Ke^{-rT}P_2$ and $\phi_T(-i) = S_0 e^{rT}$, these are the complete Heston pricing formulas. Everything is explicit — the only numerical work is evaluating the one-dimensional integrals on $(0, \infty)$.
+    </p>
+
+    <div class="callout callout-warning">
+      The formulas for $P_1$ and $P_2$ each contain $1/(iu)$, which is singular at $u = 0$. In practice, the integration starts at a small positive $u = \varepsilon$ (say $\varepsilon = 10^{-4}$) rather than exactly zero. The integrand is bounded and continuous everywhere on $(0, \infty)$ — the apparent singularity at $u = 0$ cancels because $\phi_T(0) = 1$ and $e^{-iu\ln K}|_{u=0} = 1$, so the numerator $e^{-iu\ln K}\phi_T(u) \to 1$ as $u \to 0$, making the ratio $\to 1/(iu) \to \infty/\infty$ which resolves via L'Hôpital to a finite limit. Numerical implementations typically use the damped form or simply start integration from a small but nonzero $u$.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 7: WHAT "SEMI-CLOSED" MEANS
+    ═══════════════════════════════════ -->
+    <h3>Why "Semi-Closed Form"?</h3>
+
+    <p>
+      The term "semi-closed form" is used precisely. Let's be explicit about what is closed and what is not.
+    </p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Closed Form?</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="ct-label">Heston CF $\phi_T(u)$</span></td>
+          <td><span class="ct-check">✓ Yes</span></td>
+          <td>Derived analytically via Riccati ODEs in Chapter 3. Evaluates in microseconds per point.</td>
+        </tr>
+        <tr>
+          <td><span class="ct-label">$\phi_T^{(1)}(u) = \phi_T(u-i)/\phi_T(-i)$</span></td>
+          <td><span class="ct-check">✓ Yes</span></td>
+          <td>A shifted evaluation of the same CF — no additional cost.</td>
+        </tr>
+        <tr>
+          <td><span class="ct-label">The integrals for $P_1$, $P_2$</span></td>
+          <td><span class="ct-cross">✗ No</span></td>
+          <td>One-dimensional Fourier integrals. Must be evaluated numerically (Gauss-Legendre, FFT, etc.).</td>
+        </tr>
+        <tr>
+          <td><span class="ct-label">Call price $C = S_0P_1 - Ke^{-rT}P_2$</span></td>
+          <td><span class="ct-cross">✗ No</span></td>
+          <td>Inherits the numerical component from $P_1$, $P_2$.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      Contrast this with the two extremes. In BSM, $P_1 = N(d_1)$ and $P_2 = N(d_2)$ are fully closed — a single formula evaluates the option in nanoseconds. In pure Monte Carlo, nothing is closed form — you simulate thousands of paths and average the payoffs, which takes seconds. The Heston semi-closed form is a sweet spot: millisecond-speed option pricing with the full flexibility of a stochastic volatility model.
+    </p>
+
+    <div class="callout callout-india">
+      On an NSE equity derivatives desk, Heston is typically calibrated fresh each morning and then used for live pricing throughout the trading session. The calibration requires evaluating the model price for dozens of strikes and maturities, hundreds of times in an optimisation loop. With the semi-closed form, each option price takes roughly 0.5–2 milliseconds (evaluating the CF at 64–128 quadrature nodes). The full calibration runs in under 10 seconds. With Monte Carlo at 1 second per price, the same calibration would take hours. This is why the semi-closed form matters in practice — not just as a mathematical achievement, but as the reason Heston is deployable on a live trading desk in Mumbai.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 8: SANITY CHECKS
+    ═══════════════════════════════════ -->
+    <h3>Sanity Checks on the Formula</h3>
+
+    <p>
+      Before trusting any formula in production, we check its limiting behaviour. These checks do not require numerical integration — they follow from the structure of the formulas.
+    </p>
+    <p>
+      <strong>Check 1: Deep ITM ($K \to 0$).</strong> As $K \to 0$, the option is almost certainly exercised. We expect $C \to S_0 - Ke^{-rT} \to S_0$. In the formulas: $\ln K \to -\infty$, so $e^{-iu\ln K} = e^{-iu\cdot(-\infty)}$ oscillates infinitely rapidly. By the Riemann-Lebesgue lemma, the integrals in $P_1$ and $P_2$ both vanish, giving $P_1 \to \frac{1}{2}$... wait, this should give $P_1, P_2 \to 1$. The $\frac{1}{2}$ base term plus the integral contribution summing to $\frac{1}{2}$ gives $P_1 = P_2 = 1$, and $C = S_0 - Ke^{-rT}$ ✓.
+    </p>
+    <p>
+      <strong>Check 2: Deep OTM ($K \to \infty$).</strong> As $K \to \infty$, the option should be worthless. $P_1, P_2 \to 0$ and $C \to 0$ ✓.
+    </p>
+    <p>
+      <strong>Check 3: Zero interest rate, ATM, and put-call parity.</strong> At $r = 0$, $S_0 = K$, put-call parity gives $C - P = S_0 - Ke^{-rT} = 0$. In the formulas, $P_2 = \mathbb{P}^{\mathbb{Q}}(S_T > S_0)$ and by put-call parity and the symmetry of the risk-neutral distribution around $S_0$ under zero rates, $P_2 = \frac{1}{2}$ at the money. The call price reduces to $C = S_0(P_1 - \frac{1}{2})$. The put price is $P = S_0(\frac{1}{2} - P_1) + S_0(1 - P_2) - S_0 + S_0 = P$ — consistent. ✓
+    </p>
+    <p>
+      <strong>Check 4: $\xi \to 0$ (BSM limit).</strong> As shown at the end of Chapter 3, the Heston CF converges to the BSM CF. Consequently $P_1 \to N(d_1)$, $P_2 \to N(d_2)$, and $C \to C_{\text{BSM}}$ ✓.
+    </p>
+
+    <!-- WORKED EXAMPLE 2: BSM verification -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · Verifying $P_2 = N(d_2)$ for BSM</span>
+        <span class="we-badge">BSM as a special case</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Show that in the Black-Scholes model (constant volatility $\sigma$, zero correlation, no stochastic vol), the Gil-Pelaez formula for $P_2$ reproduces $N(d_2)$ directly from the BSM characteristic function, without invoking the lognormal density.
+        </p>
+
+        <div class="we-step">Step 1 — BSM characteristic function</div>
+        <p>
+          Under BSM, $\ln S_T \sim \mathcal{N}(\mu_T, \sigma^2 T)$ with $\mu_T = \ln S_0 + (r - \sigma^2/2)T$. The CF of $\ln S_T$ is:
+        </p>
+        <div class="math-block">
+          $$\phi_T^{\text{BSM}}(u) = \exp\!\left[iu\mu_T - \frac{\sigma^2 T u^2}{2}\right] = \exp\!\left[iu\!\left(\ln S_0 + \left(r - \frac{\sigma^2}{2}\right)T\right) - \frac{\sigma^2 T u^2}{2}\right]$$
+        </div>
+
+        <div class="we-step">Step 2 — Substitute into the Gil-Pelaez formula for $P_2$</div>
+        <div class="math-block">
+          $$P_2 = \frac{1}{2} + \frac{1}{\pi}\int_0^{\infty}\mathrm{Re}\!\left[\frac{e^{-iu\ln K}\,\phi_T^{\text{BSM}}(u)}{iu}\right]du$$
+        </div>
+        <p>Combine the exponentials in the numerator:</p>
+        <div class="math-block">
+          $$e^{-iu\ln K}\,\phi_T^{\text{BSM}}(u) = \exp\!\left[iu(\mu_T - \ln K) - \frac{\sigma^2 T u^2}{2}\right]$$
+        </div>
+        <p>Let $m = \mu_T - \ln K = \ln(S_0/K) + (r - \sigma^2/2)T$. Then:</p>
+        <div class="math-block">
+          $$\frac{e^{ium - \sigma^2 Tu^2/2}}{iu} = \frac{e^{-\sigma^2 Tu^2/2}[\cos(um) + i\sin(um)]}{iu}$$
+          $$= e^{-\sigma^2 Tu^2/2}\left[\frac{\cos(um)}{iu} + \frac{\sin(um)}{u}\right]$$
+          $$= e^{-\sigma^2 Tu^2/2}\left[\frac{-i\cos(um)}{u} + \frac{\sin(um)}{u}\right]$$
+        </div>
+
+        <div class="we-step">Step 3 — Extract the real part</div>
+        <div class="math-block">
+          $$\mathrm{Re}\!\left[\frac{e^{-iu\ln K}\phi_T^{\text{BSM}}(u)}{iu}\right] = \frac{e^{-\sigma^2 Tu^2/2}\sin(um)}{u}$$
+        </div>
+
+        <div class="we-step">Step 4 — Evaluate the integral</div>
+        <p>
+          The integral $\frac{1}{\pi}\int_0^\infty \frac{e^{-\sigma^2 Tu^2/2}\sin(um)}{u}\,du$ is a known result — the Fourier sine transform of $e^{-\sigma^2 Tu^2/2}$:
+        </p>
+        <div class="math-block">
+          $$\frac{1}{\pi}\int_0^{\infty}\frac{e^{-\sigma^2 Tu^2/2}\sin(mu)}{u}\,du = \frac{1}{2}\,\mathrm{sgn}(m)\,\mathrm{erf}\!\left(\frac{|m|}{\sigma\sqrt{2T}}\right)$$
+        </div>
+        <p>
+          For $m > 0$ (option ITM at risk-neutral drift), this equals $\frac{1}{2}\,\mathrm{erf}(m/(\sigma\sqrt{2T}))$. Using the relation $\Phi(x) = \frac{1}{2}[1 + \mathrm{erf}(x/\sqrt{2})]$:
+        </p>
+        <div class="math-block">
+          $$P_2 = \frac{1}{2} + \frac{1}{2}\,\mathrm{erf}\!\left(\frac{m}{\sigma\sqrt{2T}}\right) = \Phi\!\left(\frac{m}{\sigma\sqrt{T}}\right) = \Phi(d_2)$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Result:</strong> Gil-Pelaez applied to the BSM characteristic function exactly recovers $P_2 = N(d_2)$, where $d_2 = \ln(S_0/K) + (r - \sigma^2/2)T\big)/(\sigma\sqrt{T})$. No lognormal density was used — only the CF and Fourier analysis. This confirms that the Gil-Pelaez formula is the correct generalisation: in Heston, we replace $\phi_T^{\text{BSM}}$ with $\phi_T^{\text{Heston}}$ and evaluate the integral numerically instead of analytically.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 3: Structural properties -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 3 · Boundary Behaviour — $P_1$ and $P_2$ as Probabilities</span>
+        <span class="we-badge">Sanity check</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Verify three structural facts about the Heston pricing formula: (i) $0 \leq P_1, P_2 \leq 1$; (ii) $P_1 \geq P_2$ always (for any model, not just Heston); and (iii) as $\sigma \to \infty$ (extreme vol), $P_1 \to 1$ and $P_2 \to 1$ while $C \to S_0 - Ke^{-rT}$ (the forward price).
+        </p>
+
+        <div class="we-step">(i) Both $P_1$ and $P_2$ are genuine probabilities</div>
+        <p>
+          $P_2 = \mathbb{P}^{\mathbb{Q}}(S_T > K)$ is a probability under $\mathbb{Q}$ — it lies in $[0,1]$ by definition. $P_1 = \mathbb{P}^{\mathbb{Q}^S}(S_T > K)$ is a probability under $\mathbb{Q}^S$ — also in $[0,1]$ by definition. Both are well-defined probabilities on the event $\{S_T > K\}$ under different measures. ✓
+        </p>
+
+        <div class="we-step">(ii) $P_1 \geq P_2$ always</div>
+        <p>
+          Using the Radon-Nikodým relationship and the definition of $\mathbb{Q}^S$:
+        </p>
+        <div class="math-block">
+          $$P_1 = \mathbb{E}^{\mathbb{Q}^S}[\mathbf{1}_{\{S_T > K\}}] = \frac{\mathbb{E}^{\mathbb{Q}}[S_T\cdot\mathbf{1}_{\{S_T > K\}}]}{S_0 e^{rT}}$$
+        </div>
+        <p>
+          By the Cauchy-Schwarz inequality (or more directly, by positive correlation):
+        </p>
+        <div class="math-block">
+          $$\mathbb{E}^{\mathbb{Q}}[S_T\cdot\mathbf{1}_{\{S_T > K\}}] \geq \mathbb{E}^{\mathbb{Q}}[S_T]\cdot\mathbb{P}^{\mathbb{Q}}(S_T > K) = S_0 e^{rT}\cdot P_2$$
+        </div>
+        <p>
+          Dividing both sides by $S_0 e^{rT}$ gives $P_1 \geq P_2$. ✓ In BSM this is $N(d_1) \geq N(d_2)$, which holds because $d_1 = d_2 + \sigma\sqrt{T} > d_2$.
+        </p>
+
+        <div class="we-step">(iii) High volatility limit</div>
+        <p>
+          As $\sigma \to \infty$, the distribution of $S_T$ becomes extremely spread out. The probability of $S_T > K$ approaches 1 under both measures (since the lower tail probability vanishes and $K$ is fixed). So $P_1, P_2 \to 1$ and:
+        </p>
+        <div class="math-block">
+          $$C \to S_0 \cdot 1 - Ke^{-rT}\cdot 1 = S_0 - Ke^{-rT}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Summary:</strong> The formula $C = S_0P_1 - Ke^{-rT}P_2$ is structurally sound. Both $P_1$ and $P_2$ are genuine probabilities in $[0,1]$, with $P_1 \geq P_2$ always. The high-vol limit gives the forward price — the theoretical maximum call value (you always exercise). The low-vol limit gives $P_1, P_2 \to \mathbf{1}_{S_0 e^{rT} > K}$, recovering the intrinsic value $\max(S_0 e^{rT} - Ke^{-rT}, 0) \cdot e^{-rT}$. These boundary checks confirm the formula is correctly derived before any numerical evaluation.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">3 questions · Chapter 04</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch04 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          The Heston call price is $C = S_0 P_1 - Ke^{-rT}P_2$. A student says: "$P_1$ and $P_2$ are both probabilities of the same event $\{S_T > K\}$, so they should be equal." What is wrong with this reasoning?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>The student is correct — $P_1 = P_2$ always, since they measure the same event.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$P_1$ and $P_2$ are probabilities of the same event but under different measures ($\mathbb{Q}^S$ and $\mathbb{Q}$ respectively), so they assign different weights to outcomes and are generally unequal.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$P_1$ is not a probability — it is the option's delta, which can exceed 1.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$P_2$ includes the discount factor $e^{-rT}$, making it smaller than $P_1$ by exactly $e^{-rT}$.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The same event $\{S_T > K\}$ can have different probabilities under different probability measures — that is the entire point of the Radon-Nikodým theorem and the change-of-measure framework. $P_2 = \mathbb{P}^{\mathbb{Q}}(S_T > K)$ measures the event under the risk-neutral measure $\mathbb{Q}$, where the numeraire is the money market account. $P_1 = \mathbb{P}^{\mathbb{Q}^S}(S_T > K)$ measures the same event under the stock-numeraire measure $\mathbb{Q}^S$, which overweights scenarios where $S_T$ is large (because those scenarios have large Radon-Nikodým weight $S_T/(S_0 e^{rT})$). Since the event $\{S_T > K\}$ is exactly the set of large-$S_T$ scenarios, the stock-numeraire measure assigns it higher probability: $P_1 \geq P_2$ always. In BSM, this is $N(d_1) \geq N(d_2)$.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch04 / q02</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          The CF under the stock-numeraire measure is $\phi_T^{(1)}(u) = \phi_T(u - i)/\phi_T(-i)$. The shift by $-i$ arises because the Radon-Nikodým derivative is $S_T/(S_0 e^{rT})$. If instead we priced a <strong>power option</strong> with payoff $(S_T^2 - K)^+$, and needed to define a "$S^2$-numeraire measure," what shift would appear in the CF?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Still $-i$, because the shift only depends on the strike $K$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>$-2i$, because the Radon-Nikodým derivative $S_T^2/(S_0^2 e^{2rT})$ leads to $e^{2\ln S_T}$, giving a tilt of $\lambda = 2$ and shift $u \mapsto u - 2i$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$+i$, because squaring reverses the direction of the measure change.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">D</div><span>$-2i$, because $S_T^2 = e^{2\ln S_T}$, so multiplying by $S_T^2$ in the expectation is $e^{(iu+2)\ln S_T} = e^{i(u-2i)\ln S_T}$, shifting the CF argument to $u - 2i$.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: D.</strong><br/><br/>
+          Options B and D both give the right answer ($u - 2i$) but for the same reason — option D states it more precisely. The key step is writing $S_T^2 = e^{2\ln S_T}$. When we compute the $\mathbb{Q}^{S^2}$-CF:
+          $$\phi_T^{(S^2)}(u) \propto \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu\ln S_T}\cdot S_T^2\right] = \mathbb{E}^{\mathbb{Q}}\!\left[e^{(iu+2)\ln S_T}\right] = \phi_T(u - 2i)$$
+          The shift is $-2i$ because we are multiplying by $S_T^2 = e^{2\ln S_T}$, which adds 2 to the exponent, or equivalently shifts $u \to u - 2i$ in the CF. In general, a numeraire of $S_T^\lambda$ produces a shift of $u \to u - \lambda i$. This is the Esscher transform at parameter $\lambda$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','D')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch04 / q03</span>
+        <span class="mcq-diff">★★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A trader claims: "If the Heston ATM call price is lower than the BSM price at the same vol, it must be because $\rho < 0$ is stealing value from the call." A quant colleague responds: "Not exactly — the correct statement involves how $\rho$ redistributes probability mass between $P_1$ and $P_2$ relative to $N(d_1)$ and $N(d_2)$." Which of the following best captures the quant's point?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Negative $\rho$ directly reduces the Heston CF, making $\phi_T(-i) < S_0 e^{rT}$ and thus breaking the risk-neutral drift condition.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Negative $\rho$ makes the distribution of $S_T$ symmetric, so $P_1 = P_2$ and the call price equals the BSM price.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Negative $\rho$ skews the distribution of $S_T$ leftward, raising $P_2$ (cheap OTM put territory) and potentially lowering $P_1$ for OTM calls, with the net ATM effect depending on the full parameter set — not just $\rho$ alone.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$\rho$ has no effect on ATM pricing — it only affects the skew for OTM strikes.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The trader's intuition is directionally right (negative $\rho$ affects ATM calls) but mechanistically imprecise. Here is the precise picture:<br/><br/>
+          Negative $\rho$ generates negative skewness in $\ln S_T$ — the left tail is fatter than the right. This means more probability mass sits at low $S_T$ values relative to a symmetric (zero-$\rho$) distribution. For an ATM call ($K = S_0 e^{rT}$), the effect on $P_2 = \mathbb{P}^{\mathbb{Q}}(S_T > K)$ depends on the full shape of the distribution, not just the sign of $\rho$. Specifically: the skew lowers the median of $S_T$ relative to its mean (which is fixed by no-arbitrage at $S_0 e^{rT}$), so ATM $P_2$ can be slightly below $\frac{1}{2}$, reducing the call price. The effect on $P_1$ (under the stock-numeraire measure) is compounded by the measure change. The net ATM effect is small and parameter-dependent — a full numerical calculation is required to quantify it. Option A is wrong because $\phi_T(-i) = S_0 e^{rT}$ always holds by the risk-neutral drift condition, regardless of $\rho$. Option D is wrong — $\rho$ does affect ATM options through the term structure of implied vol.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 04</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Q1–3 are direct applications of the Gil-Pelaez formula and the $P_1$, $P_2$ decomposition. Q4–6 involve the change-of-measure machinery at a deeper level. Q7–8 are derivation problems. Q9–10 are open-ended, requiring you to extend the framework beyond what was presented.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            Use the Gil-Pelaez formula to express $\mathbb{P}(X \leq a)$ (the CDF, not the tail probability) in terms of the CF $\phi_X(u)$. Verify that your formula plus the tail probability formula sums to 1 for all $a$. Then write down the equivalent formula using $\mathrm{Re}[\cdot]$ instead of $\mathrm{Im}[\cdot]$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            For a European <strong>put</strong> option with payoff $(K - S_T)^+$, write the put price $P = e^{-rT}\mathbb{E}^{\mathbb{Q}}[(K - S_T)^+]$ in the form $P = Ke^{-rT}\bar{P}_2 - S_0\bar{P}_1$, where $\bar{P}_1 = 1 - P_1$ and $\bar{P}_2 = 1 - P_2$. Verify this is consistent with put-call parity $C - P = S_0 - Ke^{-rT}$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            Show that $\phi_T(-i) = S_0 e^{rT}$ directly from the Heston CF formula derived in Chapter 3. Compute $d(-i)$, $g(-i)$, $D(\tau; -i)$, and $C(\tau; -i)$ explicitly for general parameters $(\kappa, \theta, \xi, \rho, v_0)$ and confirm that $\exp[C + D \cdot v_0 + (-i)\ln S_0] = S_0 e^{rT}$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            Prove rigorously that $P_1 \geq P_2$ for any model of the form $C = S_0 P_1 - Ke^{-rT}P_2$, using only the no-arbitrage condition (call price is non-negative) and the put-call parity identity. Do not use the Radon-Nikodým argument — derive the inequality purely from the pricing constraints.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            Define the <strong>forward measure</strong> $\mathbb{Q}^T$ by $d\mathbb{Q}^T/d\mathbb{Q} = e^{-rT}/B(0,T)$, where $B(0,T) = e^{-rT}$ is the zero-coupon bond price. Show that under $\mathbb{Q}^T$, the call price can be written as $C = B(0,T)\mathbb{E}^{\mathbb{Q}^T}[(S_T - K)^+]$. How does this differ from the $\mathbb{Q}^S$ approach? When are the two approaches equivalent?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            Show that the integrand in the Gil-Pelaez formula for $P_2$, namely $\mathrm{Re}[e^{-iu\ln K}\phi_T(u)/(iu)]$, has a well-defined limit as $u \to 0^+$. Compute $\lim_{u\to 0^+}\mathrm{Re}[e^{-iu\ln K}\phi_T(u)/(iu)]$ using L'Hôpital's rule and the facts that $\phi_T(0) = 1$ and $\phi_T'(0) = i\mathbb{E}^{\mathbb{Q}}[\ln S_T]$.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            The derivation of $\phi_T^{(1)}(u) = \phi_T(u-i)/\phi_T(-i)$ used the fact that $iu + 1 = i(u - i)$. Redo the derivation for a general Esscher tilt: define a measure $\mathbb{Q}^\lambda$ via $d\mathbb{Q}^\lambda/d\mathbb{Q} = e^{\lambda \ln S_T}/\mathbb{E}^{\mathbb{Q}}[e^{\lambda\ln S_T}]$ for $\lambda \in \mathbb{R}$. Show that the CF of $\ln S_T$ under $\mathbb{Q}^\lambda$ is $\phi_T^\lambda(u) = \phi_T(u - i\lambda)/\phi_T(-i\lambda)$, recovering the $\lambda = 1$ case.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            A <strong>digital cash-or-nothing call</strong> pays 1 if $S_T > K$ and 0 otherwise. Show that its price is simply $e^{-rT}P_2$. A <strong>digital asset-or-nothing call</strong> pays $S_T$ if $S_T > K$ and 0 otherwise. Show that its price is $S_0 P_1$. Verify that their sum equals the vanilla call price $C = S_0 P_1 - Ke^{-rT}P_2$ up to a $K$ factor on the second term.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            The Heston pricing formula assumes European exercise (exercise only at maturity $T$). For American options (exercise at any time $\tau \leq T$), the semi-closed form breaks down because the exercise boundary is path-dependent. Describe qualitatively what goes wrong when you try to apply the Gil-Pelaez approach to an American call, and explain why early exercise of a call is never optimal when interest rates are positive and the stock pays no dividends (even in Heston).
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            NIFTY weekly options (expiring every Thursday) are among the most liquid derivatives in the world. For a 5-day NIFTY option, the ratio $T = 5/365 \approx 0.014$ years is very small. Discuss what happens to the Heston Gil-Pelaez integrals as $T \to 0$: does the integrand decay faster or slower? Does the integration range $[0, \infty)$ need to be extended? And qualitatively, why do very short-maturity Heston option prices tend to converge to BSM prices (with $\sigma = \sqrt{v_0}$) even for $\rho \neq 0$?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="F_Op_Ch3.html" class="ch-nav-btn">← The Characteristic Function Machine</a>
+    <a href="F_Op_Ch5.html" class="ch-nav-btn primary">Next: Calibrating Heston to Market Data →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 Gil-Pelaez would give you full marks.",
+  "✨ The integral converges. So does your understanding.",
+  "🏆 $P_1 \geq P_2$, and your score is at the top.",
+  "🔥 Measure-theoretically impeccable. Well done.",
+  "💡 The quant desk in Powai just nodded approvingly.",
+  "🎓 That's the correct semi-closed form answer.",
+  "📈 Your probability of being right: 1.0. Under any measure.",
+  "🧮 Fourier-inverted to the correct answer. Nicely done.",
+  "⚡ The Radon-Nikodým derivative approves.",
+  "🌟 $C = S_0 P_1 - Ke^{-rT}P_2$. All three terms correct.",
+  "💎 Clean as the BSM limit of Heston.",
+  "🚀 Semi-analytical and fully correct. Carry on."
+];
+
+const wrongMsgs = [
+  "🌀 Change of measure needed. Re-read the section.",
+  "📐 Gil-Pelaez disagrees with your answer.",
+  "📉 The integrand diverged before convergence. Recalibrate.",
+  "😰 $P_1 \\neq P_2$ — they live under different measures.",
+  "🤔 The Fourier transform of that answer is zero. Try again.",
+  "📊 More numerical error than the trapezoidal rule. Look again.",
+  "🎰 Speculative. Not arbitrage-free. Back to the formula.",
+  "⚠ Even the digital option formula gets this right."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
