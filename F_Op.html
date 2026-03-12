@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Option Pricing — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--off); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.tb-left { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.tb-logo {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700;
+  color: var(--navy); text-decoration: none; white-space: nowrap; flex-shrink: 0;
+}
+.tb-logo .logo-accent { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-logo .logo-sub {
+  font-size: 0.58rem; font-weight: 400; color: var(--muted);
+  font-family: 'Barlow', sans-serif; letter-spacing: 0.01em;
+}
+.tb-sep { color: var(--border); margin: 0 0.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb .bc-current { color: var(--orange); }
+.tb-home {
+  font-size: 0.82rem; color: var(--muted); text-decoration: none;
+  font-weight: 500; transition: color 0.2s; white-space: nowrap; flex-shrink: 0;
+}
+.tb-home:hover { color: var(--navy); }
+
+/* ── PAGE ── */
+.page {
+  padding-top: calc(var(--topbar-h) + 3rem);
+  max-width: 860px; margin: 0 auto;
+  padding-left: 1.5rem; padding-right: 1.5rem; padding-bottom: 6rem;
+}
+
+/* ── HERO ── */
+.course-hero {
+  background: var(--navy); border-radius: 16px;
+  padding: 2.5rem 3rem; margin-bottom: 2rem;
+  position: relative; overflow: hidden;
+}
+.course-hero::before {
+  content: ''; position: absolute; top: -50px; right: -50px;
+  width: 220px; height: 220px; border-radius: 50%;
+  background: rgba(232,114,42,0.13);
+}
+.course-hero::after {
+  content: ''; position: absolute; bottom: -70px; right: 80px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(232,114,42,0.07);
+}
+.hero-tag {
+  font-family: 'DM Mono', monospace; font-size: 0.67rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 0.75rem;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif; font-size: 2.4rem;
+  color: white; line-height: 1.15; margin-bottom: 0.8rem;
+}
+.hero-desc {
+  font-size: 0.95rem; color: rgba(255,255,255,0.58);
+  line-height: 1.8; max-width: 500px; margin-bottom: 1.5rem;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.hero-stat { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+.hero-stat strong { color: rgba(255,255,255,0.8); font-size: 1rem; display: block; margin-bottom: 0.1rem; }
+
+/* ── PROGRESS ── */
+.progress-bar-card {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 1rem 1.4rem;
+  margin-bottom: 1.8rem; display: flex; align-items: center; gap: 1.2rem;
+}
+.prog-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+.prog-track { flex: 1; height: 7px; background: var(--off); border-radius: 4px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--orange), var(--orange2)); transition: width 0.6s ease; }
+.prog-count { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); font-weight: 700; white-space: nowrap; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.63rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 0.9rem;
+  display: flex; align-items: center; gap: 0.8rem;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── CHAPTER LIST ── */
+.chapters-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.ch-card {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 1.1rem 1.4rem;
+  display: flex; align-items: center; gap: 1.1rem;
+  text-decoration: none; color: inherit;
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+}
+.ch-card.live:hover {
+  border-color: var(--orange);
+  transform: translateX(4px);
+  box-shadow: 0 4px 18px rgba(232,114,42,0.1);
+}
+.ch-card.soon { opacity: 0.55; cursor: default; }
+
+.ch-num {
+  width: 40px; height: 40px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.85rem; font-weight: 700;
+  flex-shrink: 0;
+}
+.ch-num.live { background: rgba(232,114,42,0.1); color: var(--orange); }
+.ch-num.soon { background: var(--off); color: var(--muted); }
+
+.ch-body { flex: 1; min-width: 0; }
+.ch-title {
+  font-weight: 600; font-size: 0.95rem; color: var(--navy);
+  margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ch-card.soon .ch-title { color: var(--muted); }
+.ch-tags { display: flex; align-items: center; gap: 0.6rem; }
+.ch-diff {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  padding: 0.13rem 0.45rem; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.diff-intermediate { background: rgba(232,114,42,0.1); color: var(--orange); }
+.diff-advanced { background: rgba(45,37,96,0.08); color: var(--navy2); }
+.ch-mcq-tag { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); }
+
+.ch-right { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+.ch-status-live {
+  font-family: 'DM Mono', monospace; font-size: 0.67rem;
+  color: var(--green); display: flex; align-items: center; gap: 0.3rem;
+}
+.ch-status-live::before { content: '●'; font-size: 0.5rem; }
+.ch-status-soon { font-family: 'DM Mono', monospace; font-size: 0.67rem; color: var(--muted); }
+.ch-arrow { color: var(--border); font-size: 1.1rem; transition: color 0.18s; }
+.ch-card.live:hover .ch-arrow { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      quan<span class="logo-accent">(t)<sup>4</sup></span>
+      <span class="logo-sub"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Home</a> ›
+      <a href="Finance.html">Finance</a> ›
+      <span class="bc-current">Option Pricing</span>
+    </div>
+  </div>
+  <a href="Finance.html" class="tb-home">← Back to Finance</a>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- HERO -->
+  <div class="course-hero">
+    <div class="hero-tag">Finance · F_Op</div>
+    <h1 class="hero-title">Option Pricing</h1>
+    <p class="hero-desc">
+      From Black-Scholes to Heston — every formula derived, every assumption interrogated,
+      every concept tested on NIFTY and Bank Nifty data. Built for traders who want to actually
+      understand what they're pricing.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong id="stat-live">1</strong>chapters live</div>
+      <div class="hero-stat"><strong id="stat-total">6</strong>chapters total</div>
+      <div class="hero-stat"><strong id="stat-mcq">0</strong>practice problems</div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-card">
+    <span class="prog-label">Course progress</span>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <span class="prog-count" id="prog-count"></span>
+  </div>
+
+  <!-- CHAPTERS -->
+  <div class="section-label">All Chapters</div>
+  <div class="chapters-list" id="chapters-list"></div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CHAPTER DATA — edit this to add new chapters
+// To publish a new chapter:
+//   1. Upload F_Op_ChN.html
+//   2. Change status from "soon" to "live" below
+// ─────────────────────────────────────────────
+const CHAPTERS = [
+  { id:1, file:"F_Op_Ch1.html",  title:"The Black-Scholes World",               status:"live", difficulty:"Intermediate", mcq:4  },
+  { id:2, file:"F_Op_Ch2.html",  title:"Heston — Letting Volatility Breathe",   status:"live", difficulty:"Intermediate", mcq:4  },
+  { id:3, file:"F_Op_Ch3.html",  title:"The Characteristic Function Machine",   status:"live", difficulty:"Advanced",     mcq:3  },
+  { id:4, file:"F_Op_Ch4.html",  title:"Semi-Closed Form Option Pricing",       status:"live", difficulty:"Advanced",     mcq:3  },
+  { id:5, file:"F_Op_Ch5.html",  title:"Gauss-Legendre Quadrature",             status:"live", difficulty:"Advanced",     mcq:3  },
+  { id:6, file:"F_Op_Ch6.html",  title:"The Carr-Madan FFT Method",             status:"live", difficulty:"Advanced",     mcq:3  },
+  { id:7, file:"F_Op_Ch7.html",  title:"Heston Greeks",                         status:"live", difficulty:"Advanced",     mcq:3  },
+  { id:8, file:"F_Op_Ch8.html",  title:"Heston Calibration",                    status:"live", difficulty:"Advanced",     mcq:3  },
+  { id:9, file:"F_Op_Ch9.html",  title:"Extensions Beyond Heston",              status:"soon", difficulty:"Advanced",     mcq:3  },
+  { id:10, file:"F_Op_Ch10.html", title:"Interview Preparation",                status:"soon", difficulty:"Advanced",     mcq:0  },
+];
+
+(function(){
+  const live  = CHAPTERS.filter(c => c.status === 'live').length;
+  const total = CHAPTERS.length;
+  const mcq   = CHAPTERS.filter(c => c.status === 'live').reduce((s,c) => s + c.mcq, 0);
+  const pct   = Math.round(live / total * 100);
+
+  document.getElementById('stat-live').textContent  = live;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-mcq').textContent   = mcq;
+  document.getElementById('prog-fill').style.width  = pct + '%';
+  document.getElementById('prog-count').textContent = live + ' / ' + total + ' live';
+
+  const diffClass = {
+    Intermediate: 'diff-intermediate',
+    Advanced:     'diff-advanced'
+  };
+
+  const list = document.getElementById('chapters-list');
+  CHAPTERS.forEach(ch => {
+    const isLive = ch.status === 'live';
+    const el = document.createElement(isLive ? 'a' : 'div');
+    if (isLive) el.href = ch.file;
+    el.className = 'ch-card ' + (isLive ? 'live' : 'soon');
+    el.innerHTML = `
+      <div class="ch-num ${isLive ? 'live' : 'soon'}">${String(ch.id).padStart(2,'0')}</div>
+      <div class="ch-body">
+        <div class="ch-title">${ch.title}</div>
+        <div class="ch-tags">
+          <span class="ch-diff ${diffClass[ch.difficulty] || ''}">${ch.difficulty}</span>
+          <span class="ch-mcq-tag">${ch.mcq} problems</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        ${isLive
+          ? '<span class="ch-status-live">Live</span><span class="ch-arrow">›</span>'
+          : '<span class="ch-status-soon">Coming soon</span>'}
+      </div>
+    `;
+    list.appendChild(el);
+  });
+})();
+</script>
+</body>
+</html>
