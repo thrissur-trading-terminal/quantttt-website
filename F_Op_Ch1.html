@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Black-Scholes World — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; transition: width 0.4s; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.locked { opacity: 0.4; cursor: not-allowed; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-i { background: rgba(232,114,42,0.1); color: var(--orange); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-body p:last-child { margin-bottom: 0; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; transition: border-color 0.2s; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy { background: rgba(30,158,94,0.1); color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard { background: rgba(45,37,96,0.08); color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+.ch-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_Op.html">Option Pricing</a> ›
+      <span>The Black-Scholes World</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:17%"></div></div>
+      <span class="tb-progress-label">1 / 6</span>
+    </div>
+    <a href="F_Op.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Option Pricing</div>
+  <a class="sidebar-item active" href="F_Op_Ch1.html">
+    <div class="si-num">1</div>The Black-Scholes World
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">2</div>Heston — Letting Volatility Breathe
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">3</div>The Characteristic Function Machine
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">4</div>Pricing Options with the Heston CF
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">5</div>Calibrating Heston to Market Data
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">6</div>Monte Carlo for Heston
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 01 of 06 · Option Pricing</span>
+    </div>
+    <h1 class="chapter-title">The Black-Scholes World</h1>
+    <p class="chapter-subtitle">A model built on assumptions that are all technically wrong — and yet it earned a Nobel Prize, runs half the options desks on earth, and is the language every subsequent model speaks in. Let's learn to speak it properly.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>What Problem Are We Actually Solving?</h3>
+
+    <p>
+      It is 9:15 AM on a Thursday. Bank Nifty is at 52,400. Someone offers you the right — but not the obligation — to buy Bank Nifty at 53,000 by 3:30 PM today. What is that right worth? Not roughly. Precisely, in rupees, right now.
+    </p>
+    <p>
+      This is the options pricing problem. And it is genuinely hard. The right to buy is worth <em>something</em> — Bank Nifty might shoot to 55,000. But if it falls to 50,000, you simply don't exercise and lose only what you paid. The payoff is asymmetric: limited downside, potentially large upside. How do you put a precise number on asymmetry?
+    </p>
+    <p>
+      Before 1973, nobody had a rigorous answer. Traders priced on vibes, rule-of-thumb formulas, and whatever the market would bear. Then Fischer Black, Myron Scholes, and Robert Merton showed something remarkable: if you make a small set of assumptions about how stock prices move, the price of any European option is <strong>uniquely determined by no-arbitrage alone</strong>. Not by your market views. Not by your risk tolerance. Just by the impossibility of free money.
+    </p>
+
+    <div class="callout callout-india">
+      The NSE introduced index options on Nifty 50 in June 2001. Today, India is the world's largest derivatives market by contract volume — NSE alone trades hundreds of millions of options contracts every month. Every single one of those contracts is priced in the framework we are about to build from scratch.
+    </div>
+
+    <h3>How Does a Stock Price Move? — Geometric Brownian Motion</h3>
+
+    <p>
+      To price a derivative on a stock, we first need a model for the stock itself. The BSM answer: stock prices follow a random walk, but a <em>multiplicative</em> one. It is not the rupee change that is random — it is the <em>percentage</em> change.
+    </p>
+    <p>
+      Formally, the stock price $S_t$ satisfies:
+    </p>
+    <div class="math-block">
+      $$dS_t = \mu S_t \, dt + \sigma S_t \, dW_t$$
+    </div>
+    <p>
+      Divide both sides by $S_t$ and the structure becomes transparent:
+    </p>
+    <div class="math-block">
+      $$\frac{dS_t}{S_t} = \underbrace{\mu \, dt}_{\text{expected return}} + \underbrace{\sigma \, dW_t}_{\text{random shock}}$$
+    </div>
+    <p>
+      The instantaneous return has two parts: a deterministic drift $\mu \, dt$ (expected return per unit time), and a random noise term proportional to $dW_t$, where $W_t$ is standard Brownian motion under $\mathbb{P}$. The increment $dW_t \sim \mathcal{N}(0, dt)$.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>Geometric Brownian Motion.</strong> A process satisfying $dS_t = \mu S_t \, dt + \sigma S_t \, dW_t$ is called Geometric Brownian Motion (GBM) with drift $\mu$ and volatility $\sigma$, where:
+      <br/><br/>
+      $\mu$ — annualised expected return. For NIFTY 50, historically around 12–15% per year.<br/>
+      $\sigma$ — annualised standard deviation of log-returns. For NIFTY, 15–25% in normal conditions; spikes sharply during events like COVID or election days.<br/>
+      $W_t$ — standard Brownian motion: continuous paths, independent increments, $W_t - W_s \sim \mathcal{N}(0, t-s)$.
+    </div>
+
+    <div class="callout callout-intuition">
+      Why multiplicative? A ₹100 stock and a ₹10,000 stock both move roughly 1% when the market moves 1%. The rupee amounts differ; the proportions are similar. GBM encodes this by making the random term proportional to the current price $S_t$. It also guarantees $S_t > 0$ always — a negative stock price makes no sense.
+    </div>
+
+    <h3>Solving the SDE — You Need Itô's Lemma</h3>
+
+    <p>
+      We want the explicit solution: $S_T$ as a function of $S_0$ and the Brownian path. Tempting as it is, you cannot just integrate $dS_t/S_t$ and write $\ln(S_T/S_0) = \mu T + \sigma W_T$. That would be wrong. In stochastic calculus, the chain rule has an extra term.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>Itô's Lemma.</strong> Let $f(t, x)$ be twice continuously differentiable and $dX_t = a_t \, dt + b_t \, dW_t$. Then:
+      $$df(t, X_t) = \frac{\partial f}{\partial t}\,dt + \frac{\partial f}{\partial x}\,dX_t + \frac{1}{2}\frac{\partial^2 f}{\partial x^2}(dX_t)^2$$
+      The key is the Itô multiplication table: $(dW_t)^2 = dt$, while $dW_t \cdot dt = 0$ and $(dt)^2 = 0$. So $(dX_t)^2 = b_t^2 \, dt$.
+    </div>
+
+    <p>
+      Apply Itô's Lemma to $f(t, S_t) = \ln S_t$, noting $\partial f / \partial S = 1/S$ and $\partial^2 f / \partial S^2 = -1/S^2$:
+    </p>
+    <div class="math-block">
+      $$d(\ln S_t) = \frac{1}{S_t}\,dS_t - \frac{1}{2}\cdot\frac{1}{S_t^2}\,(dS_t)^2 = \left(\mu - \frac{\sigma^2}{2}\right)dt + \sigma\,dW_t$$
+    </div>
+    <p>
+      Both terms on the right are integrable in the standard sense. Integrating from $0$ to $T$:
+    </p>
+    <div class="math-block">
+      $$\boxed{S_T = S_0\exp\!\left[\left(\mu - \frac{\sigma^2}{2}\right)T + \sigma W_T\right]}$$
+    </div>
+
+    <div class="callout callout-warning">
+      The $-\sigma^2/2$ is not a typo. It is the Itô correction — the direct consequence of $(dW_t)^2 = dt$. Without it, the expected stock price would be wrong. Check: $W_T \sim \mathcal{N}(0,T)$, so $\mathbb{E}[e^{\sigma W_T}] = e^{\sigma^2 T/2}$ (the MGF of a normal). Then $\mathbb{E}[S_T] = S_0 e^{(\mu-\sigma^2/2)T} \cdot e^{\sigma^2 T/2} = S_0 e^{\mu T}$, as it should be. The correction makes this balance. Forget it and you will misprice every option you touch.
+    </div>
+
+    <p>
+      Since $W_T \sim \mathcal{N}(0,T)$, the log-return is normally distributed:
+    </p>
+    <div class="math-block">
+      $$\ln\!\left(\frac{S_T}{S_0}\right) \sim \mathcal{N}\!\left(\!\left(\mu - \frac{\sigma^2}{2}\right)T,\;\; \sigma^2 T\right)$$
+    </div>
+    <p>
+      $S_T$ is <strong>lognormally distributed</strong> — always positive, with multiplicative compounding. This is the GBM punchline: the stock price at any future time is a random variable with a fully specified distribution. We can now compute probabilities, expectations, and — with the PDE coming next — option prices.
+    </p>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Lognormal Probabilities</span>
+        <span class="we-badge">🇮🇳 NIFTY 50</span>
+      </div>
+      <div class="we-body">
+        <p>NIFTY 50 is at $S_0 = 24{,}000$. Assume $\mu = 0.12$ and $\sigma = 0.18$. What is the probability that NIFTY closes above $26{,}000$ in exactly one year under GBM?</p>
+
+        <div class="we-step">Write down the log-return distribution</div>
+        <div class="math-block">
+          $$\ln\!\left(\frac{S_1}{S_0}\right) \sim \mathcal{N}(m,\, s^2), \quad m = 0.12 - \frac{0.18^2}{2} = 0.1038, \quad s = 0.18$$
+        </div>
+
+        <div class="we-step">Translate the event into a log-return condition</div>
+        <p>$S_1 > 26{,}000 \iff \ln(S_1/S_0) > \ln(26000/24000) = \ln(1.0\overline{8}3) \approx 0.0800$</p>
+
+        <div class="we-step">Standardise and look up $\Phi$</div>
+        <div class="math-block">
+          $$\mathbb{P}(S_1 > 26{,}000) = \mathbb{P}\!\left(Z > \frac{0.0800 - 0.1038}{0.18}\right) = \mathbb{P}(Z > -0.132) = \Phi(0.132) \approx 0.5525$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Answer: ≈ 55.3%.</strong> The drift $\mu = 12\%$ is working in the bull's favour — it shifts the distribution rightward, pushing the probability above 50%. With zero drift, the probability would be exactly 50% (up to the Itô correction). The positive expected return is what tips the scales.
+        </div>
+      </div>
+    </div>
+
+    <h3>The Delta-Hedging Argument — Where the PDE Comes From</h3>
+
+    <p>
+      Here is the central BSM insight. If you hold an option and simultaneously hold some amount of the underlying stock, you can choose that amount so precisely that the randomness cancels completely. Your portfolio has no risk. A riskless portfolio must earn the risk-free rate $r$. That one constraint pins down the option price uniquely.
+    </p>
+    <p>
+      We need six assumptions: GBM with constant $\mu$ and $\sigma$; continuous trading; no transaction costs; no dividends; constant risk-free rate $r$; no arbitrage. Every assumption except the last is empirically false. For now, let's see what they buy us.
+    </p>
+    <p>
+      Let $V(S_t, t)$ be the value at time $t$ of a European derivative when the stock is at $S_t$. Construct the portfolio:
+    </p>
+    <div class="math-block">
+      $$\Pi = V - \Delta \cdot S \quad \text{(long the option, short } \Delta \text{ shares)}$$
+    </div>
+    <p>
+      Apply Itô's Lemma to $V$, and substitute $dS = \mu S \, dt + \sigma S \, dW_t$:
+    </p>
+    <div class="math-block">
+      $$d\Pi = \left[\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2\frac{\partial^2 V}{\partial S^2} + \mu S\!\left(\frac{\partial V}{\partial S} - \Delta\right)\right]dt + \sigma S\!\left(\frac{\partial V}{\partial S} - \Delta\right)dW_t$$
+    </div>
+    <p>
+      Set $\Delta = \partial V / \partial S$. The $dW_t$ term vanishes. No randomness whatsoever. No-arbitrage then demands $d\Pi = r\Pi \, dt$, i.e. $d\Pi = r(V - S \, \partial V/\partial S)\,dt$. Substituting and rearranging:
+    </p>
+    <div class="math-block">
+      $$\boxed{\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2\frac{\partial^2 V}{\partial S^2} + rS\frac{\partial V}{\partial S} - rV = 0}$$
+    </div>
+    <p>
+      This is the Black-Scholes PDE. Any European derivative on a non-dividend-paying asset satisfies it. Calls, puts, digitals — same PDE, different boundary conditions at expiry.
+    </p>
+
+    <div class="callout callout-intuition">
+      Notice what is <em>absent</em> from the PDE: $\mu$. The expected return of the stock is completely irrelevant to option pricing. Setting $\Delta = \partial V / \partial S$ eliminated all directional exposure. What remains is only $\sigma$ — the volatility you cannot hedge away, only be compensated for. This is why implied volatility, not expected return, is the traded quantity in options markets.
+    </div>
+
+    <h3>Solving the PDE — The Closed-Form Formula</h3>
+
+    <p>
+      The BSM PDE with the European call boundary condition $V(S, T) = \max(S - K, 0)$ has an explicit solution. The cleanest path goes through the <strong>risk-neutral measure</strong> $\mathbb{Q}$.
+    </p>
+    <p>
+      Under $\mathbb{Q}$, we replace the drift $\mu$ with the risk-free rate $r$: $dS_t = rS_t \, dt + \sigma S_t \, dW_t^{\mathbb{Q}}$. This is not an assumption about reality — it is Girsanov's theorem, a mathematical change of measure that makes the discounted stock price a martingale. Under $\mathbb{Q}$, any no-arbitrage derivative price is:
+    </p>
+    <div class="math-block">
+      $$V(S_t, t) = e^{-r(T-t)}\;\mathbb{E}^{\mathbb{Q}}\!\left[\,\text{Payoff}(S_T)\;\big|\;S_t\right]$$
+    </div>
+    <p>
+      For a call payoff $(S_T - K)^+$, evaluating this expectation over the lognormal distribution of $S_T$ under $\mathbb{Q}$ gives the closed form:
+    </p>
+    <div class="math-block">
+      $$\boxed{C = S_0\,N(d_1) - Ke^{-rT}N(d_2)}$$
+    </div>
+    <div class="math-block">
+      $$d_1 = \frac{\ln(S_0/K) + \left(r + \sigma^2/2\right)T}{\sigma\sqrt{T}}, \qquad d_2 = d_1 - \sigma\sqrt{T}$$
+    </div>
+    <p>
+      The put price follows immediately from put-call parity $C - P = S_0 - Ke^{-rT}$:
+    </p>
+    <div class="math-block">
+      $$P = Ke^{-rT}N(-d_2) - S_0\,N(-d_1)$$
+    </div>
+
+    <div class="callout callout-intuition">
+      Each term in $C = S_0 N(d_1) - Ke^{-rT}N(d_2)$ has a precise meaning. $N(d_2) = \mathbb{Q}(S_T > K)$ is the risk-neutral probability of expiring in-the-money. $N(d_1)$ is the option's delta. So the formula says: call = (stock position weighted by delta) minus (discounted strike payment weighted by exercise probability). Two legs, two probabilities, one formula. That's the whole thing.
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · BSM Call Pricing</span>
+        <span class="we-badge">🇮🇳 Bank Nifty Weekly</span>
+      </div>
+      <div class="we-body">
+        <p>Bank Nifty is at $S_0 = 52{,}000$. Strike $K = 53{,}000$, expiry $T = 7/365$ years (one week), risk-free rate $r = 6.5\%$, $\sigma = 22\%$. Compute the BSM call price.</p>
+
+        <div class="we-step">Compute $d_1$ and $d_2$</div>
+        <div class="math-block">
+          $$\sigma\sqrt{T} = 0.22 \times \sqrt{7/365} = 0.22 \times 0.13835 = 0.03044$$
+          $$\ln(S_0/K) = \ln(52000/53000) = -0.01901$$
+          $$d_1 = \frac{-0.01901 + (0.065 + 0.0242) \times 0.01918}{0.03044} = \frac{-0.01901 + 0.001711}{0.03044} = -0.568$$
+          $$d_2 = -0.568 - 0.030 = -0.598$$
+        </div>
+
+        <div class="we-step">Normal CDF values</div>
+        <div class="math-block">
+          $$N(d_1) = N(-0.568) \approx 0.285, \qquad N(d_2) = N(-0.598) \approx 0.275$$
+        </div>
+
+        <div class="we-step">Call price</div>
+        <div class="math-block">
+          $$C = 52000 \times 0.285 - 53000 \times e^{-0.065 \times 0.01918} \times 0.275$$
+          $$= 14{,}820 - 53000 \times 0.99875 \times 0.275 = 14{,}820 - 14{,}564 = \mathbf{256}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Answer: ≈ ₹256 per unit.</strong> Bank Nifty lots are 15 units, so one contract costs roughly ₹3,840 in premium. The option is OTM — strike is ₹1,000 above spot — which keeps the price low despite high notional. Delta ≈ 0.285 means every ₹1 move in Bank Nifty changes the option by ≈₹0.29. With only 7 days to expiry, theta decay is relentless: the position is losing value every hour the market stays quiet.
+        </div>
+      </div>
+    </div>
+
+    <h3>The Greeks — Sensitivity Is Everything</h3>
+
+    <p>
+      Knowing the price of an option is a start. Knowing how the price changes as the world moves is what lets you actually manage a book. The Greeks are the partial derivatives of $V$ — each one answers a specific "what if" question.
+    </p>
+
+    <p>
+      <strong>Delta</strong> $\Delta = \partial V / \partial S$. For a call: $\Delta = N(d_1)$. For a put: $\Delta = N(d_1) - 1$. Delta is both the hedge ratio and an approximate probability of finishing ITM. Deep ITM $\Delta \to 1$; deep OTM $\Delta \to 0$; ATM $\Delta \approx 0.5$.
+    </p>
+
+    <p>
+      <strong>Gamma</strong> $\Gamma = \partial^2 V / \partial S^2 = n(d_1) / (S\sigma\sqrt{T})$. Gamma measures how fast delta changes. High gamma (ATM, near expiry) means the hedge rebalances frequently — expensive in practice. Bank Nifty weekly options near expiry carry extreme gamma.
+    </p>
+
+    <p>
+      <strong>Vega</strong> $\mathcal{V} = \partial V / \partial \sigma = S\sqrt{T}\, n(d_1)$. Vega is always positive for both calls and puts — more volatility always makes options worth more, because a wider distribution means bigger potential payoffs on both sides. Selling options means being short vega.
+    </p>
+
+    <p>
+      <strong>Theta</strong> $\Theta = -\partial V / \partial t$. For a call: $\Theta = -Sn(d_1)\sigma/(2\sqrt{T}) - rKe^{-rT}N(d_2)$. Theta is almost always negative for long options — time decay. Every day that passes without a move, your position bleeds. Short options earn positive theta but carry gamma risk.
+    </p>
+
+    <div class="callout callout-intuition">
+      The BSM PDE, rearranged for a delta-neutral position ($\Delta = 0$), becomes:
+      $$\Theta + \frac{1}{2}\sigma^2 S^2 \Gamma \approx 0$$
+      Theta and gamma are locked in opposition. The gamma you love (profits from big moves) is paid for by the theta you suffer (daily decay). Every Bank Nifty option buyer is implicitly betting: "I think the move will be large enough to overcome the time decay." Every seller thinks the opposite. The entire options market is this one tradeoff, repeated a hundred million times a day.
+    </div>
+
+    <h3>Implied Volatility — The Market's One Number</h3>
+
+    <p>
+      In practice, traders do not use BSM to compute prices. They use it in reverse. They observe the market price of an option and solve for the $\sigma$ that makes BSM match it. That $\sigma$ is called the <strong>implied volatility</strong>.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>implied volatility</strong> $\sigma_\text{IV}(K, T)$ of a traded option is the unique $\sigma > 0$ satisfying:
+      $$C_\text{BSM}(S_0, K, T, r, \sigma_\text{IV}) = C_\text{market}$$
+      Since $\mathcal{V} = \partial C_\text{BSM}/\partial\sigma > 0$ always, the map $\sigma \mapsto C_\text{BSM}$ is strictly increasing, so $\sigma_\text{IV}$ is unique. It must be found numerically.
+    </div>
+
+    <p>
+      The standard method is Newton-Raphson, using vega as the derivative:
+    </p>
+    <div class="math-block">
+      $$\sigma_{n+1} = \sigma_n - \frac{C_\text{BSM}(\sigma_n) - C_\text{market}}{\mathcal{V}(\sigma_n)}$$
+    </div>
+    <p>
+      Typically 4–5 iterations from a reasonable starting point. For an ATM option, the Brenner-Subrahmanyam approximation $\sigma_0 \approx C_\text{market}/(S_0\sqrt{T/2\pi})$ is a good seed.
+    </p>
+
+    <h3>The Volatility Smile — BSM Contradicting Itself</h3>
+
+    <p>
+      If BSM were correct, implied volatility would be the same for every strike at a given maturity. It is not. When you compute $\sigma_\text{IV}$ across strikes for a fixed $T$, you get a curve — the <strong>volatility smile</strong>. In equity markets like NSE, it is typically a <strong>skew</strong>: OTM puts have higher IV than ATM, and OTM calls have lower IV. The curve slopes downward with strike.
+    </p>
+
+    <div class="callout callout-india">
+      Open the NIFTY option chain on any NSE expiry day. The ATM straddle will show IV around 12–18% in normal conditions. The 5% OTM put will be at 22–28%. The 5% OTM call will be at 10–14%. This is the equity skew in plain sight. BSM cannot explain it — it assumes $\sigma$ is constant, which would make the smile flat. The market is saying: downside moves are both more probable and larger than the lognormal predicts. Heston will let us model exactly this.
+    </div>
+
+    <h3>What BSM Gets Wrong — And Why That Matters</h3>
+
+    <p>
+      Let's be honest about the model before we extend it. BSM fails in four connected ways.
+    </p>
+    <p>
+      <strong>The smile.</strong> IV varies with strike. BSM requires it to be flat. Every equity market on earth shows a downward skew. BSM systematically overprices OTM calls and underprices OTM puts.
+    </p>
+    <p>
+      <strong>Volatility clustering.</strong> After a large NIFTY crash, the next few days also tend to be turbulent. High-vol periods cluster. BSM assumes $\sigma$ is a constant — it has no memory.
+    </p>
+    <p>
+      <strong>Fat tails.</strong> The actual distribution of NIFTY daily returns has heavier tails than a normal. The empirically observed 4-sigma move happens far more often than the normal distribution predicts. BSM underprices deep OTM options as a consequence.
+    </p>
+    <p>
+      <strong>The leverage effect.</strong> When NIFTY drops sharply, the INDIA VIX spikes. Returns and volatility are negatively correlated. BSM is blind to this: it has no correlation parameter between price and volatility.
+    </p>
+
+    <div class="callout callout-intuition">
+      BSM is not <em>wrong</em> — it is <em>incomplete</em>. It gives traders a common language (delta, vega, implied vol), a rigorous no-arbitrage foundation, and formulas that compute in microseconds. What it gets wrong is the assumed distribution of $S_T$: the world is not lognormal, because volatility is not constant. The fix is to let $\sigma$ itself be a random process driven by its own SDE, correlated with the stock. That is what Heston does. That is Chapter 2.
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 01</span>
+    </div>
+
+    <!-- MCQ 1: The missing mu -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch01 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          Analyst A thinks NIFTY will return <strong>8% per year</strong>. Analyst B thinks it will return <strong>22% per year</strong>. Both agree on $S_0$, $K$, $T$, $r$, and $\sigma$. They each compute the BSM price of the same NIFTY call option. What happens?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Analyst B quotes a higher price — a higher drift makes finishing ITM more likely.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>Analyst A quotes a higher price — a pessimist demands more compensation for risk.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>Both quote the same price — $\mu$ does not appear in the BSM formula.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Cannot be determined without also specifying the risk-free rate $r$.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The drift $\mu$ disappears entirely from the BSM PDE during the delta-hedging argument. When we set $\Delta = \partial V / \partial S$ to eliminate the $dW_t$ term, we eliminate all dependence on the direction of stock movement. The PDE and its solution contain only $r$ and $\sigma$, not $\mu$.<br/><br/>
+          This is one of the most counterintuitive results in all of finance. Both analysts can hedge away their directional exposure by dynamically trading the underlying stock. What they cannot hedge is volatility — and since they agree on $\sigma$, they agree on the price. Risk preferences are irrelevant. Only no-arbitrage conditions matter.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2: Compute d1 for ATM -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch01 / q02</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          NIFTY is at $S_0 = K = 24{,}000$ (ATM), $T = 1/12$ year, $r = 6.5\%$, $\sigma = 15\%$. Since the option is ATM, $\ln(S_0/K) = 0$. Which of the following is closest to $d_1$?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$0.433$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$0.147$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$0.065$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$0.289$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B — $d_1 \approx 0.147$.</strong><br/><br/>
+          With $\ln(S_0/K) = 0$ for an ATM option:
+          $$d_1 = \frac{(r + \sigma^2/2)\,T}{\sigma\sqrt{T}} = \frac{(r + \sigma^2/2)\sqrt{T}}{\sigma}$$
+          $$= \frac{(0.065 + 0.01125)\sqrt{1/12}}{0.15} = \frac{0.07625 \times 0.28868}{0.15} = \frac{0.02201}{0.15} \approx 0.147$$
+          Option A (0.433) is what you get if you use $T = 1$ year instead of $T = 1/12$ — a common error. Option C (0.065) is just $r\sqrt{T}/\sigma$ with the Itô correction $\sigma^2/2$ omitted. Option D has no clean derivation. The Itô correction, though small, must not be dropped.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3: Gamma-theta tradeoff -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch01 / q03</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A dealer sells an ATM Bank Nifty weekly straddle and immediately delta-hedges the position. She is now short gamma. Which statement <strong>best describes</strong> her risk profile?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>She profits from any large move in Bank Nifty, in either direction.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>She has no market risk since her position is delta-hedged.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>She earns positive theta daily, but loses money if Bank Nifty makes a large move.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Her P&amp;L this week depends only on whether implied volatility rises or falls.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          A short straddle is short both calls and puts — therefore short gamma. The BSM PDE for a delta-neutral position says $\Theta \approx -\frac{1}{2}\sigma^2 S^2 \Gamma$. Short gamma ($\Gamma < 0$) means positive theta — she collects premium decay every day the market stays quiet.<br/><br/>
+          But short gamma hurts badly on large moves. Her delta hedge was set at the initial spot price. After a 1,000-point move in Bank Nifty, her delta has shifted (that is what gamma measures), and her hedge is now misaligned. Re-hedging at the new spot locks in a realised loss. The larger the move, the worse the loss — convexity is working against her.<br/><br/>
+          Option A describes the long gamma buyer, not the short gamma seller. Option B is wrong — delta-neutral eliminates first-order risk, but second-order (gamma) risk remains. Option D (vega risk) is also real, but the question is about the gamma-theta tradeoff, which is the core driver of weekly options P&amp;L.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4: Put-call parity computation -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch01 / q04</span>
+        <span class="mcq-diff">★★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A NIFTY call is priced at ₹680 with $S_0 = 24{,}200$, $K = 24{,}000$, $T = 0.25$ years, $r = 6.5\%$. Using <strong>put-call parity only</strong> — no BSM formula needed — what is the corresponding put price?
+        </p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>₹480</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>₹340</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>₹228</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">D</div><span>₹93</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: D — ≈ ₹93.</strong><br/><br/>
+          Put-call parity: $C - P = S_0 - Ke^{-rT}$, so $P = C - S_0 + Ke^{-rT}$.
+          $$Ke^{-rT} = 24{,}000 \times e^{-0.065 \times 0.25} = 24{,}000 \times e^{-0.01625} \approx 24{,}000 \times 0.98389 = 23{,}613$$
+          $$P = 680 - 24{,}200 + 23{,}613 = \mathbf{93}$$
+          The call is ITM (spot 24,200 &gt; strike 24,000), so the put is cheap. Notice that put-call parity is completely model-free — it holds without any GBM assumption, purely from no-arbitrage: two portfolios with identical payoffs at expiry must have the same value today. You can verify this by constructing them explicitly (Portfolio 1: long call + $Ke^{-rT}$ in cash. Portfolio 2: long put + long stock. Same payoff for all $S_T$).
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','D')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 01</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        These problems are unsolved — work through them independently. Q1–3 are direct applications. Q4–7 require combining concepts from across the chapter. Q8–10 will make you think. All use realistic NSE parameters.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            NIFTY is at 23,500. Under GBM with $\mu = 0.10$ and $\sigma = 0.16$, compute the probability that NIFTY closes above 25,000 in exactly six months. Write down the log-return distribution explicitly before standardising.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            Price a NIFTY call option from scratch: $S_0 = 22{,}000$, $K = 22{,}500$, $T = 0.5$ years, $r = 6\%$, $\sigma = 20\%$. Compute $d_1$, $d_2$, and the BSM call price, showing all intermediate steps.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            Using the parameters from Q2, compute the put price two ways: (a) directly from the BSM put formula, and (b) from put-call parity. Verify that both give the same answer to the rupee.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            A Bank Nifty call has $\Delta = 0.42$ and $\Gamma = 0.00018$. Bank Nifty moves from 51,000 to 52,500 in one session. Estimate the new delta using $\Delta_\text{new} \approx \Delta + \Gamma \cdot \Delta S$. A dealer who sold 200 lots (15 units each) and delta-hedged at 51,000 now needs to re-hedge. What is the approximate mark-to-market loss from gamma slippage on this re-hedge?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            Prove put-call parity $C - P = S_0 - Ke^{-rT}$ from first principles using a no-arbitrage argument. Construct two portfolios with identical payoffs at expiry for all values of $S_T$, and conclude by the law of one price. Do not invoke the BSM formula anywhere in your proof.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            A NIFTY ATM straddle (long ATM call + long ATM put): $S_0 = K = 24{,}000$, $T = 30/365$ years, $r = 6.5\%$, $\sigma = 18\%$. Compute the total premium paid for the straddle. What is the minimum absolute move that NIFTY must make by expiry for the position to break even?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            The theta of an ATM BSM call contains the term $-Sn(d_1)\sigma / (2\sqrt{T})$. Show that as $T \to 0^+$ with the option remaining ATM, this term diverges to $-\infty$. What does this imply about the rate of time decay for a Bank Nifty weekly contract in its final two days compared to the first two days of a monthly contract?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            A NIFTY call trades at ₹350. Parameters: $S_0 = 24{,}000$, $K = 24{,}200$, $T = 0.25$ years, $r = 6.5\%$. Use Newton-Raphson with initial guess $\sigma_0 = 0.20$ to find the implied volatility to three decimal places. Show the BSM price and vega at each iteration.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            A trader sells a NIFTY call at implied volatility $\sigma_\text{IV} = 18\%$ and delta-hedges daily for one month. Realised volatility over the month is 23%. Using the P&amp;L decomposition $dP\&amp;L \approx \frac{1}{2}\Gamma\,(\Delta S)^2 - \Theta\,\Delta t$, explain why the trader loses money, and by what mechanism. Is the sign of the loss determined by $\sigma_\text{IV}$ or by $\sigma_\text{realised}$?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            You observe the following NIFTY call prices with $S_0 = 24{,}000$, $T = 7/365$, $r = 6.5\%$: strike 23,500 at ₹515; strike 24,000 at ₹190; strike 24,500 at ₹40. Compute the implied volatility for each strike. Sketch the resulting IV curve against strike. Is this a smile or a skew? What does the shape imply about the market's view of the distribution of NIFTY returns — specifically, how does the implied distribution differ from the lognormal in terms of skewness and kurtosis? What kind of events would make a trader willing to pay the extra premium for the OTM put?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <span class="ch-nav-btn disabled">← Previous</span>
+    <a href="F_Op_Ch2.html" class="ch-nav-btn primary">Next: Heston — Letting Volatility Breathe →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 Exactly right. Fischer Black would approve.",
+  "✨ Delta-hedged and correct. Well played.",
+  "🏆 The vol surface bows before you.",
+  "🔥 Nailed it. The risk-neutral gods are pleased.",
+  "💡 That's the kind of clarity that gets you onto a quant desk in Mumbai.",
+  "🎓 Textbook perfect — and we mean that literally.",
+  "📈 Your intuition just went up a sigma. Nicely done.",
+  "🧮 Merton would nod. Clean work.",
+  "⚡ Sharp as a delta-1 desk. Correct!",
+  "🌟 Even the volatility smile is impressed.",
+  "💎 As clean as a closed-form solution.",
+  "🚀 Trajectory calculated correctly. Carry on.",
+  "🎯 BSM verified. The PDE is satisfied."
+];
+
+const wrongMsgs = [
+  "🌀 Arbitrage detected between your answer and reality. Re-read the section.",
+  "📐 The PDE disagrees. Check your working.",
+  "📉 Circuit breaker triggered on your answer. Recalibrate!",
+  "🏦 Even BSM with the wrong μ gets this right. Look again.",
+  "😰 Panic selling your accuracy. Slow down.",
+  "🤔 The sample space of correct answers doesn't include this one. Try again.",
+  "📊 More variance than a fat-tailed distribution. One more attempt.",
+  "🎰 Speculative punt, not a calculated trade. Back to the formula."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'opts'));
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
