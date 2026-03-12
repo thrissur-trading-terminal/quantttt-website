@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mathematical Foundations of ML — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5%; height: 64px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-text { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--navy); }
+.logo-text span { color: var(--orange); }
+.logo-text span sup { font-size: 0.65em; vertical-align: super; }
+.nav-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+.nav-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.nav-breadcrumb a:hover { color: var(--orange); }
+.nav-breadcrumb span { color: var(--orange); }
+.nav-right { display: flex; align-items: center; gap: 1.5rem; }
+.nav-back { font-size: 0.84rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.nav-back:hover { color: var(--navy); }
+
+/* ── MODULE HERO ── */
+.module-hero {
+  padding: 120px 5% 4rem;
+  background: linear-gradient(135deg, var(--white) 60%, var(--light) 100%);
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.module-hero::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0; width: 35%;
+  background: linear-gradient(135deg, transparent, rgba(232,114,42,0.04));
+  pointer-events: none;
+}
+.module-tag { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+.module-tag::before { content: ''; display: inline-block; width: 24px; height: 2px; background: var(--orange); border-radius: 2px; }
+.module-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 4vw, 3.2rem); color: var(--navy); line-height: 1.12; letter-spacing: -0.5px; margin-bottom: 1rem; }
+.module-hero h1 em { font-style: italic; color: var(--orange); }
+.module-desc { font-size: 1.05rem; color: var(--muted); max-width: 600px; line-height: 1.75; margin-bottom: 2rem; }
+.module-meta { display: flex; gap: 2rem; flex-wrap: wrap; }
+.meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+.meta-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--navy); }
+.meta-val span { color: var(--orange); }
+.meta-key { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ── PREREQ STRIP ── */
+.prereq-strip { background: rgba(45,37,96,0.04); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1rem 5%; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.prereq-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--navy); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
+.prereq-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.prereq-pill { font-family: 'DM Mono', monospace; font-size: 0.72rem; padding: 0.25rem 0.7rem; border-radius: 100px; background: var(--off); border: 1px solid var(--border); color: var(--muted); }
+.prereq-pill.ok { background: rgba(30,158,94,0.08); border-color: rgba(30,158,94,0.25); color: var(--green); }
+
+/* ── CHAPTER LIST ── */
+.chapters-section { padding: 3rem 5% 6rem; max-width: 900px; margin: 0 auto; }
+.chapters-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+.chapters-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--navy); }
+.chapters-subtitle { font-size: 0.88rem; color: var(--muted); }
+
+.ch-list { display: flex; flex-direction: column; gap: 0; border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; }
+
+.ch-item { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.5rem 1.6rem; background: var(--white); border-bottom: 1px solid var(--border); transition: background 0.2s; text-decoration: none; color: inherit; position: relative; }
+.ch-item:last-child { border-bottom: none; }
+.ch-item.live:hover { background: var(--light); cursor: pointer; }
+.ch-item.locked { opacity: 0.55; }
+.ch-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--orange); transform: scaleY(0); transform-origin: top; transition: transform 0.25s; }
+.ch-item.live:hover::before { transform: scaleY(1); }
+
+.ch-num-badge { width: 40px; height: 40px; border-radius: 10px; background: var(--off); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--muted); flex-shrink: 0; transition: all 0.2s; }
+.ch-item.live:hover .ch-num-badge { background: var(--orange); border-color: var(--orange); color: white; }
+
+.ch-body { flex: 1; min-width: 0; }
+.ch-row1 { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; flex-wrap: wrap; }
+.ch-title { font-size: 1rem; font-weight: 700; color: var(--navy); }
+.ch-badge { font-family: 'DM Mono', monospace; font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.badge-live { background: rgba(30,158,94,0.1); color: var(--green); border: 1px solid rgba(30,158,94,0.2); }
+.badge-soon { background: var(--off); color: var(--muted); border: 1px solid var(--border); }
+.ch-desc { font-size: 0.86rem; color: var(--muted); line-height: 1.6; margin-bottom: 0.75rem; }
+.ch-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(45,37,96,0.05); color: var(--navy2); }
+
+.ch-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; flex-shrink: 0; }
+.ch-mcq { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.55rem; border-radius: 4px; white-space: nowrap; }
+.ch-arrow { color: var(--orange); font-size: 1.1rem; opacity: 0; transition: opacity 0.2s, transform 0.2s; }
+.ch-item.live:hover .ch-arrow { opacity: 1; transform: translateX(3px); }
+.ch-lock { color: var(--muted); font-size: 0.9rem; }
+
+/* ── LEARNING PATH NOTE ── */
+.path-note { background: rgba(232,114,42,0.05); border: 1.5px solid rgba(232,114,42,0.15); border-radius: 12px; padding: 1.3rem 1.5rem; margin-top: 2rem; font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+.path-note strong { color: var(--navy); }
+
+/* ── WHAT YOU WILL LEARN ── */
+.outcomes-section { background: var(--off); padding: 3rem 5%; border-top: 1px solid var(--border); }
+.outcomes-inner { max-width: 900px; margin: 0 auto; }
+.outcomes-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 1.5rem; }
+.outcomes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
+.outcome-item { display: flex; gap: 0.8rem; align-items: flex-start; }
+.outcome-check { width: 22px; height: 22px; border-radius: 50%; background: rgba(30,158,94,0.1); border: 1.5px solid rgba(30,158,94,0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.65rem; color: var(--green); margin-top: 0.1rem; }
+.outcome-text { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+.outcome-text strong { color: var(--navy); }
+
+/* ── FOOTER ── */
+footer { background: var(--navy); padding: 2.5rem 5%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
+.foot-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; color: white; }
+.foot-name span { color: var(--orange); }
+.foot-sub { font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-top: 0.2rem; }
+.foot-copy { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.2); }
+
+@media (max-width: 700px) {
+  .outcomes-grid { grid-template-columns: 1fr; }
+  .module-meta { gap: 1.2rem; }
+  .ch-right { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="logo-text">quan<span>(t)<sup>4</sup></span></span>
+  </a>
+  <div class="nav-breadcrumb">
+    <a href="index.html">Home</a>
+    <span>›</span>
+    <a href="ML.html">Machine Learning</a>
+    <span>›</span>
+    <span>Mathematical Foundations</span>
+  </div>
+  <div class="nav-right">
+    <a href="index.html" class="nav-back">← Back to Home</a>
+  </div>
+</nav>
+
+<!-- MODULE HERO -->
+<div class="module-hero">
+  <div class="module-tag">Machine Learning · Mathematical Foundations</div>
+  <h1>The Mathematics<br/>Behind <em>Every</em> ML Algorithm</h1>
+  <p class="module-desc">
+    Most ML courses teach you to call <code>model.fit()</code>. This one teaches you what's actually happening inside it — with full mathematical rigour, genuine intuition, and examples that matter to Indian traders and practitioners.
+  </p>
+  <div class="module-meta">
+    <div class="meta-item">
+      <div class="meta-val">8</div>
+      <div class="meta-key">Chapters</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-val">32<span>+</span></div>
+      <div class="meta-key">MCQ Problems</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-val">80<span>+</span></div>
+      <div class="meta-key">Terminal Questions</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-val">₹<span>0</span></div>
+      <div class="meta-key">Forever Free</div>
+    </div>
+  </div>
+</div>
+
+<!-- PREREQ STRIP -->
+<div class="prereq-strip">
+  <div class="prereq-label">Prerequisites</div>
+  <div class="prereq-pills">
+    <span class="prereq-pill ok">✓ +2 Mathematics</span>
+    <span class="prereq-pill ok">✓ Basic Probability</span>
+    <span class="prereq-pill ok">✓ Calculus (differentiation)</span>
+    <span class="prereq-pill">Linear Algebra (helpful, not required)</span>
+    <span class="prereq-pill">No ML background needed</span>
+  </div>
+</div>
+
+<!-- CHAPTER LIST -->
+<div class="chapters-section">
+  <div class="chapters-header">
+    <div>
+      <div class="chapters-title">Course Chapters</div>
+      <div class="chapters-subtitle">Each chapter builds on the last. Start from Chapter 1.</div>
+    </div>
+  </div>
+
+  <div class="ch-list">
+
+    <!-- Ch 1 — LIVE -->
+    <a href="ML_M_Ch1.html" class="ch-item live">
+      <div class="ch-num-badge">01</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">What Is Learning?</span>
+          <span class="ch-badge badge-live">● Live</span>
+        </div>
+        <div class="ch-desc">The function approximation view, the probabilistic worldview, random variables and $P_{XY}$ as the god-object of ML, the i.i.d. assumption fully earned, and the parametric estimation framework.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">$P_{XY}$</span>
+          <span class="ch-tag">i.i.d.</span>
+          <span class="ch-tag">Parametric Estimation</span>
+          <span class="ch-tag">Distribution Shift</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Ch 2 — LOCKED -->
+    <div class="ch-item locked">
+      <div class="ch-num-badge">02</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">The Learning Machine</span>
+          <span class="ch-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="ch-desc">Hypothesis classes, loss functions, empirical risk, the bias-variance tradeoff introduced. Setting up the optimisation problem precisely.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">Hypothesis Class</span>
+          <span class="ch-tag">Loss Functions</span>
+          <span class="ch-tag">Empirical Risk</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-lock">🔒</span>
+      </div>
+    </div>
+
+    <!-- Ch 3 — LOCKED -->
+    <div class="ch-item locked">
+      <div class="ch-num-badge">03</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">Empirical Risk and the Likelihood Game</span>
+          <span class="ch-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="ch-desc">ERM as a principled optimisation framework, the connection between minimising empirical risk and maximising likelihood, KL divergence as the natural distance between distributions.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">ERM</span>
+          <span class="ch-tag">KL Divergence</span>
+          <span class="ch-tag">Generalisation</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-lock">🔒</span>
+      </div>
+    </div>
+
+    <!-- Ch 4 — LOCKED -->
+    <div class="ch-item locked">
+      <div class="ch-num-badge">04</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">Maximum Likelihood — Let the Data Speak</span>
+          <span class="ch-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="ch-desc">MLE derived from first principles, consistency and efficiency, the information inequality and Cramér-Rao bound, linear regression and logistic regression as MLE in disguise.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">MLE</span>
+          <span class="ch-tag">Fisher Information</span>
+          <span class="ch-tag">Logistic Regression</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-lock">🔒</span>
+      </div>
+    </div>
+
+    <!-- Ch 5 — LOCKED -->
+    <div class="ch-item locked">
+      <div class="ch-num-badge">05</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">Hidden Variables, Prior Beliefs, and the EM Algorithm</span>
+          <span class="ch-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="ch-desc">MAP estimation and the role of priors, mixture models, the EM algorithm as coordinate ascent on the ELBO, convergence guarantees and practical pitfalls.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">MAP</span>
+          <span class="ch-tag">EM Algorithm</span>
+          <span class="ch-tag">Mixture Models</span>
+          <span class="ch-tag">ELBO</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-lock">🔒</span>
+      </div>
+    </div>
+
+    <!-- Ch 6 — LOCKED -->
+    <div class="ch-item locked">
+      <div class="ch-num-badge">06</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">Linear Models and the Bias-Variance Tradeoff</span>
+          <span class="ch-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="ch-desc">The linear family of models and why they matter, bias-variance decomposition of generalisation error, overfitting and underfitting — with a running NIFTY options example throughout.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">Bias-Variance</span>
+          <span class="ch-tag">Linear Models</span>
+          <span class="ch-tag">Generalisation Error</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-lock">🔒</span>
+      </div>
+    </div>
+
+    <!-- Ch 7 — LOCKED -->
+    <div class="ch-item locked">
+      <div class="ch-num-badge">07</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">Regularisation — Taming the Overfit</span>
+          <span class="ch-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="ch-desc">Ridge and Lasso as MAP estimation, the geometry of regularisation, support vector machines and the maximum margin principle, the kernel trick.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">Ridge · Lasso</span>
+          <span class="ch-tag">SVM</span>
+          <span class="ch-tag">Kernel Methods</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-lock">🔒</span>
+      </div>
+    </div>
+
+    <!-- Ch 8 — LOCKED -->
+    <div class="ch-item locked">
+      <div class="ch-num-badge">08</div>
+      <div class="ch-body">
+        <div class="ch-row1">
+          <span class="ch-title">From Margins to Neurons</span>
+          <span class="ch-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="ch-desc">The bridge from SVMs to neural networks, universal approximation, backpropagation derived from the chain rule, gradient descent and its variants — and where the real difficulty lies.</div>
+        <div class="ch-tags">
+          <span class="ch-tag">Neural Networks</span>
+          <span class="ch-tag">Backpropagation</span>
+          <span class="ch-tag">Gradient Descent</span>
+        </div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-mcq">4 MCQ · 10 Terminal</span>
+        <span class="ch-lock">🔒</span>
+      </div>
+    </div>
+
+  </div><!-- end ch-list -->
+
+  <div class="path-note">
+    <strong>A note on pace.</strong> This module assumes no prior ML knowledge — only solid +2 mathematics and basic probability. Each chapter is self-contained but deliberately sequential: Chapter 3 (ERM) builds directly on Chapter 2 (loss functions), and Chapter 4 (MLE) is the payoff for both. If you've seen some of this material before, use the terminal questions at the end of each chapter to find your gaps. New chapters are added regularly — push the site, not the curriculum.
+  </div>
+
+</div><!-- end chapters-section -->
+
+<!-- WHAT YOU WILL LEARN -->
+<div class="outcomes-section">
+  <div class="outcomes-inner">
+    <div class="outcomes-title">What you will actually understand by the end</div>
+    <div class="outcomes-grid">
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text">Why <strong>every ML problem is distribution estimation</strong> — and what $P_{XY}$ has to do with it</div>
+      </div>
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text">What <strong>i.i.d. actually means</strong>, why it's almost never exactly true in finance, and when to worry</div>
+      </div>
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text">Why <strong>MLE, ridge regression, and logistic regression</strong> are all the same idea in different clothes</div>
+      </div>
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text">The <strong>bias-variance tradeoff</strong> — mathematically, not just as a cartoon</div>
+      </div>
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text">What the <strong>EM algorithm</strong> is doing geometrically, and why it always increases the likelihood</div>
+      </div>
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text">Why <strong>SVMs find the maximum margin</strong>, and what the kernel trick actually does to the input space</div>
+      </div>
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text"><strong>Backpropagation</strong> as repeated chain rule — not magic, just calculus applied carefully</div>
+      </div>
+      <div class="outcome-item">
+        <div class="outcome-check">✓</div>
+        <div class="outcome-text">Why <strong>model misspecification, distribution shift, and overfitting</strong> are the three ways every ML model fails in practice</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="foot-name">quan<span>(t)<sup style="font-size:0.7em;vertical-align:super;">4</sup></span>.com</div>
+    <div class="foot-sub">by Thrissur Trading Terminal Pvt Ltd · Free. Rigorous. Accessible.</div>
+  </div>
+  <div class="foot-copy">© 2025 quan(t)⁴.com</div>
+</footer>
+
+</body>
+</html>

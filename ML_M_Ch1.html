@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>What Is Learning? — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; transition: width 0.4s; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.locked { opacity: 0.4; cursor: not-allowed; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-f { background: rgba(232,114,42,0.1); color: var(--orange); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── ML TASK TABLE ── */
+.ml-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+.ml-table thead tr { background: var(--navy); color: white; }
+.ml-table thead th { padding: 0.75rem 1rem; text-align: left; font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.05em; font-weight: 600; }
+.ml-table tbody tr { border-bottom: 1px solid var(--border); }
+.ml-table tbody tr:last-child { border-bottom: none; }
+.ml-table tbody tr:nth-child(even) { background: var(--off); }
+.ml-table tbody td { padding: 0.75rem 1rem; line-height: 1.6; color: #2a2a3e; vertical-align: top; }
+.ml-table tbody td:first-child { font-weight: 600; color: var(--navy); font-family: 'DM Mono', monospace; font-size: 0.82rem; }
+.ml-table tbody td code { font-family: 'DM Mono', monospace; background: rgba(45,37,96,0.07); padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.82rem; color: var(--navy2); }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-body p:last-child { margin-bottom: 0; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; transition: border-color 0.2s; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy { background: rgba(30,158,94,0.1); color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard { background: rgba(45,37,96,0.08); color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+.ch-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>What Is Learning?</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:12.5%"></div></div>
+      <span class="tb-progress-label">1 / 8</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item active" href="ML_M_Ch1.html">
+    <div class="si-num">1</div>What Is Learning?
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">2</div>The Learning Machine
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">3</div>Empirical Risk and the Likelihood Game
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">4</div>Maximum Likelihood — Let the Data Speak
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">6</div>Linear Models and the Bias-Variance Tradeoff
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">7</div>Regularisation — Taming the Overfit
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">8</div>From Margins to Neurons
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Foundational</span>
+      <span class="ch-num">Chapter 01 of 08 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">What Is Learning?</h1>
+    <p class="chapter-subtitle">Every prediction you have ever made — about tomorrow's weather, the next delivery, NIFTY's close — was an act of learning. You didn't derive any equations. You observed, you updated, you predicted. Machine learning is just that process made precise, principled, and scalable.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The Prediction Instinct</h3>
+
+    <p>
+      This morning, before leaving home, you glanced at the sky. Grey clouds, a certain heaviness in the air — you grabbed your umbrella. You didn't solve a system of differential equations modelling atmospheric pressure and moisture convection. You looked at past rainy days stored somewhere in your memory, matched the current sky to that pattern, and made a call. You were, in the precise mathematical sense we are about to build, <strong>doing machine learning.</strong>
+    </p>
+
+    <p>
+      A doctor looking at an X-ray develops a feel — after thousands of images — for what a malignant shadow looks like versus a benign one. She can't write down the rule. She couldn't derive it from the physics of how tissue absorbs radiation. But she's learned it, reliably, from data.
+    </p>
+
+    <p>
+      A NIFTY trader who has watched the market for five years develops a feel for when the 10:30 AM spike is a genuine breakout versus a trap set by operators. She can't articulate the rule precisely. But she acts on it, and over time, she's more right than wrong.
+    </p>
+
+    <p>
+      Both the doctor and the trader are doing the same thing mathematically: <strong>mapping inputs to outputs using accumulated experience.</strong> Machine learning is the discipline that makes this process explicit — not to replace human judgment, but to scale it, formalise it, and make it auditable.
+    </p>
+
+    <div class="callout callout-intuition">
+      The human brain is extraordinarily good at learning from examples. It is extraordinarily bad at explaining what it learned. ML flips this: the algorithms are transparent about what they've learned (every parameter is inspectable), but they need far more examples than a human does. A child learns to recognise a cat from 10 examples. A neural network needs thousands. The trade-off between sample efficiency and transparency is one of the deepest themes in the field.
+    </div>
+
+    <h3>Formalising the Problem — The Function Approximation View</h3>
+
+    <p>
+      Let's give the prediction instinct a precise mathematical skeleton. We have two sets: the <strong>input space</strong> $\mathcal{X}$ (everything we observe) and the <strong>output space</strong> $\mathcal{Y}$ (everything we want to predict). There is some true relationship between inputs and outputs — a function we'll call $f$:
+    </p>
+
+    <div class="math-block">
+      $$f : \mathcal{X} \to \mathcal{Y}$$
+    </div>
+
+    <p>
+      $f$ is the oracle. It is the perfect answer to every question we want to ask. For the doctor, $f$ maps an X-ray image (a vector of pixel intensities) to a diagnosis ($0$ = healthy, $1$ = diseased). For the NIFTY trader, $f$ maps today's market state (returns, volatility, open interest, FII flows) to tomorrow's direction. For a Zomato engineer, $f$ maps order details (restaurant, location, time of day, weather) to estimated delivery time.
+    </p>
+
+    <p>
+      The problem: <strong>$f$ is unknown.</strong> We don't have access to the oracle. What we do have is a dataset — a finite collection of input-output pairs that $f$ produced:
+    </p>
+
+    <div class="math-block">
+      $$D = \{(x_1, y_1),\; (x_2, y_2),\; \ldots,\; (x_n, y_n)\}$$
+    </div>
+
+    <p>
+      where each $x_i \in \mathcal{X}$ is an observed input, and $y_i \in \mathcal{Y}$ is the corresponding output. The <strong>fundamental goal of supervised machine learning</strong> is: given $D$, find a function $\hat{f}$ that approximates $f$ well — not just on the data we've seen, but on new inputs we haven't seen yet.
+    </p>
+
+    <div class="callout callout-intuition">
+      The word "supervised" is worth unpacking. In supervised learning, every input $x_i$ in our dataset comes with a label $y_i$ — a known correct answer. Someone supervised the data collection. The doctor annotated the X-rays. The historical NSE data came with actual future prices. Contrast this with <em>unsupervised learning</em>, where you only have $x_i$ with no labels, and the goal is to find structure in $\mathcal{X}$ itself. We'll encounter both flavours. For now, supervised learning is our entry point.
+    </div>
+
+    <div class="callout callout-india">
+      What does $\mathcal{X}$ look like for a NIFTY prediction problem? A typical feature vector might include: yesterday's log-return, the current INDIA VIX level, the net FII buy/sell in cash markets, the put-call ratio on NIFTY options, and the global cues (S&P 500 futures overnight move). That's a vector in $\mathbb{R}^5$ — five numbers, one data point. Over 250 trading days, you have $n = 250$ such points. This is your $D$. It sounds like a lot. In ML terms, it is heartbreakingly small. A facial recognition model trains on millions of images. This is the data scarcity problem specific to finance, and it will haunt us throughout this course.
+    </div>
+
+    <h3>Why We Can't Just Derive $f$ — The Case for Statistics</h3>
+
+    <p>
+      A reasonable question: why not derive $f$ from first principles? We have physics, chemistry, biology. Can't we just <em>model</em> the system?
+    </p>
+
+    <p>
+      Sometimes yes. The trajectory of a cricket ball follows Newtonian mechanics well enough to be computed analytically. But the moment the system involves human beings at scale — markets, healthcare outcomes, consumer behaviour — the first-principles approach collapses under complexity.
+    </p>
+
+    <p>
+      Consider the NIFTY closing price tomorrow. It is the result of buy and sell orders placed by millions of participants — retail investors in Patna, proprietary traders in Mumbai, foreign institutional investors rebalancing in New York, algorithmic systems reacting to news in microseconds. No equation captures this. The system has too many interacting agents, too many feedback loops, too much dependence on news that hasn't happened yet.
+    </p>
+
+    <p>
+      The medical diagnosis problem is equally intractable from physics. The relationship between pixel intensities in a lung X-ray and whether the patient has cancer involves the entire biochemistry of tumour formation — a system of staggering complexity that is nowhere close to being derivable from first principles.
+    </p>
+
+    <p>
+      <strong>When $f$ is too complex to derive analytically, we do the only reasonable thing: we observe it repeatedly and build a statistical approximation.</strong> This is the philosophical leap from deterministic to probabilistic thinking, and it is the foundation of everything that follows.
+    </p>
+
+    <div class="callout callout-india">
+      India's weather forecasting is a beautiful example of this tension. The IMD (India Meteorological Department) runs sophisticated physical models — differential equations, atmospheric dynamics, the works. Yet a farmer in Vidarbha with 40 years of local observation often has better intuition for when the monsoon will arrive in his district than the IMD model. Why? Because the farmer has a richer local dataset and has implicitly learned the local anomalies that the global model smooths over. Modern ML weather models like Google's GraphCast combine both — the physical model provides structure, the data provides the corrections. This hybrid approach — physics where you can, statistics where you must — is the frontier of scientific ML.
+    </div>
+
+    <h3>The Probabilistic Worldview — Why Random Variables?</h3>
+
+    <p>
+      To make the statistical approach rigorous, we need a language. That language is probability theory. Specifically, we need to ask: <em>where do the data points $(x_i, y_i)$ come from?</em>
+    </p>
+
+    <p>
+      The dataset $D$ didn't have to come out exactly this way. If the doctor had seen different patients that month, the X-rays would be different. If we looked at a different set of trading days, the NIFTY returns would differ. The data is the outcome of a <strong>random process</strong> — and the mathematical object that captures a random process is a <strong>random variable.</strong>
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>The Probability Triplet $(\Omega, \mathcal{F}, P)$.</strong> All of probability theory is built on three objects:
+      <br/><br/>
+      $\Omega$ — the <strong>sample space</strong>: the set of all possible outcomes of the random experiment. If the experiment is "observe a patient," then $\Omega$ is the set of all possible patients in the world. If the experiment is "observe today's NIFTY," then $\Omega = \mathbb{R}_{>0}$.
+      <br/><br/>
+      $\mathcal{F}$ — a <strong>sigma-algebra</strong>: the collection of events we are allowed to assign probabilities to. For a coin flip, $\mathcal{F} = \{\emptyset, \{H\}, \{T\}, \{H,T\}\}$. For NIFTY's price, $\mathcal{F}$ contains events like "NIFTY closes between 23,000 and 24,000."
+      <br/><br/>
+      $P : \mathcal{F} \to [0,1]$ — the <strong>probability measure</strong>: assigns a number to each event. $P(\Omega) = 1$, $P(\emptyset) = 0$, and probabilities add up correctly for disjoint events.
+    </div>
+
+    <div class="callout callout-intuition">
+      Don't be intimidated by the sigma-algebra $\mathcal{F}$. It is the answer to a simple question: <em>which questions about the world are we even allowed to ask?</em> You can't assign a probability to every conceivable subset of $\mathbb{R}$ — measure theory tells us some subsets are pathological. The sigma-algebra is the safety fence: it defines the well-behaved events. In practice, for all problems in this course, $\mathcal{F}$ will be the standard Borel sigma-algebra on $\mathbb{R}^d$, which contains every interval, every open set, every closed set — essentially everything you'd ever want to compute a probability for.
+    </div>
+
+    <p>
+      Now we can define a <strong>random variable</strong> properly. A random variable $X$ is a function from the sample space $\Omega$ to $\mathbb{R}^d$:
+    </p>
+
+    <div class="math-block">
+      $$X : \Omega \to \mathbb{R}^d$$
+    </div>
+
+    <p>
+      Every data point $x_i$ you observe is one <strong>realisation</strong> of $X$ — one outcome of the random experiment made concrete. The random variable $X$ lives in the abstract probability space $(\Omega, \mathcal{F}, P)$. Its realisations $x_1, x_2, \ldots, x_n$ live in $\mathbb{R}^d$, where $d$ is the number of features.
+    </p>
+
+    <p>
+      The <strong>distribution function</strong> of $X$ — written $P_X$ or $F_X$ — tells us the probability of $X$ taking values in any region of $\mathbb{R}^d$. It completely characterises the random variable: if you know $P_X$, you know everything about the statistical behaviour of $X$.
+    </p>
+
+    <p>
+      Similarly, the label $Y$ is a random variable $Y : \Omega \to \mathcal{Y}$. Crucially, $X$ and $Y$ are both defined on the <strong>same</strong> sample space $\Omega$ — they are random variables arising from the same underlying random experiment. Observing a patient produces both an X-ray $x$ and a diagnosis $y$ simultaneously. Observing a trading day produces both a feature vector $x$ and a future return $y$ simultaneously.
+    </p>
+
+    <h3>The Joint Distribution $P_{XY}$ — The God-Object of ML</h3>
+
+    <p>
+      Since $X$ and $Y$ are both defined on the same $\Omega$, we can define their <strong>joint distribution</strong> $P_{XY}$ — a single mathematical object that encodes the complete statistical relationship between inputs and outputs.
+    </p>
+
+    <div class="math-block">
+      $$P_{XY}(x, y) = P(X \leq x,\; Y \leq y)$$
+    </div>
+
+    <p>
+      This is the god-object of machine learning. Everything — every task, every model, every algorithm — is a different question asked of $P_{XY}$. Want to classify? Ask for the conditional $P_{Y|X}$. Want to predict a number? Compute $\mathbb{E}[Y | X = x]$. Want to generate realistic data? Sample from the marginal $P_X$. Want to understand which inputs are informative? Look at the mutual information between $X$ and $Y$.
+    </p>
+
+    <p>
+      The tragedy: <strong>we never get to see $P_{XY}$ directly.</strong> We only see $D$ — $n$ samples drawn from it. All of ML is the art of drawing conclusions about $P_{XY}$ from this finite, noisy, incomplete glimpse.
+    </p>
+
+    <table class="ml-table">
+      <thead>
+        <tr>
+          <th>ML Task</th>
+          <th>What you're really estimating</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Classification</td>
+          <td><code>P(Y | X)</code> — probability of label given features</td>
+          <td>Is this NIFTY move a breakout or a trap?</td>
+        </tr>
+        <tr>
+          <td>Regression</td>
+          <td><code>E[Y | X]</code> — expected output given features</td>
+          <td>What will NIFTY close at tomorrow?</td>
+        </tr>
+        <tr>
+          <td>Density Estimation</td>
+          <td><code>P(X)</code> — marginal distribution of features</td>
+          <td>How unusual is today's INDIA VIX reading?</td>
+        </tr>
+        <tr>
+          <td>Anomaly Detection</td>
+          <td>Regions where <code>P(X)</code> is very low</td>
+          <td>Flag suspicious order flow on NSE</td>
+        </tr>
+        <tr>
+          <td>Generation</td>
+          <td>Sample new <code>x ~ P(X)</code></td>
+          <td>Simulate a realistic NIFTY return path</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-india">
+      Every time NSE publishes a new options chain at 9:15 AM, that is one data point $(x_i, y_i)$ — a snapshot of the market state and the resulting option prices. The entire history of NSE options data since 2001 is just $D$: roughly 5,000 trading days, one sample per day from an infinite, unknown $P_{XY}$. The market has been running for over two decades and we still have only 5,000 samples. For context, a state-of-the-art image classification model trains on 14 million images. This is why financial ML is genuinely hard, and why the elegant theory we're building here must always be applied with humility about sample size.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Identifying the ML Problem</span>
+        <span class="we-badge">🏏 IPL + 🇮🇳 NIFTY</span>
+      </div>
+      <div class="we-body">
+        <p>For each scenario below, identify $\mathcal{X}$, $\mathcal{Y}$, what $P_{XY}$ represents, and which ML task is being performed.</p>
+
+        <div class="we-step">Scenario A — IPL match prediction</div>
+        <p>Before each IPL match, you observe: pitch report (5 categorical features), toss result, playing XI on both sides (22 binary indicators), recent team form (win/loss over last 5 games). You want to predict whether the batting-first team scores above 180.</p>
+        <p>$\mathcal{X} \subset \mathbb{R}^{30}$ approximately (encoding all the features above). $\mathcal{Y} = \{0, 1\}$ (below 180, above 180). This is <strong>binary classification</strong>. We're estimating $P(Y=1 \mid X=x)$ — the probability of a high score given the match conditions. $P_{XY}$ encodes everything about how pitch conditions, team composition, and form collectively determine scoring outcomes.</p>
+
+        <div class="we-step">Scenario B — NIFTY intraday return prediction</div>
+        <p>At 9:15 AM each day, you observe: overnight SGX Nifty change, previous day's close-to-close return, INDIA VIX opening level, net FII cash market activity (previous session), and the PCR (put-call ratio) on the front-month contract. You want to predict the NIFTY return from 9:15 AM to 3:30 PM.</p>
+        <p>$\mathcal{X} \subset \mathbb{R}^5$. $\mathcal{Y} = \mathbb{R}$ (a continuous return). This is <strong>regression</strong>. We're estimating $\mathbb{E}[Y \mid X=x]$. $P_{XY}$ encodes the statistical relationship between opening market conditions and the intraday return that follows.</p>
+
+        <div class="we-answer">
+          <strong>The key observation:</strong> Same mathematical framework, completely different domains. $\mathcal{X}$, $\mathcal{Y}$, and the relevant conditional of $P_{XY}$ change — but the fundamental question ("use $D$ to approximate $f$") stays the same. This universality is why the mathematics of ML is worth learning once and applying everywhere.
+        </div>
+      </div>
+    </div>
+
+    <h3>The i.i.d. Assumption — Powerful, Convenient, and Often Wrong</h3>
+
+    <p>
+      We said the dataset $D$ consists of observations drawn from $P_{XY}$. But we haven't said <em>how</em> they're drawn. The standard assumption — the one that makes the mathematics tractable — is that the data points are drawn <strong>independently and identically distributed</strong>, which we write as:
+    </p>
+
+    <div class="math-block">
+      $$(x_i, y_i) \overset{\text{i.i.d.}}{\sim} P_{XY}, \quad i = 1, \ldots, n$$
+    </div>
+
+    <p>
+      Two words, four letters, and an assumption that carries enormous weight. Let's earn each one.
+    </p>
+
+    <p>
+      <strong>Identically distributed</strong> means every $(x_i, y_i)$ is drawn from the <em>same</em> $P_{XY}$. The rules of the game don't change between observations. The distribution that generated the first data point is the same one that generated the last.
+    </p>
+
+    <div class="callout callout-warning">
+      <strong>Distribution shift</strong> is what happens when the identical distribution assumption breaks. Train your NIFTY prediction model on data from 2015 to 2019. Deploy it in March 2020. The COVID-19 crash changes the relationship between every feature and the label — FII flows, VIX levels, PCR ratios all behave in qualitatively different ways during a pandemic-driven circuit breaker. The $P_{XY}$ during 2020 is genuinely different from the $P_{XY}$ during 2017. Your model was trained on the wrong distribution. This is the single biggest reason financial ML models that backtest beautifully fail catastrophically in live trading.
+    </div>
+
+    <p>
+      <strong>Independent</strong> means knowing one data point tells you nothing about another. Formally, for $i \neq j$:
+    </p>
+
+    <div class="math-block">
+      $$P\bigl((x_i, y_i) \mid (x_j, y_j)\bigr) = P\bigl((x_i, y_i)\bigr)$$
+    </div>
+
+    <p>
+      The observations don't talk to each other. They have no memory of each other. Whether patient 47 in the X-ray dataset has cancer tells you nothing about patient 48's diagnosis — they're unconnected strangers. Independence is a very reasonable assumption there.
+    </p>
+
+    <div class="callout callout-warning">
+      <strong>Serial dependence</strong> is what happens when independence breaks. NIFTY daily returns are <em>not</em> independent. If NIFTY crashed 4% today, tomorrow's return distribution is statistically different from what it would be on a quiet day. Volatility clusters — large moves tend to be followed by large moves. Institutional investors rebalance over multiple days. News cycles create momentum. This is well-documented and goes by the name of <em>autocorrelation</em> in financial time series. The i.i.d. assumption on daily returns is a convenient lie. A usable lie, in many contexts — but always a lie. Know when you're making it.
+    </div>
+
+    <p>
+      So why do we use i.i.d. at all? Because without it, the mathematics of learning theory — error bounds, sample complexity, generalisation guarantees — becomes vastly harder to derive. The i.i.d. assumption is the <strong>price of tractability</strong>. It gives us clean theorems and usable algorithms. The practitioner's job is to know when that price is too high for the problem at hand, and to reach for tools designed for dependent data (time series models, recurrent networks, state space models) when it is.
+    </p>
+
+    <h3>The Fundamental Problem of ML, Stated Precisely</h3>
+
+    <p>
+      We now have all the ingredients for a precise statement of what ML is trying to do. It is worth reading slowly.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>The Fundamental Problem of Machine Learning.</strong><br/><br/>
+      Given a dataset $D = \{(x_i, y_i)\}_{i=1}^n$ drawn i.i.d. from an unknown joint distribution $P_{XY}$ over $\mathcal{X} \times \mathcal{Y}$, estimate $P_{XY}$ — or the relevant conditional or marginal of it — well enough to make accurate predictions on new, unseen inputs drawn from the same $P_{XY}$.
+    </div>
+
+    <p>
+      This is, at its core, an estimation problem. We want to estimate a probability distribution from samples. The challenge: $P_{XY}$ could be <em>any</em> distribution over $\mathcal{X} \times \mathcal{Y}$ — an infinite-dimensional space of possibilities. Estimating an arbitrary distribution from $n$ finite samples is impossible in general. We need to constrain the problem.
+    </p>
+
+    <h3>The Parametric Approach — Making a Bet on the Shape of the World</h3>
+
+    <p>
+      The standard way to make the estimation problem tractable is to assume that $P_{XY}$ belongs to some <strong>parametric family</strong> — a specific collection of distributions indexed by a finite-dimensional parameter vector $\theta \in \Theta$:
+    </p>
+
+    <div class="math-block">
+      $$\mathcal{P} = \{P_\theta : \theta \in \Theta\}, \quad \Theta \subseteq \mathbb{R}^k$$
+    </div>
+
+    <p>
+      For example: assume the data is Gaussian, $P_\theta = \mathcal{N}(\mu, \Sigma)$, so $\theta = (\mu, \Sigma)$ — a mean vector and a covariance matrix. Or assume the conditional $P_{Y|X}$ is a linear function of $X$ plus Gaussian noise, which leads to linear regression. The parametric assumption shrinks the problem from "find an arbitrary distribution over an infinite-dimensional space" to "find the right $k$-dimensional parameter vector."
+    </p>
+
+    <p>
+      With a parametric family in hand, the estimation problem becomes an optimisation problem. Define a <strong>distance metric</strong> $d(P_{XY}, P_\theta)$ that measures how far the parametric distribution $P_\theta$ is from the true unknown $P_{XY}$. Then find the parameter that minimises this distance:
+    </p>
+
+    <div class="math-block">
+      $$\theta^* = \underset{\theta \in \Theta}{\arg\min}\; d(P_{XY},\; P_\theta)$$
+    </div>
+
+    <div class="callout callout-intuition">
+      Read that equation carefully. It is the architecture of all of supervised machine learning. You choose a model family $\mathcal{P}$ (linear model, decision tree, neural network — this is the "model choice"). You choose a distance $d$ (squared error, cross-entropy, KL divergence — this is the "loss function"). You optimise. The entire rest of this course — all eight chapters — is unpacking three questions: <em>which family?</em> <em>which distance?</em> <em>how do we optimise when we can't see $P_{XY}$ directly, only samples from it?</em> Everything flows from this one equation.
+    </div>
+
+    <p>
+      There's one immediate subtlety: we can't actually compute $d(P_{XY}, P_\theta)$, because $P_{XY}$ is unknown. We only have samples $D$. So in practice, we approximate $d(P_{XY}, P_\theta)$ using the data. <em>How</em> we do that approximation — and what it means mathematically — is the subject of Chapter 2.
+    </p>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · The Parametric Bet</span>
+        <span class="we-badge">🇮🇳 NIFTY Returns</span>
+      </div>
+      <div class="we-body">
+        <p>Suppose we observe $n = 500$ daily NIFTY log-returns $\{x_1, \ldots, x_{500}\}$ and want to estimate their distribution $P_X$. We decide to use a parametric Gaussian family:</p>
+        <div class="math-block">
+          $$P_\theta = \mathcal{N}(\mu, \sigma^2), \quad \theta = (\mu, \sigma^2)$$
+        </div>
+
+        <div class="we-step">What the parametric bet means</div>
+        <p>We are betting that NIFTY daily log-returns are drawn from some Gaussian distribution — that the true $P_X$ is one member of the family $\{\mathcal{N}(\mu, \sigma^2) : \mu \in \mathbb{R}, \sigma > 0\}$. This reduces the infinite-dimensional problem of estimating $P_X$ to a two-dimensional problem: find $(\mu^*, \sigma^{*2})$.</p>
+
+        <div class="we-step">The optimisation problem</div>
+        <p>We want $\theta^* = (\mu^*, \sigma^{*2})$ such that $\mathcal{N}(\mu^*, \sigma^{*2})$ is "closest" to the true $P_X$ in some distance $d$. Using the sample mean and variance as an initial guess:</p>
+        <div class="math-block">
+          $$\hat{\mu} = \frac{1}{n}\sum_{i=1}^n x_i, \qquad \hat{\sigma}^2 = \frac{1}{n}\sum_{i=1}^n (x_i - \hat{\mu})^2$$
+        </div>
+        <p>In Chapter 4, we'll see that this is exactly the Maximum Likelihood Estimator — the $\theta$ that minimises the KL divergence from $P_X$ to $P_\theta$ using only the samples in $D$.</p>
+
+        <div class="we-step">When the bet is wrong</div>
+        <p>NIFTY returns are well-known to have fat tails — the probability of a 4-sigma daily move is much higher in reality than the Gaussian predicts. On 12 March 2020, NIFTY fell 8.3% in a single session. Under $\mathcal{N}(0.05\%, 1\%)$ (roughly calibrated to historical data), the probability of an 8.3% move is astronomically small — effectively zero. The Gaussian family simply cannot express this.</p>
+
+        <div class="we-answer">
+          <strong>The lesson:</strong> the parametric bet is a double-edged sword. It makes the problem tractable, but if the true $P_X$ doesn't belong to your chosen family, no amount of data will give you the right answer — you'll converge to the <em>best Gaussian approximation</em> of the true distribution, not the true distribution itself. This is called <strong>model misspecification</strong>, and learning to diagnose it is a core practitioner skill.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      We now have the full picture of what machine learning is, mathematically. Data is samples from an unknown $P_{XY}$. Learning is estimating $P_{XY}$, or the right conditional of it, by fitting a parametric family using an optimisation criterion. Generalisation — performing well on new, unseen data — is the proof that we've learned the right thing. Everything else is detail.
+    </p>
+
+    <p>
+      But there is one question we haven't answered: what should the distance $d$ be? How do you measure the gap between two probability distributions when you can only see samples from one of them, and the other is your own parametric guess? That is the question that unlocks everything. It is the subject of Chapter 2.
+    </p>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 01</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch01 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A Zomato engineer builds a model to predict delivery time. She trains it on data collected in Delhi during October–November 2024 and deploys it across India in June 2025. In Mumbai during the monsoon, the model performs terribly. Which assumption of the i.i.d. framework is <strong>most directly violated?</strong>
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Independence — monsoon deliveries are correlated with each other.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Identical distribution — the true $P_{XY}$ in Mumbai monsoon is different from Delhi in October.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>The parametric assumption — a linear model can't capture delivery time.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>The function approximation assumption — $f$ doesn't exist for delivery time prediction.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The identical distribution assumption requires that training and deployment data come from the same $P_{XY}$. Here, the training data was collected in a specific city, season, and time period. The deployment context — different city, monsoon conditions, different traffic patterns, different restaurant density — is a genuinely different $P_{XY}$. The relationship between features (distance, time of day, restaurant) and delivery time is structurally different in monsoon Mumbai versus autumn Delhi.<br/><br/>
+          This is called <strong>distribution shift</strong> or <strong>covariate shift</strong>, and it is one of the most common failure modes of deployed ML systems. Option A (independence) might also be mildly violated — nearby deliveries during flooding may be correlated — but the primary failure is the distributional mismatch between training and deployment.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch01 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          An ML practitioner wants to predict whether an IPL batsman will score above 50 in a given match. She defines $\mathcal{X}$ as the batsman's career statistics and $\mathcal{Y} = \{0, 1\}$. What is she <strong>actually estimating</strong> from $P_{XY}$?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>The marginal $P_X$ — the distribution of career statistics across all batsmen.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>The joint $P_{XY}$ directly — the full distribution over career stats and match outcomes.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>The conditional $P(Y=1 \mid X=x)$ — the probability of scoring above 50 given career stats.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The marginal $P_Y$ — the overall fraction of innings where batsmen score above 50.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Classification is always about estimating $P(Y \mid X)$ — the probability of a particular label given the observed features. When the model sees Virat Kohli's career statistics (average 58, strike rate 130, ...) and outputs "72% probability of scoring above 50," it is evaluating $P(Y=1 \mid X = x_\text{Kohli})$.<br/><br/>
+          Option B — estimating the full joint $P_{XY}$ — would also work and is more powerful, but it's harder and often unnecessary. If you only need to classify, you only need the conditional. Option A ($P_X$) is the distribution of career statistics themselves — this is what you'd estimate if you were doing density estimation or anomaly detection, not classification. Option D ($P_Y$) is just the base rate — the fraction of innings above 50 regardless of who's batting — which ignores the feature information entirely.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch01 / q03</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A trader trains a NIFTY direction model on daily data from 2015–2022 and achieves 58% accuracy on a held-out test set from the same period. In live trading from January 2023 onwards, the model achieves only 51% — barely above random. Which of the following is the <strong>most likely explanation</strong>, and why?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>The independence assumption was violated — consecutive trading days are correlated.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>The model is too complex — it has too many parameters for the dataset size.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Distribution shift — the statistical regime governing NIFTY returns changed after 2022.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The test set accuracy of 58% was a fluke — 58% is not statistically significant over a few years.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The held-out test set comes from the same 2015–2022 period as the training data, so if the model performs well there, overfitting is less likely to be the primary issue. The sharp drop in live performance starting 2023 is the hallmark of distribution shift: the $P_{XY}$ underlying NIFTY returns in 2023–2024 (rising interest rate environment, post-COVID normalisation, changed FII patterns) is measurably different from 2015–2022.<br/><br/>
+          The model learned to exploit statistical regularities that were genuinely present in the training period but faded or reversed in the deployment period. This is also known as <strong>non-stationarity</strong> in financial time series, and it is arguably the central challenge of all quantitative trading. The correct response is not to build a better model on the old data, but to continuously retrain on recent data, use shorter lookback windows, or build models that explicitly account for regime changes.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch01 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A researcher fits a Gaussian model $\mathcal{N}(\hat\mu, \hat\sigma^2)$ to 10 years of NIFTY daily log-returns and uses it to estimate the probability of a daily move worse than $-5\%$. The Gaussian gives a probability of $3.2 \times 10^{-7}$. In reality, such moves have occurred 4 times in 10 years (roughly 2,500 trading days). What is happening, and what is its name?
+        </p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Overfitting — the model has memorised the training data too well.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Distribution shift — NIFTY's true distribution changed during the 10-year period.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>Model misspecification — the true $P_X$ has fat tails that the Gaussian family cannot express.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Insufficient data — 2,500 data points is not enough to fit a Gaussian accurately.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The empirical frequency of $-5\%$ days is $4/2500 \approx 1.6 \times 10^{-3}$ — five orders of magnitude larger than the Gaussian prediction of $3.2 \times 10^{-7}$. This is not a matter of data quantity or changing regimes. It is a fundamental mismatch between the shape of the parametric family and the shape of the true distribution.<br/><br/>
+          The Gaussian distribution has exponentially thin tails — it places essentially zero probability on events beyond 3–4 standard deviations. But financial returns have <strong>fat tails</strong> (formally, their kurtosis exceeds 3): extreme events occur far more frequently than any Gaussian would predict. This is documented in every liquid market on earth and goes by names like leptokurtosis or heavy-tailed distributions.<br/><br/>
+          This is <strong>model misspecification</strong>: the true $P_X$ lies outside your parametric family $\{\mathcal{N}(\mu, \sigma^2)\}$. No amount of data, no clever optimisation, will fix this. The fix is to choose a richer family — Student-t distributions, mixture models, or non-parametric approaches — that can actually express fat tails.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 01</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Work through these independently. Q1–3 test direct understanding. Q4–7 require connecting ideas across sections. Q8–10 will make you think beyond the chapter.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            For each of the following, define $\mathcal{X}$, $\mathcal{Y}$, and state whether it is classification, regression, or density estimation: (a) Predicting whether a patient will be readmitted to hospital within 30 days, given their discharge summary. (b) Estimating tomorrow's INDIA VIX level given today's market state. (c) Identifying whether a transaction on the NSE is suspicious (possible market manipulation).
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            An X-ray image of dimensions $p \times q$ pixels, each with 256 grayscale values, is treated as a data point. What is the dimension $d$ of the feature vector $x \in \mathbb{R}^d$? For a standard chest X-ray at $1024 \times 1024$ resolution, compute $d$. What does this imply about the size of the feature space relative to typical medical dataset sizes (usually a few thousand images)?
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            Let $\Omega$ be the sample space of all possible trading days on NSE. Define two random variables $X: \Omega \to \mathbb{R}^5$ (opening market features) and $Y: \Omega \to \mathbb{R}$ (intraday return). Describe in words what the following objects represent: (a) $P_X$, (b) $P_Y$, (c) $P_{XY}$, (d) $P(Y \mid X = x_0)$ where $x_0$ is today's specific feature vector.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            A hospital builds a cancer detection model on patients from Mumbai's Tata Memorial Hospital and deploys it at a rural clinic in Chhattisgarh. List at least three specific ways in which the i.i.d. assumption might be violated in this deployment. For each violation, state whether it is independence or identical distribution that breaks, and explain the mechanism.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            Consider the parametric family of distributions $\mathcal{P} = \{\text{Bernoulli}(p) : p \in [0,1]\}$ applied to the problem of predicting whether NIFTY closes up or down on a given day. (a) What is the parameter $\theta$ here? (b) What assumption about $P_Y$ are you making by choosing this family? (c) Is this assumption reasonable? What does it imply about the marginal probability of NIFTY closing up on any given day?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            You observe that a NIFTY prediction model trained on 2010–2020 data performs well out-of-sample within that period but poorly on 2021–2023 data. A colleague says "just add more data and retrain." A second colleague says "the problem is non-stationarity — more data won't help unless you address the regime change." Who is more likely correct, and why? What specific test would you run to distinguish between overfitting and distribution shift as the root cause?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            In the NIFTY return example from Worked Example 2, we estimated $P_X$ using a Gaussian. The sample mean of daily log-returns over 10 years is approximately $\hat\mu = 0.0004$ (0.04% per day) and sample standard deviation $\hat\sigma = 0.0095$ (0.95% per day). Using these parameters, compute $P(\text{NIFTY falls more than 3\%})$ under the fitted Gaussian. Then compare with the empirical frequency: historically, NIFTY has had roughly 18 such days in 3,000 trading sessions. What does this comparison tell you about the Gaussian assumption?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            The fundamental problem of ML requires that test data be drawn from the same $P_{XY}$ as training data. In reinforcement learning for trading, the algorithm's own actions affect the market, which changes $P_{XY}$. Explain precisely which assumption of the standard ML framework breaks in this setting, and why this makes reinforcement learning fundamentally harder than supervised learning.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            We argued that the parametric approach is necessary for tractability. But there is an alternative: non-parametric density estimation (e.g., kernel density estimation), which makes no assumption about the functional form of $P_X$. (a) What is the price of the non-parametric approach in terms of data requirements? (b) Given that financial datasets are typically small (hundreds to thousands of points) and feature spaces are high-dimensional ($d$ can be 10–100), argue for or against using non-parametric methods in quantitative finance.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            Is the i.i.d. assumption ever exactly true in practice? Construct a careful argument that it is — by describing a data-generating process (real or hypothetical) where i.i.d. holds exactly. Then construct an equally careful argument that even in your example, some subtle dependence or distributional change might still be present. What does this exercise tell you about the role of assumptions in statistical modelling?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <span class="ch-nav-btn disabled">← Previous</span>
+    <a href="ML_M_Ch2.html" class="ch-nav-btn primary">Next: The Learning Machine →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 Spot on. The probability gods are pleased.",
+  "✨ That's the kind of clarity that separates signal from noise.",
+  "🏆 Correct. Your priors were well-calibrated.",
+  "🔥 The distribution of your answers is looking healthy.",
+  "💡 Exactly right. Now you see why everyone assumes i.i.d. — and when not to.",
+  "🎓 Clean reasoning. That's what rigour looks like.",
+  "📈 Likelihood of being a good ML practitioner: just went up.",
+  "🧮 Textbook correct — and we mean that in the best possible way.",
+  "⚡ Sharp. You're already thinking like a statistician.",
+  "🌟 $P(\\text{correct answer} \\mid \\text{your reasoning}) = 1$. Well done.",
+  "💎 Model well-specified. Answer verified.",
+  "🚀 Optimal $\\theta^*$ selected. Carry on."
+];
+
+const wrongMsgs = [
+  "🌀 Distribution shift detected between your answer and reality. Re-read the section.",
+  "📐 The sigma-algebra of correct answers doesn't contain this one. Try again.",
+  "📉 Model misspecification. Your parametric family needs updating.",
+  "🏦 Even a Gaussian tail has more probability mass than this answer. Look again.",
+  "😰 Overfitting to a wrong intuition. Regularise your thinking.",
+  "🤔 The i.i.d. assumption is violated between your answer and the question. Recalibrate.",
+  "📊 High variance estimate. Read the callout boxes and try once more.",
+  "🎰 That's a prior without a likelihood update. Apply Bayes and retry."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'opts'));
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>

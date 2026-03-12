@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quantttt — Master Quantitative Trading</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5%; height: 70px;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-emblem { width: 36px; height: 36px; flex-shrink: 0; }
+.logo-text { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--navy); letter-spacing: 0.02em; }
+.logo-text span { color: var(--orange); }
+.logo-text span sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.nav-links { display: flex; gap: 2.5rem; list-style: none; }
+.nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+.nav-links a:hover { color: var(--navy); }
+.nav-cta { background: var(--orange); color: white; padding: 0.55rem 1.4rem; border-radius: 6px; font-weight: 600; font-size: 0.88rem; text-decoration: none; transition: background 0.2s, transform 0.2s; }
+.nav-cta:hover { background: var(--orange2); transform: translateY(-1px); }
+
+/* HERO */
+.hero { min-height: 100vh; display: flex; align-items: center; padding: 90px 5% 5rem; position: relative; overflow: hidden; background: var(--white); }
+.hero::after { content: ''; position: absolute; right: -80px; top: 0; bottom: 0; width: 42%; background: linear-gradient(135deg, var(--light) 0%, #fde8d4 100%); clip-path: polygon(12% 0, 100% 0, 100% 100%, 0% 100%); z-index: 0; }
+
+.hero-left { position: relative; z-index: 2; max-width: 580px; }
+
+.hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--light); border: 1px solid rgba(232,114,42,0.3); border-radius: 100px; padding: 0.35rem 1rem; font-size: 0.78rem; font-weight: 600; color: var(--orange); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1.8rem; animation: fadeUp 0.8s both; }
+
+.hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5.5vw, 5rem); line-height: 1.08; letter-spacing: -1px; color: var(--navy); margin-bottom: 1.5rem; animation: fadeUp 0.8s 0.1s both; }
+.hero h1 em { font-style: italic; color: var(--orange); }
+
+.hero-sub { font-size: 1.1rem; color: var(--muted); max-width: 500px; line-height: 1.75; margin-bottom: 2.5rem; animation: fadeUp 0.8s 0.2s both; }
+
+.hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; animation: fadeUp 0.8s 0.3s both; }
+
+.btn-primary { background: var(--orange); color: white; padding: 0.9rem 2rem; border-radius: 8px; font-weight: 700; font-size: 0.95rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+.btn-primary:hover { background: var(--orange2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,114,42,0.3); }
+
+.btn-outline { background: transparent; color: var(--navy); padding: 0.9rem 2rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border: 2px solid var(--navy); transition: all 0.2s; }
+.btn-outline:hover { background: var(--navy); color: white; }
+
+.hero-stats { display: flex; gap: 2.5rem; margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid var(--border); flex-wrap: wrap; animation: fadeUp 0.8s 0.4s both; }
+.stat-num { font-family: 'Barlow Condensed', sans-serif; font-size: 2.4rem; font-weight: 700; color: var(--navy); line-height: 1; }
+.stat-num span { color: var(--orange); }
+.stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.hero-right { position: absolute; right: 5%; top: 50%; transform: translateY(-50%); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; animation: fadeUp 0.8s 0.2s both; }
+.hero-emblem { width: 220px; filter: drop-shadow(0 20px 50px rgba(232,114,42,0.18)); }
+.hero-brand-name { font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--navy); opacity: 0.4; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* MARQUEE */
+.marquee-wrap { background: var(--navy); padding: 0.85rem 0; overflow: hidden; }
+.marquee-track { display: flex; width: max-content; animation: marquee 30s linear infinite; }
+.marquee-item { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: rgba(255,255,255,0.5); padding: 0 2rem; white-space: nowrap; display: flex; align-items: center; gap: 1rem; }
+.marquee-item::after { content: '◆'; color: var(--orange); font-size: 0.45rem; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* SECTIONS */
+section { padding: 6rem 5%; }
+
+.section-label { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.6rem; }
+.section-label::before { content: ''; display: inline-block; width: 24px; height: 2px; background: var(--orange); border-radius: 2px; }
+
+.section-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.5vw, 2.8rem); color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 1rem; }
+.section-sub { color: var(--muted); font-size: 1.05rem; max-width: 520px; line-height: 1.7; }
+
+/* HOW */
+.how-section { background: var(--off); }
+.how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 3.5rem; background: var(--border); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+.how-card { background: var(--white); padding: 2.5rem 2rem; position: relative; transition: background 0.3s; }
+.how-card:hover { background: var(--light); }
+.how-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+.how-card:hover::after { transform: scaleX(1); }
+.how-step { font-family: 'Barlow Condensed', sans-serif; font-size: 3.5rem; font-weight: 700; color: rgba(45,37,96,0.06); line-height: 1; margin-bottom: 1rem; }
+.how-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.2rem; }
+.icon-o { background: rgba(232,114,42,0.1); }
+.icon-n { background: rgba(45,37,96,0.08); }
+.icon-g { background: rgba(30,158,94,0.1); }
+.how-card h3 { font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.6rem; }
+.how-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+
+/* TOPICS */
+.topics-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
+.topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px,1fr)); gap: 1rem; }
+.topic-card { border: 1.5px solid var(--border); border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+.topic-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+.topic-card:hover { border-color: var(--orange); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(232,114,42,0.12); }
+.topic-card:hover::before { transform: scaleX(1); }
+.topic-tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; margin-bottom: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.tag-b { background: rgba(30,158,94,0.1); color: var(--green); }
+.tag-i { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tag-a { background: rgba(45,37,96,0.08); color: var(--navy); }
+.topic-card h4 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; }
+.topic-card p { color: var(--muted); font-size: 0.86rem; line-height: 1.65; }
+.topic-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.topic-count { font-family: 'DM Mono', monospace; font-size: 0.73rem; color: var(--muted); }
+.topic-arrow { color: var(--orange); transition: transform 0.2s; }
+.topic-card:hover .topic-arrow { transform: translateX(4px); }
+
+/* PRACTICE */
+.practice-section { background: var(--off); }
+.problem-shell { margin-top: 3rem; background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 40px rgba(0,0,0,0.06); }
+.shell-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.5rem; background: var(--navy); }
+.shell-dots { display: flex; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-r { background: #ff5f56; } .dot-y { background: #ffbd2e; } .dot-g { background: #27c93f; }
+.shell-title { font-family: 'DM Mono', monospace; font-size: 0.76rem; color: rgba(255,255,255,0.4); }
+.shell-badge { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); }
+.problem-body { display: grid; grid-template-columns: 1fr 1fr; min-height: 380px; }
+.prob-left { padding: 2rem; border-right: 1px solid var(--border); }
+.prob-meta { display: flex; gap: 0.6rem; margin-bottom: 1.3rem; }
+.meta-pill { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.22rem 0.7rem; border-radius: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+.pill-m { background: rgba(232,114,42,0.1); color: var(--orange); border: 1px solid rgba(232,114,42,0.25); }
+.pill-t { background: rgba(45,37,96,0.07); color: var(--navy); border: 1px solid rgba(45,37,96,0.2); }
+.prob-q { font-size: 0.97rem; line-height: 1.8; margin-bottom: 1.3rem; }
+.prob-q strong { color: var(--orange); font-weight: 700; }
+.prob-formula { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--navy2); margin-bottom: 1.3rem; line-height: 1.9; }
+.options { display: flex; flex-direction: column; gap: 0.55rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.prob-right { padding: 2rem; display: flex; flex-direction: column; }
+.explanation { background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.75; color: var(--muted); display: none; flex: 1; margin-bottom: 1rem; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--navy); }
+.expl-ans { color: var(--green); font-weight: 700; font-size: 1rem; }
+.check-btn { background: var(--orange); color: white; border: none; padding: 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; margin-top: auto; }
+.check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.check-btn:disabled { opacity: 0.4; cursor: default; }
+.hints { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.45rem; }
+.hint { font-size: 0.82rem; color: var(--muted); display: flex; gap: 0.5rem; }
+.hint-ic { color: var(--orange); }
+
+/* TESTIMONIALS */
+.testi-section { background: var(--navy); }
+.testi-section .section-label { color: var(--orange2); }
+.testi-section .section-label::before { background: var(--orange2); }
+.testi-section .section-title { color: white; }
+.testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: 3rem; }
+.testi-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.8rem; transition: border-color 0.2s, background 0.2s; }
+.testi-card:hover { border-color: rgba(232,114,42,0.4); background: rgba(255,255,255,0.07); }
+.testi-quote { font-size: 0.92rem; color: rgba(255,255,255,0.62); line-height: 1.8; margin-bottom: 1.5rem; font-style: italic; font-weight: 300; }
+.testi-author { display: flex; align-items: center; gap: 0.75rem; }
+.testi-av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: white; }
+.av1 { background: var(--orange); } .av2 { background: var(--green); } .av3 { background: #6366f1; }
+.testi-name { font-size: 0.88rem; font-weight: 600; color: white; }
+.testi-role { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.15rem; }
+
+/* CTA */
+.cta-section { background: linear-gradient(135deg, var(--light) 0%, #fde8d4 100%); text-align: center; padding: 7rem 5%; position: relative; overflow: hidden; }
+.cta-emblem { position: absolute; right: 5%; top: 50%; transform: translateY(-50%); width: 280px; opacity: 0.07; pointer-events: none; }
+.cta-section h2 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 4.5vw, 3.5rem); color: var(--navy); letter-spacing: -0.5px; margin-bottom: 1rem; }
+.cta-section h2 em { font-style: italic; color: var(--orange); }
+.cta-section p { color: var(--muted); font-size: 1.05rem; max-width: 480px; margin: 0 auto 2.5rem; line-height: 1.7; }
+.cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
+
+/* FOOTER */
+footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
+.foot-brand { display: flex; align-items: center; gap: 10px; }
+.foot-logo-svg { width: 30px; }
+.foot-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: white; }
+.foot-name span { color: var(--orange); }
+.foot-sub { font-size: 0.74rem; color: rgba(255,255,255,0.35); margin-top: 0.25rem; }
+.foot-links { display: flex; gap: 2rem; }
+.foot-links a { color: rgba(255,255,255,0.45); font-size: 0.84rem; text-decoration: none; transition: color 0.2s; }
+.foot-links a:hover { color: white; }
+.foot-copy { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: rgba(255,255,255,0.2); }
+
+/* PILLAR CARDS */
+.pillar-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 2rem; }
+.pillar-card { border: 2px solid var(--border); border-radius: 14px; padding: 1.8rem 1.4rem; cursor: pointer; transition: all 0.25s; text-align: center; position: relative; }
+.pillar-card:hover { transform: translateY(-3px); }
+.pillar-active { border-color: var(--orange); background: var(--light); }
+.pillar-soon { opacity: 0.6; cursor: not-allowed; }
+.pillar-soon:hover { transform: none; }
+.pillar-icon { font-size: 2rem; font-family: 'DM Mono', monospace; color: var(--navy); margin-bottom: 0.7rem; line-height: 1; }
+.pillar-label { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem; }
+.pillar-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; margin-bottom: 0.9rem; }
+.active-status { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--green); font-weight: 600; }
+.soon-status { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+
+/* SUBTOPICS PANEL */
+.subtopics-panel { background: var(--off); border: 1.5px solid var(--border); border-radius: 16px; padding: 2rem; animation: fadeUp 0.4s both; }
+.subtopics-header { margin-bottom: 1.5rem; }
+.subtopics-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; }
+.sub-card { border: 1.5px solid var(--border); border-radius: 12px; padding: 1.5rem; background: var(--white); transition: all 0.25s; position: relative; text-decoration: none; color: inherit; display: block; }
+.sub-active { cursor: pointer; }
+.sub-active:hover { border-color: var(--orange); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,114,42,0.1); }
+.sub-soon { opacity: 0.55; cursor: not-allowed; }
+.sub-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+.sub-live { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--green); font-weight: 600; }
+.sub-coming { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+.sub-card h4 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; }
+.sub-card p { color: var(--muted); font-size: 0.86rem; line-height: 1.65; }
+.sub-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+/* TOAST */
+.coming-toast { display: none; position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--navy); color: white; padding: 0.8rem 1.8rem; border-radius: 100px; font-size: 0.88rem; font-weight: 600; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,0.2); animation: fadeUp 0.3s both; }
+
+@media (max-width: 900px) {
+  .pillar-grid { grid-template-columns: repeat(2,1fr); }
+  .subtopics-grid { grid-template-columns: 1fr; }
+  .hero::after { display: none; }
+  .hero-right { display: none; }
+  .how-grid { grid-template-columns: 1fr; }
+  .problem-body { grid-template-columns: 1fr; }
+  .prob-right { border-top: 1px solid var(--border); }
+  .testi-grid { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+}
+@media (max-width: 600px) {
+  .hero h1 { font-size: 2.4rem; }
+  .hero-stats { gap: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img src="logo.png" class="logo-emblem" alt="Thrissur Trading Terminal Logo"/>
+    <span class="logo-text">quan<span>(t)<sup>4</sup></span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#topics">Topics</a></li>
+    <li><a href="#practice">Practice</a></li>
+    <li><a href="#about">About</a></li>
+  </ul>
+  <a href="#" class="nav-cta">Start Learning →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-right">
+    <img src="logo.png" class="hero-emblem" alt="Thrissur Trading Terminal Logo"/>
+    <div class="hero-brand-name">Thrissur Trading Terminal</div>
+  </div>
+
+  <div class="hero-left">
+    <div class="hero-badge">🇮🇳 India's Quant Education Platform</div>
+    <h1>Learn Quant.<br/><em>Trade Smarter.</em><br/>Think in Numbers.</h1>
+    <p class="hero-sub">Rigorous, proof-based lessons on options pricing, the Greeks, and volatility models — paired with MCQ practice. Built for serious Indian market participants.</p>
+    <div class="hero-actions">
+      <a href="#topics" class="btn-primary">Explore Topics →</a>
+      <a href="#practice" class="btn-outline">▶ Try a Problem</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-num">50<span>+</span></div><div class="stat-label">Concepts</div></div>
+      <div><div class="stat-num">200<span>+</span></div><div class="stat-label">Practice Problems</div></div>
+      <div><div class="stat-num">₹<span>0</span></div><div class="stat-label">To Start</div></div>
+      <div><div class="stat-num">9<span>+</span></div><div class="stat-label">Modules</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">Black-Scholes-Merton</span><span class="marquee-item">Itô's Lemma</span><span class="marquee-item">Delta Hedging</span><span class="marquee-item">Implied Volatility</span><span class="marquee-item">Volatility Smile</span><span class="marquee-item">The Greeks</span><span class="marquee-item">Heston Model</span><span class="marquee-item">Risk-Neutral Pricing</span><span class="marquee-item">GBM & Stochastic Calculus</span><span class="marquee-item">Put-Call Parity</span><span class="marquee-item">Nifty Options Pricing</span><span class="marquee-item">SABR Model</span><span class="marquee-item">Newton-Raphson IV</span>
+    <span class="marquee-item">Black-Scholes-Merton</span><span class="marquee-item">Itô's Lemma</span><span class="marquee-item">Delta Hedging</span><span class="marquee-item">Implied Volatility</span><span class="marquee-item">Volatility Smile</span><span class="marquee-item">The Greeks</span><span class="marquee-item">Heston Model</span><span class="marquee-item">Risk-Neutral Pricing</span><span class="marquee-item">GBM & Stochastic Calculus</span><span class="marquee-item">Put-Call Parity</span><span class="marquee-item">Nifty Options Pricing</span><span class="marquee-item">SABR Model</span><span class="marquee-item">Newton-Raphson IV</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="about" class="how-section">
+  <div class="section-label">How it works</div>
+  <div class="section-title">Learn. Practice. <em style="font-style:italic;color:var(--orange)">Master.</em></div>
+  <p class="section-sub">A structured path from first principles to interview-ready quant knowledge — no fluff, just rigorous math with real intuition.</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-step">01</div>
+      <div class="how-icon icon-o">📖</div>
+      <h3>Study the Theory</h3>
+      <p>Proof-based lessons on GBM, Itô's Lemma, BSM PDE, Greeks, and stochastic volatility. Rigorous but readable, with Indian market context throughout.</p>
+    </div>
+    <div class="how-card">
+      <div class="how-step">02</div>
+      <div class="how-icon icon-n">🧩</div>
+      <h3>Solve MCQ Problems</h3>
+      <p>Practice problems modelled on real quant interviews and NSE/NISM exams. Instant feedback with full worked solutions. All examples in ₹.</p>
+    </div>
+    <div class="how-card">
+      <div class="how-step">03</div>
+      <div class="how-icon icon-g">📈</div>
+      <h3>Track Your Progress</h3>
+      <p>Build streaks, earn topic badges, and identify gaps. Designed to get you ready for quant desks, prop firms, and MFE programme interviews.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TOPICS -->
+<section id="topics">
+  <div class="topics-header">
+    <div>
+      <div class="section-label">Curriculum</div>
+      <div class="section-title">What You'll Learn</div>
+    </div>
+  </div>
+  <p class="section-sub" style="margin-bottom:2.5rem;">Four pillars. One goal: make you think quantitatively. Start with Math — everything else builds on it.</p>
+
+  <!-- PILLAR CARDS -->
+  <div class="pillar-grid">
+    <div class="pillar-card pillar-active" onclick="togglePillar('math')">
+      <div class="pillar-icon">∑</div>
+      <div class="pillar-label">Mathematics</div>
+      <div class="pillar-desc">Probability, Stochastic Processes, Linear Algebra, Calculus</div>
+      <div class="pillar-status active-status">● Active</div>
+    </div>
+    <div class="pillar-card" onclick="togglePillar('finance')">
+      <div class="pillar-icon">₹</div>
+      <div class="pillar-label">Finance</div>
+      <div class="pillar-desc">BSM, Heston, Greeks, Vol Models, NPTEL courses</div>
+      <div class="pillar-status active-status">● Active</div>
+    </div>
+    <div class="pillar-card pillar-soon" onclick="showComingSoon(this)">
+      <div class="pillar-icon">&lt;/&gt;</div>
+      <div class="pillar-label">Programming</div>
+      <div class="pillar-desc">  Algorithms, DSA for quant developers</div>
+      <div class="pillar-status soon-status">⏳ Coming Soon</div>
+    </div>
+    <div class="pillar-card" onclick="togglePillar('ml')">
+      <div class="pillar-icon">⚙</div>
+      <div class="pillar-label">Machine Learning</div>
+      <div class="pillar-desc">Mathematical ML, Deep Learning, Reinforcement Learning</div>
+      <div class="pillar-status active-status">● Active</div>
+    </div>
+  </div>
+
+  <!-- MATH SUBTOPICS (expanded by default) -->
+  <div class="subtopics-panel" id="panel-math">
+    <div class="subtopics-header">
+      <span class="section-label" style="margin:0;">Mathematics — Choose a track</span>
+    </div>
+    <div class="subtopics-grid">
+
+      <a href="M_Pr.html" class="sub-card sub-active">
+        <div class="sub-top">
+          <span class="sub-tag tag-b">Beginner → Advanced</span>
+          <span class="sub-live">● Live</span>
+        </div>
+        <h4>Probability Theory</h4>
+        <p>Sample spaces, axioms, Bayes' theorem, random variables, distributions, limit theorems — the language of uncertainty. Built for traders.</p>
+        <div class="sub-footer">
+          <span class="topic-count">12 chapters</span>
+          <span class="topic-arrow">Start Learning →</span>
+        </div>
+      </a>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-i">Intermediate</span>
+          <span class="sub-coming">🔒 Coming Soon</span>
+        </div>
+        <h4>Stochastic Processes</h4>
+        <p>Markov chains, Poisson processes, Brownian motion, martingales. Where the maths starts to smell like money.</p>
+        <div class="sub-footer">
+          <span class="topic-count">Months 3–6</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-a">Advanced</span>
+          <span class="sub-coming">🔒 2026</span>
+        </div>
+        <h4>Linear Algebra</h4>
+        <p>Vectors, matrices, decompositions, PCA, least squares — the engine behind every ML algorithm in finance.</p>
+        <div class="sub-footer">
+          <span class="topic-count">12 modules</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-a">Advanced</span>
+          <span class="sub-coming">🔒 2026</span>
+        </div>
+        <h4>Multivariable Calculus</h4>
+        <p>Partial derivatives, chain rule, multiple integrals, vector identities — the language of optimisation.</p>
+        <div class="sub-footer">
+          <span class="topic-count">8 modules</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FINANCE SUBTOPICS (hidden by default) -->
+  <div class="subtopics-panel" id="panel-finance" style="display:none;">
+    <div class="subtopics-header">
+      <span class="section-label" style="margin:0;">Finance — Choose a track</span>
+    </div>
+    <div class="subtopics-grid">
+
+      <a href="F_Op.html" class="sub-card sub-active">
+        <div class="sub-top">
+          <span class="sub-tag tag-i">Intermediate → Advanced</span>
+          <span class="sub-live">● Live</span>
+        </div>
+        <h4>Option Pricing</h4>
+        <p>From Black-Scholes to Heston — GBM, PDE derivation, Greeks, implied volatility, stochastic volatility, characteristic functions, calibration.</p>
+        <div class="sub-footer">
+          <span class="topic-count">6 chapters</span>
+          <span class="topic-arrow">Start Learning →</span>
+        </div>
+      </a>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-a">Advanced</span>
+          <span class="sub-coming">🔒 Coming Soon</span>
+        </div>
+        <h4>Fixed Income &amp; Rates</h4>
+        <p>Bond pricing, yield curves, duration, convexity, interest rate models — the other half of every derivatives desk.</p>
+        <div class="sub-footer">
+          <span class="topic-count">Coming 2026</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-a">Advanced</span>
+          <span class="sub-coming">🔒 Coming Soon</span>
+        </div>
+        <h4>Portfolio Theory</h4>
+        <p>Mean-variance optimisation, CAPM, factor models, risk parity — rigorous treatment of how capital gets allocated.</p>
+        <div class="sub-footer">
+          <span class="topic-count">Coming 2026</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-a">Advanced</span>
+          <span class="sub-coming">🔒 Coming Soon</span>
+        </div>
+        <h4>Market Microstructure</h4>
+        <p>Order books, bid-ask spreads, price impact, execution algorithms — what actually happens inside NSE every millisecond.</p>
+        <div class="sub-footer">
+          <span class="topic-count">Coming 2026</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ML SUBTOPICS (hidden by default) -->
+  <div class="subtopics-panel" id="panel-ml" style="display:none;">
+    <div class="subtopics-header">
+      <span class="section-label" style="margin:0;">Machine Learning — Choose a track</span>
+    </div>
+    <div class="subtopics-grid">
+
+      <a href="ML_M.html" class="sub-card sub-active">
+        <div class="sub-top">
+          <span class="sub-tag tag-b">Foundational → Advanced</span>
+          <span class="sub-live">● Live</span>
+        </div>
+        <h4>Mathematical Foundations of ML</h4>
+        <p>Probabilistic framing, ERM, MLE, MAP, EM algorithm, bias-variance tradeoff, SVMs, neural networks — built from scratch with full rigour.</p>
+        <div class="sub-footer">
+          <span class="topic-count">8 chapters</span>
+          <span class="topic-arrow">Start Learning →</span>
+        </div>
+      </a>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-i">Intermediate</span>
+          <span class="sub-coming">🔒 Coming Soon</span>
+        </div>
+        <h4>Deep Learning</h4>
+        <p>Backpropagation, CNNs, RNNs, LSTMs, attention mechanisms, transformers — and what they're actually doing mathematically.</p>
+        <div class="sub-footer">
+          <span class="topic-count">Coming 2026</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+      <div class="sub-card sub-soon">
+        <div class="sub-top">
+          <span class="sub-tag tag-a">Advanced</span>
+          <span class="sub-coming">🔒 Coming Soon</span>
+        </div>
+        <h4>Reinforcement Learning</h4>
+        <p>MDPs, Q-learning, policy gradients, multi-armed bandits — with direct applications to algorithmic trading and portfolio optimisation.</p>
+        <div class="sub-footer">
+          <span class="topic-count">Coming 2026</span>
+          <span class="topic-arrow" style="opacity:0.3;">→</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Coming Soon Toast -->
+  <div class="coming-toast" id="coming-toast">🚧 This pillar is being built. Check back soon!</div>
+
+</section>
+
+<!-- PRACTICE -->
+<section id="practice" class="practice-section">
+  <div class="section-label">Practice Arena</div>
+  <div class="section-title">Try a Real Problem</div>
+  <p class="section-sub">Every concept is reinforced with problems that mirror actual quant interview questions — with full step-by-step solutions.</p>
+
+  <div class="problem-shell">
+    <div class="shell-bar">
+      <div class="shell-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <div class="shell-title">quan(t)⁴.com / BSM / problem-04</div>
+      <div class="shell-badge">★ Medium</div>
+    </div>
+    <div class="problem-body">
+      <div class="prob-left">
+        <div class="prob-meta"><span class="meta-pill pill-m">Medium</span><span class="meta-pill pill-t">Black-Scholes</span></div>
+
+        <!-- Question in Shadows Into Light Two -->
+        <p class="prob-q" style="font-family:'Shadows Into Light Two', cursive; font-size:1.15rem; line-height:2; color:#1a1a2e;">
+          A Nifty call option has spot $S_0 =$ ₹50,000, strike $K =$ ₹52,000, maturity $T = 0.25$ years, risk-free rate $r = 6.5\%$, and volatility $\sigma = 18\%$. Which is closest to the <strong style="color:var(--orange)">BSM call price</strong>?
+        </p>
+
+        <!-- Formula box with KaTeX -->
+        <div class="prob-formula">
+          $$C = S_0 \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)$$
+          $$d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)\,T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}$$
+        </div>
+
+        <div class="options" id="opts">
+          <div class="opt" onclick="pick(this,false)"><div class="opt-ltr">A</div><span>₹520</span></div>
+          <div class="opt" onclick="pick(this,false)"><div class="opt-ltr">B</div><span>₹890</span></div>
+          <div class="opt" onclick="pick(this,true)"><div class="opt-ltr">C</div><span>₹1,240</span></div>
+          <div class="opt" onclick="pick(this,false)"><div class="opt-ltr">D</div><span>₹1,880</span></div>
+        </div>
+      </div>
+
+      <div class="prob-right">
+        <!-- Feedback message -->
+        <div id="feedback-msg" style="display:none; font-family:'Shadows Into Light Two',cursive; font-size:1.1rem; padding:0.8rem 1rem; border-radius:8px; margin-bottom:1rem; text-align:center; font-weight:600;"></div>
+
+        <div class="explanation" id="expl">
+          <strong>Step-by-step solution:</strong><br/><br/>
+
+          <strong>Step 1 — Compute $d_1$:</strong><br/>
+          $\ln(50000/52000) \approx -0.0392$<br/>
+          $r + \sigma^2/2 = 0.065 + 0.0162 = 0.0812$<br/>
+          $d_1 = \dfrac{-0.0392 + 0.0812 \times 0.25}{0.18 \times 0.5} = \mathbf{-0.210}$<br/><br/>
+
+          <strong>Step 2 — Compute $d_2$:</strong><br/>
+          $d_2 = -0.210 - 0.09 = \mathbf{-0.299}$<br/><br/>
+
+          <strong>Step 3 — Normal CDF values:</strong><br/>
+          $N(-0.210) \approx 0.417 \quad | \quad N(-0.299) \approx 0.382$<br/><br/>
+
+          <strong>Step 4 — Call price:</strong><br/>
+          $C = 50{,}000 \times 0.417 - 52{,}000 \times e^{-0.01625} \times 0.382$<br/>
+          $= 20{,}850 - 19{,}610 =$ <span class="expl-ans">₹1,240 ✓</span>
+        </div>
+
+        <button class="check-btn" id="checkBtn" disabled>Select an answer first</button>
+
+        <div class="hints">
+          <div class="hint"><span class="hint-ic">💡</span><span>Use $(r + \sigma^2/2)$ in $d_1$ — the Itô correction is critical</span></div>
+          <div class="hint"><span class="hint-ic">📊</span><span>$d_2 = d_1 - \sigma\sqrt{T}$ is always a quick sanity check</span></div>
+          <div class="hint"><span class="hint-ic">🔁</span><span>Put via parity: $P = C - S_0 + Ke^{-rT}$</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-section">
+  <div class="section-label">Early Learners</div>
+  <div class="section-title">What Students Say</div>
+  <div class="testi-grid">
+    <div class="testi-card"><p class="testi-quote">"Finally a platform that doesn't hand-wave the math. The BSM PDE derivation is the clearest I've seen — even compared to textbooks."</p><div class="testi-author"><div class="testi-av av1">AR</div><div><div class="testi-name">Arjun R.</div><div class="testi-role">MFE Student, IIT Bombay</div></div></div></div>
+    <div class="testi-card"><p class="testi-quote">"The ₹-denominated Nifty examples make it so much more relevant. The practice problems feel exactly like quant interview questions."</p><div class="testi-author"><div class="testi-av av2">PK</div><div><div class="testi-name">Priya K.</div><div class="testi-role">Quant Intern, Mumbai</div></div></div></div>
+    <div class="testi-card"><p class="testi-quote">"Coming from a CS background I needed rigorous but accessible content. Quantttt bridges that gap — math-first with real Indian market context."</p><div class="testi-author"><div class="testi-av av3">SM</div><div><div class="testi-name">Siddharth M.</div><div class="testi-role">Software Engineer → Quant</div></div></div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <img src="logo.png" class="cta-emblem" alt=""/>
+  <h2>Ready to think<br/><em>quantitatively?</em></h2>
+  <p>Join India's most rigorous quant trading education platform. Start completely free today.</p>
+  <div class="cta-btns">
+    <a href="#" class="btn-primary">Start Learning Free →</a>
+    <a href="#topics" class="btn-outline">Browse Topics</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-brand">
+    <img src="logo.png" class="foot-logo-svg" alt="TTT Logo" style="filter: brightness(0) invert(1);"/>
+    <div>
+      <div class="foot-name">quan<span>(t)<sup style="font-size:0.7em;vertical-align:super;">4</sup></span>.com</div>
+      <div class="foot-sub">by Thrissur Trading Terminal Pvt Ltd</div>
+    </div>
+  </div>
+  <div class="foot-links"><a href="#">About</a><a href="#">Topics</a><a href="#">Practice</a><a href="#">Contact</a></div>
+  <div class="foot-copy">© 2025 quan(t)⁴.com</div>
+</footer>
+
+<script>
+  function togglePillar(id) {
+    const allPanels = ['math', 'finance', 'ml'];
+    allPanels.forEach(function(p) {
+      const panel = document.getElementById('panel-' + p);
+      if (panel) panel.style.display = 'none';
+    });
+    document.querySelectorAll('.pillar-card').forEach(function(c) {
+      c.classList.remove('pillar-active');
+    });
+    const panel = document.getElementById('panel-' + id);
+    if (panel) panel.style.display = 'block';
+    // Mark clicked card active via event
+    const cards = document.querySelectorAll('.pillar-card');
+    cards.forEach(function(c) {
+      if (c.getAttribute('onclick') === "togglePillar('" + id + "')") {
+        c.classList.add('pillar-active');
+      }
+    });
+  }
+
+  function showComingSoon(el) {
+    const toast = document.getElementById('coming-toast');
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 2500);
+  }
+
+  const correctMsgs = [
+    "🎯 Spot on! Itô himself would approve.",
+    "✨ Your delta is perfectly hedged!",
+    "🏆 Fischer Black is smiling down on you.",
+    "🔥 Nailed it! The vol surface bows in your honour.",
+    "💡 Brilliant! You've tamed the lognormal beast.",
+    "🎓 Textbook perfect — and we mean that literally.",
+    "📈 Your P&L just went positive. Nicely done!",
+    "🧮 The BSM gods are pleased with this offering.",
+    "⚡ Risk-neutral and razor-sharp. Well played!",
+    "🌟 That's the kind of clarity that gets you on a quant desk.",
+    "🎉 Correct! Even the volatility smile is impressed.",
+    "🔬 Precise as a Monte Carlo with a million paths.",
+    "💎 That answer is as clean as a closed-form solution.",
+    "🚀 To the moon — and you calculated the trajectory correctly.",
+    "🎸 Absolutely rocking that risk-neutral measure!",
+    "🦅 Soaring above the noise. Correct answer!",
+    "🌊 Riding the Brownian motion all the way to the right answer.",
+    "🏅 Gold medal in quantitative reasoning. Correct!",
+    "🎯 Bang on the money — quite literally ₹1,240!",
+    "🧠 That grey matter is doing serious quantitative work!"
+  ];
+
+  const wrongMsgs = [
+    "🌀 Schrödinger's answer — simultaneously right and wrong until you recalculate!",
+    "⚛️ Even electrons don't jump this far. Check your exponent!",
+    "🍎 Newton's third law applies here too — every wrong answer has an equal and opposite correction!",
+    "🌊 Heisenberg's uncertainty principle doesn't apply to BSM. The answer is precise — recalculate!",
+    "🔭 The parallax error is in your d₁. Adjust your angle!",
+    "∞ Your answer diverges. The integral needs better lis!",
+    "📐 Euclid would weep. The geometry of this calculation is off!",
+    "🧮 L'Hôpital says your limit doesn't exist — but the correct answer does!",
+    "🔢 The residual is too large. Your approximation needs tightening!",
+    "📊 This answer has more variance than a fat-tailed distribution. Recalibrate!",
+    "📉 Circuit breaker triggered on this answer. Lower limit hit!",
+    "🏦 The RBI wouldn't sanction this calculation. Recheck your rate!",
+    "📋 SEBI would like a word about this pricing anomaly!",
+    "💹 Arbitrage opportunity detected — your answer and reality are mispriced!",
+    "🔔 Opening bell rings — and your answer needs a fresh start!",
+    "😱 Fear took the wheel on this one. Stay calm and trust the formula!",
+    "🤑 Greed whispered the wrong answer. The market punishes overconfidence!",
+    "😰 Panic selling your accuracy here. Take a breath and recalculate!",
+    "💸 FOMO led you to the wrong option. Slow down, read the question again!",
+    "🎰 That was a speculative punt, not a calculated trade. Back to the formula!"
+  ];
+
+  let picked = null, done = false;
+
+  function pick(el, correct) {
+    if (done) return;
+    picked = { el, correct };
+    document.querySelectorAll('.opt').forEach(o => o.style.borderColor = '');
+    el.style.borderColor = 'var(--orange)';
+    const btn = document.getElementById('checkBtn');
+    btn.disabled = false;
+    btn.textContent = 'Check Answer';
+    btn.onclick = check;
+  }
+
+  function check() {
+    if (!picked || done) return;
+    done = true;
+    document.querySelectorAll('.opt').forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+    const msg = document.getElementById('feedback-msg');
+    msg.style.display = 'block';
+
+    if (picked.correct) {
+      picked.el.classList.add('correct');
+      const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+      msg.textContent = m;
+      msg.style.background = 'rgba(30,158,94,0.1)';
+      msg.style.color = 'var(--green)';
+      msg.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    } else {
+      picked.el.classList.add('wrong');
+      document.querySelectorAll('.opt').forEach(o => {
+        if (o.querySelector('span').textContent === '₹1,240') o.classList.add('correct');
+      });
+      const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+      msg.textContent = m;
+      msg.style.background = 'rgba(220,38,38,0.06)';
+      msg.style.color = '#dc2626';
+      msg.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    }
+
+    document.getElementById('expl').classList.add('show');
+
+    // Re-render KaTeX in explanation
+    if (window.renderMathInElement) {
+      renderMathInElement(document.getElementById('expl'), {
+        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      });
+    }
+
+    const btn = document.getElementById('checkBtn');
+    btn.textContent = picked.correct ? '✓ Correct! Next Problem →' : 'See Explanation Above ↑';
+    btn.style.background = picked.correct ? 'var(--green)' : '#dc2626';
+  }
+</script>
+</body>
+</html>
