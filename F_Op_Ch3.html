@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Characteristic Function Machine — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; transition: width 0.4s; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.done { color: var(--green); }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.sidebar-item.locked { opacity: 0.4; cursor: not-allowed; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-a { background: rgba(45,37,96,0.08); color: var(--navy2); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── DERIVATION BLOCK — numbered steps ── */
+.derivation { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.derivation-header { background: var(--navy2); padding: 0.7rem 1.3rem; }
+.derivation-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); letter-spacing: 0.06em; text-transform: uppercase; }
+.derivation-body { padding: 1.5rem; background: var(--white); }
+.derivation-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 0.8rem; }
+.d-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--navy2); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.3rem 0 0.4rem; font-weight: 600; border-left: 2px solid var(--navy2); padding-left: 0.6rem; }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-body p:last-child { margin-bottom: 0; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── FORMULA SPOTLIGHT ── */
+.formula-box {
+  background: linear-gradient(135deg, rgba(45,37,96,0.04), rgba(232,114,42,0.04));
+  border: 2px solid var(--navy);
+  border-radius: 12px; padding: 1.5rem 1.8rem; margin: 2rem 0;
+  text-align: center;
+}
+.formula-box-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.8rem; font-weight: 600; }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; transition: border-color 0.2s; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy { background: rgba(30,158,94,0.1); color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard { background: rgba(45,37,96,0.08); color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+.ch-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_Op.html">Option Pricing</a> ›
+      <span>The Characteristic Function Machine</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:50%"></div></div>
+      <span class="tb-progress-label">3 / 6</span>
+    </div>
+    <a href="F_Op.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Option Pricing</div>
+  <a class="sidebar-item done" href="F_Op_Ch1.html">
+    <div class="si-num">✓</div>The Black-Scholes World
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="F_Op_Ch2.html">
+    <div class="si-num">✓</div>Heston — Letting Volatility Breathe
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item active" href="F_Op_Ch3.html">
+    <div class="si-num">3</div>The Characteristic Function Machine
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">4</div>Pricing Options with the Heston CF
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">5</div>Calibrating Heston to Market Data
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">6</div>Monte Carlo for Heston
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-a">Advanced</span>
+      <span class="ch-num">Chapter 03 of 06 · Option Pricing</span>
+    </div>
+    <h1 class="chapter-title">The Characteristic Function Machine</h1>
+    <p class="chapter-subtitle">Heston's real genius was not the model itself — it was recognising that his model has a closed-form characteristic function. That one fact turns an analytically intractable problem into a numerical integration that runs in microseconds.</p>
+  </div>
+
+  <div class="content-body">
+
+    <!-- ══════════════════════════════════
+         SECTION 1: WHY WE NEED THE CF
+    ═══════════════════════════════════ -->
+    <h3>Why the PDE Approach Breaks Down</h3>
+
+    <p>
+      In Chapter 1, BSM gave us a closed-form option price because the stock price distribution at maturity is lognormal — a fully characterised distribution with a known density. Computing $\mathbb{E}^{\mathbb{Q}}[(S_T - K)^+]$ was a straightforward Gaussian integral, and the answer was $N(d_1)$ and $N(d_2)$.
+    </p>
+    <p>
+      In Heston, the stock price $S_T$ is <em>not</em> lognormally distributed. It is the endpoint of a process whose diffusion coefficient $\sqrt{v_t}$ is itself a random process. The marginal distribution of $S_T$ has no simple closed form — it is a complicated mixture of lognormals, weighted by the random path of $v_t$. You cannot write it down as a density and integrate it analytically.
+    </p>
+    <p>
+      The BSM PDE route also fails. In BSM, there is one state variable ($S$), and the PDE has one solution. In Heston, there are two state variables ($S$ and $v$), making the PDE two-dimensional. Two-dimensional PDEs generally do not have closed-form solutions. Solving them numerically requires a grid over $(S, v, t)$, which is slower by orders of magnitude.
+    </p>
+    <p>
+      So how did Heston price options in his 1993 paper? He took a completely different route. Instead of trying to find the distribution of $S_T$ directly, he computed its <strong>characteristic function</strong> — and then inverted that to get prices.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of the characteristic function as a different way of encoding a probability distribution. The density and the characteristic function carry exactly the same information — they are Fourier transform pairs. But sometimes one is tractable when the other is not. Heston's insight was that the characteristic function of $\ln S_T$, conditioned on $v_0$, satisfies a system of ODEs that can be solved in closed form — even though the density of $S_T$ cannot be written down explicitly.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 2: THE CHARACTERISTIC FUNCTION
+    ═══════════════════════════════════ -->
+    <h3>What Is a Characteristic Function?</h3>
+
+    <p>
+      Let $X$ be a real-valued random variable. Its <strong>characteristic function</strong> is:
+    </p>
+    <div class="math-block">
+      $$\phi_X(u) = \mathbb{E}\!\left[e^{iuX}\right], \quad u \in \mathbb{R}$$
+    </div>
+    <p>
+      where $i = \sqrt{-1}$ is the imaginary unit. The characteristic function is a complex-valued function of a real argument $u$.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>Characteristic function.</strong> For a random variable $X$ with distribution $\mu$, the characteristic function is:
+      $$\phi_X(u) = \mathbb{E}[e^{iuX}] = \int_{-\infty}^{\infty} e^{iux} \, d\mu(x)$$
+      If $X$ has a density $f_X(x)$, then $\phi_X(u) = \int_{-\infty}^{\infty} e^{iux} f_X(x)\,dx$ — precisely the Fourier transform of $f_X$ evaluated at $-u$. The CF always exists (the integrand has modulus 1), and it uniquely determines the distribution of $X$.
+    </div>
+
+    <p>
+      Three properties make the CF powerful for our purposes:
+    </p>
+    <p>
+      <strong>Uniqueness.</strong> Two distributions have the same CF if and only if they are identical. So knowing $\phi_X$ is the same as knowing the distribution of $X$.
+    </p>
+    <p>
+      <strong>Inversion.</strong> Given $\phi_X(u)$, we can recover the CDF of $X$ via the Gil-Pelaez inversion formula (which we will use in Chapter 4 to turn $\phi$ into option prices):
+    </p>
+    <div class="math-block">
+      $$F_X(x) = \frac{1}{2} - \frac{1}{\pi}\int_0^\infty \mathrm{Re}\!\left[\frac{e^{-iux}\phi_X(u)}{iu}\right]du$$
+    </div>
+    <p>
+      <strong>Affine transforms.</strong> If $Y = aX + b$, then $\phi_Y(u) = e^{iub}\phi_X(au)$. If $X$ and $Y$ are independent, $\phi_{X+Y}(u) = \phi_X(u)\phi_Y(u)$. These rules make CFs easy to manipulate algebraically.
+    </p>
+
+    <div class="callout callout-intuition">
+      A useful sanity check: if $X \sim \mathcal{N}(\mu, \sigma^2)$, then:
+      $$\phi_X(u) = \mathbb{E}[e^{iuX}] = e^{i\mu u - \sigma^2 u^2/2}$$
+      This is the moment generating function (MGF) evaluated at $iu$. The CF always exists because $|e^{iuX}| = 1$ — unlike the MGF, which can blow up. For option pricing, we need the CF of $\ln S_T$ under the risk-neutral measure $\mathbb{Q}$.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 3: FEYNMAN-KAC CONNECTION
+    ═══════════════════════════════════ -->
+    <h3>The Feynman-Kac Theorem — Connecting PDEs to Expectations</h3>
+
+    <p>
+      The Feynman-Kac theorem is the bridge between stochastic processes and PDEs. It says: the solution to a certain class of linear PDE can be written as a conditional expectation under a corresponding stochastic process — and vice versa.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>Feynman-Kac (informal statement).</strong> If $u(t, x)$ satisfies:
+      $$\frac{\partial u}{\partial t} + \mu(x)\frac{\partial u}{\partial x} + \frac{1}{2}\sigma^2(x)\frac{\partial^2 u}{\partial x^2} - r\,u = 0$$
+      with terminal condition $u(T, x) = g(x)$, then:
+      $$u(t, x) = e^{-r(T-t)}\,\mathbb{E}\!\left[g(X_T)\,|\,X_t = x\right]$$
+      where $dX_s = \mu(X_s)\,ds + \sigma(X_s)\,dW_s$.
+    </div>
+
+    <p>
+      We used this implicitly in Chapter 1 — the BSM PDE is exactly the Feynman-Kac equation for the discounted expectation of the payoff under $\mathbb{Q}$. In Heston, the same logic applies, but now we have two state variables: $\ln S_t$ and $v_t$. The Feynman-Kac PDE is two-dimensional.
+    </p>
+    <p>
+      Here is the key move. Instead of trying to solve the PDE for the option price $V(S, v, t)$ directly, we solve it for the characteristic function of $\ln S_T$:
+    </p>
+    <div class="math-block">
+      $$\phi(\tau; u) \equiv \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu\ln S_T}\,\Big|\,S_t,\, v_t\right], \quad \tau = T - t$$
+    </div>
+    <p>
+      This object also satisfies a Feynman-Kac PDE — but with a critical difference: we can make an educated guess about its functional form (an <em>ansatz</em>) that reduces the PDE to a system of ordinary differential equations, which we can then solve explicitly.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 4: THE PDE FOR THE CF
+    ═══════════════════════════════════ -->
+    <h3>The PDE That the CF Satisfies</h3>
+
+    <p>
+      Under the Heston dynamics:
+    </p>
+    <div class="math-block">
+      $$dS_t = rS_t\,dt + \sqrt{v_t}\,S_t\,dW_t^S, \qquad dv_t = \kappa(\theta - v_t)\,dt + \xi\sqrt{v_t}\,dW_t^v$$
+    </div>
+    <p>
+      Let $x_t = \ln S_t$. By Itô's lemma:
+    </p>
+    <div class="math-block">
+      $$dx_t = \left(r - \frac{v_t}{2}\right)dt + \sqrt{v_t}\,dW_t^S$$
+    </div>
+    <p>
+      The characteristic function $\phi(\tau; u) = \mathbb{E}^{\mathbb{Q}}[e^{iux_T} \mid x_t, v_t]$ satisfies, by Feynman-Kac applied to the pair $(x_t, v_t)$:
+    </p>
+    <div class="math-block">
+      $$-\frac{\partial \phi}{\partial \tau} + \left(r - \frac{v}{2}\right)\frac{\partial \phi}{\partial x} + \kappa(\theta - v)\frac{\partial \phi}{\partial v} + \frac{1}{2}v\frac{\partial^2 \phi}{\partial x^2} + \rho\xi v\frac{\partial^2 \phi}{\partial x\,\partial v} + \frac{1}{2}\xi^2 v\frac{\partial^2 \phi}{\partial v^2} = 0$$
+    </div>
+    <p>
+      with initial condition $\phi(0; u) = e^{iux}$ (at $\tau = 0$, i.e. $t = T$, we know $x_T$ exactly).
+    </p>
+    <p>
+      This is a two-dimensional linear PDE with variable coefficients — formidable on its face. But it has a special structure: all terms are either constant or linear in $v$. This is what "affine" means in the Heston model, and it is what makes the next step work.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 5: THE AFFINE ANSATZ
+    ═══════════════════════════════════ -->
+    <h3>The Affine Ansatz — A Brilliant Guess</h3>
+
+    <p>
+      We guess that the characteristic function has the exponential-affine form:
+    </p>
+
+    <div class="formula-box">
+      <div class="formula-box-label">The Affine Ansatz</div>
+      $$\phi(\tau; u) = \exp\!\Big[C(\tau; u) + D(\tau; u)\cdot v + iu\cdot x\Big]$$
+    </div>
+
+    <p>
+      where $C(\tau; u)$ and $D(\tau; u)$ are complex-valued functions of time-to-maturity $\tau$ and frequency $u$, with initial conditions $C(0; u) = 0$ and $D(0; u) = 0$ (so that $\phi(0; u) = e^{iux}$ as required).
+    </p>
+    <p>
+      Why guess this form? Because it is exponential-linear in both $x$ and $v$. Substituting into the PDE, every term is proportional to $\phi$ itself — the exponential factors cancel, and the two-dimensional PDE collapses into two ODEs: one for $D(\tau; u)$ and one for $C(\tau; u)$. The PDE has been completely separated.
+    </p>
+
+    <div class="callout callout-intuition">
+      The ansatz is not a lucky guess — it follows from the theory of affine processes. A process $(x_t, v_t)$ is affine if the coefficients of its SDE are linear in the state vector. Heston is affine in $(x_t, v_t)$, and it is a theorem that the CF of any affine process is exponential-affine in the state vector. Heston knew this. The ansatz is not a trick; it is the correct functional form, guaranteed by the structure of the model.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 6: THE RICCATI ODE
+    ═══════════════════════════════════ -->
+    <h3>Substituting the Ansatz — The Riccati Equation</h3>
+
+    <p>
+      Substituting $\phi = e^{C + Dv + iux}$ into the PDE and cancelling the common $\phi$ factor:
+    </p>
+
+    <div class="derivation">
+      <div class="derivation-header">
+        <div class="derivation-title">Derivation — Reducing the PDE to Two ODEs</div>
+      </div>
+      <div class="derivation-body">
+        <div class="d-step">Step 1 — Compute partial derivatives of the ansatz</div>
+        <p>From $\phi = e^{C(\tau) + D(\tau)v + iux}$:</p>
+        <div class="math-block">
+          $$\frac{\partial \phi}{\partial \tau} = (C' + D'v)\phi, \quad \frac{\partial \phi}{\partial x} = iu\,\phi, \quad \frac{\partial \phi}{\partial v} = D\,\phi$$
+          $$\frac{\partial^2 \phi}{\partial x^2} = (iu)^2\phi = -u^2\phi, \quad \frac{\partial^2 \phi}{\partial x\,\partial v} = iu\cdot D\,\phi, \quad \frac{\partial^2 \phi}{\partial v^2} = D^2\phi$$
+        </div>
+
+        <div class="d-step">Step 2 — Substitute into the PDE and cancel $\phi$</div>
+        <div class="math-block">
+          $$-(C' + D'v) + \left(r - \frac{v}{2}\right)iu + \kappa(\theta - v)D + \frac{1}{2}v(-u^2) + \rho\xi v(iuD) + \frac{1}{2}\xi^2 v D^2 = 0$$
+        </div>
+
+        <div class="d-step">Step 3 — Separate terms by powers of $v$</div>
+        <p>Group all terms independent of $v$ (the "$v^0$" terms) and all terms proportional to $v$ (the "$v^1$" terms) separately:</p>
+        <div class="math-block">
+          $$v^0: \quad -C' + riu + \kappa\theta D = 0$$
+          $$v^1: \quad -D' - \frac{iu}{2} - \kappa D - \frac{u^2}{2} + i\rho\xi u D + \frac{1}{2}\xi^2 D^2 = 0$$
+        </div>
+
+        <div class="d-step">Step 4 — Rearrange into standard form</div>
+        <p>The $v^0$ equation gives the ODE for $C$:</p>
+        <div class="math-block">
+          $$\frac{dC}{d\tau} = riu + \kappa\theta D$$
+        </div>
+        <p>The $v^1$ equation gives the ODE for $D$:</p>
+        <div class="math-block">
+          $$\frac{dD}{d\tau} = \frac{1}{2}\xi^2 D^2 + (i\rho\xi u - \kappa)D + \left(-\frac{u^2}{2} - \frac{iu}{2}\right)$$
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The ODE for $D$ is a <strong>Riccati equation</strong> — a first-order ODE that is quadratic in $D$. Riccati equations appear throughout physics and engineering; the quadratic $\xi^2 D^2/2$ term is what makes it Riccati rather than linear. Fortunately, Riccati equations with constant coefficients can always be solved in closed form.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 7: SOLVING THE ODEs
+    ═══════════════════════════════════ -->
+    <h3>Solving the ODEs — Closed-Form Expressions</h3>
+
+    <p>
+      Define the discriminant $d$ (a complex number, a function of $u$):
+    </p>
+    <div class="math-block">
+      $$d \equiv d(u) = \sqrt{(\kappa - i\rho\xi u)^2 + \xi^2(u^2 + iu)}$$
+    </div>
+
+    <div class="callout callout-warning">
+      $d$ is the square root of a complex number, and complex square roots have two branches. The standard choice selects the branch with $\mathrm{Re}(d) \geq 0$. This choice affects the numerical evaluation of $C(\tau; u)$ through a logarithm that appears below. At large $|\tau|$, the standard branch can cause the logarithm to accumulate phase jumps — the famous <strong>branch cut problem</strong>. We will return to this at the end of the chapter. For now, accept $d$ as a well-defined complex constant for each $u$.
+    </div>
+
+    <p>
+      Also define the ratio:
+    </p>
+    <div class="math-block">
+      $$g \equiv g(u) = \frac{\kappa - i\rho\xi u - d}{\kappa - i\rho\xi u + d}$$
+    </div>
+
+    <p>
+      With these definitions, the Riccati ODE for $D$ has the explicit solution:
+    </p>
+
+    <div class="formula-box">
+      <div class="formula-box-label">Solution for D(&tau;; u)</div>
+      $$D(\tau; u) = \frac{\kappa - i\rho\xi u - d}{\xi^2}\cdot\frac{1 - e^{-d\tau}}{1 - g\,e^{-d\tau}}$$
+    </div>
+
+    <p>
+      Substituting this into the ODE $dC/d\tau = riu + \kappa\theta D$ and integrating from $0$ to $\tau$:
+    </p>
+
+    <div class="formula-box">
+      <div class="formula-box-label">Solution for C(&tau;; u)</div>
+      $$C(\tau; u) = riu\tau + \frac{\kappa\theta}{\xi^2}\!\left[(\kappa - i\rho\xi u - d)\,\tau - 2\ln\!\left(\frac{1 - g\,e^{-d\tau}}{1 - g}\right)\right]$$
+    </div>
+
+    <p>
+      Both formulas can be verified by direct differentiation and confirmed to satisfy the initial conditions $C(0; u) = D(0; u) = 0$.
+    </p>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Evaluating d and g at u = 0</span>
+        <span class="we-badge">Sanity check</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Any valid CF must satisfy $\phi(\tau; 0) = \mathbb{E}[e^{0}] = 1$ for all $\tau$. Verify that the Heston CF formula gives $\phi = 1$ when $u = 0$.
+        </p>
+
+        <div class="we-step">Evaluate d at u = 0</div>
+        <div class="math-block">
+          $$d(0) = \sqrt{(\kappa - 0)^2 + \xi^2(0 + 0)} = \sqrt{\kappa^2} = \kappa$$
+        </div>
+
+        <div class="we-step">Evaluate g at u = 0</div>
+        <div class="math-block">
+          $$g(0) = \frac{\kappa - 0 - \kappa}{\kappa - 0 + \kappa} = \frac{0}{2\kappa} = 0$$
+        </div>
+
+        <div class="we-step">Evaluate D at u = 0</div>
+        <div class="math-block">
+          $$D(\tau; 0) = \frac{\kappa - 0 - \kappa}{\xi^2}\cdot\frac{1 - e^{-\kappa\tau}}{1 - 0} = \frac{0}{\xi^2}\cdot(1 - e^{-\kappa\tau}) = 0$$
+        </div>
+
+        <div class="we-step">Evaluate C at u = 0</div>
+        <div class="math-block">
+          $$C(\tau; 0) = 0 + \frac{\kappa\theta}{\xi^2}\left[(\kappa - 0 - \kappa)\tau - 2\ln\!\left(\frac{1 - 0}{1 - 0}\right)\right] = \frac{\kappa\theta}{\xi^2}\left[0 - 2\ln(1)\right] = 0$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Result: </strong> When $u = 0$: $C = 0$, $D = 0$, and $iu \cdot x = 0$. So $\phi(\tau; 0) = e^{0 + 0 + 0} = 1$ for all $\tau$ and all $x$, $v$. The normalisation condition is satisfied. This is a necessary (though not sufficient) check that the formula is correct.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 8: THE FULL CF
+    ═══════════════════════════════════ -->
+    <h3>The Complete Heston Characteristic Function</h3>
+
+    <p>
+      Assembling all the pieces, the characteristic function of $\ln S_T$ under $\mathbb{Q}$, conditioned on $(S_t, v_t)$ at time $t$ with $\tau = T - t$, is:
+    </p>
+
+    <div class="formula-box">
+      <div class="formula-box-label">The Heston Characteristic Function — Complete Formula</div>
+      $$\boxed{\phi_T(u) = \exp\!\Big[C(\tau; u) + D(\tau; u)\cdot v_t + iu\ln S_t\Big]}$$
+      where:
+      $$d = \sqrt{(\kappa - i\rho\xi u)^2 + \xi^2(u^2 + iu)}$$
+      $$g = \frac{\kappa - i\rho\xi u - d}{\kappa - i\rho\xi u + d}$$
+      $$D(\tau; u) = \frac{\kappa - i\rho\xi u - d}{\xi^2}\cdot\frac{1 - e^{-d\tau}}{1 - g\,e^{-d\tau}}$$
+      $$C(\tau; u) = riu\tau + \frac{\kappa\theta}{\xi^2}\!\left[(\kappa - i\rho\xi u - d)\tau - 2\ln\!\left(\frac{1-g\,e^{-d\tau}}{1-g}\right)\right]$$
+    </div>
+
+    <p>
+      This is a complex-valued function of the real variable $u$. Given a set of Heston parameters $(\kappa, \theta, \xi, \rho, v_0)$ and market inputs $(S_0, r, T)$, it can be evaluated at any $u$ in a few microseconds. The payoff — computing option prices from this CF — is the subject of Chapter 4.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 9: THE BRANCH CUT PROBLEM
+    ═══════════════════════════════════ -->
+    <h3>The Branch Cut Problem — When the Formula Breaks</h3>
+
+    <p>
+      The logarithm in $C(\tau; u)$ is of a complex number: $\ln\!\left(\frac{1-ge^{-d\tau}}{1-g}\right)$. The complex logarithm is multi-valued. Every time the argument crosses the negative real axis, its principal branch jumps by $2\pi i$ — a branch cut discontinuity.
+    </p>
+    <p>
+      For short maturities $\tau$, the argument of the log stays well away from the negative real axis and there is no problem. But as $\tau$ increases — long-dated options or when $d$ has a large imaginary part — the argument of the logarithm can wind around the origin, accumulating phase jumps. The numerical evaluation of $C$ will then be discontinuous and incorrect.
+    </p>
+    <p>
+      The symptom: the numerically computed CF $\phi_T(u)$ will have visible discontinuities as a function of $u$, and the resulting option price will be wrong by an amount related to $2\pi$ phase errors.
+    </p>
+
+    <div class="callout callout-warning">
+      There is a well-known alternative formulation due to Kahl and Jäckel (2005) that avoids the branch cut problem entirely by rotating the formula. Instead of using $d = \sqrt{(\kappa - i\rho\xi u)^2 + \xi^2(u^2+iu)}$, they use $d^* = \sqrt{(\kappa - i\rho\xi u)^2 + \xi^2(u^2+iu)}$ with the sign convention that $\mathrm{Re}(d^*) \geq 0$ always enforced at each $u$, and rewrite the logarithm using $\ln(1/g)$ instead of $\ln(g)$. The resulting formula is mathematically identical but numerically stable for all maturities. Any production implementation should use the Kahl-Jäckel form.
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · Evaluating the CF at a Specific u</span>
+        <span class="we-badge">Numerical walkthrough</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Evaluate $\phi_T(u)$ at $u = 1$ for the following Heston parameters: $\kappa = 2$, $\theta = 0.04$, $\xi = 0.3$, $\rho = -0.7$, $v_0 = 0.04$, with $S_0 = 100$, $r = 0.05$, $\tau = 0.5$. Compute $d$, $g$, $D$, $C$, and $\phi$.
+        </p>
+
+        <div class="we-step">Compute d (complex)</div>
+        <div class="math-block">
+          $$\kappa - i\rho\xi u = 2 - i(-0.7)(0.3)(1) = 2 + 0.21i$$
+          $$u^2 + iu = 1 + i$$
+          $$d = \sqrt{(2 + 0.21i)^2 + (0.09)(1+i)}$$
+          $$= \sqrt{4 + 0.84i - 0.0441 + 0.09 + 0.09i}$$
+          $$= \sqrt{4.0459 + 0.93i}$$
+        </div>
+        <p>To compute $\sqrt{4.0459 + 0.93i}$: modulus $= \sqrt{4.0459^2 + 0.93^2} = \sqrt{16.370 + 0.865} = \sqrt{17.235} \approx 4.151$. Argument $= \arctan(0.93/4.0459) \approx \arctan(0.2299) \approx 0.2257$ rad. So $d \approx \sqrt{4.151}\,e^{i \cdot 0.1129} \approx 2.037\,(\cos 0.1129 + i\sin 0.1129) \approx 2.037(0.9937 + 0.1128i) \approx 2.024 + 0.230i$.</p>
+
+        <div class="we-step">Compute g</div>
+        <div class="math-block">
+          $$g = \frac{(2 + 0.21i) - (2.024 + 0.230i)}{(2 + 0.21i) + (2.024 + 0.230i)} = \frac{-0.024 - 0.020i}{4.024 + 0.440i}$$
+        </div>
+        <p>Numerically: $|$numerator$| \approx 0.0312$, $|$denominator$| \approx 4.048$, so $|g| \approx 0.0077$ — very small, meaning $g \approx 0$ for this parameter set. The formula is stable here.</p>
+
+        <div class="we-step">Compute D and C</div>
+        <p>Since $|g| \approx 0.0077 \ll 1$ and $e^{-d\tau} = e^{-(2.024+0.230i)(0.5)} = e^{-1.012 - 0.115i} \approx e^{-1.012}(\cos(-0.115) + i\sin(-0.115)) \approx 0.3636(0.9934 - 0.1148i) \approx 0.3612 - 0.0417i$:</p>
+        <div class="math-block">
+          $$D \approx \frac{-0.024-0.020i}{0.09}\cdot\frac{1-(0.3612-0.0417i)}{1 - 0} \approx \frac{-0.267-0.222i}{1}\cdot(0.639+0.042i) \approx -0.180 - 0.153i$$
+        </div>
+        <div class="math-block">
+          $$C \approx (0.05)(i)(1)(0.5) + \frac{(2)(0.04)}{0.09}\left[(-0.024-0.020i)(0.5) - 2\ln(1)\right]$$
+          $$\approx 0.025i + 0.889\left[-0.012 - 0.010i\right] \approx -0.0107 + 0.0161i$$
+        </div>
+
+        <div class="we-step">Assemble the CF</div>
+        <div class="math-block">
+          $$\phi_T(1) = \exp\!\left[(-0.0107 + 0.0161i) + (-0.180-0.153i)(0.04) + i(1)\ln(100)\right]$$
+          $$= \exp\!\left[-0.0107 + 0.0161i - 0.00720 - 0.00612i + 4.6052i\right]$$
+          $$= \exp\!\left[-0.01790 + 4.615i\right]$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Result:</strong> $\phi_T(1) \approx e^{-0.01790} \cdot e^{4.615i} \approx 0.9823\,(\cos(4.615) + i\sin(4.615)) \approx 0.9823(-0.1367 - 0.9906i) \approx -0.134 - 0.973i$.<br/><br/>
+          The CF is a complex number with modulus $\approx 0.982$ (close to 1, as expected for small arguments) and a large phase arising from the $iu\ln S_0 = 4.605i$ term. Actual implementation uses double-precision complex arithmetic and evaluates this at hundreds of values of $u$ simultaneously via vectorised code.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 10: WHY THIS IS REMARKABLE
+    ═══════════════════════════════════ -->
+    <h3>Why This Is Remarkable</h3>
+
+    <p>
+      Let's pause to appreciate what just happened. We have a model — Heston — whose stock price distribution at maturity has no closed-form density. You cannot write $f_{S_T}(s)$ explicitly. And yet we have a completely explicit, algebraically closed formula for the characteristic function of $\ln S_T$.
+    </p>
+    <p>
+      The characteristic function carries all the same information as the density. So in a mathematically precise sense, we know everything about the distribution of $S_T$ — we just know it in Fourier space rather than in direct space. And in Fourier space, option pricing is a matter of numerical integration, which modern computers do extremely fast.
+    </p>
+    <p>
+      Compare this to the alternatives. Monte Carlo simulation requires thousands of paths and minutes of computation for complex instruments. Finite-difference PDE solvers require careful grid design and are slow for multi-dimensional state spaces. The CF approach — sometimes called the <strong>semi-analytical</strong> approach — gives option prices in milliseconds, making it suitable for real-time calibration and live trading.
+    </p>
+
+    <div class="callout callout-india">
+      On an NSE options desk, Heston is re-calibrated throughout the trading day as the NIFTY option chain updates tick by tick. The calibration loop — compute model prices, compare to market, update parameters — runs dozens of times per minute. This is only feasible because the CF formula turns each model-price computation into a one-dimensional numerical integral rather than a Monte Carlo simulation. The entire quantitative options market in India relies on exactly this formula, running on servers in Powai and BKC, thousands of times per day.
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">3 questions · Chapter 03</span>
+    </div>
+
+    <!-- MCQ 1: What the CF encodes -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch03 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          The Heston model has no closed-form probability density for $S_T$. Yet it has a closed-form characteristic function $\phi_T(u)$. A junior quant asks: "If we can't write down the density, how do we know the full distribution?" What is the correct answer?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>We don't — the CF only gives moments, not the full distribution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>We approximate the distribution as lognormal with matching mean and variance from the CF.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>The CF uniquely determines the full distribution — it is the Fourier transform of the density, and the two carry identical information.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>The CF only works for symmetric distributions, so Heston requires a correction for the skew.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The characteristic function and the probability density (or CDF) carry exactly the same information — they are related by the Fourier transform, and the transform is invertible. The Gil-Pelaez inversion formula recovers the CDF from the CF via a single integral. Knowing $\phi_T(u)$ for all $u \in \mathbb{R}$ is mathematically equivalent to knowing the full distribution of $\ln S_T$.<br/><br/>
+          Option A confuses the CF with the moment generating function. The CF gives all moments too (via derivatives at $u=0$), but it gives much more — the full distribution. Option B (lognormal approximation) is a computational shortcut sometimes used in practice but is not what we are doing with the Heston CF. Option D is simply false — the CF is defined for any distribution, symmetric or not.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2: The affine ansatz -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch03 / q02</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          The affine ansatz $\phi = e^{C(\tau) + D(\tau)v + iux}$ is substituted into the two-dimensional Feynman-Kac PDE for the characteristic function. What is the key structural property of the Heston model that makes this substitution reduce the PDE to two ODEs?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>The Heston model has constant drift, so all time-derivative terms vanish after substitution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>The ansatz turns the PDE into a polynomial in $u$, and matching coefficients gives the ODEs.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>The Heston model is affine in $(x, v)$ — all PDE coefficients are at most linear in $v$ — so after substitution, the PDE separates by powers of $v$ into two independent ODEs.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The exponential form of the ansatz allows the PDE to be factored into a product of two independent equations.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          After substituting the ansatz and cancelling the common $\phi$ factor, the left-hand side of the PDE becomes a polynomial in $v$. Since all the original PDE coefficients are at most linear in $v$ (this is the affine property), the result contains only $v^0$ and $v^1$ terms — no higher powers. Setting the coefficient of $v^0$ to zero gives the ODE for $C$; setting the coefficient of $v^1$ to zero gives the (Riccati) ODE for $D$. The two equations are then solved sequentially: first $D$, then $C$ by integration.<br/><br/>
+          Option A is wrong — the drift is not constant in Heston (the variance drift $\kappa(\theta-v)$ depends on $v$). Option B is wrong — the separation is by powers of $v$, not powers of $u$. Option D describes the form of the ansatz but not the mechanism by which it decouples the PDE.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3: Branch cut -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch03 / q03</span>
+        <span class="mcq-diff">★★★ Computational / Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A quant implements the Heston CF formula and finds that for short maturities ($T = 1$ month) the computed option prices are accurate, but for long maturities ($T = 3$ years) they are wildly wrong — sometimes negative. She has checked her algebra multiple times. The most likely cause is:
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>A sign error in the Riccati ODE — the $\xi^2 D^2/2$ term should be negative.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>The Feller condition is violated, causing negative variance at long maturities.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>A branch cut discontinuity in the complex logarithm inside $C(\tau; u)$, causing phase jumps of $2\pi i$ that accumulate at large $\tau$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The Gil-Pelaez inversion integral diverges for long maturities because the CF decays too slowly.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          This is one of the most common bugs in Heston implementations. The formula for $C(\tau; u)$ contains the term $\ln\!\left(\frac{1-ge^{-d\tau}}{1-g}\right)$, where the argument is a complex number. As $\tau$ increases, the argument of the logarithm rotates in the complex plane. Each time it crosses the negative real axis, the principal-branch logarithm jumps by $2\pi i$. These jumps propagate through the exponential into the CF, causing the computed $\phi_T(u)$ to be wrong by a factor of $e^{2k\pi i} = 1$ for integer $k$ — but the <em>intermediate</em> values are wrong, and the numerical integration that produces option prices accumulates these errors, producing prices that can be negative or absurdly large.<br/><br/>
+          The fix is the Kahl-Jäckel (2005) rotation: rewrite the log as $\ln(g^{-1}(e^{d\tau} - g))$, track the argument continuously using $\mathrm{arg}(z)$ (not the principal branch), or use the alternative $D$ formulation with $d$ replaced by $-d$. Option B is a separate (real) problem that manifests differently. Options A and D are red herrings.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 03</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Q1–3 test the definitions and properties of characteristic functions. Q4–6 involve the Feynman-Kac connection and the structure of the PDE. Q7–8 are derivation-level problems on the Riccati ODE and the ansatz. Q9–10 are harder, requiring you to reason about the formula's properties and limits.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            Let $X \sim \mathcal{N}(\mu, \sigma^2)$. Derive its characteristic function $\phi_X(u) = e^{i\mu u - \sigma^2 u^2/2}$ from the definition $\phi_X(u) = \mathbb{E}[e^{iuX}]$ by completing the square in the Gaussian integral. Do not use the MGF as a shortcut — perform the integral explicitly.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            If $X$ and $Y$ are independent random variables, prove that $\phi_{X+Y}(u) = \phi_X(u)\cdot\phi_Y(u)$. Use this to find the CF of the sum of $n$ i.i.d. $\mathcal{N}(0,1)$ random variables, and verify it matches the CF of $\mathcal{N}(0, n)$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            For the Heston CF, verify the normalisation condition $\phi_T(0) = 1$ algebraically — not by the numerical worked example in the chapter, but by tracing the formula for general parameter values. Show that $d(0) = \kappa$, $g(0) = 0$, $D(\tau; 0) = 0$, $C(\tau; 0) = 0$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            The Feynman-Kac theorem connects PDEs to conditional expectations. State the Feynman-Kac theorem precisely (including the regularity conditions on the coefficients) and explain how it is used in the Heston CF derivation. In particular, what is the terminal condition on $\phi$, and where does $e^{iux}$ come from?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            Starting from the Heston SDEs under $\mathbb{Q}$, apply Itô's lemma to $x_t = \ln S_t$ and write down the SDE for $x_t$. Then write down the two-dimensional Feynman-Kac PDE that $\phi(\tau; u) = \mathbb{E}^{\mathbb{Q}}[e^{iux_T} \mid x_t, v_t]$ satisfies. Show all steps, including how the cross-variation $\rho\,\xi\sqrt{v_t}\sqrt{v_t}$ enters as the $\rho\xi v$ coefficient.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            Show that after substituting the affine ansatz $\phi = e^{C+Dv+iux}$ into the Feynman-Kac PDE and cancelling $\phi$, the resulting expression contains only $v^0$ and $v^1$ terms (no $v^2$ or higher). Identify exactly which term in the original PDE would create a $v^2$ term, and explain why it does not appear.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            The ODE for $D$ is a Riccati equation: $D' = \frac{1}{2}\xi^2 D^2 + (\rho\xi iu - \kappa)D + (-u^2/2 - iu/2)$. Verify that $D(\tau; u)$ as given in the chapter satisfies this ODE by differentiating the formula and substituting. You will need $dD/d\tau$ — compute it using the quotient rule on the $\frac{1-e^{-d\tau}}{1-ge^{-d\tau}}$ factor.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            In the large-$\tau$ limit (long-dated options), the factor $e^{-d\tau} \to 0$ assuming $\mathrm{Re}(d) > 0$. Find the limiting values $D(\infty; u)$ and $C(\infty; u)/\tau$ (the asymptotic growth rate of $C$). What does this imply about the behaviour of the Heston implied volatility smile as $T \to \infty$?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            The first derivative of the CF at $u = 0$ gives the first moment: $\phi'_X(0) = i\mathbb{E}[X]$. Using the Heston CF formula, compute $\partial\phi_T / \partial u \big|_{u=0}$ and show it equals $i\,\mathbb{E}^{\mathbb{Q}}[\ln S_T] = i\!\left(\ln S_0 + (r - \theta/2)T\right)$ in the large-$\kappa$ (fast mean reversion) limit. What does this tell you about the risk-neutral drift of $\ln S_T$?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            Consider a "degenerate" Heston model where $\xi \to 0$ (zero vol-of-vol). Show that in this limit, the Heston CF reduces to the BSM characteristic function $\phi_T^{\text{BSM}}(u) = \exp\!\left[iu(\ln S_0 + (r - \sigma^2/2)T) - u^2\sigma^2 T/2\right]$ with $\sigma^2 = \theta$ (the long-run variance). This confirms that BSM is the degenerate case of Heston.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="F_Op_Ch2.html" class="ch-nav-btn">← Heston — Letting Volatility Breathe</a>
+    <a href="F_Op_Ch4.html" class="ch-nav-btn primary">Next: Pricing Options with the Heston CF →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 Fourier-transformed to the correct answer.",
+  "✨ The characteristic function converges to your score.",
+  "🏆 Analytically tractable and correct. Well done.",
+  "🔥 Nailed it. The branch cut stays well-behaved.",
+  "💡 That's the kind of clarity that writes a Heston implementation in production.",
+  "🎓 Textbook perfect — and we mean that literally.",
+  "📈 Your intuition is affine in correctness. Nicely done.",
+  "🧮 The Riccati ODE is satisfied. Clean work.",
+  "⚡ Feynman-Kac would approve. Correct!",
+  "🌟 Even complex logarithms can't trip you up.",
+  "💎 As clean as a closed-form CF.",
+  "🚀 Semi-analytical and correct. Carry on."
+];
+
+const wrongMsgs = [
+  "🌀 Branch cut detected in your reasoning. Re-read.",
+  "📐 The affine structure disagrees with your answer.",
+  "📉 Phase jump of 2π in your confidence. Recalibrate!",
+  "😰 The Riccati equation is unimpressed. Slow down.",
+  "🤔 The sample space of correct answers doesn't include this one.",
+  "📊 More error than a naive Euler discretisation. Try again.",
+  "🎰 That's a speculative guess, not a derivation. Back to the formula.",
+  "⚠ Even BSM's CF gets this right. Look again."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'opts'));
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
