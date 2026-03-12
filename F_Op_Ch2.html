@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Heston — Letting Volatility Breathe — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; transition: width 0.4s; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.done { color: var(--green); }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.sidebar-item.locked { opacity: 0.4; cursor: not-allowed; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-i { background: rgba(232,114,42,0.1); color: var(--orange); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── PARAMETER TABLE ── */
+.param-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+.param-table th { background: var(--navy); color: white; font-family: 'DM Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.7rem 1rem; text-align: left; }
+.param-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: #2a2a3e; line-height: 1.6; vertical-align: top; }
+.param-table tr:last-child td { border-bottom: none; }
+.param-table tr:nth-child(even) td { background: var(--off); }
+.param-sym { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--orange); font-weight: 700; }
+.param-name { font-weight: 600; color: var(--navy); }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-body p:last-child { margin-bottom: 0; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; transition: border-color 0.2s; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy { background: rgba(30,158,94,0.1); color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard { background: rgba(45,37,96,0.08); color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+.ch-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_Op.html">Option Pricing</a> ›
+      <span>Heston — Letting Volatility Breathe</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:33%"></div></div>
+      <span class="tb-progress-label">2 / 6</span>
+    </div>
+    <a href="F_Op.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Option Pricing</div>
+  <a class="sidebar-item done" href="F_Op_Ch1.html">
+    <div class="si-num">✓</div>The Black-Scholes World
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item active" href="F_Op_Ch2.html">
+    <div class="si-num">2</div>Heston — Letting Volatility Breathe
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">3</div>The Characteristic Function Machine
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">4</div>Pricing Options with the Heston CF
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">5</div>Calibrating Heston to Market Data
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">6</div>Monte Carlo for Heston
+    <span class="si-mcq-badge">3 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 02 of 06 · Option Pricing</span>
+    </div>
+    <h1 class="chapter-title">Heston — Letting Volatility Breathe</h1>
+    <p class="chapter-subtitle">BSM freezes volatility in place and calls it a model. Heston lets it move — randomly, mean-reverting, correlated with the stock itself. Five parameters. One smile. The whole story of why options markets look the way they do.</p>
+  </div>
+
+  <div class="content-body">
+
+    <!-- ══════════════════════════════════
+         SECTION 1: WHY σ MUST MOVE
+    ═══════════════════════════════════ -->
+    <h3>Why BSM's σ Needs to Move</h3>
+
+    <p>
+      It is Budget Day. The Finance Minister is at the podium. NIFTY has been creeping sideways for two weeks, but the INDIA VIX — the NSE's measure of implied volatility — has been climbing steadily for three days. By 11 AM, the VIX is at 22. By 1 PM, it spikes to 31. By 3:30 PM closing, it is back at 24.
+    </p>
+    <p>
+      None of that is compatible with BSM. In the BSM world, $\sigma$ is a constant. It cannot spike, cannot mean-revert, cannot anticipate an event and then calm down after it passes. The VIX is doing all three of those things simultaneously — and it does so on every major event day, every earnings season, every RBI policy meeting.
+    </p>
+    <p>
+      The problem runs deeper than just the VIX being volatile. When volatility moves, the entire shape of the options smile moves with it. On a calm day, the NIFTY skew is moderate. After a sharp selloff, the skew steepens dramatically — OTM puts become much more expensive relative to ATM. BSM has exactly one free parameter ($\sigma$) to fit the entire smile at a given maturity. It cannot fit a shape that is itself changing over time.
+    </p>
+
+    <div class="callout callout-india">
+      The INDIA VIX is computed by NSE from NIFTY options prices across a range of strikes and maturities, using a methodology similar to the CBOE VIX. It measures the market's expectation of 30-day annualised volatility. Historically: 12–16% in quiet bull markets, 20–30% in normal uncertainty, 50–85% during COVID (March 2020), and brief spikes above 90% during the worst of the 2008 crisis. No BSM model with a constant $\sigma$ can accommodate a range from 12% to 90%.
+    </div>
+
+    <p>
+      What we need is a model where $\sigma$ is not a constant but a <em>random process</em> — one that can spike when markets panic, drift back when calm returns, and co-move with the stock in a way that generates the skew we observe. Steven Heston provided exactly this in 1993.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 2: THE HESTON SDEs
+    ═══════════════════════════════════ -->
+    <h3>The Heston Model — Two Coupled SDEs</h3>
+
+    <p>
+      The Heston model describes the joint evolution of the stock price $S_t$ and its instantaneous variance $v_t$ under the risk-neutral measure $\mathbb{Q}$:
+    </p>
+
+    <div class="math-block">
+      $$dS_t = r S_t \, dt + \sqrt{v_t}\, S_t \, dW_t^S$$
+      $$dv_t = \kappa(\theta - v_t)\,dt + \xi\sqrt{v_t}\,dW_t^v$$
+      $$d\langle W^S, W^v \rangle_t = \rho \, dt$$
+    </div>
+
+    <p>
+      The first equation is GBM — but with $\sigma$ replaced by $\sqrt{v_t}$, a quantity that now varies randomly over time. The second equation governs $v_t$ — the <strong>Cox-Ingersoll-Ross (CIR) process</strong>. The third line says the two Brownian motions are correlated with coefficient $\rho$.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>The Heston Model (risk-neutral dynamics).</strong>
+      $$dS_t = r S_t \, dt + \sqrt{v_t}\, S_t \, dW_t^S$$
+      $$dv_t = \kappa(\theta - v_t)\,dt + \xi\sqrt{v_t}\,dW_t^v$$
+      with $\mathbb{E}[dW_t^S \, dW_t^v] = \rho \, dt$. The five parameters $(\kappa, \theta, \xi, \rho, v_0)$ together determine the entire shape of the implied volatility surface.
+    </div>
+
+    <div class="callout callout-intuition">
+      Notice what changed from BSM and what didn't. The stock equation is structurally identical — drift $r$, diffusion $\sqrt{v_t} S_t \, dW_t^S$. The only change is that $\sigma$ (a constant) has been promoted to $\sqrt{v_t}$ (a stochastic process). Everything BSM taught us — delta hedging, risk-neutral pricing, the PDE framework — remains valid. Heston is not a replacement for BSM. It is BSM with the straightjacket removed from one parameter.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 3: THE CIR PROCESS
+    ═══════════════════════════════════ -->
+    <h3>The Variance Process — Why CIR?</h3>
+
+    <p>
+      The variance $v_t$ follows the Cox-Ingersoll-Ross process. Let's understand its anatomy before discussing the parameters.
+    </p>
+    <p>
+      The drift term $\kappa(\theta - v_t)$ is a restoring force. When $v_t > \theta$, the drift is negative — variance is pulled downward toward $\theta$. When $v_t < \theta$, the drift is positive — variance is pulled upward. The further $v_t$ is from $\theta$, the stronger the pull. This is <strong>mean reversion</strong>, and it is exactly what we observe in the VIX: spikes are followed by gradual decay back to normal levels.
+    </p>
+    <p>
+      The diffusion term $\xi\sqrt{v_t}\,dW_t^v$ has a $\sqrt{v_t}$ factor. This does two things simultaneously. First, it ensures that when $v_t$ is near zero, the random shocks are small — the process cannot be pushed below zero by noise alone. Second, it means variance is more volatile when variance is already high, which matches empirical reality: turbulent markets are turbulent in their turbulence.
+    </p>
+
+    <div class="callout callout-warning">
+      Notice that we model the <em>variance</em> $v_t = \sigma_t^2$, not the volatility $\sigma_t$ itself. This is a modelling choice. The instantaneous volatility of the stock is $\sqrt{v_t}$. When you read "Heston volatility parameter" in a paper, check whether they mean $\sqrt{v_t}$ or $v_t$ — the distinction matters when comparing calibrated parameter values across implementations.
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 4: THE FIVE PARAMETERS
+    ═══════════════════════════════════ -->
+    <h3>The Five Parameters — A Field Guide</h3>
+
+    <p>
+      Every Heston model is fully specified by five numbers. Understanding what each one does — intuitively, not just algebraically — is the difference between calibrating a model and actually using it.
+    </p>
+
+    <table class="param-table">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Name</th>
+          <th>What it controls</th>
+          <th>Typical range (NIFTY)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="param-sym">κ</span></td>
+          <td><span class="param-name">Mean reversion speed</span></td>
+          <td>How fast variance snaps back to θ after a shock</td>
+          <td>0.5 – 5.0</td>
+        </tr>
+        <tr>
+          <td><span class="param-sym">θ</span></td>
+          <td><span class="param-name">Long-run variance</span></td>
+          <td>The level variance reverts to; √θ is the long-run vol</td>
+          <td>0.02 – 0.08 (i.e. 14%–28% vol)</td>
+        </tr>
+        <tr>
+          <td><span class="param-sym">ξ</span></td>
+          <td><span class="param-name">Vol-of-vol</span></td>
+          <td>How wildly variance itself fluctuates; controls smile curvature</td>
+          <td>0.2 – 1.0</td>
+        </tr>
+        <tr>
+          <td><span class="param-sym">ρ</span></td>
+          <td><span class="param-name">Correlation</span></td>
+          <td>Co-movement of stock and variance; controls skew direction</td>
+          <td>−0.8 – −0.3 (equity skew)</td>
+        </tr>
+        <tr>
+          <td><span class="param-sym">v₀</span></td>
+          <td><span class="param-name">Initial variance</span></td>
+          <td>Today's variance level; √v₀ is today's spot vol</td>
+          <td>0.02 – 0.10 (14%–32% vol)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      Now let's understand each one properly.
+    </p>
+
+    <h3>κ — Mean Reversion Speed</h3>
+
+    <p>
+      $\kappa$ controls how quickly the variance process forgets a shock. High $\kappa$ means variance snaps back fast — a volatility spike during an RBI rate announcement decays within hours. Low $\kappa$ means shocks persist — elevated vol after a global selloff lingers for weeks.
+    </p>
+    <p>
+      The characteristic timescale is the <strong>half-life</strong>: the expected time for variance to travel halfway from $v_0$ back to $\theta$:
+    </p>
+    <div class="math-block">
+      $$t_{1/2} = \frac{\ln 2}{\kappa}$$
+    </div>
+    <p>
+      For $\kappa = 2$, the half-life is $0.693/2 \approx 0.35$ years — about 4 months. For $\kappa = 5$, it is about 7 weeks. For $\kappa = 0.5$, it stretches to nearly 1.4 years. Calibrated values for equity indices typically sit between $\kappa = 1$ and $\kappa = 4$.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of $\kappa$ as the "memory" of the volatility process. High $\kappa$: the market has short memory — yesterday's panic is today's footnote. Low $\kappa$: the market holds grudges — the volatility from a sharp crash hangs in the air for months. The INDIA VIX after the COVID crash of March 2020 took roughly 6 months to fully normalise, suggesting a $\kappa$ around 1.4 for that regime.
+    </div>
+
+    <h3>θ — Long-Run Variance</h3>
+
+    <p>
+      $\theta$ is the gravitational centre of the variance process — the level it drifts back to regardless of where it starts. Its square root $\sqrt{\theta}$ is the long-run implied volatility that the market is "comfortable" with in the absence of shocks.
+    </p>
+    <p>
+      For NIFTY in a normal market environment, $\sqrt{\theta}$ calibrates to around 16–20% annualised vol. During sustained periods of stress (say, during prolonged geopolitical uncertainty), $\theta$ itself can shift upward — a regime change that Heston, in its basic form, cannot capture (that requires a regime-switching extension).
+    </p>
+    <p>
+      The conditional expectation of variance, given current variance $v_0$, decays exponentially toward $\theta$:
+    </p>
+    <div class="math-block">
+      $$\mathbb{E}[v_t \mid v_0] = \theta + (v_0 - \theta)e^{-\kappa t}$$
+    </div>
+    <p>
+      As $t \to \infty$, this converges to $\theta$ regardless of $v_0$. As $t \to 0$, it equals $v_0$. The exponential decay rate is exactly $\kappa$ — connecting the two parameters cleanly.
+    </p>
+
+    <h3>ξ — Vol-of-Vol</h3>
+
+    <p>
+      $\xi$ (xi, sometimes written $\sigma_v$) is the volatility of the variance process itself — how noisy $v_t$ is around its mean-reverting path. It is sometimes called "vol-of-vol" or "volvol."
+    </p>
+    <p>
+      In the implied volatility surface, $\xi$ is the primary driver of <strong>smile curvature</strong> — the degree to which the IV curve bends away from flat. High $\xi$: the variance process is wild, producing fat tails in the stock return distribution, which means expensive deep OTM options in both directions — a pronounced symmetric smile. Low $\xi$: the variance barely moves, the smile is nearly flat, approaching BSM.
+    </p>
+
+    <div class="callout callout-intuition">
+      Here is an extreme thought experiment. Set $\xi = 0$. Then $dv_t = \kappa(\theta - v_t)\,dt$ — a purely deterministic ODE, no randomness. Variance follows a fixed path from $v_0$ to $\theta$ and stays there. The stock is then GBM with a time-varying but perfectly predictable $\sigma(t)$. In this degenerate case, BSM still prices correctly — you just use the correct time-averaged $\sigma$. The moment $\xi > 0$, variance becomes genuinely random, and BSM can no longer produce the right prices. $\xi$ is the parameter that breaks BSM.
+    </div>
+
+    <h3>ρ — Correlation</h3>
+
+    <p>
+      $\rho$ is the instantaneous correlation between the stock Brownian motion $W^S$ and the variance Brownian motion $W^v$. It is the most important parameter for shaping the <em>asymmetry</em> of the smile.
+    </p>
+    <p>
+      For equity indices, $\rho$ is empirically negative — typically between $-0.8$ and $-0.3$. This encodes the <strong>leverage effect</strong>: when the stock falls, variance tends to rise. A large negative return and a large positive variance shock are correlated events. In plain English: crashes are accompanied by volatility spikes.
+    </p>
+    <p>
+      In the implied volatility surface, negative $\rho$ shifts the smile to the left — the left side (low strikes, OTM puts) of the smile becomes elevated relative to the right side (high strikes, OTM calls). This is exactly the equity skew we documented in Chapter 1. The model-data link is direct: $\rho < 0$ produces downward-sloping IV as a function of strike.
+    </p>
+
+    <div class="callout callout-india">
+      On NSE, the leverage effect is visible and tradeable. During the March 2020 COVID crash, NIFTY fell roughly 38% over five weeks while the INDIA VIX rose from ~14 to ~85. The correlation between daily NIFTY log-returns and daily INDIA VIX changes over this period was approximately $-0.85$. A Heston model calibrated to this period would produce $\rho \approx -0.80$ — deep negative, generating a steep skew where NIFTY put options were dramatically overpriced relative to calls.
+    </div>
+
+    <h3>v₀ — Initial Variance</h3>
+
+    <p>
+      $v_0$ is today's variance level — the starting point of the stochastic variance process. Its square root $\sqrt{v_0}$ is today's spot volatility, which should match (approximately) the ATM implied volatility for short maturities.
+    </p>
+    <p>
+      $v_0$ is not really a "shape" parameter — it does not change the structure of the smile. It shifts the entire vol surface up or down. When you re-calibrate the Heston model daily, $v_0$ is usually the parameter that moves the most, absorbing the day-to-day changes in the overall vol level.
+    </p>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Half-Life and Conditional Expectation</span>
+        <span class="we-badge">🇮🇳 INDIA VIX</span>
+      </div>
+      <div class="we-body">
+        <p>
+          A Heston model is calibrated to NIFTY options with parameters $\kappa = 2.5$, $\theta = 0.04$ (long-run vol $= \sqrt{0.04} = 20\%$). The INDIA VIX spikes to 35% on a Budget Day surprise, implying $v_0 = 0.35^2 = 0.1225$. How long does it take, on average, for the variance to fall halfway back to its long-run level? And what is the expected variance after 3 months ($T = 0.25$ years)?
+        </p>
+
+        <div class="we-step">Half-life</div>
+        <div class="math-block">
+          $$t_{1/2} = \frac{\ln 2}{\kappa} = \frac{0.6931}{2.5} \approx 0.277 \text{ years} \approx \mathbf{101 \text{ calendar days}}$$
+        </div>
+
+        <div class="we-step">Conditional expectation at T = 0.25</div>
+        <div class="math-block">
+          $$\mathbb{E}[v_{0.25} \mid v_0] = \theta + (v_0 - \theta)e^{-\kappa T}$$
+          $$= 0.04 + (0.1225 - 0.04)\,e^{-2.5 \times 0.25}$$
+          $$= 0.04 + 0.0825 \times e^{-0.625}$$
+          $$= 0.04 + 0.0825 \times 0.5353 = 0.04 + 0.04416 = \mathbf{0.0842}$$
+        </div>
+        <p>Implied volatility: $\sqrt{0.0842} \approx 29.0\%$.</p>
+
+        <div class="we-answer">
+          <strong>Answer:</strong> The variance half-life is approximately 101 days. After 3 months, expected variance is 0.0842, implying vol of ≈29% — still elevated well above the 20% long-run level, but meaningfully below the 35% spike. The Budget Day panic decays but does not evaporate quickly. This is why post-event implied vols for longer maturities stay elevated even after the event itself has passed.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 5: THE FELLER CONDITION
+    ═══════════════════════════════════ -->
+    <h3>The Feller Condition — Keeping Variance Positive</h3>
+
+    <p>
+      Here is a natural question: can $v_t$ hit zero? Economically, zero variance would mean the stock price is frozen — clearly degenerate. Mathematically, the answer depends on the parameters.
+    </p>
+    <p>
+      The diffusion term $\xi\sqrt{v_t}$ vanishes as $v_t \to 0$, so the process cannot diffuse through zero. But the drift $\kappa(\theta - v_t)$ is positive near zero, pushing upward — unless the random shocks are large enough to overwhelm this restoring force. The condition under which $v_t$ remains strictly positive almost surely is the <strong>Feller condition</strong>:
+    </p>
+    <div class="math-block">
+      $$\boxed{2\kappa\theta > \xi^2}$$
+    </div>
+
+    <div class="callout callout-definition">
+      <strong>Feller condition.</strong> For the CIR process $dv_t = \kappa(\theta - v_t)\,dt + \xi\sqrt{v_t}\,dW_t$, the boundary $v_t = 0$ is:
+      <br/><br/>
+      <strong>Inaccessible</strong> (never reached, a.s.) if $2\kappa\theta \geq \xi^2$.
+      <br/>
+      <strong>Accessible but reflecting</strong> (touches zero but bounces back) if $2\kappa\theta < \xi^2$.
+      <br/><br/>
+      The strict inequality $2\kappa\theta > \xi^2$ is typically required for well-behaved numerical simulation.
+    </div>
+
+    <div class="callout callout-warning">
+      In practice, the Feller condition is frequently violated in calibrated Heston models. When you fit Heston to real market data, the optimiser often finds $\xi$ values large enough that $\xi^2 > 2\kappa\theta$. This is not necessarily a disaster — the process can touch zero and reflect — but it does cause numerical problems in simulation (variance can go negative in Euler discretisation) and certain pricing formulas become less stable. Practitioners either impose the Feller condition as a hard constraint during calibration or use simulation schemes (like the full-truncation scheme) that handle zero-boundary gracefully.
+    </div>
+
+    <p>
+      When the Feller condition holds, the stationary distribution of $v_t$ as $t \to \infty$ is a Gamma distribution:
+    </p>
+    <div class="math-block">
+      $$v_\infty \sim \mathrm{Gamma}(\alpha, \beta), \quad \alpha = \frac{2\kappa\theta}{\xi^2}, \quad \beta = \frac{2\kappa}{\xi^2}$$
+    </div>
+    <p>
+      The mean of this distribution is $\alpha/\beta = \theta$ — confirming that $\theta$ is indeed the long-run mean. The variance of $v_\infty$ is $\alpha/\beta^2 = \theta\xi^2/(2\kappa)$ — larger $\xi$ or smaller $\kappa$ means variance fluctuates more in the long run.
+    </p>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · Feller Condition and Stationary Distribution</span>
+        <span class="we-badge">🇮🇳 NIFTY Heston Calibration</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Two competing Heston calibrations are proposed for a NIFTY options book. Check the Feller condition for each, and for the one that satisfies it, compute the shape parameters of the stationary Gamma distribution and the long-run standard deviation of variance.
+        </p>
+        <p>
+          <strong>Model A:</strong> $\kappa = 3.0$, $\theta = 0.04$, $\xi = 0.40$<br/>
+          <strong>Model B:</strong> $\kappa = 1.2$, $\theta = 0.05$, $\xi = 0.70$
+        </p>
+
+        <div class="we-step">Check Feller condition: $2\kappa\theta > \xi^2$</div>
+        <div class="math-block">
+          $$\text{Model A: } 2 \times 3.0 \times 0.04 = 0.24 \quad \text{vs} \quad \xi^2 = 0.16 \quad \Rightarrow \quad 0.24 > 0.16 \checkmark$$
+          $$\text{Model B: } 2 \times 1.2 \times 0.05 = 0.12 \quad \text{vs} \quad \xi^2 = 0.49 \quad \Rightarrow \quad 0.12 < 0.49 \times$$
+        </div>
+        <p>Model A satisfies the Feller condition. Model B does not — variance can touch zero.</p>
+
+        <div class="we-step">Stationary distribution for Model A</div>
+        <div class="math-block">
+          $$\alpha = \frac{2\kappa\theta}{\xi^2} = \frac{2 \times 3.0 \times 0.04}{0.16} = \frac{0.24}{0.16} = 1.5$$
+          $$\beta = \frac{2\kappa}{\xi^2} = \frac{6.0}{0.16} = 37.5$$
+        </div>
+        <p>So $v_\infty \sim \mathrm{Gamma}(1.5,\; 37.5)$. The mean is $\alpha/\beta = 1.5/37.5 = 0.04 = \theta$ ✓.</p>
+        <p>The variance of $v_\infty$ is $\alpha/\beta^2 = 1.5/1406.25 \approx 0.001067$, so the standard deviation of $v_\infty$ is $\sqrt{0.001067} \approx 0.0327$.</p>
+
+        <div class="we-answer">
+          <strong>Answer:</strong> Model A passes the Feller condition. In the long run, variance is Gamma-distributed with mean 0.04 (vol = 20%) and standard deviation ≈ 0.033 around that mean. The long-run vol fluctuates roughly ±3.3 variance points around the 20% level. Model B, with its high vol-of-vol and low mean reversion, will produce an unstable variance process that can reach zero — problematic for both pricing and hedging.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SECTION 6: HOW HESTON MAKES THE SMILE
+    ═══════════════════════════════════ -->
+    <h3>How Heston Generates the Smile</h3>
+
+    <p>
+      We now have all the ingredients to understand — qualitatively and precisely — how each Heston parameter shapes the implied volatility surface. This is the payoff for learning the model.
+    </p>
+
+    <h3>ξ Controls Curvature</h3>
+
+    <p>
+      When $\xi = 0$, variance is deterministic and the model collapses to BSM — flat smile. As $\xi$ increases, the distribution of $S_T$ develops fatter tails in <em>both</em> directions. Deep OTM options in both directions become more expensive. The smile curves upward symmetrically at the wings.
+    </p>
+    <p>
+      In practice, for equity markets, increasing $\xi$ raises the tails of the IV curve without strongly affecting the ATM level or the slope. If your model fits the ATM and skew well but underprices wing options (deep OTM puts and calls), the fix is to increase $\xi$.
+    </p>
+
+    <h3>ρ Controls Skew</h3>
+
+    <p>
+      $\rho$ is the parameter that breaks the left-right symmetry of the smile. With $\rho = 0$, the smile is symmetric around ATM. With $\rho < 0$ (the equity case), the distribution of $S_T$ becomes negatively skewed — there is more probability mass on large downside moves than large upside moves. OTM puts become more expensive than equidistant OTM calls. The smile tilts downward from left to right.
+    </p>
+    <p>
+      The relationship is intuitive. Negative $\rho$ means that when the stock falls (negative $dW^S$), variance tends to rise (positive $dW^v$). A falling stock accompanied by rising volatility produces fatter left tails and thinner right tails in the return distribution — exactly the shape that produces the equity skew.
+    </p>
+
+    <div class="callout callout-intuition">
+      Here is the cleanest way to remember it. The smile has three shape properties: <strong>level</strong> (controlled by $v_0$ and $\theta$), <strong>slope</strong> (controlled by $\rho$), and <strong>curvature</strong> (controlled by $\xi$). Mean reversion $\kappa$ primarily affects the term structure — how the smile shape changes across maturities. A quant calibrating Heston to a single maturity is essentially fitting a parabola (level + slope + curvature) using ($v_0/\theta$, $\rho$, $\xi$), with $\kappa$ becoming important only when fitting multiple maturities simultaneously.
+    </div>
+
+    <h3>κ Controls the Term Structure</h3>
+
+    <p>
+      At short maturities, the implied vol surface is dominated by $v_0$ — what vol is doing right now. At long maturities, it converges toward $\sqrt{\theta}$ — what vol "wants" to be. The speed of this transition is $\kappa$. High $\kappa$: the surface flattens quickly with maturity. Low $\kappa$: the surface retains memory of current $v_0$ even for long-dated options.
+    </p>
+    <p>
+      This is why NIFTY's 1-week options often have very different ATM vol than 3-month options, and why the smile shape changes dramatically between weekly and monthly expiries. Heston captures all of this with a single additional differential equation.
+    </p>
+
+    <!-- ══════════════════════════════════
+         SECTION 7: WHAT HESTON CANNOT DO
+    ═══════════════════════════════════ -->
+    <h3>What Heston Still Cannot Do</h3>
+
+    <p>
+      Heston is a massive step forward from BSM. But intellectual honesty demands we acknowledge where it falls short.
+    </p>
+    <p>
+      <strong>Jumps.</strong> Heston has continuous paths — $S_t$ and $v_t$ cannot jump. But real markets do jump. The NIFTY gap-down on 24 February 2022 (Russia-Ukraine) was a discontinuous move that no diffusion model can produce with the correct probability. Bates (1996) extended Heston by adding a Poisson jump process, but at the cost of three more parameters.
+    </p>
+    <p>
+      <strong>The short-maturity smile.</strong> For very short maturities (1-day, 2-day options), the Heston-implied smile is too flat. Real markets show very steep skews for short maturities. This is partly the jump problem — a 1-day option is very sensitive to the possibility of an overnight gap.
+    </p>
+    <p>
+      <strong>The forward smile.</strong> Heston does a reasonable job fitting today's smile but struggles to correctly price options on realised variance or options with forward-start features. The forward smile implied by Heston is often flatter than what the market implies.
+    </p>
+    <p>
+      <strong>Rough volatility.</strong> Recent empirical work shows that the VIX behaves more like a fractional Brownian motion with Hurst exponent $H \approx 0.1$ (very rough) than a standard Brownian motion. The "rough Heston" model (El Euch and Rosenbaum, 2019) addresses this but requires significantly more mathematical machinery.
+    </p>
+
+    <div class="callout callout-intuition">
+      Despite these limitations, Heston remains the workhorse of quantitative options practice. It is analytically tractable — it has a closed-form characteristic function (Chapter 3), which means options can be priced via fast Fourier transforms in milliseconds. It has five interpretable parameters that traders can reason about intuitively. And it fits real smiles well enough for most desk purposes. The perfect model does not exist. Heston is the best model that is both rigorous and fast enough to use in production.
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 02</span>
+    </div>
+
+    <!-- MCQ 1: Feller condition -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch02 / q01</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A Heston model is calibrated with $\kappa = 1.0$, $\theta = 0.03$, $\xi = 0.30$. A quant suggests increasing $\xi$ to 0.80 to better fit the steep short-maturity skew. Does the revised model satisfy the Feller condition, and what is the practical consequence?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Yes, Feller is satisfied — $2\kappa\theta = 0.06 > \xi^2 = 0.64$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>No, Feller is violated — $2\kappa\theta = 0.06 < \xi^2 = 0.64$, so variance can reach zero.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>The Feller condition is irrelevant for pricing — it only affects simulation.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Feller cannot be evaluated without knowing $v_0$.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The Feller condition requires $2\kappa\theta > \xi^2$. With $\kappa = 1.0$, $\theta = 0.03$, $\xi = 0.80$:
+          $$2 \times 1.0 \times 0.03 = 0.06 \quad \text{vs} \quad \xi^2 = 0.64$$
+          $0.06 \ll 0.64$: Feller is badly violated. The variance process will hit zero with positive probability. In Euler-Maruyama simulation, variance can go negative — then $\sqrt{v_t}$ is undefined and the simulation crashes. Even with truncation fixes, the characteristic function formula (Chapter 3) becomes numerically unstable. In practice, you would instead try to fit the skew by adjusting $\rho$ (more negative) rather than blowing up $\xi$.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2: What ρ does -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch02 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          Two Heston models are identical except: <strong>Model X</strong> has $\rho = -0.7$ and <strong>Model Y</strong> has $\rho = +0.3$. Both have the same $\kappa$, $\theta$, $\xi$, $v_0$. How do their implied volatility smiles differ for a one-month expiry?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Model X has a higher ATM vol; Model Y has lower ATM vol.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>Both smiles have the same shape — $\rho$ only affects multi-year maturities.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>Model X shows a downward-sloping skew (OTM puts expensive); Model Y shows an upward-sloping skew (OTM calls expensive).</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Model X has more curvature; Model Y has less curvature.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          $\rho$ controls the skew direction. With $\rho = -0.7$ (Model X), when the stock falls, variance rises — producing fatter left tails and thinner right tails. Low-strike (OTM put) options become more expensive than equidistant OTM calls. The IV curve slopes downward as strike increases: the classic equity skew.<br/><br/>
+          With $\rho = +0.3$ (Model Y), when the stock rises, variance also rises. Right tails fatten, left tails thin. OTM calls become more expensive than OTM puts. The smile tilts upward — an upward skew. This is the characteristic smile of certain commodities (e.g., oil, where supply shocks push prices up and volatility up simultaneously).<br/><br/>
+          Curvature (option D) is primarily controlled by $\xi$, not $\rho$. ATM vol level (option A) is primarily controlled by $v_0$ and $\theta$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3: Half-life computation -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch02 / q03</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A Heston model has $\kappa = 4.0$. After a sharp NIFTY selloff, the INDIA VIX jumps to 40%, meaning $v_0 = 0.16$. The long-run variance is $\theta = 0.04$ (long-run vol = 20%). Approximately how many <strong>calendar days</strong> does it take for the expected variance to fall halfway back to $\theta$?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>25 days</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>173 days</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>63 days</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>365 days</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C — approximately 63 calendar days.</strong><br/><br/>
+          The half-life formula is:
+          $$t_{1/2} = \frac{\ln 2}{\kappa} = \frac{0.6931}{4.0} = 0.1733 \text{ years}$$
+          Converting to calendar days: $0.1733 \times 365 \approx 63$ days.<br/><br/>
+          Option A (25 days) would correspond to $\kappa \approx 10$. Option B (173 days) corresponds to $\kappa \approx 1.46$. Option D (365 days) corresponds to $\kappa \approx 0.69$. Note that the initial level of variance ($v_0 = 0.16$) and the long-run level ($\theta = 0.04$) do not affect the half-life — only $\kappa$ does. The half-life is a property of the process dynamics, not of the current displacement.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4: Parameter identification -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">finance / option-pricing / ch02 / q04</span>
+        <span class="mcq-diff">★★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A quant observes that after re-calibrating Heston to NIFTY options daily for a month, the parameter $v_0$ fluctuates wildly day-to-day while $\kappa$, $\theta$, $\xi$, $\rho$ are relatively stable. She also notices that the 1-week ATM implied vol closely tracks the daily change in $v_0$. This is <strong>most consistent</strong> with which interpretation?
+        </p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>The model is mis-specified — a well-calibrated Heston should have all five parameters stable.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$v_0$ is being conflated with $\theta$ — they should be set equal for a stable calibration.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>$v_0$ is correctly acting as the "current vol level" parameter, absorbing daily changes in market vol while the structural parameters describe the longer-run dynamics.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>The instability in $v_0$ indicates the Feller condition is being violated daily.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          This is exactly the correct interpretation. In Heston, $v_0$ is the <em>state variable</em> — it tells you where the variance process is right now. It is analogous to the current stock price $S_0$ in BSM: it changes every day because the market changes every day. The other four parameters $(\kappa, \theta, \xi, \rho)$ describe the <em>dynamics</em> of the process — the structural behaviour of volatility, which changes much more slowly.<br/><br/>
+          The short-maturity ATM vol being closely linked to $v_0$ is exactly right: for very short maturities, there is not enough time for mean reversion to matter, so the smile is essentially anchored at $\sqrt{v_0}$. For longer maturities, $\theta$ becomes the anchor instead.<br/><br/>
+          Option A is wrong — this is normal, expected behaviour. Option B is wrong — $v_0 = \theta$ would assume the process starts at its long-run mean, which is rarely true. Option D is wrong — Feller depends on $\kappa$, $\theta$, $\xi$, not on $v_0$.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 02</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Q1–3 are direct applications of the parameter definitions and the Feller condition. Q4–7 require combining multiple concepts. Q8–10 are harder — they ask you to reason about what the model can and cannot do. Use realistic NSE/INDIA VIX parameters throughout.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            The INDIA VIX is currently at 18%, implying $v_0 = 0.0324$. A Heston model has $\theta = 0.0225$ (long-run vol = 15%) and $\kappa = 3.0$. Write down the conditional expectation $\mathbb{E}[v_T \mid v_0]$ as a function of $T$. Evaluate it at $T = 1/12$, $T = 0.25$, and $T = 1$ year. What does the term structure of expected variance look like?
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            For each of the following parameter sets, state whether the Feller condition holds and compute the half-life $t_{1/2}$:
+            (a) $\kappa = 2.0$, $\theta = 0.05$, $\xi = 0.40$;
+            (b) $\kappa = 0.8$, $\theta = 0.06$, $\xi = 0.55$;
+            (c) $\kappa = 5.0$, $\theta = 0.03$, $\xi = 0.50$.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            For a Heston model satisfying the Feller condition with parameters $\kappa = 2.5$, $\theta = 0.04$, $\xi = 0.35$, compute the shape parameters $\alpha$ and $\beta$ of the stationary Gamma distribution of $v_\infty$. What is the long-run mean and standard deviation of the variance? What is the long-run mean and approximate standard deviation of the volatility $\sqrt{v_\infty}$?
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            Suppose you observe that the NIFTY 1-month ATM implied vol is 20%, but the 6-month ATM implied vol is only 16%. Assuming the Heston model is the true data generating process with $\kappa = 2.0$ and $\theta = 0.04$, what does this term structure imply about $v_0$? Is the market currently in a high-vol or low-vol regime relative to the long run?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            A trader observes that the NIFTY 1-month implied vol surface has a steep downward skew: the 5% OTM put has IV = 24%, the ATM has IV = 18%, and the 5% OTM call has IV = 14%. Which Heston parameter is primarily responsible for this skew, and in what direction should it be adjusted to fit this surface? Explain your reasoning without invoking any formula.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            The conditional variance $\mathbb{E}[v_t \mid v_0] = \theta + (v_0 - \theta)e^{-\kappa t}$. Show that the conditional expectation of the <em>volatility</em> $\mathbb{E}[\sqrt{v_t} \mid v_0]$ cannot be computed by simply taking the square root of the conditional variance. What additional information would you need? (Hint: consider Jensen's inequality for the concave function $\sqrt{\cdot}$.)
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            Two NSE traders are debating Heston. Trader A says: "I don't need $\rho$ — I can fit the skew by just making $\theta$ lower for OTM put strikes." Trader B says: "That is not a Heston model anymore — you would be using a different $\theta$ per strike, which is a local vol model." Who is right and why? What is the fundamental modelling distinction between stochastic vol and local vol?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            On 4 June 2024 (India election results day), NIFTY fell approximately 8% intraday before recovering. The INDIA VIX spiked from 20 to 31 within 30 minutes of market open. Discuss which Heston parameters would change most dramatically if you re-calibrated the model immediately after the open versus the previous day's close. In particular, discuss the movement in $v_0$, $\rho$, and whether the Feller condition is likely to be stressed.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            In the Heston model, the variance $v_t$ is a CIR process. The CIR process was originally proposed to model interest rates (Cox, Ingersoll, Ross 1985). List at least three properties that make the CIR process suitable for modelling both interest rates and variance. Then identify at least one property that is appropriate for variance but would be unrealistic for interest rates (or vice versa), and explain why.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            The Heston model cannot produce a steep enough skew for very short maturities (e.g., 1-week NIFTY options), even with $|\rho|$ close to 1. Explain intuitively why this is the case by thinking about what happens to the variance process $v_t$ over very short time intervals. What extension to the basic Heston model would most directly address this shortcoming, and what new parameter(s) would it introduce?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="F_Op_Ch1.html" class="ch-nav-btn">← The Black-Scholes World</a>
+    <a href="F_Op_Ch3.html" class="ch-nav-btn primary">Next: The Characteristic Function Machine →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 Exactly. Heston himself would approve.",
+  "✨ The variance process nods in agreement.",
+  "🏆 Mean reversion to the correct answer. Well done.",
+  "🔥 Nailed it. The Feller condition is satisfied.",
+  "💡 That's the kind of clarity that gets you past a quant interview in Mumbai.",
+  "🎓 Textbook perfect — and we mean that literally.",
+  "📈 Your intuition just jumped by ξ · dW. Nicely done.",
+  "🧮 The CIR process converges to your confidence level.",
+  "⚡ Sharp as a calibrated vol surface. Correct!",
+  "🌟 Even the INDIA VIX is impressed.",
+  "💎 As clean as a Gamma stationary distribution.",
+  "🚀 Five parameters, one correct answer. Carry on.",
+  "🎯 The skew bows before you."
+];
+
+const wrongMsgs = [
+  "🌀 Variance process hit zero. Re-read the section.",
+  "📐 The Feller condition disagrees with your answer.",
+  "📉 Circuit breaker triggered. Recalibrate!",
+  "🏦 The INDIA VIX wouldn't sanction this. Check your working.",
+  "😰 Panic-selling your accuracy. Slow down.",
+  "🤔 The sample space of correct answers doesn't include this one.",
+  "📊 More variance than the vol-of-vol parameter. Try again.",
+  "🎰 Speculative punt, not a calibrated trade. Back to the formula.",
+  "⚠ Even BSM gets this right. Look again."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'opts'));
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
