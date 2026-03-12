@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Heston Calibration — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-a{background:rgba(45,37,96,0.08);color:var(--navy2);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.formula-box{background:linear-gradient(135deg,rgba(45,37,96,0.04),rgba(232,114,42,0.04));border:2px solid var(--navy);border-radius:12px;padding:1.5rem 1.8rem;margin:2rem 0;}
+.formula-box-label{font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.8rem;font-weight:600;}
+.formula-box p{font-size:0.88rem;color:var(--muted);margin-top:0.8rem;margin-bottom:0;}
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+.cal-table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.83rem;}
+.cal-table th{background:var(--navy);color:white;font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;padding:0.6rem 0.9rem;text-align:center;}
+.cal-table th:first-child{text-align:left;}
+.cal-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.8rem;}
+.cal-table td:first-child{text-align:left;font-family:'Barlow',sans-serif;font-weight:600;color:var(--navy);}
+.cal-table tr:last-child td{border-bottom:none;}
+.cal-table tr:nth-child(even) td{background:var(--off);}
+.res-pos{color:var(--green);font-weight:600;}
+.res-neg{color:#dc2626;font-weight:600;}
+.res-ok{color:var(--muted);}
+.param-table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.87rem;}
+.param-table th{background:var(--navy2);color:white;font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;padding:0.65rem 1rem;text-align:left;}
+.param-table td{padding:0.7rem 1rem;border-bottom:1px solid var(--border);}
+.param-table tr:last-child td{border-bottom:none;}
+.param-sym{font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--orange);font-weight:500;}
+.param-val{font-family:'DM Mono',monospace;font-weight:700;color:var(--navy);}
+.param-interp{font-size:0.85rem;color:var(--muted);}
+.loss-table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.87rem;}
+.loss-table th{background:var(--navy);color:white;font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;padding:0.65rem 1rem;text-align:left;}
+.loss-table td{padding:0.7rem 1rem;border-bottom:1px solid var(--border);line-height:1.5;vertical-align:top;}
+.loss-table tr:last-child td{border-bottom:none;}
+.loss-table tr:nth-child(even) td{background:var(--off);}
+.loss-table tr.hl td{background:rgba(232,114,42,0.07);font-weight:600;}
+.loss-eq{font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--navy2);}
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin:1.2rem 0;}
+.metric-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:0.9rem 1rem;text-align:center;}
+.metric-val{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:700;color:var(--navy);}
+.metric-val.good{color:var(--green);}
+.metric-val.bad{color:#dc2626;}
+.metric-label{font-family:'DM Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-top:0.3rem;}
+.honest-truth{background:linear-gradient(135deg,#1a1a2e 0%,#2D2560 100%);border-radius:14px;padding:2rem;margin:2.5rem 0;color:white;}
+.ht-label{font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--orange);margin-bottom:0.8rem;font-weight:600;}
+.ht-title{font-family:'Playfair Display',serif;font-size:1.5rem;color:white;margin-bottom:1.2rem;line-height:1.3;}
+.ht-body p{font-size:0.93rem;line-height:1.85;color:rgba(255,255,255,0.8);margin-bottom:1rem;}
+.ht-body p strong{color:var(--orange2);}
+.ht-body p:last-child{margin-bottom:0;}
+.real-data-panel{border:2px solid var(--orange);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.rdp-header{background:var(--orange);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.rdp-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:white;letter-spacing:0.05em;font-weight:600;}
+.rdp-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.7);}
+.rdp-body{padding:1.5rem;background:var(--white);}
+.rdp-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.algo-steps{margin:1.5rem 0;}
+.algo-step{display:flex;gap:1rem;margin-bottom:1rem;align-items:flex-start;}
+.algo-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;margin-top:0.1rem;}
+.algo-text{font-size:0.93rem;line-height:1.75;color:#2a2a3e;}
+.algo-text strong{color:var(--navy);}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-letter{width:24px;height:24px;border-radius:50%;background:var(--off);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:700;flex-shrink:0;}
+.mcq-check-btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.95rem;letter-spacing:0.04em;background:var(--navy);color:white;border:none;padding:0.55rem 1.3rem;border-radius:7px;cursor:pointer;transition:background 0.2s;}
+.mcq-check-btn:hover{background:var(--navy2);}
+.mcq-feedback{font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.6rem 0.9rem;border-radius:7px;margin-top:0.8rem;display:none;}
+.mcq-feedback.show{display:block;}
+.mcq-feedback.correct-fb{background:rgba(30,158,94,0.08);color:var(--green);}
+.mcq-feedback.wrong-fb{background:rgba(220,38,38,0.06);color:#dc2626;}
+.mcq-explanation{font-size:0.88rem;line-height:1.75;color:var(--muted);margin-top:0.9rem;padding-top:0.9rem;border-top:1px solid var(--border);display:none;}
+.mcq-explanation.show{display:block;}
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);color:white;padding:0.8rem 1.3rem;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:0.8rem;}
+.terminal-title{font-family:'DM Mono',monospace;font-size:0.8rem;letter-spacing:0.06em;}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:1.5rem;}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:700;margin-top:0.15rem;}
+.tq-text{font-size:0.92rem;line-height:1.75;color:#2a2a3e;flex:1;}
+.tq-badge{flex-shrink:0;font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.15rem 0.45rem;border-radius:4px;margin-top:0.25rem;text-transform:uppercase;letter-spacing:0.04em;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.1);color:var(--navy2);}
+.chapter-nav{display:flex;justify-content:space-between;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.95rem;letter-spacing:0.04em;padding:0.65rem 1.4rem;border-radius:8px;text-decoration:none;transition:all 0.2s;}
+.ch-nav-prev{background:var(--off);color:var(--navy);border:1.5px solid var(--border);}
+.ch-nav-prev:hover{background:var(--border);}
+.ch-nav-next{background:var(--orange);color:white;border:1.5px solid var(--orange);}
+.ch-nav-next:hover{background:var(--orange2);border-color:var(--orange2);}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="tb-logo" href="index.html">quan(t)<sup>4</sup></a>
+    <span class="tb-sep">|</span>
+    <div class="tb-breadcrumb">
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_Op.html">Option Pricing</a> ›
+      <span>Heston Calibration</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:80%"></div></div>
+      <span class="tb-progress-label">8 / 10</span>
+    </div>
+    <a href="F_Op.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Option Pricing</div>
+  <a class="sidebar-item done" href="F_Op_Ch1.html"><div class="si-num">✓</div>The Black-Scholes World<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch2.html"><div class="si-num">✓</div>Heston — Letting Volatility Breathe<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch3.html"><div class="si-num">✓</div>The Characteristic Function Machine<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch4.html"><div class="si-num">✓</div>Semi-Closed Form Option Pricing<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch5.html"><div class="si-num">✓</div>Gauss-Legendre Quadrature<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch6.html"><div class="si-num">✓</div>The Carr-Madan FFT Method<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="F_Op_Ch7.html"><div class="si-num">✓</div>Heston Greeks<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item active" href="F_Op_Ch8.html"><div class="si-num">8</div>Heston Calibration<span class="si-mcq-badge">3 MCQ</span></a>
+  <a class="sidebar-item locked" href="F_Op_Ch9.html"><div class="si-num">9</div>Extensions Beyond Heston</a>
+  <a class="sidebar-item locked" href="F_Op_Ch10.html"><div class="si-num">10</div>Interview Preparation</a>
+</nav>
+
+<main class="content">
+<div class="chapter-header">
+  <div class="chapter-meta">
+    <span class="ch-tag ch-tag-a">Advanced</span>
+    <span class="ch-num">Chapter 08 · Option Pricing</span>
+  </div>
+  <h1 class="chapter-title">Heston Calibration</h1>
+  <p class="chapter-subtitle">You have a pricing engine. You have market data. Now you need to find the five parameters — $\kappa, \theta, \xi, \rho, v_0$ — that make the model match what the market is actually saying. This is calibration: the bridge between beautiful mathematics and messy reality. We will do it properly on clean synthetic data, and then we will do it on real NIFTY prices from today and show you what happens when reality refuses to cooperate.</p>
+</div>
+
+<div class="content-body">
+
+<h3>The Inverse Problem</h3>
+<p>Everything we have built so far has been a <strong>forward problem</strong>: given parameters, compute a price. Calibration is the reverse. Given market prices — or equivalently, implied volatilities — find the parameters that reproduce them. Formally:</p>
+
+<div class="formula-box">
+  <div class="formula-box-label">Calibration Objective</div>
+  $$\hat{\Theta} = \underset{\Theta}{\arg\min}\; \mathcal{L}(\Theta), \qquad \Theta = (\kappa,\, \theta,\, \xi,\, \rho,\, v_0)$$
+  <p>where $\mathcal{L}$ measures the distance between model-implied volatilities and market-implied volatilities across all available strikes and maturities.</p>
+</div>
+
+<p>The market gives you a discrete grid: $N_K$ strikes times $N_T$ maturities, so $N = N_K \times N_T$ data points. You want five numbers that collectively explain all of them. Think of it like fitting a surface — you are asking a five-parameter family of smooth curves to pass through a cloud of noisy, discrete, market-determined points.</p>
+
+<div class="callout callout-intuition">Each point on the implied volatility surface encodes the market's collective opinion about the distribution of future returns at that strike and maturity. Calibration is the art of finding the Heston world whose risk-neutral distribution best matches that opinion. When it works well, your model prices any exotic derivative consistently with the vanilla market. When it does not — as we will see — that tells you something deep about whether the model is even appropriate for this data.</div>
+
+<h3>Choosing What to Minimise</h3>
+<p>The choice of loss function is not aesthetic. It decides what the calibration prioritises, and different choices give genuinely different parameter sets.</p>
+
+<table class="loss-table">
+  <thead><tr><th>Loss Function</th><th>Formula</th><th>Prioritises</th></tr></thead>
+  <tbody>
+    <tr><td><strong>IV RMSE</strong></td><td><span class="loss-eq">√(Σ(σ̂ᵢ − σᵢ)² / N)</span></td><td>Uniform fit across all strikes. Interpretable: RMSE of 0.5 means off by half a vol point on average.</td></tr>
+    <tr><td><strong>Relative IV Error</strong></td><td><span class="loss-eq">√(Σ((σ̂ᵢ−σᵢ)/σᵢ)² / N)</span></td><td>Proportional accuracy. Avoids over-weighting high-vol deep OTM options.</td></tr>
+    <tr class="hl"><td><strong>Vega-Weighted IV</strong></td><td><span class="loss-eq">√(Σ wᵢ(σ̂ᵢ−σᵢ)²), wᵢ ∝ vegaᵢ</span></td><td>ATM accuracy. High-vega options (near-ATM, longer-dated) count more. Industry standard.</td></tr>
+    <tr><td><strong>Price RMSE</strong></td><td><span class="loss-eq">√(Σ(Ĉᵢ − Cᵢ)² / N)</span></td><td>Raw price accuracy. Naturally over-weights expensive options. Rarely used alone.</td></tr>
+  </tbody>
+</table>
+
+<p>For NIFTY options, vega-weighted IV error is the right default. ATM options have the tightest bid-ask spreads and the deepest liquidity — your model must nail them. Being wrong on the ATM straddle is a hedging disaster. In this chapter we use IV RMSE throughout because it is the most interpretable.</p>
+
+<h3>Why Calibration Is a Slippery Fish</h3>
+<p>Calibration looks like a standard least-squares problem. It is not. Several properties of the Heston loss landscape conspire to make optimisation genuinely difficult.</p>
+
+<p><strong>Non-convexity.</strong> The map $\Theta \mapsto \mathcal{L}(\Theta)$ is not convex. There are multiple local minima — different parameter combinations that explain the data equally well or nearly so. A gradient-based method starting from the wrong point will find a local minimum and declare victory.</p>
+
+<p><strong>Parameter redundancy.</strong> The parameters $\kappa$, $\theta$, and $v_0$ interact heavily. Increasing $\kappa$ and $\theta$ simultaneously can leave the near-term smile almost unchanged, creating a flat ridge in the loss landscape where the optimizer wanders aimlessly.</p>
+
+<p><strong>Correlation instability.</strong> $\rho$ and $\xi$ jointly determine skew. The product $\rho \cdot \xi$ is often better identified than either individually — you can achieve the same skew with $(\rho=-0.8, \xi=0.5)$ or $(\rho=-0.5, \xi=0.8)$. Without rich maturity structure, the two are indistinguishable.</p>
+
+<p><strong>Short-maturity instability.</strong> For small $T$, the characteristic function integrand oscillates rapidly at large $|u|$. The GL quadrature requires a higher upper cutoff, and small numerical errors in the CF can cascade into large IV errors. One bad pricing call in the loss function sends the optimizer off a cliff.</p>
+
+<div class="callout callout-warning">The Feller condition $2\kappa\theta > \xi^2$ ensures the variance process stays strictly positive. Calibration regularly pushes parameters outside this region — producing formally valid fits but a model where variance can touch zero, causing the characteristic function to become numerically unstable. Always check Feller after calibration, and treat a violated Feller condition as a warning sign about parameter reliability.</div>
+
+<h3>The Algorithms</h3>
+<p><strong>Nelder-Mead (downhill simplex)</strong> is a derivative-free local optimizer. It maintains a geometric shape in parameter space and iteratively moves it downhill. Fast when started near the true minimum, but gets stuck in local minima when started far away. Best as a final polish step.</p>
+
+<p><strong>Differential Evolution (DE)</strong> is a population-based global optimizer. It maintains a population of candidate parameter vectors and evolves them through mutation and crossover. Excellent at exploring the full parameter space without getting trapped locally. Slower per iteration, but far more reliable from a cold start.</p>
+
+<p><strong>Hybrid DE + Nelder-Mead</strong> is the industry standard: run DE to find a good basin of attraction, then switch to Nelder-Mead for fast, precise convergence. This combines DE's global exploration with Nelder-Mead's local precision.</p>
+
+<div class="callout callout-intuition">Think of the loss surface as a mountain range. Nelder-Mead is a skilled climber who descends to the nearest valley — fast, but she starts from wherever you drop her. DE is a search party of 15 climbers scattered randomly across the range who communicate and gradually converge on the deepest valley. The hybrid strategy: let the search party find the right valley, then send the expert in for the final descent.</div>
+
+<h3>The Calibration Workflow</h3>
+<div class="algo-steps">
+  <div class="algo-step"><div class="algo-num">1</div><div class="algo-text"><strong>Data preparation.</strong> Collect call and put IVs at each strike. Average them to get mid-IVs — this cancels the bid-ask spread. Discard strikes with a spread wider than 1 vol point. For each maturity, identify the ATM strike closest to the forward price $F = S_0 e^{rT}$.</div></div>
+  <div class="algo-step"><div class="algo-num">2</div><div class="algo-text"><strong>Initial guess.</strong> Set $v_0 \approx \sigma_{ATM,T_1}^2$ and $\theta \approx \sigma_{ATM,T_{long}}^2$. Estimate $\rho \cdot \xi$ from the skew slope via linear regression of IV on log-moneyness. Start $\kappa = 2$, $\xi = 0.5$.</div></div>
+  <div class="algo-step"><div class="algo-num">3</div><div class="algo-text"><strong>Log-space reparameterisation.</strong> Optimise over $(\log\kappa,\, \log\theta,\, \log\xi,\, \operatorname{arctanh}(\rho),\, \log v_0)$. This enforces positivity constraints automatically — $e^{\text{anything}}$ is always positive, $\tanh(\text{anything})$ always lies in $(-1,1)$ — and makes the loss landscape more symmetric.</div></div>
+  <div class="algo-step"><div class="algo-num">4</div><div class="algo-text"><strong>Global search with DE.</strong> Population size 15, 300+ iterations, mutation $(0.5, 1.0)$, recombination 0.85. Takes 30–120 seconds but produces a reliable starting basin.</div></div>
+  <div class="algo-step"><div class="algo-num">5</div><div class="algo-text"><strong>Polish with Nelder-Mead.</strong> Take DE's best output, run Nelder-Mead with tolerances $10^{-6}$ to converge precisely. As a final check, run 3–5 additional Nelder-Mead starts from perturbed initialisations — if all converge to the same point, the minimum is trustworthy.</div></div>
+  <div class="algo-step"><div class="algo-num">6</div><div class="algo-text"><strong>Validate.</strong> Compute the full residual table. Target: MAE &lt; 0.5 vol pts, RMSE &lt; 0.8 vol pts, Max &lt; 2 vol pts, R² &gt; 0.98. Inspect residual signs — random is fine, structured is a red flag.</div></div>
+</div>
+
+<hr class="content-divider"/>
+
+<!-- WORKED EXAMPLE — SYNTHETIC -->
+<div class="worked-example">
+  <div class="we-header">
+    <span class="we-title">WORKED EXAMPLE — CALIBRATION ON A SYNTHETIC NIFTY SURFACE</span>
+    <span class="we-badge">Ideal case · algorithm works cleanly</span>
+  </div>
+  <div class="we-body">
+    <p>We construct a realistic synthetic NIFTY surface by choosing a set of "true" Heston parameters, pricing a grid of options, and then recovering those parameters through calibration — as if we did not know them. This is the controlled experiment: the model is correctly specified, maturities span 30 to 90 days, and we add only ±0.05 vol pts of bid-ask rounding noise. We will see exactly what success looks like.</p>
+
+    <div class="we-step">Setup — true parameters</div>
+    <p>Spot: NIFTY at 23,750. Risk-free rate: 6.5%. Three maturities: T₁ = 30d, T₂ = 60d, T₃ = 90d. Nine strikes from 22,500 to 24,500, spanning ±4.5% moneyness. True parameters reflecting a normal NIFTY volatility regime:</p>
+
+    <table class="param-table">
+      <thead><tr><th>Parameter</th><th>Symbol</th><th>True Value</th><th>Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td>Mean reversion speed</td><td><span class="param-sym">κ</span></td><td><span class="param-val">2.50</span></td><td><span class="param-interp">Half-life ≈ 101 days — slow reversion</span></td></tr>
+        <tr><td>Long-run variance</td><td><span class="param-sym">θ</span></td><td><span class="param-val">0.0441</span></td><td><span class="param-interp">Long-run vol = 21.0%</span></td></tr>
+        <tr><td>Vol of vol</td><td><span class="param-sym">ξ</span></td><td><span class="param-val">0.60</span></td><td><span class="param-interp">Moderate variance uncertainty</span></td></tr>
+        <tr><td>Spot-vol correlation</td><td><span class="param-sym">ρ</span></td><td><span class="param-val">−0.70</span></td><td><span class="param-interp">Strong negative leverage effect</span></td></tr>
+        <tr><td>Initial variance</td><td><span class="param-sym">v₀</span></td><td><span class="param-val">0.0484</span></td><td><span class="param-interp">Current vol = 22.0% — slightly above long-run</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="we-step">Step 1 — The synthetic IV surface</div>
+    <p>Price each option using the Heston CF with GL quadrature ($n = 128$), invert to BSM implied vol, add noise. This is the "market" our calibration sees:</p>
+
+    <table class="cal-table">
+      <thead><tr><th>Strike</th><th>Moneyness</th><th>T₁ = 30d</th><th>T₂ = 60d</th><th>T₃ = 90d</th></tr></thead>
+      <tbody>
+        <tr><td>22,500</td><td>−5.26%</td><td>24.01%</td><td>23.39%</td><td>23.16%</td></tr>
+        <tr><td>22,750</td><td>−4.21%</td><td>23.71%</td><td>23.04%</td><td>22.76%</td></tr>
+        <tr><td>23,000</td><td>−3.16%</td><td>23.41%</td><td>22.63%</td><td>22.28%</td></tr>
+        <tr><td>23,250</td><td>−2.11%</td><td>22.94%</td><td>22.31%</td><td>21.95%</td></tr>
+        <tr><td>23,500</td><td>−1.05%</td><td>22.33%</td><td>21.86%</td><td>21.52%</td></tr>
+        <tr><td><strong>23,750</strong></td><td><strong>ATM</strong></td><td><strong>21.78%</strong></td><td><strong>21.48%</strong></td><td><strong>21.14%</strong></td></tr>
+        <tr><td>24,000</td><td>+1.05%</td><td>21.06%</td><td>20.93%</td><td>20.69%</td></tr>
+        <tr><td>24,250</td><td>+2.11%</td><td>20.45%</td><td>20.51%</td><td>20.27%</td></tr>
+        <tr><td>24,500</td><td>+3.16%</td><td>19.86%</td><td>19.95%</td><td>19.81%</td></tr>
+      </tbody>
+    </table>
+
+    <p>The surface has the right qualitative shape: a downward skew (higher IV for lower strikes — the put protection bid), and a gentle downward term structure. ATM IVs decay from 21.78% at 30 days to 21.14% at 90 days, consistent with $v_0 > \theta$ — current variance is above its long-run mean and slowly reverting.</p>
+
+    <div class="we-step">Step 2 — Initial estimates from data</div>
+    <p>Before optimising, read off what the data tells us directly. $v_0 \approx \sigma_{ATM,T_1}^2 = 0.2178^2 = 0.04743$. $\theta \approx \sigma_{ATM,T_3}^2 = 0.2114^2 = 0.04469$. Skew slope from linear regression: approximately −110 vol pts per unit log-moneyness, implying $\rho \cdot \xi \approx -0.42$. Start: $\kappa = 2.5$, $\xi = 0.6$, $\rho = -0.70$.</p>
+
+    <div class="we-step">Step 3 — Run the calibration</div>
+    <p>Four Nelder-Mead starts from slightly perturbed log-space initialisations. All four converge:</p>
+
+    <div style="background:var(--off);border-radius:8px;padding:1rem 1.2rem;font-family:'DM Mono',monospace;font-size:0.78rem;margin:1rem 0;color:var(--navy);">
+      Start 1: RMSE = 0.0281 vol pts<br/>
+      Start 2: RMSE = 0.0281 vol pts<br/>
+      Start 3: RMSE = 0.0281 vol pts<br/>
+      Start 4: RMSE = 0.0281 vol pts
+    </div>
+
+    <p>All four starts hitting the same point to five decimal places is a strong signal of a globally unique minimum. Calibrated parameters versus truth:</p>
+
+    <table class="param-table">
+      <thead><tr><th>Parameter</th><th>True</th><th>Calibrated</th><th>Recovery Error</th></tr></thead>
+      <tbody>
+        <tr><td>κ</td><td>2.5000</td><td><span class="param-val">2.5345</span></td><td>+1.4%</td></tr>
+        <tr><td>θ</td><td>0.04410</td><td><span class="param-val">0.04370</span></td><td>−0.9%</td></tr>
+        <tr><td>ξ</td><td>0.6000</td><td><span class="param-val">0.5943</span></td><td>−0.9%</td></tr>
+        <tr><td>ρ</td><td>−0.7000</td><td><span class="param-val">−0.7140</span></td><td>−2.0%</td></tr>
+        <tr><td>v₀</td><td>0.04840</td><td><span class="param-val">0.04839</span></td><td>&lt;0.1%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="we-step">Step 4 — Full residual table</div>
+    <table class="cal-table">
+      <thead><tr><th>Strike</th><th>Mkt T₁</th><th>Mdl T₁</th><th>Res</th><th>Mkt T₂</th><th>Mdl T₂</th><th>Res</th><th>Mkt T₃</th><th>Mdl T₃</th><th>Res</th></tr></thead>
+      <tbody>
+        <tr><td>22,500</td><td>24.01</td><td>23.99</td><td><span class="res-neg">−0.02</span></td><td>23.39</td><td>23.43</td><td><span class="res-pos">+0.04</span></td><td>23.16</td><td>23.17</td><td><span class="res-pos">+0.01</span></td></tr>
+        <tr><td>22,750</td><td>23.71</td><td>23.74</td><td><span class="res-pos">+0.03</span></td><td>23.04</td><td>23.04</td><td><span class="res-ok">+0.00</span></td><td>22.76</td><td>22.74</td><td><span class="res-neg">−0.02</span></td></tr>
+        <tr><td>23,000</td><td>23.41</td><td>23.38</td><td><span class="res-neg">−0.03</span></td><td>22.63</td><td>22.66</td><td><span class="res-pos">+0.03</span></td><td>22.28</td><td>22.32</td><td><span class="res-pos">+0.04</span></td></tr>
+        <tr><td>23,250</td><td>22.94</td><td>22.92</td><td><span class="res-neg">−0.02</span></td><td>22.31</td><td>22.27</td><td><span class="res-neg">−0.04</span></td><td>21.95</td><td>21.92</td><td><span class="res-neg">−0.03</span></td></tr>
+        <tr><td>23,500</td><td>22.33</td><td>22.36</td><td><span class="res-pos">+0.03</span></td><td>21.86</td><td>21.87</td><td><span class="res-pos">+0.01</span></td><td>21.52</td><td>21.52</td><td><span class="res-ok">+0.00</span></td></tr>
+        <tr><td><strong>23,750</strong></td><td><strong>21.78</strong></td><td><strong>21.75</strong></td><td><span class="res-neg">−0.03</span></td><td><strong>21.48</strong></td><td><strong>21.43</strong></td><td><span class="res-neg">−0.05</span></td><td><strong>21.14</strong></td><td><strong>21.12</strong></td><td><span class="res-neg">−0.02</span></td></tr>
+        <tr><td>24,000</td><td>21.06</td><td>21.10</td><td><span class="res-pos">+0.04</span></td><td>20.93</td><td>20.96</td><td><span class="res-pos">+0.03</span></td><td>20.69</td><td>20.70</td><td><span class="res-pos">+0.01</span></td></tr>
+        <tr><td>24,250</td><td>20.45</td><td>20.46</td><td><span class="res-pos">+0.01</span></td><td>20.51</td><td>20.46</td><td><span class="res-neg">−0.05</span></td><td>20.27</td><td>20.28</td><td><span class="res-pos">+0.01</span></td></tr>
+        <tr><td>24,500</td><td>19.86</td><td>19.85</td><td><span class="res-neg">−0.01</span></td><td>19.95</td><td>19.94</td><td><span class="res-neg">−0.01</span></td><td>19.81</td><td>19.83</td><td><span class="res-pos">+0.02</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-val good">0.025</div><div class="metric-label">MAE (vol pts)</div></div>
+      <div class="metric-card"><div class="metric-val good">0.028</div><div class="metric-label">RMSE (vol pts)</div></div>
+      <div class="metric-card"><div class="metric-val good">0.050</div><div class="metric-label">Max Error</div></div>
+      <div class="metric-card"><div class="metric-val good">0.9995</div><div class="metric-label">R²</div></div>
+    </div>
+
+    <div class="we-answer">
+      <strong>Result:</strong> All five parameters recovered to within 2% of truth. Residuals are random in sign, bounded to ±0.05 vol pts — consistent with pure bid-ask noise and nothing else. R² = 0.9995. This is what a successful calibration looks like: small, random, structureless residuals. No systematic pattern anywhere.
+    </div>
+  </div>
+</div>
+
+<!-- THE HONEST TRUTH -->
+<div class="honest-truth">
+  <div class="ht-label">⚡ The Honest Truth</div>
+  <div class="ht-title">Now let us try it with real data.</div>
+  <div class="ht-body">
+    <p>Everything above was a controlled experiment. We built the surface from Heston parameters, then asked Heston to find those parameters back. Of course it succeeded — we were asking the model to solve its own puzzle.</p>
+    <p>Below is <strong>actual NIFTY data from 12 March 2026</strong> — live option prices scraped from NSE at 14:27 IST. Three weekly expiries: 5, 12, and 18 calendar days. Eleven strikes from 23,500 to 24,000. This is exactly the data a practitioner would feed into a calibration engine on a normal trading morning. Let us see what happens.</p>
+  </div>
+</div>
+
+<!-- REAL DATA PANEL -->
+<div class="real-data-panel">
+  <div class="rdp-header">
+    <span class="rdp-title">REAL NSE DATA — NIFTY — 12 MARCH 2026, 14:27 IST</span>
+    <span class="rdp-badge">SPOT: 23,738.50</span>
+  </div>
+  <div class="rdp-body">
+    <p>Three expiries: T₁ = 17 Mar (5 days), T₂ = 24 Mar (12 days), T₃ = 30 Mar (18 days). Mid-IVs are the average of call IV and put IV at each strike — averaging the two sides cancels most of the bid-ask spread and gives a cleaner signal.</p>
+
+    <table class="cal-table">
+      <thead><tr><th>Strike</th><th>Moneyness</th><th>T₁ = 5d</th><th>T₂ = 12d</th><th>T₃ = 18d</th></tr></thead>
+      <tbody>
+        <tr><td>23,500</td><td>−1.00%</td><td>23.56%</td><td>23.24%</td><td>22.81%</td></tr>
+        <tr><td>23,550</td><td>−0.79%</td><td>23.27%</td><td>23.03%</td><td>22.63%</td></tr>
+        <tr><td>23,600</td><td>−0.58%</td><td>22.99%</td><td>22.91%</td><td>22.43%</td></tr>
+        <tr><td>23,650</td><td>−0.37%</td><td>22.69%</td><td>22.45%</td><td>22.20%</td></tr>
+        <tr><td>23,700</td><td>−0.16%</td><td>22.42%</td><td>22.39%</td><td>21.99%</td></tr>
+        <tr><td><strong>23,750</strong></td><td><strong>ATM</strong></td><td><strong>22.13%</strong></td><td><strong>22.18%</strong></td><td><strong>21.80%</strong></td></tr>
+        <tr><td>23,800</td><td>+0.26%</td><td>21.93%</td><td>21.89%</td><td>21.55%</td></tr>
+        <tr><td>23,850</td><td>+0.47%</td><td>21.66%</td><td>21.66%</td><td>21.33%</td></tr>
+        <tr><td>23,900</td><td>+0.68%</td><td>21.49%</td><td>21.44%</td><td>21.17%</td></tr>
+        <tr><td>23,950</td><td>+0.89%</td><td>21.32%</td><td>21.26%</td><td>20.76%</td></tr>
+        <tr><td>24,000</td><td>+1.10%</td><td>21.15%</td><td>21.16%</td><td>20.70%</td></tr>
+      </tbody>
+    </table>
+
+    <p>Three features jump out immediately. The <strong>term structure is almost completely flat</strong>: ATM IVs are 22.13%, 22.18%, 21.80% across 5, 12, and 18 days. The 5-day and 18-day ATM IVs differ by only 0.33 vol points — barely any term structure signal at all. The <strong>skew is steep for such short maturities</strong> — 2.41 vol points across just a 2.1% strike range at T₁ = 5 days, corresponding to a slope of roughly −115 vol pts per unit log-moneyness. And crucially, all three expiries are <strong>weekly or near-weekly</strong> — the longest is only 18 days.</p>
+
+    <p>Now run the best calibration possible — Nelder-Mead from a carefully chosen starting point in log-space, GL quadrature with 96 nodes. Here is what emerges:</p>
+
+    <table class="param-table">
+      <thead><tr><th>Parameter</th><th>Calibrated Value</th><th>What It Implies</th></tr></thead>
+      <tbody>
+        <tr><td>κ (mean reversion speed)</td><td><span class="param-val">20.00</span></td><td><span class="param-interp">At the upper bound — half-life = 13 days</span></td></tr>
+        <tr><td>θ (long-run variance)</td><td><span class="param-val">0.00760</span></td><td><span class="param-interp">Long-run vol = 8.7% — absurdly low for NIFTY</span></td></tr>
+        <tr><td>ξ (vol of vol)</td><td><span class="param-val">1.101</span></td><td><span class="param-interp">Very large — model straining for skew</span></td></tr>
+        <tr><td>ρ (correlation)</td><td><span class="param-val">−0.654</span></td><td><span class="param-interp">Plausible sign, but jointly distorted</span></td></tr>
+        <tr><td>v₀ (initial variance)</td><td><span class="param-val">0.07497</span></td><td><span class="param-interp">Current vol = 27.4% — market is printing 22.1%</span></td></tr>
+      </tbody>
+    </table>
+
+    <p>These parameters are economically nonsensical. A long-run vol of 8.7% would imply NIFTY is expected to become calmer than a government bond. $v_0 = 27.4\%$ when the market is clearly showing 22.1% ATM IV. $\kappa = 20$ with a half-life of 13 days — suspiciously close to the maximum maturity in the dataset. The Feller condition is badly violated: $2\kappa\theta = 0.30 \ll \xi^2 = 1.21$.</p>
+
+    <p>And yet — here are the residuals:</p>
+
+    <table class="cal-table">
+      <thead><tr><th>Strike</th><th>Mkt T₁</th><th>Mdl T₁</th><th>Res</th><th>Mkt T₂</th><th>Mdl T₂</th><th>Res</th><th>Mkt T₃</th><th>Mdl T₃</th><th>Res</th></tr></thead>
+      <tbody>
+        <tr><td>23,500</td><td>23.56</td><td>23.19</td><td><span class="res-neg">−0.37</span></td><td>23.24</td><td>23.79</td><td><span class="res-pos">+0.55</span></td><td>22.81</td><td>22.69</td><td><span class="res-neg">−0.12</span></td></tr>
+        <tr><td>23,550</td><td>23.27</td><td>22.90</td><td><span class="res-neg">−0.37</span></td><td>23.03</td><td>23.52</td><td><span class="res-pos">+0.49</span></td><td>22.63</td><td>22.45</td><td><span class="res-neg">−0.18</span></td></tr>
+        <tr><td>23,600</td><td>22.99</td><td>22.65</td><td><span class="res-neg">−0.34</span></td><td>22.91</td><td>23.25</td><td><span class="res-pos">+0.34</span></td><td>22.43</td><td>22.21</td><td><span class="res-neg">−0.22</span></td></tr>
+        <tr><td>23,650</td><td>22.69</td><td>22.42</td><td><span class="res-neg">−0.27</span></td><td>22.45</td><td>23.00</td><td><span class="res-pos">+0.55</span></td><td>22.20</td><td>21.97</td><td><span class="res-neg">−0.23</span></td></tr>
+        <tr><td>23,700</td><td>22.42</td><td>22.20</td><td><span class="res-neg">−0.22</span></td><td>22.39</td><td>22.75</td><td><span class="res-pos">+0.36</span></td><td>21.99</td><td>21.74</td><td><span class="res-neg">−0.25</span></td></tr>
+        <tr><td><strong>23,750</strong></td><td><strong>22.13</strong></td><td><strong>22.01</strong></td><td><span class="res-neg">−0.12</span></td><td><strong>22.18</strong></td><td><strong>22.52</strong></td><td><span class="res-pos">+0.34</span></td><td><strong>21.80</strong></td><td><strong>21.51</strong></td><td><span class="res-neg">−0.29</span></td></tr>
+        <tr><td>23,800</td><td>21.93</td><td>21.83</td><td><span class="res-neg">−0.10</span></td><td>21.89</td><td>22.29</td><td><span class="res-pos">+0.40</span></td><td>21.55</td><td>21.29</td><td><span class="res-neg">−0.26</span></td></tr>
+        <tr><td>23,850</td><td>21.66</td><td>21.66</td><td><span class="res-ok">+0.00</span></td><td>21.66</td><td>22.07</td><td><span class="res-pos">+0.41</span></td><td>21.33</td><td>21.07</td><td><span class="res-neg">−0.26</span></td></tr>
+        <tr><td>23,900</td><td>21.49</td><td>21.50</td><td><span class="res-pos">+0.01</span></td><td>21.44</td><td>21.86</td><td><span class="res-pos">+0.42</span></td><td>21.17</td><td>20.86</td><td><span class="res-neg">−0.31</span></td></tr>
+        <tr><td>23,950</td><td>21.32</td><td>21.36</td><td><span class="res-pos">+0.04</span></td><td>21.26</td><td>21.66</td><td><span class="res-pos">+0.40</span></td><td>20.76</td><td>20.65</td><td><span class="res-neg">−0.11</span></td></tr>
+        <tr><td>24,000</td><td>21.15</td><td>21.22</td><td><span class="res-pos">+0.07</span></td><td>21.16</td><td>21.47</td><td><span class="res-pos">+0.31</span></td><td>20.70</td><td>20.45</td><td><span class="res-neg">−0.25</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-val bad">0.271</div><div class="metric-label">MAE (vol pts)</div></div>
+      <div class="metric-card"><div class="metric-val bad">0.307</div><div class="metric-label">RMSE (vol pts)</div></div>
+      <div class="metric-card"><div class="metric-val bad">0.550</div><div class="metric-label">Max Error</div></div>
+      <div class="metric-card"><div class="metric-val bad">0.833</div><div class="metric-label">R²</div></div>
+    </div>
+
+    <p>RMSE of 0.307 vol pts is not catastrophic in isolation — half a tick on a NIFTY option. But look at the <strong>pattern</strong>. T₁ residuals are all negative or near zero. T₂ residuals are all positive — uniformly, at every single strike. T₃ residuals are all negative again. That alternating sign-by-maturity pattern is not noise. Noise is random. This is systematic, maturity-structured, strike-independent. It has a name: <strong>model misspecification</strong>.</p>
+  </div>
+</div>
+
+<h3>Why It Fails — The Precise Mechanism</h3>
+
+<p>The failure has nothing to do with the optimizer running incorrectly, and nothing to do with the numerical integration. The failure is structural: <strong>Heston cannot fit this surface without distorting its parameters into economically meaningless territory.</strong></p>
+
+<p><strong>The term structure is nearly flat.</strong> Heston explains the difference between near-term and long-run vol through the mean-reversion timescale $1/\kappa$. With all three maturities under 18 days, and $1/\kappa$ comparable to the longest maturity, mean reversion has almost no time to operate. The 5-day and 18-day ATM IVs differ by only 0.33 vol pts — the optimizer cannot use this tiny signal to pin down both $\kappa$ and $\theta$ independently. So it does the only thing it can: push $\kappa$ to the maximum allowed value and let $\theta$ float to whatever makes the level roughly right.</p>
+
+<p><strong>The identifiability problem.</strong> Statistically, a parameter is <em>identified</em> if the data contains enough information to determine it uniquely. With three maturities that are all in the same short-date regime, you effectively have one piece of term-structure information, not three. You need at least one longer-dated maturity — 30 days minimum, ideally 60+ — to anchor $\theta$ and let $\kappa$ be determined by the term structure gradient. Without that, the calibration is solving an underdetermined system.</p>
+
+<p><strong>Short-date skew requires extreme parameters.</strong> Heston skew at short maturities scales roughly as $\rho \xi \sqrt{T}$. With $T_1 = 5/365 = 0.0137$, matching a slope of −115 vol pts per log-moneyness requires $\rho \xi \approx -0.65$ — already large. But the optimizer must also simultaneously fit T₂ and T₃, which have slightly different slopes. The only way to do all three with a fixed $(\rho, \xi)$ is to give $\kappa$ a large value so that the maturities "decouple" slightly, allowing different effective vols at different terms. This pushes $\kappa \to 20$ and forces $\theta$ to a compensating absurdity.</p>
+
+<p><strong>The hump is structurally impossible.</strong> The real market's ATM IV goes 22.13% $\to$ 22.18% $\to$ 21.80% — up then down, a slight hump. Heston produces a monotone term structure by construction: variance mean-reverts exponentially from $v_0$ to $\theta$, always monotonically. There is no way for a single-factor mean-reverting variance process to produce a humped term structure. This is not a parameter problem — it is a model class problem.</p>
+
+<div class="callout callout-india">
+  Every quant desk in Mumbai calibrates Heston to NSE data daily. The standard practice is to use <strong>weekly, monthly, and quarterly expiries simultaneously</strong> — near-weekly (5–7 days), front monthly (25–35 days), and one quarterly (60–90 days) at minimum. With that maturity structure, the term-structure information is rich enough to identify $\kappa$ and $\theta$ separately, and calibration works cleanly with RMSE under 0.3 vol pts. Feeding only weekly expiries into Heston — as we were forced to do with today's data — is a known pathological case. Real desks have systems to detect this: if calibration returns $\kappa &gt; 10$ or $\theta &lt; 0.01$, a flag is raised and the weekly expiry is either dropped from the calibration, given a much lower weight, or fitted using flat-vol BSM independently.
+</div>
+
+<div class="callout callout-warning">When residuals have a systematic pattern — same sign across all strikes for a given maturity, or a monotone sign pattern across maturities — do not keep tweaking the optimizer. The model is telling you something. No amount of starting-point adjustment or algorithm tuning will fix a structural limitation. The correct responses are: (1) add longer-dated expiries to the calibration set, (2) downweight or exclude the problematic short expiries, (3) use a more flexible model — Heston with jumps, two-factor stochastic vol, or rough volatility.</div>
+
+<h3>Quality Metrics and Acceptance Criteria</h3>
+<p>Four numbers tell you whether to use a calibration result or throw it away. These are industry-standard thresholds for liquid equity index options.</p>
+
+<table class="loss-table">
+  <thead><tr><th>Metric</th><th>Formula</th><th>Target</th><th>If Violated</th></tr></thead>
+  <tbody>
+    <tr><td><strong>MAE</strong></td><td>$\frac{1}{N}\sum|\hat\sigma_i-\sigma_i|$</td><td>&lt; 0.50 vol pts</td><td>Average fit is poor — systematic misfit.</td></tr>
+    <tr><td><strong>RMSE</strong></td><td>$\sqrt{\frac{1}{N}\sum(\hat\sigma_i-\sigma_i)^2}$</td><td>&lt; 0.80 vol pts</td><td>Penalises large outliers — check the wings.</td></tr>
+    <tr><td><strong>Max Error</strong></td><td>$\max_i|\hat\sigma_i-\sigma_i|$</td><td>&lt; 2.00 vol pts</td><td>Single strike is badly wrong — check pricing.</td></tr>
+    <tr><td><strong>R²</strong></td><td>$1 - \frac{\sum(\hat\sigma_i-\sigma_i)^2}{\sum(\sigma_i-\bar\sigma)^2}$</td><td>&gt; 0.98</td><td>Model explains &lt;98% of surface variation.</td></tr>
+  </tbody>
+</table>
+
+<p>Beyond these numbers, <strong>always inspect the residual table visually</strong>. Random-signed residuals below 0.3 vol pts are noise — acceptable. Structured, same-signed residuals at multiple strikes or maturities are a signal — investigate before using the calibrated parameters for anything. The synthetic example passed all four criteria. The real NSE example failed R² (0.833) and showed structured residuals. The model should not be used for exotic pricing on this dataset without modification.</p>
+
+<hr class="content-divider"/>
+
+<!-- MCQ SECTION -->
+<div class="mcq-section">
+  <div class="mcq-header">
+    <span class="mcq-header-title">Quick Check</span>
+    <span class="mcq-count">3 questions</span>
+  </div>
+
+  <!-- Q1 -->
+  <div class="mcq-card">
+    <div class="mcq-card-header">
+      <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+      <span class="mcq-id">CH08 · Q1</span><span class="mcq-diff">Medium</span>
+    </div>
+    <div class="mcq-body">
+      <div class="mcq-question">You calibrate Heston to NIFTY data and find residuals that are <strong>+0.8 vol pts at every strike for T₁</strong> and <strong>−0.6 vol pts at every strike for T₂</strong>. The most likely explanation is:</div>
+      <div class="mcq-options" id="opts1">
+        <div class="opt" onclick="pickOpt(this,'q1','A')"><span class="opt-letter">A</span> The optimizer converged to a local minimum — re-run with different starting points.</div>
+        <div class="opt" onclick="pickOpt(this,'q1','B')"><span class="opt-letter">B</span> Heston's single-factor variance structure cannot match the shape of this term structure — model misspecification.</div>
+        <div class="opt" onclick="pickOpt(this,'q1','C')"><span class="opt-letter">C</span> The loss function is wrong — switching to vega-weighted IV will fix it.</div>
+        <div class="opt" onclick="pickOpt(this,'q1','D')"><span class="opt-letter">D</span> The GL quadrature is using too few nodes and introducing pricing errors.</div>
+      </div>
+      <button class="mcq-check-btn" onclick="checkOpt('q1','B')">Check Answer</button>
+      <div class="mcq-feedback" id="fb1"></div>
+      <div class="mcq-explanation" id="ex1">The key is that residuals are <em>uniform in sign across all strikes within each maturity</em>. Numerical errors (D) would be random across strikes. A local minimum (A) typically produces non-uniform residuals. Changing the loss function (C) does not change what the model can represent. Only B explains the pattern: Heston forces a monotone IV term structure, and the market has a shape that cannot be produced by a single exponential mean-reversion. That is structural misspecification, not a numerical or optimisation failure.</div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="mcq-card">
+    <div class="mcq-card-header">
+      <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+      <span class="mcq-id">CH08 · Q2</span><span class="mcq-diff">Medium</span>
+    </div>
+    <div class="mcq-body">
+      <div class="mcq-question">Why do we optimise in log-space — i.e. over $(\log\kappa, \log\theta, \log\xi, \operatorname{arctanh}(\rho), \log v_0)$ — rather than directly over $(\kappa, \theta, \xi, \rho, v_0)$?</div>
+      <div class="mcq-options" id="opts2">
+        <div class="opt" onclick="pickOpt(this,'q2','A')"><span class="opt-letter">A</span> Log-space makes the loss function convex, guaranteeing convergence to the global minimum.</div>
+        <div class="opt" onclick="pickOpt(this,'q2','B')"><span class="opt-letter">B</span> It automatically enforces positivity and bounds constraints, and makes the loss landscape more symmetric so the optimizer converges faster.</div>
+        <div class="opt" onclick="pickOpt(this,'q2','C')"><span class="opt-letter">C</span> It reduces the effective dimensionality of the problem from 5 to 4.</div>
+        <div class="opt" onclick="pickOpt(this,'q2','D')"><span class="opt-letter">D</span> Log-space parameterisation is a requirement of the Feller condition.</div>
+      </div>
+      <button class="mcq-check-btn" onclick="checkOpt('q2','B')">Check Answer</button>
+      <div class="mcq-feedback" id="fb2"></div>
+      <div class="mcq-explanation" id="ex2">B is correct. In native space, trial steps can generate negative values for positive-constrained parameters ($\kappa, \theta, \xi, v_0 &gt; 0$), causing the pricing function to fail. In log-space, $e^{\text{anything}}$ is always positive — the constraint is satisfied by construction. Arctanh maps any real number to $(-1,1)$, keeping $\rho$ valid automatically. Log-space does NOT make the problem convex (A is false), does not reduce dimension (C), and has no direct relationship to the Feller condition (D).</div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="mcq-card">
+    <div class="mcq-card-header">
+      <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+      <span class="mcq-id">CH08 · Q3</span><span class="mcq-diff">Hard</span>
+    </div>
+    <div class="mcq-body">
+      <div class="mcq-question">After calibrating Heston to a dataset containing only maturities of 5, 10, and 15 days, you find $\kappa = 18$, $\theta = 0.01$ (long-run vol = 10%), and $v_0 = 0.06$ (current vol = 24.5%). The most accurate interpretation is:</div>
+      <div class="mcq-options" id="opts3">
+        <div class="opt" onclick="pickOpt(this,'q3','A')"><span class="opt-letter">A</span> Vol is expected to mean-revert sharply from 24.5% to 10% — useful information for trading the vol term structure.</div>
+        <div class="opt" onclick="pickOpt(this,'q3','B')"><span class="opt-letter">B</span> The parameters $\kappa$ and $\theta$ are not identified by this dataset — many $(\kappa,\theta)$ pairs fit equally well, and the values have no economic meaning.</div>
+        <div class="opt" onclick="pickOpt(this,'q3','C')"><span class="opt-letter">C</span> The optimizer diverged — try wider parameter bounds and more starting points.</div>
+        <div class="opt" onclick="pickOpt(this,'q3','D')"><span class="opt-letter">D</span> The calibration is unreliable because the Feller condition $2\kappa\theta &gt; \xi^2$ is violated.</div>
+      </div>
+      <button class="mcq-check-btn" onclick="checkOpt('q3','B')">Check Answer</button>
+      <div class="mcq-feedback" id="fb3"></div>
+      <div class="mcq-explanation" id="ex3">B captures the key statistical concept: <em>parameter identification</em>. A parameter is identified if the data contains enough information to pin it down uniquely. With max maturity 15 days, the mean-reversion half-life $\ln(2)/18 = 14$ days is comparable to the longest maturity — the variance process barely begins to revert within the sample window. Many different $(\kappa, \theta)$ pairs produce nearly identical short-dated surfaces, so the data cannot distinguish them. Option A is dangerously wrong — these numbers look economically meaningful but are identification artefacts, not market information. Trading on them would be a mistake. Option D (Feller) is a separate concern and does not explain the specific pattern of distortion.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TERMINAL QUESTIONS -->
+<div class="terminal-section">
+  <div class="terminal-header">
+    <span style="font-size:1rem;">⌘</span>
+    <span class="terminal-title">TERMINAL QUESTIONS — CHAPTER 08</span>
+  </div>
+  <div class="terminal-body">
+    <div class="tq-list">
+      <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Write the IV RMSE loss function in full mathematical notation. Define every symbol. Explain why we minimise implied volatility error rather than option price error for a calibration spanning multiple strikes and maturities.</div><div class="tq-badge tq-easy">Easy</div></div>
+      <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">What is the Feller condition, and why does calibration sometimes violate it? If calibration returns parameters that violate Feller, should you always reject them? Give a concrete example of the trade-off.</div><div class="tq-badge tq-easy">Easy</div></div>
+      <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Explain in words — no equations — why Differential Evolution is preferred over pure gradient descent for Heston calibration. What property of the Heston loss landscape makes global search necessary?</div><div class="tq-badge tq-easy">Easy</div></div>
+      <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">You calibrate Heston to a surface containing only ATM options — no skew data at all. Which of the five parameters can you identify from this data, and which cannot be identified? Justify your answer using the structure of the Heston characteristic function.</div><div class="tq-badge tq-medium">Medium</div></div>
+      <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Show that the log-space transformations $\kappa = e^{x_1}$, $\rho = \tanh(x_4)$ automatically enforce $\kappa &gt; 0$ and $-1 &lt; \rho &lt; 1$ for any real-valued $x_1, x_4 \in \mathbb{R}$. Why does this matter for the optimizer's behaviour?</div><div class="tq-badge tq-medium">Medium</div></div>
+      <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Compare IV RMSE and vega-weighted IV error as calibration objectives. For a desk that primarily hedges ATM straddles, which is more appropriate? Under what market conditions might price RMSE be the better choice?</div><div class="tq-badge tq-medium">Medium</div></div>
+      <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">In the real NIFTY calibration, T₁ residuals were uniformly negative and T₂ residuals uniformly positive. Sketch (or describe precisely) the shape of the true IV term structure versus what Heston can produce. Why is a humped term structure structurally impossible for single-factor Heston?</div><div class="tq-badge tq-medium">Medium</div></div>
+      <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">The Heston short-time skew slope is approximately $\frac{1}{2}\rho\xi/\sqrt{v_0}$. Use this to explain why matching steep short-dated skew requires either large $|\rho|$, large $\xi$, or small $v_0$. What happens to each of these as $T \to 0$?</div><div class="tq-badge tq-hard">Hard</div></div>
+      <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Consider adding Tikhonov regularisation: $\mathcal{L}_{reg}(\Theta) = \mathcal{L}_{IV}(\Theta) + \lambda\|\Theta - \Theta_{prior}\|^2$. How does $\lambda$ control the bias-variance trade-off? How would you choose $\Theta_{prior}$ in practice for daily recalibration, and how does the optimal $\lambda$ depend on the quality of today's data?</div><div class="tq-badge tq-hard">Hard</div></div>
+      <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">You are asked to price a 6-month NIFTY barrier option on a desk where calibration is currently done to only weekly expiries (5–18 days). Describe in detail all the risks you face — numerical, model, and practical — and the specific steps you would take before trusting the calibrated parameters for this pricing task.</div><div class="tq-badge tq-hard">Hard</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="chapter-nav">
+  <a class="ch-nav-btn ch-nav-prev" href="F_Op_Ch7.html">← Chapter 7: Heston Greeks</a>
+  <a class="ch-nav-btn ch-nav-next" href="F_Op_Ch9.html">Chapter 9: Extensions Beyond Heston →</a>
+</div>
+
+</div><!-- content-body -->
+</main>
+</div><!-- layout -->
+
+<script>
+const correctMsgs=["Nailed it. The optimizer would be proud.","Correct. You clearly read the residual table.","Yes — now go calibrate something real.","Right. Local minima can't touch you now.","Exactly. Misspecification has no hiding place."];
+const wrongMsgs=["Not quite. Look at the sign structure more carefully.","Incorrect. Think about what 'uniform sign' really means.","Wrong. The optimizer isn't the culprit here.","Nope. Re-read the identifiability section.","Not this one. Think structurally, not numerically."];
+let selected={};
+function pickOpt(el,qid,letter){
+  const n=qid.replace('q','');
+  document.querySelectorAll('#opts'+n+' .opt').forEach(o=>{o.classList.remove('correct','wrong');o.style.borderColor='';o.style.background='';});
+  selected[qid]=letter;
+  el.style.borderColor='var(--orange)';el.style.background='var(--light)';
+}
+function checkOpt(qid,correctLetter){
+  const n=qid.replace('q','');
+  const fb=document.getElementById('fb'+n);
+  const ex=document.getElementById('ex'+n);
+  const opts=document.querySelectorAll('#opts'+n+' .opt');
+  const letters=['A','B','C','D'];
+  if(!selected[qid]){fb.textContent='Pick an option first.';fb.className='mcq-feedback show';return;}
+  opts.forEach((o,i)=>{if(letters[i]===correctLetter)o.classList.add('correct');else if(letters[i]===selected[qid])o.classList.add('wrong');});
+  const ok=selected[qid]===correctLetter;
+  const msgs=ok?correctMsgs:wrongMsgs;
+  fb.textContent=msgs[Math.floor(Math.random()*msgs.length)];
+  fb.className='mcq-feedback show '+(ok?'correct-fb':'wrong-fb');
+  ex.className='mcq-explanation show';
+}
+</script>
+</body>
+</html>
