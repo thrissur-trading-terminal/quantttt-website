@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Learning Machine — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; transition: width 0.4s; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.locked { opacity: 0.4; cursor: not-allowed; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-f { background: rgba(232,114,42,0.1); color: var(--orange); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+.callout-theorem { background: rgba(45,37,96,0.04); border: 1.5px solid rgba(45,37,96,0.15); border-radius: 10px; }
+.callout-theorem::before { content: '📎 Theorem'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── PROOF BLOCK ── */
+.proof-block { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.proof-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.proof-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.proof-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.proof-body { padding: 1.5rem; background: var(--white); }
+.proof-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.proof-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.proof-qed { text-align: right; font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--navy); margin-top: 1rem; font-weight: 700; }
+.proof-result { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.proof-result strong { color: var(--green); }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-body p:last-child { margin-bottom: 0; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── SIDE BY SIDE ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+.col-card { background: var(--off); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+.col-card-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange); margin-bottom: 0.6rem; font-weight: 600; }
+.col-card p { font-size: 0.88rem; line-height: 1.7; color: #2a2a3e; margin-bottom: 0.7rem; }
+.col-card p:last-child { margin-bottom: 0; }
+@media (max-width: 650px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy { background: rgba(30,158,94,0.1); color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard { background: rgba(45,37,96,0.08); color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+.ch-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>The Learning Machine</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:25%"></div></div>
+      <span class="tb-progress-label">2 / 8</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html">
+    <div class="si-num">1</div>What Is Learning?
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item active" href="ML_M_Ch2.html">
+    <div class="si-num">2</div>The Learning Machine
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">3</div>Empirical Risk and the Likelihood Game
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">4</div>Maximum Likelihood — Let the Data Speak
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">6</div>Linear Models and the Bias-Variance Tradeoff
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">7</div>Regularisation — Taming the Overfit
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">8</div>From Margins to Neurons
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Foundational</span>
+      <span class="ch-num">Chapter 02 of 08 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">The Learning Machine</h1>
+    <p class="chapter-subtitle">You can't improve what you can't measure. Before a machine can learn anything, we need to answer one precise question: what does it mean for a hypothesis to be <em>good</em>? The answer involves a loss function, an expectation, and one of the most important theorems in all of statistics.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The Space of All Possible Answers</h3>
+
+    <p>
+      Chapter 1 ended with a goal: find a function $\hat{f}$ that approximates the unknown $f: \mathcal{X} \to \mathcal{Y}$. But we were deliberately vague about <em>where</em> we look. Do we search over all possible functions? A function from $\mathbb{R}^5$ to $\mathbb{R}$ could be anything — a polynomial, a sine wave, a piecewise constant monster with discontinuities at every rational number. Searching over all of them is computationally hopeless and, as we'll see, statistically dangerous.
+    </p>
+
+    <p>
+      The first design decision in any ML problem is to restrict the search to a manageable set — the <strong>hypothesis class</strong> $\mathcal{H}$.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>hypothesis class</strong> $\mathcal{H}$ is a set of candidate functions $h: \mathcal{X} \to \mathcal{Y}$ that we are willing to consider as approximations to $f$. Our learning algorithm searches over $\mathcal{H}$ and returns the best $h$ it finds.
+      $$\mathcal{H} \subseteq \{\text{all functions } \mathcal{X} \to \mathcal{Y}\}$$
+      Examples: the set of all linear functions, the set of all decision trees of depth $\leq 5$, the set of all neural networks with a fixed architecture.
+    </div>
+
+    <p>
+      The hypothesis class is your <strong>prior belief about the shape of the world</strong>, expressed mathematically. Choosing $\mathcal{H}$ = linear functions says "I believe the relationship between features and labels is roughly linear." Choosing $\mathcal{H}$ = deep neural networks says "I believe the relationship is complex and I want maximum flexibility."
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏏 IPL — Classification</div>
+        <p>$\mathcal{H}$ = all linear classifiers on match conditions. $h_\theta(x) = \mathbb{1}[\theta^\top x > 0]$. You're betting the boundary between "team scores above 180" and "below 180" is a hyperplane in the feature space of pitch report, toss, team form.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY — Regression</div>
+        <p>$\mathcal{H}$ = all functions of the form $h_\theta(x) = \theta^\top x$. You're betting tomorrow's NIFTY return is a linear combination of today's VIX, FII flow, PCR, and other features. Simple. Auditable. Probably wrong. But a principled start.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      Neither a rich nor a simple $\mathcal{H}$ is universally better. A very simple $\mathcal{H}$ (linear functions) may miss the true $f$ entirely — high bias. A very rich $\mathcal{H}$ (all neural networks) can fit anything, including noise — high variance. This tradeoff between expressiveness and reliability is the deepest tension in ML, and it will occupy us for the rest of this course. For now, simply note that the choice of $\mathcal{H}$ is one of the most consequential decisions a practitioner makes — and most people make it by habit rather than principle.
+    </div>
+
+    <h3>Measuring Goodness: The Loss Function</h3>
+
+    <p>
+      Once we have a hypothesis $h \in \mathcal{H}$, we need to measure how good it is on a single data point $(x, y)$. We need a number: "this prediction was this bad."
+    </p>
+
+    <div class="callout callout-definition">
+      A <strong>loss function</strong> $L: \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}^+$ takes a prediction $h(x)$ and a true label $y$, and returns a non-negative number measuring the cost of the prediction error.
+      $$L\bigl(h(x),\, y\bigr) \;\in\; \mathbb{R}^+$$
+      Zero means perfect prediction. Larger means worse. The specific form of $L$ encodes what kinds of errors we care about and how much.
+    </div>
+
+    <p>
+      Two loss functions dominate most of machine learning. Both deserve to be understood, not just memorised.
+    </p>
+
+    <p>
+      <strong>Squared error loss</strong> — for regression problems where $\mathcal{Y} = \mathbb{R}$:
+    </p>
+    <div class="math-block">
+      $$L(h(x), y) = \|h(x) - y\|_2^2 = (h(x) - y)^2$$
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏏 Rohit Sharma's Score</div>
+        <p>Predict 67, actual is 82. Loss $= (67-82)^2 = 225$. Predict 79, actual is 82. Loss $= (79-82)^2 = 9$. Being off by 15 runs costs 25 times more than being off by 3.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Close Prediction</div>
+        <p>Predict 23,800, actual 24,150. Loss $= (23800-24150)^2 = 122{,}500$. Predict 24,100, actual 24,150. Loss $= 2{,}500$. A 350-point error is penalised 49 times more than a 50-point error.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      Why squared and not absolute error $|h(x) - y|$? Two reasons. First, squaring penalises large errors <em>disproportionately</em> — the model becomes especially afraid of catastrophic misses, which is often what we want. Second, squaring is differentiable everywhere. The absolute value has a kink at zero that breaks gradient-based optimisation. Squared error is the mathematically convenient choice that also happens to have a deep probabilistic interpretation — as we'll discover in Chapter 3, it secretly assumes the noise is Gaussian.
+    </div>
+
+    <p>
+      <strong>Zero-one loss</strong> — for classification problems where $\mathcal{Y} = \{0, 1\}$:
+    </p>
+    <div class="math-block">
+      $$L(h(x), y) = \begin{cases} 0 & \text{if } h(x) = y \\ 1 & \text{if } h(x) \neq y \end{cases} = \mathbb{1}[h(x) \neq y]$$
+    </div>
+
+    <p>
+      Every wrong prediction costs 1, regardless of how wrong. A perfect prediction costs 0. Clean and simple.
+    </p>
+
+    <div class="callout callout-warning">
+      Zero-one loss treats all errors as equally bad. In medicine and trading, this is almost always wrong. Missing a cancer diagnosis (predicting healthy when the patient is ill) is catastrophically worse than a false alarm. A model that wrongly predicts "NIFTY up" on a day it falls 0.1% and a day it falls 5% is penalised identically. In practice, we construct asymmetric loss functions — but zero-one loss is the theoretically clean starting point, and the Bayes classifier we derive later is optimal under it. Know its limitations before you deploy it.
+    </div>
+
+    <h3>True Risk: The Number We Actually Care About</h3>
+
+    <p>
+      A loss on a single data point is a noisy signal. What we really want is the expected loss over the entire distribution $P_{XY}$ — how bad is $h$ on average, across all possible inputs the world might throw at it?
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>true risk</strong> (or expected risk) of a hypothesis $h$ is:
+      $$R(h) \;\triangleq\; \mathbb{E}_{P_{XY}}\!\left[L(h(x), y)\right]$$
+      It is the expected loss when $(x, y)$ is drawn from the true joint distribution $P_{XY}$. The best hypothesis in $\mathcal{H}$ is:
+      $$h^*(x) = \underset{h \,\in\, \mathcal{H}}{\arg\min}\; R(h)$$
+    </div>
+
+    <p>
+      True risk is the <em>population-level</em> performance of $h$. It answers: "If I deploy this model in the real world, over all possible inputs it will ever encounter, how well does it do on average?"
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏥 Cancer Classifier</div>
+        <p>$R(h)$ under zero-one loss = the probability of making an incorrect diagnosis on a randomly selected patient from the population. $R(h) = 0.05$ means 5% of patients are misclassified.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Direction Model</div>
+        <p>$R(h)$ under zero-one loss = the fraction of trading days the model predicts the wrong direction, averaged over all possible market conditions — not just the days you tested on.</p>
+      </div>
+    </div>
+
+    <p>
+      This is exactly what we want to minimise. And exactly what we <strong>cannot compute</strong>. Because $R(h)$ requires integrating over $P_{XY}$, which is unknown. We only have $D$ — $n$ samples from it.
+    </p>
+
+    <h3>Empirical Risk Minimisation — The Principled Substitute</h3>
+
+    <p>
+      We can't compute $R(h)$. But we can <em>approximate</em> it. Replace the expectation over the unknown $P_{XY}$ with an average over the known dataset $D$:
+    </p>
+
+    <div class="math-block">
+      $$\hat{R}(h) \;\triangleq\; \frac{1}{N}\sum_{i=1}^N L\!\left(h(x_i),\, y_i\right)$$
+    </div>
+
+    <p>
+      This is the <strong>empirical risk</strong> — the average loss on the training data. The algorithm that minimises it is called <strong>Empirical Risk Minimisation (ERM)</strong>:
+    </p>
+
+    <div class="math-block">
+      $$\boxed{\hat{h}^*(x) = \underset{h \,\in\, \mathcal{H}}{\arg\min}\; \hat{R}(h)}$$
+    </div>
+
+    <p>
+      This single equation is the skeleton of nearly every supervised learning algorithm ever invented. Linear regression: ERM with squared error and $\mathcal{H}$ = linear functions. Logistic regression: ERM with cross-entropy loss and $\mathcal{H}$ = sigmoid-linear functions. Neural networks: ERM with various losses and $\mathcal{H}$ = deep compositions of nonlinear functions. The framework is universal. The design choices are what differ.
+    </p>
+
+    <div class="callout callout-intuition">
+      ERM is principled, not arbitrary. By the Law of Large Numbers, $\hat{R}(h) \to R(h)$ as $N \to \infty$ for any fixed $h$. The empirical average of i.i.d. losses converges to the true expectation. So with infinite data, minimising $\hat{R}(h)$ and minimising $R(h)$ become the same problem. With finite data, we're doing the best we can with what we have. The question is: how much data is enough? That is the central question of statistical learning theory — and it depends entirely on the complexity of $\mathcal{H}$.
+    </div>
+
+    <h3>The Generalisation Gap — Why Training Error Lies</h3>
+
+    <p>
+      Here is the most important distinction in all of applied machine learning. It has two names for the same quantity:
+    </p>
+
+    <p>
+      <strong>Training error</strong> $= \hat{R}(\hat{h}^*)$ — how well the model performs on the data it was trained on.<br/>
+      <strong>Generalisation error</strong> $= R(\hat{h}^*)$ — how well it performs on new, unseen data from $P_{XY}$.
+    </p>
+
+    <p>
+      The <strong>generalisation gap</strong> is $R(\hat{h}^*) - \hat{R}(\hat{h}^*)$. A large gap means the model learned the training data but not the underlying pattern — it has <strong>overfit</strong>.
+    </p>
+
+    <div class="callout callout-warning">
+      $\hat{R}(h) \to R(h)$ for a <em>fixed</em> $h$ as $N \to \infty$ — this is just the LLN. But $\hat{h}^* = \arg\min_\mathcal{H} \hat{R}(h)$ may not converge to $h^* = \arg\min_\mathcal{H} R(h)$. The minimiser of the empirical risk and the minimiser of the true risk are different objects. The ERM algorithm searches over $\mathcal{H}$ and finds whatever looks best on the training data. If $\mathcal{H}$ is very large, it can find a hypothesis that fits the training data perfectly but generalises poorly — because it memorised noise, not signal. When $\hat{h}^*$ converges to $h^*$ is one of the deepest results in learning theory, and it depends on the <em>complexity</em> of $\mathcal{H}$.
+    </div>
+
+    <div class="callout callout-india">
+      This is the single most important concept for any quantitative trader to internalise. A backtest is training error — always flattering, always optimistic. Live trading is generalisation error — the honest report card. A strategy that made 40% annualised in a 3-year backtest and 3% in live trading has not been unlucky. It has overfit. The model found patterns in historical NIFTY data that were real in-sample but were statistical artifacts, not causal signals. The generalisation gap killed it. Every serious quant firm runs out-of-sample tests, walk-forward validation, and live paper trading precisely to measure the generalisation gap before real money is at risk.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Loss, Risk, and ERM in Practice</span>
+        <span class="we-badge">🏏 IPL + 🇮🇳 NIFTY</span>
+      </div>
+      <div class="we-body">
+        <p>For each scenario, identify the loss function, write out the empirical risk $\hat{R}(h)$ explicitly, and state what ERM reduces to computationally.</p>
+
+        <div class="we-step">Scenario A — Predicting whether an IPL batsman scores above 50</div>
+        <p>$\mathcal{X} \subset \mathbb{R}^{30}$ (match conditions), $\mathcal{Y} = \{0,1\}$, zero-one loss. The dataset has $N = 500$ innings. The empirical risk is:</p>
+        <div class="math-block">
+          $$\hat{R}(h) = \frac{1}{500}\sum_{i=1}^{500} \mathbb{1}[h(x_i) \neq y_i] = \frac{\text{number of misclassified innings}}{500}$$
+        </div>
+        <p>ERM = find the classifier in $\mathcal{H}$ that minimises the fraction of training innings it gets wrong. This is literally minimising training misclassification rate.</p>
+
+        <div class="we-step">Scenario B — Predicting NIFTY's next-day return</div>
+        <p>$\mathcal{X} \subset \mathbb{R}^5$ (VIX, FII, PCR, SGX, prev return), $\mathcal{Y} = \mathbb{R}$, squared error loss, $\mathcal{H}$ = linear functions $h_\theta(x) = \theta^\top x$. Dataset: $N = 500$ trading days.</p>
+        <div class="math-block">
+          $$\hat{R}(h_\theta) = \frac{1}{500}\sum_{i=1}^{500}(\theta^\top x_i - y_i)^2$$
+        </div>
+        <p>ERM = find $\theta^*$ that minimises the mean squared prediction error on training days. This is exactly <strong>ordinary least squares linear regression</strong> — the oldest and most widely used ML algorithm, now derived from first principles.</p>
+
+        <div class="we-answer">
+          <strong>The unifying insight:</strong> linear regression is not a separate invention — it is ERM with squared error loss and a linear hypothesis class. Every supervised learning algorithm is ERM with specific choices of $\mathcal{H}$ and $L$. The framework is always the same.
+        </div>
+      </div>
+    </div>
+
+    <h3>The Bayes Classifier — The Theoretical Ceiling</h3>
+
+    <p>
+      We've been asking: given $D$, what is the best $h$ we can find? Now ask a different question: if we <em>knew</em> $P_{XY}$ exactly, what is the <em>best possible classifier</em>? Is there a theoretical upper bound on how well any algorithm can ever do?
+    </p>
+
+    <p>
+      Fix binary classification ($\mathcal{Y} = \{0,1\}$), zero-one loss, and allow $\mathcal{H}$ = all possible functions (no restriction). The optimal classifier is:
+    </p>
+
+    <div class="math-block">
+      $$h_B(x) = \begin{cases} 0 & \text{if } P(y=0 \mid x) > P(y=1 \mid x) \\ 1 & \text{if } P(y=1 \mid x) \geq P(y=0 \mid x) \end{cases}$$
+    </div>
+
+    <p>
+      At every input $x$, predict the more probable class. This is the <strong>Bayes classifier</strong>. Its risk $R(h_B)$ is called the <strong>Bayes error</strong> — the irreducible minimum error that no algorithm can beat.
+    </p>
+
+    <div class="callout callout-intuition">
+      The Bayes classifier is not a practical algorithm — it requires knowing $P_{XY}$, which we don't. It is a theoretical benchmark. The gap $R(h) - R(h_B)$ for any classifier $h$ tells you how far you are from the theoretical ceiling. Some of this gap is due to your hypothesis class being too restricted (approximation error). Some is due to having too little data (estimation error). Reducing both is the goal of all of ML.
+    </div>
+
+    <h3>Proving the Bayes Classifier Is Optimal</h3>
+
+    <p>
+      A claim this strong deserves a proof. We show $R(h_B) \leq R(h)$ for every $h \in \mathcal{H}$ — the Bayes classifier has the lowest possible true risk.
+    </p>
+
+    <!-- PROOF BLOCK -->
+    <div class="proof-block">
+      <div class="proof-header">
+        <span class="proof-title">Theorem · Optimality of the Bayes Classifier</span>
+        <span class="proof-badge">Zero-One Loss · Binary Classification</span>
+      </div>
+      <div class="proof-body">
+        <div class="proof-step">Setup</div>
+        <p>For any classifier $h$, partition $\mathbb{R}^d$ into two regions:
+        $$S_i(h) = \{x \in \mathbb{R}^d : h(x) = i\}, \quad i = 0, 1$$
+        These partition the input space: $S_0(h) \cap S_1(h) = \emptyset$ and $S_0(h) \cup S_1(h) = \mathbb{R}^d$.</p>
+
+        <div class="proof-step">Expanding the True Risk</div>
+        <p>Under zero-one loss, $R(h) = P(h(x) \neq y)$. A mistake happens in exactly two ways: predicting 1 when $y=0$, or predicting 0 when $y=1$. Expanding:</p>
+        <div class="math-block">
+          $$R(h) = P(h(x)=1,\, y=0) + P(h(x)=0,\, y=1)$$
+          $$= P(y=0)\int_{S_1(h)} P_{X|y=0}(x)\,dx \;+\; P(y=1)\int_{S_0(h)} P_{X|y=1}(x)\,dx$$
+        </div>
+
+        <div class="proof-step">Pointwise Minimisation</div>
+        <p>For any fixed $x \in \mathbb{R}^d$, the classifier must assign $x$ to either $S_0$ or $S_1$. The contribution of this point to the risk is:</p>
+        <div class="math-block">
+          $$\text{cost of assigning } x \text{ to } S_1 = P(y=0)\cdot P_{X|y=0}(x)$$
+          $$\text{cost of assigning } x \text{ to } S_0 = P(y=1)\cdot P_{X|y=1}(x)$$
+        </div>
+        <p>The Bayes classifier assigns each $x$ to whichever class has the lower cost — it takes the pointwise minimum. By Bayes' theorem, $P(y=0)\cdot P_{X|y=0}(x) \propto P(y=0|x)$, so this is equivalent to predicting the more probable class at every $x$.</p>
+
+        <div class="proof-step">Conclusion</div>
+        <p>Since $h_B$ minimises the integrand at every point $x$, its total risk is:</p>
+        <div class="math-block">
+          $$R(h_B) = \int_{\mathbb{R}^d} \min\!\bigl(P(y=0)\cdot P_{X|y=0}(x),\; P(y=1)\cdot P_{X|y=1}(x)\bigr)\,dx$$
+        </div>
+        <p>For any other classifier $h$, there exist points $x$ where it does not take the minimum — so it incurs higher cost there. Therefore:</p>
+        <div class="proof-result">
+          <strong>Result: $R(h_B) \leq R(h)$ for all $h \in \mathcal{H}$.</strong> The Bayes classifier is globally optimal under zero-one loss. No algorithm, regardless of complexity, can do better in expectation. The Bayes error $R(h_B)$ is the irreducible floor.
+        </div>
+        <div class="proof-qed">□</div>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      The proof has a beautiful structure: it reduces a global optimisation (minimise total risk over all of $\mathbb{R}^d$) to a local decision (at each point $x$, which class has higher posterior probability?). The Bayes classifier solves the local problem at every point simultaneously — and since the global objective is an integral over local contributions, the local optimum gives the global optimum. This "pointwise" argument is a recurring technique in mathematical ML.
+    </div>
+
+    <h3>The Regression Oracle: What Minimises Squared Error?</h3>
+
+    <p>
+      The companion result for regression is equally important. For squared error loss and unrestricted $\mathcal{H}$, what $h$ minimises the true risk?
+    </p>
+
+    <div class="math-block">
+      $$h^*(x) = \underset{h}{\arg\min}\; \mathbb{E}_{P_{XY}}\!\left[(h(x) - y)^2\right] = \mathbb{E}[Y \mid X = x]$$
+    </div>
+
+    <p>
+      The optimal predictor under squared error is the <strong>conditional expectation</strong> of $Y$ given $X$. Not the most likely value of $Y$ — the average value of $Y$ across all samples with the same $x$.
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏏 Batting Average</div>
+        <p>The best prediction of Rohit Sharma's score given today's match conditions is his <em>average</em> score across all historical matches with those exact conditions. Not his most common score — his mean score.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Return</div>
+        <p>The best NIFTY return prediction given today's features is $\mathbb{E}[\text{return} \mid \text{VIX}=18, \text{FII}=+2000\text{Cr}, \ldots]$ — the historical average return on all days with those features.</p>
+      </div>
+    </div>
+
+    <p>
+      This result explains why linear regression is not naive. It is the best possible estimator of $\mathbb{E}[Y|X]$ within the linear hypothesis class — and $\mathbb{E}[Y|X]$ is the theoretical target for all regression. Every regression algorithm, from the simplest linear model to the deepest neural network, is attempting to estimate this conditional expectation. The battle is fought in hypothesis class size and data quantity, not in the target itself.
+    </p>
+
+    <div class="callout callout-warning">
+      $\mathbb{E}[Y|X=x]$ requires knowing $P_{XY}$. Every regression algorithm is an approximation to this quantity, not the quantity itself. The approximation error has two components: bias (how wrong is $\mathcal{H}$ on average?) and variance (how sensitive is $\hat{h}^*$ to the specific training set?). Getting the bias-variance balance right — Chapter 6 — is the central engineering challenge of regression.
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · The Bayes Classifier in Action</span>
+        <span class="we-badge">🇮🇳 INDIA VIX → NIFTY Direction</span>
+      </div>
+      <div class="we-body">
+        <p>Suppose we model the relationship between INDIA VIX and NIFTY direction using known distributions. Let $Y = 1$ if NIFTY closes down, $Y = 0$ if up. Assume:</p>
+        <div class="math-block">
+          $$P(Y=1) = 0.45, \quad P(Y=0) = 0.55$$
+          $$P_{X|Y=0}(x) = \mathcal{N}(x;\; 15,\; 4^2) \quad \text{(up days: VIX tends lower)}$$
+          $$P_{X|Y=1}(x) = \mathcal{N}(x;\; 22,\; 6^2) \quad \text{(down days: VIX tends higher)}$$
+        </div>
+
+        <div class="we-step">At VIX = 18, what does the Bayes classifier predict?</div>
+        <p>Compute the joint likelihoods at $x = 18$:</p>
+        <div class="math-block">
+          $$P(y=0)\cdot P_{X|y=0}(18) = 0.55 \times \mathcal{N}(18;\,15,\,16) = 0.55 \times \frac{1}{\sqrt{2\pi \cdot 16}}e^{-\frac{(18-15)^2}{32}}$$
+          $$= 0.55 \times 0.0997 \times e^{-0.281} = 0.55 \times 0.0997 \times 0.755 \approx 0.0414$$
+        </div>
+        <div class="math-block">
+          $$P(y=1)\cdot P_{X|y=1}(18) = 0.45 \times \mathcal{N}(18;\,22,\,36) = 0.45 \times \frac{1}{\sqrt{2\pi \cdot 36}}e^{-\frac{(18-22)^2}{72}}$$
+          $$= 0.45 \times 0.0665 \times e^{-0.222} = 0.45 \times 0.0665 \times 0.801 \approx 0.0240$$
+        </div>
+
+        <div class="we-step">Compare and decide</div>
+        <p>At VIX = 18: the "up" joint likelihood (0.0414) exceeds the "down" joint likelihood (0.0240). The Bayes classifier predicts $h_B(18) = 0$ — <strong>NIFTY up</strong>.</p>
+
+        <div class="we-step">Finding the decision boundary</div>
+        <p>The Bayes classifier switches prediction at the $x$ where both joint likelihoods are equal. Setting them equal and solving gives the decision boundary — the VIX level above which the model predicts a down day. In this case, the boundary is near VIX $\approx 19.8$. Below 19.8, predict up. Above 19.8, predict down.</p>
+
+        <div class="we-answer">
+          <strong>The lesson:</strong> the Bayes classifier does not simply threshold at the mean of either class. It accounts for the class priors ($P(Y=0) = 0.55$) and the different spreads of the two distributions. The prior that NIFTY closes up more often than down shifts the decision boundary upward — you need a higher VIX than you might naively think before the model calls a down day.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      We now have a complete framework: hypothesis class, loss function, true risk, empirical risk, ERM, and the theoretical optima — Bayes classifier and conditional expectation. The architecture is clear. But there is a critical question we deferred: the LLN guarantees $\hat{R}(h) \to R(h)$ for fixed $h$, but does minimising $\hat{R}$ over all of $\mathcal{H}$ give us the minimiser of $R$? The answer involves measuring how "far apart" two probability distributions are — which requires a new mathematical tool. That tool is KL divergence, and it is the subject of Chapter 3.
+    </p>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 02</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch02 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A NIFTY direction model achieves <strong>3% training error</strong> and <strong>48% test error</strong>. A second model achieves <strong>38% training error</strong> and <strong>40% test error</strong>. Which of the following is the most accurate diagnosis?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Model 1 is better — lower training error always indicates a superior model.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Model 1 has overfit severely. Model 2 has a smaller generalisation gap and will likely perform better in live trading.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Both models are equally bad — 48% and 40% test error are both near random.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Model 1 has underfit — it needs a more complex hypothesis class.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Model 1 has a generalisation gap of $48\% - 3\% = 45$ percentage points — a massive discrepancy between training and test performance. This is the signature of severe overfitting: the model memorised the training data, including its noise, and learned nothing generalisable. Model 2 has a gap of only $40\% - 38\% = 2$ percentage points — it generalises almost as well as it trains, which is what we want.<br/><br/>
+          The correct conclusion: for live trading, Model 2 is far preferable despite its higher training error. Training error is advertising. Test error is the truth.<br/><br/>
+          Option C is wrong to dismiss both — 40% test error for direction prediction is actually competitive in many market regimes (random is 50%), while 48% is barely better than random. Option D is wrong: a 3% training error is not underfitting — underfitting would show high training error too.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch02 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          For an unrestricted hypothesis class ($\mathcal{H}$ = all measurable functions) and squared error loss, which $h$ minimises the true risk $R(h) = \mathbb{E}_{P_{XY}}[(h(x)-y)^2]$?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>The mode of $P(Y \mid X=x)$ — the most likely value of $Y$ given $X$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>The median of $P(Y \mid X=x)$ — the value that minimises absolute error.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>The conditional expectation $\mathbb{E}[Y \mid X=x]$ — the mean of the conditional distribution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The marginal mean $\mathbb{E}[Y]$ — independent of $X$.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The conditional expectation $\mathbb{E}[Y \mid X=x]$ is the unique minimiser of squared error loss. To see why: write $y = \mathbb{E}[Y|X=x] + \epsilon$ where $\epsilon$ is the residual noise with $\mathbb{E}[\epsilon|X=x] = 0$. Then $(h(x) - y)^2 = (h(x) - \mathbb{E}[Y|X=x] - \epsilon)^2$. Taking expectation over $Y$, the cross term vanishes and we get $\mathbb{E}[(h(x)-y)^2|X=x] = (h(x) - \mathbb{E}[Y|X=x])^2 + \text{Var}(Y|X=x)$. The variance term is irreducible — it is the Bayes error for regression. The first term is minimised by setting $h(x) = \mathbb{E}[Y|X=x]$.<br/><br/>
+          Options A (mode) and B (median) minimise different objectives. Mode minimises zero-one loss. Median minimises absolute error loss. Squared error gives the mean. Each loss function implies a different optimal predictor — the loss function choice is not arbitrary.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch02 / q03</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          At a particular market state $x$, a classifier estimates $P(y=1 \mid x) = 0.35$. Under zero-one loss, what does the Bayes classifier predict, and what is the <strong>Bayes error at this specific point</strong>?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Predict class 1; Bayes error at this point = 0.35.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>Predict class 0; Bayes error at this point = 0.35.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Predict class 0; Bayes error at this point = 0.65.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Predict class 1; Bayes error at this point = 0.65.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          $P(y=1|x) = 0.35$ implies $P(y=0|x) = 0.65$. The Bayes classifier predicts the more probable class: $h_B(x) = 0$ (predict "NIFTY up" in this context).<br/><br/>
+          The Bayes error <em>at this point</em> is the probability of a mistake even under the optimal decision. Since we predict class 0, we're wrong whenever the true label is 1, which happens with probability $P(y=1|x) = 0.35$. So the local Bayes error is $\min(P(y=0|x), P(y=1|x)) = \min(0.65, 0.35) = 0.35$.<br/><br/>
+          Intuitively: even the best classifier makes mistakes at ambiguous points where both classes have significant probability. At $x$ where $P(y=1|x) = 0.35$, the world itself is uncertain — 35% of the time this market state leads to a down day. No algorithm can eliminate this uncertainty. It is irreducible noise in the data-generating process.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch02 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A cancer detection model achieves zero-one loss of 0.04 on a held-out test set from AIIMS Delhi. A NIFTY direction model achieves zero-one loss of 0.44 on unseen trading days. A colleague claims the cancer model is "clearly better." What is the most sophisticated response?
+        </p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Agreed — 4% error is objectively better than 44% error, regardless of domain.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>The NIFTY model is better — financial prediction is harder so any positive result is impressive.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The comparison is meaningless without knowing the Bayes error for each domain. If cancer Bayes error is near 0% and NIFTY Bayes error is near 50%, both models may be equally close to their theoretical ceiling.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Both models are poor — we should aim for 0% error in all domains.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Raw error rates are meaningless without knowing the Bayes error — the irreducible theoretical minimum — for each domain. Cancer diagnosis: the disease has clear physical signatures (measurable biomarkers, imaging features), so the Bayes error is likely very low, perhaps under 1%. A 4% error model is therefore performing 3–4 percentage points above the ceiling — there is significant room for improvement.<br/><br/>
+          NIFTY direction: markets are close to efficient — prices already incorporate available information. The Bayes error for daily direction prediction may be near 47–49%. A 44% error model is actually performing <em>better</em> than the theoretical minimum in some sense — or more precisely, it is very close to the ceiling. The 6-percentage-point gap from random may represent most of the extractable signal.<br/><br/>
+          This is why quant traders celebrate a sustained 52% win rate on daily direction calls as extraordinary — the Bayes error for that problem is near 50%. A 96% accuracy in cancer detection sounds impressive but may still be far from optimal for that domain. Always ask: what is the Bayes error?
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 02</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Work through these independently. Q1–3 are direct applications of the definitions. Q4–7 require connecting concepts. Q8–10 will make you think carefully.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            For each of the following, write down the loss function $L(h(x), y)$ explicitly and compute the empirical risk $\hat{R}(h)$ for the given predictions: (a) Regression: true returns $y = [0.5\%, -0.3\%, 1.2\%]$, predictions $h(x) = [0.4\%, -0.5\%, 0.9\%]$, squared error. (b) Classification: true labels $y = [0,1,0,1,0]$, predictions $h(x) = [0,1,1,1,0]$, zero-one loss.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            A hypothesis class $\mathcal{H}$ contains only three functions: $h_1, h_2, h_3$. On a training set of 4 points, their losses are: $h_1: [0.2, 0.8, 0.1, 0.5]$, $h_2: [0.4, 0.3, 0.3, 0.2]$, $h_3: [0.1, 0.9, 0.2, 0.8]$. Which hypothesis does ERM select? What is the empirical risk of the selected hypothesis?
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            At a particular input $x$, $P(y=0|x) = 0.72$ and $P(y=1|x) = 0.28$. (a) What does the Bayes classifier predict? (b) What is the Bayes error at this point? (c) If any classifier predicts class 1 at this $x$, what is its loss at this point under zero-one loss, in expectation over $y$?
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            Prove that the conditional expectation $h^*(x) = \mathbb{E}[Y|X=x]$ minimises the true risk under squared error loss. Your proof should: (a) write out $R(h) = \mathbb{E}[(h(x)-y)^2]$, (b) add and subtract $\mathbb{E}[Y|X=x]$ inside the square, (c) expand and show the cross-term is zero, (d) conclude that $R(h) \geq R(h^*)$ with equality iff $h = h^*$.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            A NIFTY classification model is trained on 500 days and achieves $\hat{R} = 0.38$. The true risk is estimated (via a large test set) as $R = 0.41$. A second model is trained on the same data with $\hat{R} = 0.30$ and $R = 0.46$. (a) Compute the generalisation gap for each. (b) Which model would you deploy for live trading, and why? (c) What does the larger gap of Model 2 tell you about its hypothesis class?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            Under zero-one loss, the ERM solution $\hat{h}^*$ minimises the fraction of training points misclassified. Show that for a hypothesis class containing a single threshold classifier $h_t(x) = \mathbb{1}[x > t]$ on one-dimensional data, ERM reduces to searching over at most $N+1$ candidate values of $t$. Why does this make ERM computationally tractable for this class?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            A doctor tells you "my diagnosis model has 95% accuracy on my hospital's patient data." List three distinct reasons why this 95% may be misleading as a measure of true risk $R(h)$, drawing on concepts from this chapter. For each reason, suggest one way to get a more honest estimate of $R(h)$.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            Construct an explicit example where ERM over $\mathcal{H}$ gives $\hat{R}(\hat{h}^*) = 0$ (zero training error) but $R(\hat{h}^*) \geq 0.4$ (40%+ true error). Your example should specify $\mathcal{X}$, $\mathcal{Y}$, $\mathcal{H}$, a dataset $D$, and an $h \in \mathcal{H}$ that achieves this. What property of $\mathcal{H}$ enables this gap?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            The Bayes classifier is optimal under zero-one loss. Under squared error loss, $\mathbb{E}[Y|X]$ is optimal. What is the optimal predictor under absolute error loss $L(h(x),y) = |h(x) - y|$? Prove your answer by showing that any other predictor has higher expected absolute error. (Hint: the proof uses the fact that the median minimises expected absolute deviation.)
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            The Bayes error $R(h_B)$ is the irreducible noise floor — no algorithm can do better. But in practice, we never know $R(h_B)$ because we don't know $P_{XY}$. Propose a practical method to estimate the Bayes error for a NIFTY direction classification problem using only observed market data, without assuming any parametric form for $P_{XY}$. What are the limitations of your proposed method?
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch1.html" class="ch-nav-btn">← What Is Learning?</a>
+    <a href="ML_M_Ch3.html" class="ch-nav-btn primary">Next: Empirical Risk and the Likelihood Game →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 Exactly right. The hypothesis class approves.",
+  "✨ ERM would select this answer too.",
+  "🏆 Optimal under zero-one loss. Well played.",
+  "🔥 The Bayes classifier bows before your reasoning.",
+  "💡 That's the kind of clarity that closes the generalisation gap.",
+  "🎓 Training error and test error are both zero here. Impressive.",
+  "📈 Your risk just went below Bayes error. Suspiciously good.",
+  "🧮 Loss function satisfied. Answer verified.",
+  "⚡ Sharp as a decision boundary at the optimal threshold.",
+  "🌟 $R(\\hat{h}^*) = R(h^*)$ achieved. The gap is closed.",
+  "💎 Generalisation gap: 0. Perfect score.",
+  "🚀 ERM converged. Carry on."
+];
+
+const wrongMsgs = [
+  "🌀 Your generalisation gap is showing. Re-read the section.",
+  "📐 The loss function disagrees with this answer.",
+  "📉 Training error on this question: 1. Try again.",
+  "🏦 The Bayes classifier would not make this mistake.",
+  "😰 Overfitting to an intuition that doesn't hold. Recalibrate.",
+  "🤔 This answer has higher risk than the Bayes error. Look again.",
+  "📊 Hypothesis class too restricted. The answer is out there.",
+  "🎰 That was a speculative punt. Back to the definitions."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'opts'));
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>

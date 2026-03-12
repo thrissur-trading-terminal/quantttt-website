@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Empirical Risk and the Likelihood Game — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  overflow-y: auto; background: var(--off);
+  border-right: 1px solid var(--border); padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 1.4rem 0.4rem; margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.4rem; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem; color: var(--muted);
+  border-left: 3px solid transparent; text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.locked { opacity: 0.4; cursor: not-allowed; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.si-mcq-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content { margin-left: var(--sidebar-w); flex: 1; max-width: 800px; padding: 3rem 3.5rem 6rem; }
+
+/* ── CHAPTER HEADER ── */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-f { background: rgba(232,114,42,0.1); color: var(--orange); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; font-style: italic; }
+
+/* ── BODY TEXT ── */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2.2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* ── CALLOUTS ── */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Watch Out'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* ── MATH BLOCK ── */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* ── DERIVATION BLOCK ── */
+.derivation { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.deriv-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.deriv-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.deriv-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.deriv-body { padding: 1.5rem; background: var(--white); }
+.deriv-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.deriv-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.deriv-result { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.deriv-result strong { color: var(--green); }
+.deriv-note { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); border-radius: 4px; padding: 0.3rem 0.7rem; display: inline-block; margin-top: 0.4rem; }
+
+/* ── WORKED EXAMPLE ── */
+.worked-example { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin: 2rem 0; }
+.we-header { background: var(--navy); padding: 0.75rem 1.3rem; display: flex; align-items: center; justify-content: space-between; }
+.we-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+.we-badge { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.we-body { padding: 1.5rem; background: var(--white); }
+.we-body p { font-size: 0.95rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1rem; }
+.we-body p:last-child { margin-bottom: 0; }
+.we-step { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--orange); letter-spacing: 0.08em; text-transform: uppercase; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.we-answer { background: rgba(30,158,94,0.06); border: 1.5px solid rgba(30,158,94,0.25); border-radius: 8px; padding: 0.9rem 1.2rem; margin-top: 1rem; font-size: 0.93rem; color: var(--navy); }
+.we-answer strong { color: var(--green); }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+.col-card { background: var(--off); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+.col-card-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange); margin-bottom: 0.6rem; font-weight: 600; }
+.col-card p { font-size: 0.88rem; line-height: 1.7; color: #2a2a3e; margin-bottom: 0.7rem; }
+.col-card p:last-child { margin-bottom: 0; }
+@media (max-width: 650px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── EQUIVALENCE BRIDGE ── */
+.equiv-bridge { background: var(--navy); border-radius: 12px; padding: 1.8rem 2rem; margin: 2rem 0; text-align: center; }
+.equiv-bridge-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: rgba(255,255,255,0.4); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1rem; }
+.equiv-row { display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+.equiv-box { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 1rem 1.5rem; font-size: 0.9rem; color: white; line-height: 1.6; }
+.equiv-box strong { color: var(--orange2); }
+.equiv-arrow { font-size: 1.6rem; color: var(--orange); font-family: 'DM Mono', monospace; }
+.equiv-bridge-sub { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-top: 1rem; }
+
+/* ── DIVIDER ── */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+.mcq-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
+.mcq-card-header { background: var(--navy); padding: 0.7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+.mcq-body { padding: 1.5rem; }
+.mcq-question { font-family: 'Shadows Into Light Two', cursive; font-size: 1.1rem; line-height: 1.9; color: var(--text); margin-bottom: 1.3rem; }
+.mcq-question strong { color: var(--orange); font-style: normal; }
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.18s; font-size: 0.9rem; background: var(--white); user-select: none; }
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600; background: var(--off); border: 1px solid var(--border); flex-shrink: 0; color: var(--navy); transition: all 0.18s; }
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+.mcq-feedback { display: none; border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Shadows Into Light Two', cursive; font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem; }
+.mcq-explanation { display: none; background: rgba(30,158,94,0.05); border: 1.5px solid rgba(30,158,94,0.2); border-radius: 10px; padding: 1.2rem; font-size: 0.87rem; line-height: 1.8; color: var(--muted); margin-bottom: 1rem; }
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.mcq-check-btn { background: var(--orange); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; font-family: 'Barlow', sans-serif; width: 100%; }
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── TERMINAL QUESTIONS ── */
+.terminal-section { margin-top: 3rem; }
+.terminal-header { background: var(--navy); border-radius: 12px 12px 0 0; padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.terminal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; }
+.terminal-badge { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--orange); }
+.terminal-body { border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 1.5rem; }
+.terminal-intro { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tq-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.tq-item { display: flex; gap: 1rem; align-items: flex-start; }
+.tq-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700; color: var(--orange); background: rgba(232,114,42,0.1); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
+.tq-text { font-size: 0.93rem; line-height: 1.8; color: #2a2a3e; }
+.tq-diff { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+.tq-easy { background: rgba(30,158,94,0.1); color: var(--green); }
+.tq-medium { background: rgba(232,114,42,0.1); color: var(--orange); }
+.tq-hard { background: rgba(45,37,96,0.08); color: var(--navy2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Empirical Risk and the Likelihood Game</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:37.5%"></div></div>
+      <span class="tb-progress-label">3 / 8</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html">
+    <div class="si-num">1</div>What Is Learning?
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html">
+    <div class="si-num">2</div>The Learning Machine
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item active" href="ML_M_Ch3.html">
+    <div class="si-num">3</div>Empirical Risk and the Likelihood Game
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">4</div>Maximum Likelihood — Let the Data Speak
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">6</div>Linear Models and the Bias-Variance Tradeoff
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">7</div>Regularisation — Taming the Overfit
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <a class="sidebar-item locked" href="#" onclick="return false;">
+    <div class="si-num">8</div>From Margins to Neurons
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Foundational</span>
+      <span class="ch-num">Chapter 03 of 08 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Empirical Risk and the Likelihood Game</h1>
+    <p class="chapter-subtitle">Chapter 2 left us with a question: ERM minimises $\hat{R}(h)$, but we actually care about $R(h)$. The gap between them requires measuring how far apart two probability distributions are. This chapter builds that measuring instrument — from information theory to KL divergence — and reveals that minimising the gap between distributions and maximising likelihood are secretly the same operation.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The Question Left Open</h3>
+
+    <p>
+      End of Chapter 2: we know $\hat{R}(h) \to R(h)$ as $N \to \infty$ by the Law of Large Numbers. But we also noted this is true for any <em>fixed</em> $h$ — the convergence of the function values does not automatically guarantee that the <em>minimiser</em> of $\hat{R}$ converges to the minimiser of $R$. The central question of generalisation is precisely: when does $\hat{h}^* \to h^*$?
+    </p>
+
+    <p>
+      Answering this requires a language for measuring how close two probability distributions are. Specifically, we want to measure how close our parametric model $P_\theta$ is to the true unknown distribution $P$. Once we have that measuring instrument, ERM and maximum likelihood will turn out to be two descriptions of the same optimisation problem.
+    </p>
+
+    <p>
+      This chapter builds that instrument from the ground up — starting from a single question: <strong>how surprised should you be when something happens?</strong>
+    </p>
+
+    <h3>Surprisal: Quantifying How Shocked You Should Be</h3>
+
+    <p>
+      Before we can measure the distance between distributions, we need to measure the information content of a single event. The right notion is <strong>surprisal</strong> — how much new information does an event $A$ provide when it occurs?
+    </p>
+
+    <p>
+      Two properties we want from any reasonable surprisal measure $\mathcal{I}(A)$: rare events should be more surprising (carry more information) than common ones, and the surprisal of two independent events together should equal the sum of their individual surprisals — information should add when events are independent.
+    </p>
+
+    <p>
+      There is essentially one function that satisfies both requirements.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>surprisal</strong> (or self-information) of an event $A \in \mathcal{F}$ is:
+      $$\mathcal{I}(A) \;\triangleq\; -\log P(A)$$
+      For a discrete random variable $X$ taking value $x_i$: $\mathcal{I}(x_i) = -\log P(x_i)$. Logarithms are base $e$ (nats) or base 2 (bits) depending on context — the theory is identical.
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🎲 Tossing a Fair Coin</div>
+        <p>$P(\text{heads}) = 0.5$. Surprisal $= -\log(0.5) = \log 2 \approx 0.693$ nats. Neither outcome is very surprising — you learn exactly one bit of information.</p>
+        <p>$P(\text{heads}) = 0.99$. Surprisal $= -\log(0.99) \approx 0.01$ nats. A biased coin landing heads carries almost no information — you expected it.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 INDIA VIX Spike</div>
+        <p>On a normal trading day, $P(\text{VIX} > 30) \approx 0.05$. Surprisal $= -\log(0.05) \approx 3.0$ nats. A VIX spike is genuinely surprising — it carries significant information about regime change.</p>
+        <p>$P(\text{VIX between 10 and 20}) \approx 0.65$. Surprisal $\approx 0.43$ nats. Low-volatility regimes are routine — not much information when they persist.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      Surprisal has the right qualitative behaviour. Certain events ($P=1$) have zero surprisal — you learn nothing when something inevitable happens. Impossible events ($P=0$) have infinite surprisal — if they somehow occurred, it would overturn everything you thought you knew. And crucially: $\mathcal{I}(A \cap B) = \mathcal{I}(A) + \mathcal{I}(B)$ when $A$ and $B$ are independent, because $-\log P(A \cap B) = -\log P(A) - \log P(B)$. Information is additive over independent events. Logarithms are the unique function with this property.
+    </div>
+
+    <h3>Entropy: The Average Surprise in a Distribution</h3>
+
+    <p>
+      A single event's surprisal is just one number. What we want is a property of the entire <em>distribution</em> $P_X$ — a measure of how uncertain or spread-out it is. The natural answer: take the expected surprisal.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>entropy</strong> of a discrete distribution $P_X$ is the expected surprisal:
+      $$H(P_X) \;\triangleq\; \mathbb{E}_{P_X}\!\left[-\log P_X(x)\right] = -\sum_i P_X(x_i)\,\log P_X(x_i)$$
+      Entropy measures the average amount of information gained — equivalently, the average uncertainty — when a random variable $X \sim P_X$ is observed.
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏏 IPL Match Result</div>
+        <p>If both teams are evenly matched: $P(\text{win}) = P(\text{loss}) = 0.5$. $H = -2 \times 0.5 \log 0.5 = \log 2 \approx 0.693$ nats. Maximum uncertainty — maximum entropy.</p>
+        <p>If one team almost always wins: $P(\text{win}) = 0.95$, $P(\text{loss}) = 0.05$. $H \approx 0.199$ nats. Low entropy — little uncertainty before the match.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Direction</div>
+        <p>A market with $P(\text{up}) = P(\text{down}) = 0.5$ has maximum entropy — a completely unpredictable index. A market with $P(\text{up}) = 0.9$ has lower entropy — more predictable, less information generated per day.</p>
+        <p>High entropy = hard to predict = large Bayes error. Low entropy = easier to predict. Entropy is the Bayes error in disguise for classification.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      Entropy is maximised when all outcomes are equally likely — maximum uncertainty. It is minimised (at zero) when one outcome has probability 1 — no uncertainty at all. For a fair $k$-sided die, $H = \log k$: the more sides, the more uncertainty per roll. For NIFTY, entropy quantifies how much information each trading day generates. A low-entropy regime (strong trend) is more predictable; a high-entropy regime (choppy, mean-reverting) generates more surprisal per day and is harder to trade systematically.
+    </div>
+
+    <h3>Cross-Entropy: When Your Model Disagrees with Reality</h3>
+
+    <p>
+      Entropy measures the average surprisal under the <em>true</em> distribution. But suppose we are using a <em>model</em> distribution $Q_X$ to describe a world that actually follows $P_X$. How surprised will we be on average, according to our model?
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>cross-entropy</strong> of $Q$ relative to $P$ is the expected surprisal under $P$ when surprisal is measured using $Q$:
+      $$H(P, Q) \;\triangleq\; \mathbb{E}_{P_X}\!\left[-\log Q_X(x)\right] = -\sum_i P_X(x_i)\,\log Q_X(x_i)$$
+      Samples come from $P$ (reality) but we assign probabilities using $Q$ (our model). Cross-entropy is always at least as large as entropy: $H(P,Q) \geq H(P)$.
+    </div>
+
+    <p>
+      The difference $H(P,Q) - H(P)$ is the extra surprise incurred by using the wrong model $Q$ instead of the true distribution $P$. This extra surprise is always non-negative — your model can never be more efficient at encoding reality than reality itself. And it has a name.
+    </p>
+
+    <h3>KL Divergence: The Distance Between Distributions</h3>
+
+    <p>
+      The gap between cross-entropy and entropy is the most important divergence measure in all of information theory and machine learning.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>Kullback-Leibler (KL) divergence</strong> from $P$ to $Q$ is:
+      $$D_{KL}(P \| Q) \;\triangleq\; H(P, Q) - H(P) = \mathbb{E}_{P}\!\left[\log \frac{P(x)}{Q(x)}\right] = \sum_i P(x_i)\,\log \frac{P(x_i)}{Q(x_i)}$$
+      For continuous distributions:
+      $$D_{KL}(P_X \| Q_X) = \int_{\mathcal{X}} P_X(x)\,\log \frac{P_X(x)}{Q_X(x)}\,dx$$
+      It measures how much extra surprisal you incur by using $Q$ to encode samples from $P$.
+    </div>
+
+    <p>
+      KL divergence satisfies three critical properties — and one critical non-property.
+    </p>
+
+    <div class="callout callout-warning">
+      <strong>$D_{KL}(P \| Q) \geq 0$, with equality if and only if $P = Q$.</strong> This follows from Jensen's inequality applied to the convex function $-\log$. There is never a benefit to using the wrong model — the extra surprisal is always non-negative, and zero only when your model is exactly correct.<br/><br/>
+      <strong>$D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$ in general.</strong> KL divergence is not symmetric. The "distance" from $P$ to $Q$ is not the same as the "distance" from $Q$ to $P$. It is technically a divergence, not a metric. In ML, we almost always minimise $D_{KL}(P \| Q)$ — where $P$ is the true distribution and $Q$ is our model — because this corresponds to MLE, as we're about to show.
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📊 Gaussian Fit to Returns</div>
+        <p>True NIFTY daily returns follow a fat-tailed distribution $P$. You model them with a Gaussian $Q$. $D_{KL}(P \| Q) > 0$ — your model underestimates tail probabilities, leading to systematic surprisal whenever large moves occur. The KL divergence quantifies exactly how badly misspecified your model is.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🔁 Asymmetry in Practice</div>
+        <p>$D_{KL}(P \| Q)$ is large when $P$ puts mass in regions where $Q$ assigns near-zero probability — your model is caught completely off-guard. $D_{KL}(Q \| P)$ is large when $Q$ spreads mass over regions $P$ considers unlikely. These measure different kinds of model failure.</p>
+      </div>
+    </div>
+
+    <h3>The Big Connection: Minimising KL Divergence = Maximising Likelihood</h3>
+
+    <p>
+      Here is the single most important equivalence in all of statistical ML. We will derive it carefully, because it deserves to be understood and not just stated.
+    </p>
+
+    <p>
+      We have $N$ samples $D = \{v_1, v_2, \ldots, v_N\}$ drawn i.i.d. from an unknown distribution $P_v$. We choose a parametric model family $P_\theta$ and want the best $\theta$. "Best" means closest to the truth — so we minimise $D_{KL}(P_v \| P_\theta)$ over $\theta$.
+    </p>
+
+    <!-- DERIVATION BLOCK -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · KL Minimisation = Maximum Likelihood Estimation</span>
+        <span class="deriv-badge">The Central Equivalence</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Step 1 — Write out the optimisation</div>
+        <p>We want:</p>
+        <div class="math-block">
+          $$\theta^* = \underset{\theta}{\arg\min}\; D_{KL}(P_v \| P_\theta) = \underset{\theta}{\arg\min} \int P_v(v)\,\log \frac{P_v(v)}{P_\theta(v)}\,dv$$
+        </div>
+
+        <div class="deriv-step">Step 2 — Split the integrand</div>
+        <p>Expand the $\log$ of a ratio into a difference of logs:</p>
+        <div class="math-block">
+          $$D_{KL}(P_v \| P_\theta) = \int P_v(v)\,\log P_v(v)\,dv - \int P_v(v)\,\log P_\theta(v)\,dv$$
+        </div>
+        <p>The first integral is $-H(P_v)$ — the entropy of the true distribution. It does not depend on $\theta$ at all. So minimising over $\theta$:</p>
+        <div class="math-block">
+          $$\theta^* = \underset{\theta}{\arg\min}\left[-H(P_v) - \int P_v(v)\,\log P_\theta(v)\,dv\right] = \underset{\theta}{\arg\min} - \int P_v(v)\,\log P_\theta(v)\,dv$$
+        </div>
+        <div class="deriv-note">The entropy $H(P_v)$ is a constant with respect to $\theta$ — it drops out of the minimisation.</div>
+
+        <div class="deriv-step">Step 3 — Recognise the expectation</div>
+        <p>The remaining term is $-\mathbb{E}_{P_v}[\log P_\theta(v)]$. Minimising the negative is the same as maximising the positive:</p>
+        <div class="math-block">
+          $$\theta^* = \underset{\theta}{\arg\max}\; \mathbb{E}_{P_v}\!\left[\log P_\theta(v)\right]$$
+        </div>
+
+        <div class="deriv-step">Step 4 — Apply the Law of Large Numbers</div>
+        <p>We don't know $P_v$, so we can't compute $\mathbb{E}_{P_v}[\log P_\theta(v)]$ exactly. But by the LLN, with $N$ i.i.d. samples:</p>
+        <div class="math-block">
+          $$\mathbb{E}_{P_v}\!\left[\log P_\theta(v)\right] \;\approx\; \frac{1}{N}\sum_{i=1}^N \log P_\theta(v_i) \quad \text{as } N \to \infty$$
+        </div>
+
+        <div class="deriv-step">Step 5 — Arrive at MLE</div>
+        <p>Plugging back in, the KL-minimising estimator is:</p>
+        <div class="math-block">
+          $$\theta^* = \underset{\theta}{\arg\max}\; \frac{1}{N}\sum_{i=1}^N \log P_\theta(v_i)$$
+        </div>
+        <p>Recognise $P_\theta(v_i)$ as the likelihood of observation $v_i$ under model $P_\theta$. The sum $\sum_i \log P_\theta(v_i) = \log \prod_i P_\theta(v_i)$ is the log of the joint likelihood of the entire dataset (since samples are i.i.d.). Therefore:</p>
+        <div class="math-block">
+          $$\theta^* = \underset{\theta}{\arg\max}\;\log \ell_\theta(D) = \underset{\theta}{\arg\max}\;\ell_\theta(D)$$
+        </div>
+
+        <div class="deriv-result">
+          <strong>The KL-minimising estimator is the Maximum Likelihood Estimator.</strong> Minimising the distance between your model and the true distribution — measured by KL divergence — is exactly the same as maximising the probability that your model assigned to the observed data. These are two descriptions of the same optimisation problem. ERM, KL minimisation, and MLE are members of the same family.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      This equivalence is the reason MLE is so central to statistics: it is not just a convenient computational trick. It is the principled answer to "which parameters make my model as close as possible to the true distribution?" The answer is: the parameters that assigned the highest probability to the data you actually saw. The data speaks, and MLE listens.
+    </div>
+
+    <!-- EQUIVALENCE BRIDGE VISUAL -->
+    <div class="equiv-bridge">
+      <div class="equiv-bridge-label">The Same Optimisation, Three Languages</div>
+      <div class="equiv-row">
+        <div class="equiv-box"><strong>KL Minimisation</strong><br/>$\underset{\theta}{\arg\min}\; D_{KL}(P_v \| P_\theta)$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Distance to truth</span></div>
+        <div class="equiv-arrow">≡</div>
+        <div class="equiv-box"><strong>Maximum Likelihood</strong><br/>$\underset{\theta}{\arg\max}\; \frac{1}{N}\sum_i \log P_\theta(v_i)$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Probability of the data</span></div>
+        <div class="equiv-arrow">≡</div>
+        <div class="equiv-box"><strong>ERM</strong><br/>$\underset{\theta}{\arg\min}\; -\frac{1}{N}\sum_i \log P_\theta(v_i)$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">NLL as empirical risk</span></div>
+      </div>
+      <div class="equiv-bridge-sub">All three optimise the same objective. The language changes. The solution does not.</div>
+    </div>
+
+    <h3>Squared Error Is MLE in Disguise</h3>
+
+    <p>
+      The equivalence above isn't just abstract. It immediately explains why squared error loss is not an arbitrary choice for regression — it is the natural loss function when you assume Gaussian noise.
+    </p>
+
+    <p>
+      Consider supervised regression: $x \in \mathbb{R}^d$, $y \in \mathbb{R}$, dataset $D = \{(x_i, y_i)\}_{i=1}^N$ i.i.d. from $P_{XY}$. We want to estimate $P_\theta(y|x)$. The model choice:
+    </p>
+
+    <div class="math-block">
+      $$P_\theta(y \mid x) = \mathcal{N}(y;\; h_\theta(x),\; I)$$
+    </div>
+
+    <p>
+      We assume the label $y$ is the model's prediction $h_\theta(x)$ plus Gaussian noise. Under this model, the log-likelihood of a single observation $(x_i, y_i)$ is:
+    </p>
+
+    <div class="math-block">
+      $$\log P_\theta(y_i \mid x_i) = \log \mathcal{N}(y_i;\; h_\theta(x_i),\; I) \;\propto\; -\frac{1}{2}(y_i - h_\theta(x_i))^2$$
+    </div>
+
+    <p>
+      Summing over the dataset, MLE becomes:
+    </p>
+
+    <div class="math-block">
+      $$\theta^* = \underset{\theta}{\arg\max}\;\sum_{i=1}^N \log P_\theta(y_i \mid x_i) \;\propto\; \underset{\theta}{\arg\min}\;\sum_{i=1}^N (y_i - h_\theta(x_i))^2$$
+    </div>
+
+    <p>
+      Maximising the Gaussian log-likelihood is identical to minimising the sum of squared errors. Linear regression is MLE under a Gaussian noise assumption. When you minimise squared error, you are implicitly assuming the residuals are Gaussian — whether you know it or not.
+    </p>
+
+    <div class="callout callout-warning">
+      This is a model assumption, not a universal truth. NIFTY daily returns are not Gaussian — they have fat tails, skew, and volatility clustering. When you fit a squared-error regression model to financial returns, you are implicitly making a Gaussian noise assumption that is known to be wrong. The model will systematically underestimate the probability of large moves. This is not a reason to never use squared error — it is a reason to know what you're assuming when you do.
+    </div>
+
+    <div class="callout callout-india">
+      Every options pricing model that uses squared error loss (or equivalently, Gaussian returns) inherits this assumption. Black-Scholes assumes lognormal returns — Gaussian log-returns — and this is why it systematically misprices deep OTM options on NIFTY. The volatility smile you see in NIFTY option chains is the market's correction for exactly this Gaussian misspecification. The true distribution of NIFTY returns has fatter tails than any Gaussian. The KL divergence between true NIFTY returns and any Gaussian is strictly positive and non-trivial — measured, empirically, in years of P&amp;L.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Computing KL Divergence</span>
+        <span class="we-badge">📊 Two Market Regime Models</span>
+      </div>
+      <div class="we-body">
+        <p>Suppose NIFTY daily returns fall into two regimes: up days and down days, each with three sub-outcomes — small, medium, large move. Let $P$ be the empirically estimated true distribution and $Q$ be a simplified model:</p>
+
+        <div class="math-block">
+          $$\begin{array}{lccc}
+          \text{Outcome} & P(x) & Q(x) & P(x)\log\frac{P(x)}{Q(x)} \\
+          \hline
+          \text{Small up} & 0.30 & 0.25 & 0.30 \times \log(1.20) = 0.0547 \\
+          \text{Medium up} & 0.20 & 0.25 & 0.20 \times \log(0.80) = -0.0446 \\
+          \text{Large up} & 0.08 & 0.05 & 0.08 \times \log(1.60) = 0.0376 \\
+          \text{Small down} & 0.25 & 0.25 & 0.25 \times \log(1.00) = 0 \\
+          \text{Medium down} & 0.12 & 0.15 & 0.12 \times \log(0.80) = -0.0268 \\
+          \text{Large down} & 0.05 & 0.05 & 0.05 \times \log(1.00) = 0
+          \end{array}$$
+        </div>
+
+        <div class="we-step">Compute $D_{KL}(P \| Q)$</div>
+        <p>Sum all terms:</p>
+        <div class="math-block">
+          $$D_{KL}(P \| Q) = 0.0547 - 0.0446 + 0.0376 + 0 - 0.0268 + 0 \approx 0.0209 \text{ nats}$$
+        </div>
+
+        <div class="we-step">Interpret</div>
+        <p>$D_{KL} \approx 0.021$ nats. This is a relatively small divergence — the model $Q$ is a reasonable approximation to $P$. The largest contributor is "small up" days (0.0547), where $Q$ underestimates the probability (0.25 vs true 0.30). The model thinks small up-moves are less common than they are.</p>
+
+        <div class="we-answer">
+          <strong>Note on asymmetry:</strong> if you computed $D_{KL}(Q \| P)$ instead, you would get a different number. Try it: the asymmetry comes from the fact that $Q$ assigns equal probability (0.25) to small and medium up-moves, while $P$ weights them 0.30 vs 0.20. Minimising $D_{KL}(P \| Q)$ (as MLE does) penalises the model for missing mass where $P$ is high. Minimising $D_{KL}(Q \| P)$ penalises the model for placing mass where $P$ is low. They solve different problems.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · MLE for a Gaussian Model</span>
+        <span class="we-badge">🇮🇳 Fitting NIFTY Daily Returns</span>
+      </div>
+      <div class="we-body">
+        <p>Suppose we model NIFTY daily log-returns as $v_i \sim \mathcal{N}(\mu, \sigma^2)$, i.e. $P_\theta(v) = \mathcal{N}(v;\,\mu,\,\sigma^2)$ where $\theta = (\mu, \sigma^2)$. We observe $N$ returns $v_1, \ldots, v_N$. Find the MLE for $\theta$.</p>
+
+        <div class="we-step">Step 1 — Write the log-likelihood</div>
+        <p>Since samples are i.i.d., the joint log-likelihood is the sum of individual log-likelihoods:</p>
+        <div class="math-block">
+          $$\hat{\ell}(\theta) = \sum_{i=1}^N \log \mathcal{N}(v_i;\,\mu,\,\sigma^2) = -\frac{N}{2}\log(2\pi\sigma^2) - \frac{1}{2\sigma^2}\sum_{i=1}^N (v_i - \mu)^2$$
+        </div>
+
+        <div class="we-step">Step 2 — Maximise over $\mu$</div>
+        <p>Differentiate with respect to $\mu$ and set to zero:</p>
+        <div class="math-block">
+          $$\frac{\partial \hat{\ell}}{\partial \mu} = \frac{1}{\sigma^2}\sum_{i=1}^N(v_i - \mu) = 0 \;\implies\; \hat{\mu} = \frac{1}{N}\sum_{i=1}^N v_i = \bar{v}$$
+        </div>
+
+        <div class="we-step">Step 3 — Maximise over $\sigma^2$</div>
+        <div class="math-block">
+          $$\frac{\partial \hat{\ell}}{\partial \sigma^2} = -\frac{N}{2\sigma^2} + \frac{1}{2\sigma^4}\sum_{i=1}^N(v_i-\mu)^2 = 0 \;\implies\; \hat{\sigma}^2 = \frac{1}{N}\sum_{i=1}^N(v_i - \bar{v})^2$$
+        </div>
+
+        <div class="we-answer">
+          <strong>The MLE for a Gaussian model is the sample mean and sample variance.</strong> This is not a coincidence or a definition — it is the principled result of minimising KL divergence between the true distribution and the Gaussian family. Every time a quant fits a normal distribution to historical NIFTY returns using sample statistics, they are performing MLE, whether they label it that way or not. The resulting model is the closest Gaussian (in KL divergence) to whatever the true distribution actually is.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The framework is now complete for the unsupervised case. Chapter 4 takes this further — into the supervised setting, where we estimate $P_\theta(y|x)$ rather than $P_\theta(v)$ — and derives the MLE estimators for the canonical models: linear regression, logistic regression, and beyond. The tools are all here. Chapter 4 puts them to work.
+    </p>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 03</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch03 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A NIFTY analyst fits a Gaussian model to daily returns using maximum likelihood. She then claims she is "minimising the distance between her model and the true return distribution." Which distance measure is she implicitly minimising?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Euclidean distance between mean and variance estimates.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>Total variation distance between the fitted and empirical distributions.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>KL divergence $D_{KL}(P_{\text{true}} \| P_\theta)$ from the true distribution to the model.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>KL divergence $D_{KL}(P_\theta \| P_{\text{true}})$ from the model to the true distribution.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C.</strong><br/><br/>
+          As the derivation showed, minimising $D_{KL}(P_{\text{true}} \| P_\theta)$ over $\theta$ drops the entropy term (constant in $\theta$) and reduces to maximising $\mathbb{E}_{P_{\text{true}}}[\log P_\theta(v)]$, which by the LLN is approximated by the sample log-likelihood $\frac{1}{N}\sum_i \log P_\theta(v_i)$. MLE therefore minimises $D_{KL}(P_{\text{true}} \| P_\theta)$ — the divergence measured from the true distribution to the model.<br/><br/>
+          Option D is the reverse direction — $D_{KL}(P_\theta \| P_{\text{true}})$ — which is a different quantity and corresponds to a different estimator (the moment-matching or M-projection). The direction matters: $D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$ in general.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch03 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A model $Q$ assigns probability $Q(x) = 0$ to an outcome $x$ that the true distribution $P$ assigns $P(x) = 0.05$. What happens to $D_{KL}(P \| Q)$?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$D_{KL}(P \| Q) = 0$ — a rare event doesn't affect the divergence significantly.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>$D_{KL}(P \| Q)$ increases by exactly 0.05 nats.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>$D_{KL}(P \| Q) = +\infty$ — a model assigning zero probability to a possible event has infinite divergence from the truth.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$D_{KL}(P \| Q)$ is undefined — the divergence cannot be computed when $Q(x) = 0$.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The KL divergence term for this outcome is $P(x)\log\frac{P(x)}{Q(x)} = 0.05 \times \log\frac{0.05}{0}$. Since $\log(a/0) = +\infty$ for any $a > 0$, this single term drives the entire divergence to $+\infty$.<br/><br/>
+          This is not a technical nuisance — it has deep practical meaning. A model that assigns zero probability to something that actually happens is infinitely wrong. It has been caught in a category error: declaring something impossible that the world regularly produces. In ML terms, such a model will assign $\log P_\theta(v_i) = -\infty$ to any observation $v_i$ in the zero-probability region, making the log-likelihood $-\infty$. This is why models must have support everywhere the data might live — a Gaussian model is often used precisely because it assigns non-zero probability to all of $\mathbb{R}$, making $D_{KL}$ finite even if large.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch03 / q03</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          Two Zomato delivery time models are being compared. $P$ = true distribution: $P(fast) = 0.6$, $P(slow) = 0.4$. Model $Q$: $Q(fast) = 0.5$, $Q(slow) = 0.5$. Model $R$: $R(fast) = 0.6$, $R(slow) = 0.4$. What are $D_{KL}(P \| Q)$ and $D_{KL}(P \| R)$? Which model would MLE select?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$D_{KL}(P\|Q) \approx 0.020$, $D_{KL}(P\|R) = 0.020$. Both models are equally good.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>$D_{KL}(P\|Q) \approx 0.020$, $D_{KL}(P\|R) = 0$. MLE selects Model $R$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>$D_{KL}(P\|Q) = 0$, $D_{KL}(P\|R) \approx 0.020$. MLE selects Model $Q$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Both divergences are positive since no model can perfectly represent the true distribution.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          $D_{KL}(P \| Q) = 0.6\log\frac{0.6}{0.5} + 0.4\log\frac{0.4}{0.5} = 0.6\log(1.2) + 0.4\log(0.8)$<br/>
+          $= 0.6 \times 0.1823 + 0.4 \times (-0.2231) = 0.1094 - 0.0893 = 0.0201$ nats.<br/><br/>
+          $D_{KL}(P \| R) = 0.6\log\frac{0.6}{0.6} + 0.4\log\frac{0.4}{0.4} = 0.6 \times 0 + 0.4 \times 0 = 0$.<br/><br/>
+          Model $R$ is exactly equal to $P$, so its KL divergence from $P$ is zero. MLE will select $R$, because $R$ assigns the highest probability to data drawn from $P$. Option D is wrong: when a model exactly matches the true distribution, $D_{KL} = 0$. The KL divergence is zero if and only if $P = Q$ everywhere.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch03 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A quant fits a linear regression model to NIFTY returns using squared error loss. A colleague says "you're assuming Gaussian noise." The quant replies "I'm just minimising prediction error, I haven't assumed anything probabilistic." Who is right, and why?
+        </p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>The quant is right — squared error is a purely computational choice with no probabilistic interpretation.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>The colleague is right — squared error loss only makes sense if you explicitly assume Gaussian noise.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The colleague is right in a precise sense: minimising squared error is equivalent to MLE under a Gaussian noise model, whether or not the quant intended this. The assumption is implicit, not optional.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Both are right — probabilistic and computational interpretations are completely separate and never interact.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          As the derivation showed: if $P_\theta(y|x) = \mathcal{N}(y; h_\theta(x), I)$, then maximising the conditional log-likelihood reduces exactly to minimising $\sum_i (y_i - h_\theta(x_i))^2$. The converse is also true: if you are minimising squared error, you are — whether knowingly or not — finding the MLE under a Gaussian noise assumption.<br/><br/>
+          The quant's model has an implicit probabilistic interpretation. The Gaussian assumption has consequences: it implies residuals should be symmetric, homoscedastic (constant variance), and have light tails. For NIFTY returns, all three are violated. The model is not wrong to use — squared error is often a reasonable starting point — but the quant should know what they are assuming, because those assumptions determine when and how the model will fail. Implicit assumptions are the most dangerous kind.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 03</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">
+        Q1–3 test direct computation. Q4–7 require you to connect entropy, KL divergence, and MLE. Q8–10 are harder — they ask you to reason carefully about when the equivalences hold, break, or generalise.
+      </p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">
+            Compute the entropy $H(P)$ for the following distributions: (a) Uniform over 4 outcomes. (b) $P = (0.9, 0.1)$. (c) $P = (0.25, 0.25, 0.25, 0.25)$. Which has the highest entropy? Explain why in one sentence.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">
+            Let $P = (0.5, 0.3, 0.2)$ and $Q = (0.4, 0.4, 0.2)$. Compute $D_{KL}(P \| Q)$ and $D_{KL}(Q \| P)$. Verify that they are not equal and state which outcome drives the larger difference.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">
+            You observe 5 NIFTY daily log-returns: $\{0.4\%, -0.2\%, 0.8\%, -0.5\%, 0.1\%\}$. Assuming $P_\theta(v) = \mathcal{N}(\mu, \sigma^2)$, compute the MLE estimates $\hat{\mu}$ and $\hat{\sigma}^2$. Then write out the log-likelihood value at the MLE.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">
+            Show from first principles that $H(P) \leq \log k$ for any distribution over $k$ outcomes, with equality when $P$ is uniform. (Hint: use the fact that $D_{KL}(P \| U) \geq 0$ where $U$ is the uniform distribution, and expand the KL divergence.)
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">
+            Explain the following claim: "Minimising cross-entropy $H(P, Q)$ over $Q$ is equivalent to minimising KL divergence $D_{KL}(P \| Q)$ over $Q$." Is this always true? State the condition under which the two objectives are identical.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">
+            A classification model outputs probabilities $P_\theta(y|x)$ for $y \in \{0,1\}$. Show that minimising the cross-entropy loss $-\frac{1}{N}\sum_i [y_i \log P_\theta(1|x_i) + (1-y_i)\log P_\theta(0|x_i)]$ is equivalent to MLE for the Bernoulli model $P_\theta(y|x) = P_\theta(1|x)^y (1-P_\theta(1|x))^{1-y}$. This is logistic regression in disguise.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">
+            Suppose you fit a Laplace distribution $P_\theta(v) = \frac{1}{2b}\exp(-|v-\mu|/b)$ to NIFTY returns using MLE instead of a Gaussian. What loss function does this correspond to in ERM? Why might this be more appropriate for financial returns than squared error? What assumption about the noise structure does it imply?
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">
+            The derivation of KL $\to$ MLE used the LLN to approximate $\mathbb{E}_{P_v}[\log P_\theta(v)]$ by $\frac{1}{N}\sum_i \log P_\theta(v_i)$. This approximation requires i.i.d. samples. Describe two specific scenarios in financial data where this i.i.d. assumption fails, and explain qualitatively how MLE is affected when it does.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">
+            The KL divergence $D_{KL}(P \| Q)$ is not a metric — it violates the symmetry axiom and the triangle inequality. Propose a symmetrised version of KL divergence and show it satisfies symmetry. Then explain why the original asymmetric KL is used in ML despite not being a metric, while your symmetrised version is not used for MLE.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">
+            Consider the minimum KL divergence estimator $\theta^* = \arg\min_\theta D_{KL}(P_{\text{true}} \| P_\theta)$ when the true distribution $P_{\text{true}}$ is <em>not</em> in the parametric family $\{P_\theta\}$ — i.e., there is no $\theta$ such that $P_\theta = P_{\text{true}}$. What does $\theta^*$ converge to in this case? Is the resulting estimator still useful? This is the concept of model misspecification — discuss using a concrete example from financial modelling.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch2.html" class="ch-nav-btn">← The Learning Machine</a>
+    <a href="ML_M_Ch4.html" class="ch-nav-btn primary">Next: Maximum Likelihood — Let the Data Speak →</a>
+  </div>
+
+</main>
+</div><!-- end layout -->
+
+<script>
+const correctMsgs = [
+  "🎯 KL divergence minimised. Entropy of your wrong answers: 0.",
+  "✨ Maximum likelihood achieved on this question.",
+  "🏆 The log-likelihood of that answer is exactly zero. Perfect.",
+  "🔥 Cross-entropy between your answer and the truth: also zero.",
+  "💡 Your surprisal at being right should be very low by now.",
+  "🎓 The information gain from this answer: substantial.",
+  "📈 That answer has zero divergence from the correct distribution.",
+  "🧮 MLE would select this answer with probability 1.",
+  "⚡ Fisher information is maximised. Nicely done.",
+  "🌟 Entropy of the correct answers is 0. You've found it.",
+  "💎 The Gaussian noise assumption holds for this result.",
+  "🚀 Log-likelihood at maximum. Carry on."
+];
+
+const wrongMsgs = [
+  "🌀 Non-zero KL divergence detected between your answer and reality.",
+  "📐 The log-likelihood of that answer is quite negative.",
+  "📉 Model misspecification. Your hypothesis class needs expanding.",
+  "🏦 Surprisal: high. This outcome has low probability under the correct model.",
+  "😰 Cross-entropy too high. Revisit the derivation.",
+  "🤔 The entropy of this question is non-zero. Try again.",
+  "📊 $D_{KL}$(your answer $\\|$ correct answer) $= +\\infty$. One of you assigns zero probability.",
+  "🎰 That was a sample from the wrong distribution. Back to Bayes."
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
