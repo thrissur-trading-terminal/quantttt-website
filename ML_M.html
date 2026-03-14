@@ -178,15 +178,15 @@ footer { background: var(--navy); padding: 2.5rem 5%; display: flex; justify-con
       <div class="meta-key">Chapters</div>
     </div>
     <div class="meta-item">
-      <div class="meta-val">4 <span style="font-size:1rem;font-weight:400;color:var(--green);">Live</span></div>
-      <div class="meta-key">Available Now</div>
+      <div class="meta-val">8 <span style="font-size:1rem;font-weight:400;color:var(--green);">Live</span></div>
+      <div class="meta-key">All Chapters</div>
     </div>
     <div class="meta-item">
-      <div class="meta-val">16<span>+</span></div>
+      <div class="meta-val">32<span>+</span></div>
       <div class="meta-key">MCQ Problems</div>
     </div>
     <div class="meta-item">
-      <div class="meta-val">40<span>+</span></div>
+      <div class="meta-val">80<span>+</span></div>
       <div class="meta-key">Terminal Questions</div>
     </div>
     <div class="meta-item">
@@ -292,16 +292,16 @@ footer { background: var(--navy); padding: 2.5rem 5%; display: flex; justify-con
       <div class="ch-num-badge">04</div>
       <div class="ch-body">
         <div class="ch-row1">
-          <span class="ch-title">Markov Chains — Stationarity, Return Times, and Hidden Sequences</span>
+          <span class="ch-title">Maximum Likelihood — Let the Data Speak</span>
           <span class="ch-badge badge-live">● Live</span>
         </div>
-        <div class="ch-desc">Stationary distributions and their uniqueness, the return time formula $\pi_j = 1/m_j$, the Gambler's Ruin, mean time in transient states via the fundamental matrix, Hidden Markov Models with the Forward and Viterbi algorithms, and branching processes with extinction probabilities.</div>
+        <div class="ch-desc">Density estimation for the Bayes classifier, MLE for Gaussian and discrete models with full derivations, the multimodal problem, Gaussian Mixture Models as universal approximators, and why mixture MLE has no closed form.</div>
         <div class="ch-tags">
-          <span class="ch-tag">Stationary Distribution</span>
-          <span class="ch-tag">HMM</span>
-          <span class="ch-tag">Viterbi</span>
-          <span class="ch-tag">Branching Processes</span>
-          <span class="ch-tag">Gambler's Ruin</span>
+          <span class="ch-tag">MLE</span>
+          <span class="ch-tag">Density Estimation</span>
+          <span class="ch-tag">GMM</span>
+          <span class="ch-tag">Lagrangian</span>
+          <span class="ch-tag">Multimodal Data</span>
         </div>
       </div>
       <div class="ch-right">
@@ -310,90 +310,96 @@ footer { background: var(--navy); padding: 2.5rem 5%; display: flex; justify-con
       </div>
     </a>
 
-    <!-- Ch 5 — LOCKED -->
-    <div class="ch-item locked">
+    <!-- Ch 5 — LIVE -->
+    <a href="ML_M_Ch5.html" class="ch-item live">
       <div class="ch-num-badge">05</div>
       <div class="ch-body">
         <div class="ch-row1">
           <span class="ch-title">Hidden Variables, Prior Beliefs, and the EM Algorithm</span>
-          <span class="ch-badge badge-soon">Coming Soon</span>
+          <span class="ch-badge badge-live">● Live</span>
         </div>
-        <div class="ch-desc">MAP estimation and the role of priors, mixture models, the EM algorithm as coordinate ascent on the ELBO, convergence guarantees and practical pitfalls.</div>
+        <div class="ch-desc">Latent variable models, the ELBO derived via Jensen's inequality, KL gap and tightness condition, the EM algorithm with convergence proof, responsibilities for GMMs, Bayesian estimation, MAP with conjugate priors, and the Beta-Bernoulli example.</div>
         <div class="ch-tags">
-          <span class="ch-tag">MAP</span>
           <span class="ch-tag">EM Algorithm</span>
-          <span class="ch-tag">Mixture Models</span>
           <span class="ch-tag">ELBO</span>
+          <span class="ch-tag">Latent Variables</span>
+          <span class="ch-tag">MAP Estimation</span>
+          <span class="ch-tag">Conjugate Priors</span>
         </div>
       </div>
       <div class="ch-right">
         <span class="ch-mcq">4 MCQ · 10 Terminal</span>
-        <span class="ch-lock">🔒</span>
+        <span class="ch-arrow">→</span>
       </div>
-    </div>
+    </a>
 
-    <!-- Ch 6 — LOCKED -->
-    <div class="ch-item locked">
+    <!-- Ch 6 — LIVE -->
+    <a href="ML_M_Ch6.html" class="ch-item live">
       <div class="ch-num-badge">06</div>
       <div class="ch-body">
         <div class="ch-row1">
-          <span class="ch-title">Linear Models and the Bias-Variance Tradeoff</span>
-          <span class="ch-badge badge-soon">Coming Soon</span>
+          <span class="ch-title">Non-parametric Density Estimation</span>
+          <span class="ch-badge badge-live">● Live</span>
         </div>
-        <div class="ch-desc">The linear family of models and why they matter, bias-variance decomposition of generalisation error, overfitting and underfitting — with a running NIFTY options example throughout.</div>
+        <div class="ch-desc">The $k/nV$ counting argument derived from scratch, Parzen windows with hypercube and Gaussian kernels, KNN density estimation with adaptive neighbourhoods, and the KNN classifier derived as the Bayes classifier with non-parametric density estimates.</div>
         <div class="ch-tags">
-          <span class="ch-tag">Bias-Variance</span>
-          <span class="ch-tag">Linear Models</span>
-          <span class="ch-tag">Generalisation Error</span>
+          <span class="ch-tag">Parzen Windows</span>
+          <span class="ch-tag">KNN</span>
+          <span class="ch-tag">Kernel Density</span>
+          <span class="ch-tag">Adaptive Neighbourhood</span>
+          <span class="ch-tag">Bayes Classifier</span>
         </div>
       </div>
       <div class="ch-right">
         <span class="ch-mcq">4 MCQ · 10 Terminal</span>
-        <span class="ch-lock">🔒</span>
+        <span class="ch-arrow">→</span>
       </div>
-    </div>
+    </a>
 
-    <!-- Ch 7 — LOCKED -->
-    <div class="ch-item locked">
+    <!-- Ch 7 — LIVE -->
+    <a href="ML_M_Ch7.html" class="ch-item live">
       <div class="ch-num-badge">07</div>
       <div class="ch-body">
         <div class="ch-row1">
-          <span class="ch-title">Regularisation — Taming the Overfit</span>
-          <span class="ch-badge badge-soon">Coming Soon</span>
+          <span class="ch-title">Linear Models, Generalisation, and the Bias-Variance Tradeoff</span>
+          <span class="ch-badge badge-live">● Live</span>
         </div>
-        <div class="ch-desc">Ridge and Lasso as MAP estimation, the geometry of regularisation, support vector machines and the maximum margin principle, the kernel trick.</div>
+        <div class="ch-desc">ERM ↔ MLE equivalence, linear regression closed form $(X^\top X)^{-1}X^\top y$, generalised linear models with basis functions, logistic regression and softmax, train-test generalisation, and the full bias-variance-noise decomposition derived from scratch.</div>
         <div class="ch-tags">
-          <span class="ch-tag">Ridge · Lasso</span>
-          <span class="ch-tag">SVM</span>
-          <span class="ch-tag">Kernel Methods</span>
+          <span class="ch-tag">Linear Regression</span>
+          <span class="ch-tag">Logistic Regression</span>
+          <span class="ch-tag">Softmax</span>
+          <span class="ch-tag">Bias-Variance</span>
+          <span class="ch-tag">Generalisation</span>
         </div>
       </div>
       <div class="ch-right">
         <span class="ch-mcq">4 MCQ · 10 Terminal</span>
-        <span class="ch-lock">🔒</span>
+        <span class="ch-arrow">→</span>
       </div>
-    </div>
+    </a>
 
-    <!-- Ch 8 — LOCKED -->
-    <div class="ch-item locked">
+    <!-- Ch 8 — LIVE -->
+    <a href="ML_M_Ch8.html" class="ch-item live">
       <div class="ch-num-badge">08</div>
       <div class="ch-body">
         <div class="ch-row1">
-          <span class="ch-title">From Margins to Neurons</span>
-          <span class="ch-badge badge-soon">Coming Soon</span>
+          <span class="ch-title">Regularisation, SVMs, and the Kernel Trick</span>
+          <span class="ch-badge badge-live">● Live</span>
         </div>
-        <div class="ch-desc">The bridge from SVMs to neural networks, universal approximation, backpropagation derived from the chain rule, gradient descent and its variants — and where the real difficulty lies.</div>
+        <div class="ch-desc">Regularised ERM with L1/L2 penalties, Ridge and Lasso as MAP estimation with Gaussian/Laplace priors, max-margin classifiers, KKT conditions and support vectors, soft-margin SVM, and the kernel trick with Mercer's theorem.</div>
         <div class="ch-tags">
-          <span class="ch-tag">Neural Networks</span>
-          <span class="ch-tag">Backpropagation</span>
-          <span class="ch-tag">Gradient Descent</span>
+          <span class="ch-tag">Ridge · Lasso</span>
+          <span class="ch-tag">SVM</span>
+          <span class="ch-tag">KKT Conditions</span>
+          <span class="ch-tag">Kernel Trick</span>
         </div>
       </div>
       <div class="ch-right">
         <span class="ch-mcq">4 MCQ · 10 Terminal</span>
-        <span class="ch-lock">🔒</span>
+        <span class="ch-arrow">→</span>
       </div>
-    </div>
+    </a>
 
   </div><!-- end ch-list -->
 
