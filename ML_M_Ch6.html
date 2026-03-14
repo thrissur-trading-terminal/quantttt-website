@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Non-parametric Density Estimation · quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-f{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;font-style:italic;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.derivation{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.deriv-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.deriv-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.deriv-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.deriv-body{padding:1.5rem;background:var(--white);}
+.deriv-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.deriv-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.deriv-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.deriv-result strong{color:var(--green);}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.col-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;}
+.col-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.col-card p{font-size:0.88rem;line-height:1.7;color:#2a2a3e;margin-bottom:0.7rem;}
+.col-card p:last-child{margin-bottom:0;}
+@media(max-width:650px){.two-col{grid-template-columns:1fr;}}
+
+.compare-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.88rem;}
+.compare-table th{background:var(--navy);color:white;padding:0.65rem 1rem;text-align:left;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;}
+.compare-table td{padding:0.65rem 1rem;border-bottom:1px solid var(--border);color:#2a2a3e;line-height:1.6;}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table tr:nth-child(even) td{background:var(--off);}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.cliffhanger{background:var(--navy);border-radius:12px;padding:1.8rem 2rem;margin:2.5rem 0;text-align:center;}
+.cliffhanger-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.8rem;}
+.cliffhanger p{font-size:0.95rem;color:rgba(255,255,255,0.75);line-height:1.75;max-width:580px;margin:0 auto;}
+.cliffhanger strong{color:var(--orange2);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Non-parametric Density Estimation</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:75%"></div></div>
+      <span class="tb-progress-label">6 / 8</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html"><div class="si-num">1</div>What Is Learning?<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html"><div class="si-num">2</div>The Learning Machine<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch3.html"><div class="si-num">3</div>Empirical Risk and the Likelihood Game<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch4.html"><div class="si-num">4</div>Maximum Likelihood — Let the Data Speak<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch5.html"><div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="ML_M_Ch6.html"><div class="si-num">6</div>Non-parametric Density Estimation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">7</div>Linear Models and the Bias-Variance Tradeoff<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">8</div>Regularisation, SVMs, and the Kernel Trick<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Intermediate</span>
+      <span class="ch-num">Chapter 06 of 08 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Non-parametric<br/>Density Estimation</h1>
+    <p class="chapter-subtitle">Every chapter so far has assumed a parametric family — Gaussian, Bernoulli, mixture of Gaussians. What if you refuse to make that assumption? What if you let the data itself determine the shape of the density, with no model imposed? This chapter builds the answer from a single counting argument.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Abandoning the Parametric Assumption</h3>
+
+    <p>
+      Chapters 3 through 5 all operated within the parametric framework: choose a model family $\{P_\theta\}$, then find the best $\theta$ by MLE, MAP, or EM. The assumption that the true distribution belongs to your chosen family is always implicit — and always potentially wrong.
+    </p>
+
+    <p>
+      Non-parametric density estimation makes no such assumption. Given data $D = \{x_1, \ldots, x_n\}$ drawn i.i.d. from an unknown $P_x$, we want to estimate $P_x(x)$ at any query point $x$ — directly from the data, with no parametric model in between. The data determines the shape.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of the difference this way. A parametric estimator says: "I believe the data is Gaussian. Let me find the best Gaussian." A non-parametric estimator says: "I make no assumption about the shape. I'll estimate the density at any point $x$ by counting how many data points are near $x$." The first approach can be very efficient when the assumption is right. The second is more flexible but requires more data to achieve the same accuracy. The bias-variance tradeoff again, in a new form.
+    </div>
+
+    <h3>The Fundamental Counting Argument</h3>
+
+    <p>
+      The core idea of all non-parametric density estimation is elegant and elementary. Fix a region $R$ in the input space around the query point $x$. Let $P$ be the probability that a randomly drawn data point falls within $R$:
+    </p>
+
+    <div class="math-block">
+      $$P = \int_R P_x(x)\, dx$$
+    </div>
+
+    <p>
+      Now suppose we have $n$ data points drawn i.i.d. from $P_x$. Whether each point falls in $R$ is a Bernoulli trial with success probability $P$. If $k$ points fall in $R$, the MLE for $P$ is simply the empirical frequency:
+    </p>
+
+    <div class="math-block">
+      $$\hat{P} = \frac{k}{n}$$
+    </div>
+
+    <p>
+      So we have $\frac{k}{n} \approx \int_R P_x(x)\, dx$. If $R$ is small enough that $P_x(x)$ is approximately constant within $R$ — a reasonable assumption for a sufficiently small region — then:
+    </p>
+
+    <div class="math-block">
+      $$\int_R P_x(x)\, dx \approx P_x(x) \cdot V$$
+    </div>
+
+    <p>
+      where $V$ is the volume of region $R$. Combining these two approximations gives the fundamental non-parametric density estimate:
+    </p>
+
+    <div class="math-block">
+      $$\boxed{P_x(x) \approx \frac{k}{n \cdot V}}$$
+    </div>
+
+    <p>
+      Density at $x$ $\approx$ fraction of data points near $x$, divided by the volume of the neighbourhood. This single formula is the foundation of every non-parametric density estimator.
+    </p>
+
+    <div class="callout callout-intuition">
+      The formula $P_x(x) = k/(nV)$ has a beautiful physical interpretation. Imagine dropping $n$ marbles randomly onto the floor according to distribution $P_x$. To estimate the density at a point $x$, draw a circle of area $V$ around $x$ and count how many marbles landed inside ($k$). The density estimate is $k/(nV)$ — the number of marbles per unit area near $x$. More marbles in the region means higher density. Larger region means less resolution but more stable estimates.
+    </div>
+
+    <h3>Two Strategies: Fix $V$ or Fix $k$</h3>
+
+    <p>
+      The formula $P_x(x) = k/(nV)$ has two free quantities: $k$ (the count) and $V$ (the volume). We can only choose one — the other is determined by the data. This gives rise to two families of non-parametric estimators:
+    </p>
+
+    <table class="compare-table">
+      <tr><th>Strategy</th><th>Fix</th><th>Determine</th><th>Method</th></tr>
+      <tr><td><strong>Parzen Windows</strong></td><td>$V$ (volume of region)</td><td>$k$ (count points inside)</td><td>Fix a window, count neighbours</td></tr>
+      <tr><td><strong>K-Nearest Neighbours</strong></td><td>$k$ (number of neighbours)</td><td>$V$ (grow until $k$ points inside)</td><td>Fix count, grow neighbourhood</td></tr>
+    </table>
+
+    <p>
+      Both give density estimates via the same formula. They differ in what they hold fixed and what they let the data determine.
+    </p>
+
+    <h3>Parzen Window Estimation</h3>
+
+    <p>
+      Fix a region $R$ of volume $V$ centred at the query point $x$, and count how many of the $n$ training points fall inside. The simplest choice: a $d$-dimensional hypercube with side length $h$, giving $V = h^d$.
+    </p>
+
+    <p>
+      To count the points inside, define the <strong>window function</strong>:
+    </p>
+
+    <div class="math-block">
+      $$\phi(u) = \begin{cases} 1 & \text{if } |u_j| \leq \frac{1}{2} \quad \text{for all } j = 1, \ldots, d \\ 0 & \text{otherwise} \end{cases}$$
+    </div>
+
+    <p>
+      Then $\phi\!\left(\frac{x - x_i}{h}\right) = 1$ if and only if $x_i$ is within the hypercube of side $h$ centred at $x$. Summing over all training points gives $k = \sum_i \phi\!\left(\frac{x-x_i}{h}\right)$. The Parzen density estimate is:
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>Parzen window density estimate</strong> at query point $x$ is:
+      $$P_x(x) = \frac{1}{n \cdot h^d} \sum_{i=1}^n \phi\!\left(\frac{x - x_i}{h}\right)$$
+      where $h$ is the bandwidth (side length of the hypercube) and $\phi$ is the window function. The bandwidth $h$ is the single hyperparameter controlling the smoothness of the estimate.
+    </div>
+
+    <div class="callout callout-warning">
+      The hypercube window function is discontinuous — the density estimate jumps sharply at the boundaries of each hypercube. This produces density estimates that are not smooth and can have artefacts. The fix: replace the hard indicator $\phi$ with a smooth kernel. The <strong>Gaussian kernel</strong> $\phi(u) = \exp(-\|u - u_0\|_2^2)$ assigns soft weights to each training point based on its distance from $x$, producing smooth density estimates. This is the basis of <strong>Kernel Density Estimation (KDE)</strong> — widely used in practice for everything from financial return distributions to election modelling.
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📊 Bandwidth Too Small ($h \to 0$)</div>
+        <p>Each training point gets its own spike. The estimate perfectly reproduces the training data but has no generalisability — it cannot estimate density between training points. Variance is very high.</p>
+        <p>Analogous to memorising training data in ERM. Zero training error, useless generalisation.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">📊 Bandwidth Too Large ($h \to \infty$)</div>
+        <p>Every training point contributes to every query point. The estimate becomes flat — approximately uniform — regardless of the true shape. Bias is very high.</p>
+        <p>Analogous to a hypothesis class that is too simple. The model cannot capture the true structure.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      KDE is used routinely in Indian quantitative finance. When a derivatives desk at a Mumbai prop firm wants to estimate the implied return distribution from 3 years of NIFTY daily returns, they run KDE with a Gaussian kernel — not a parametric Gaussian fit. The KDE faithfully captures the fat tails, the negative skew, and the volatility clustering that a single Gaussian would miss. The bandwidth is typically chosen by cross-validation or Silverman's rule of thumb: $h = 1.06\,\hat{\sigma}\, n^{-1/5}$.
+    </div>
+
+    <h3>K-Nearest Neighbour Density Estimation</h3>
+
+    <p>
+      The second strategy fixes $k$ and grows the volume $V$ until it captures exactly $k$ training points. At a dense region of the input space, $V$ will be small — many points are nearby. At a sparse region, $V$ will be large — you need to look further to find $k$ neighbours.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>$k$-nearest neighbour (KNN) density estimate</strong> at query point $x$ is:
+      $$P_x(x) = \frac{k}{n \cdot V(x)}$$
+      where $V(x)$ is the volume of the smallest ball around $x$ that contains exactly $k$ training points. Unlike Parzen windows, the neighbourhood size $V(x)$ <em>adapts to the local data density</em> — it contracts in dense regions and expands in sparse ones.
+    </div>
+
+    <p>
+      This adaptive neighbourhood is the key advantage of KNN over Parzen windows. In regions where the data is dense, KNN uses a small neighbourhood and achieves high resolution. In sparse regions, it automatically widens the neighbourhood to maintain a stable estimate. Parzen windows use the same $V$ everywhere, which can lead to over-smoothing in dense regions or under-smoothing in sparse ones.
+    </p>
+
+    <div class="callout callout-intuition">
+      KNN density estimation has a simple mental model. To estimate the density at $x$: find the $k$ nearest training points. The density is inversely proportional to how far you had to look. If your 10 nearest neighbours are all within 0.1 units of $x$, the density is high. If you have to go 5 units away to find your 10th neighbour, the density is low. The density estimate adapts automatically — no bandwidth to tune, just one hyperparameter $k$.
+    </div>
+
+    <h3>The KNN Classifier: Bayes Optimal from Counting</h3>
+
+    <p>
+      The most important application of KNN density estimation in this course is what happens when you use it to implement the Bayes classifier. This is where the chapter's payoff lives.
+    </p>
+
+    <p>
+      Consider $m$-class classification. Given a query point $x$, place a volume $V$ around it and capture $k$ training points. Let $k_i$ be the number of those $k$ points with class label $i$. Then $\sum_{i=1}^m k_i = k$.
+    </p>
+
+    <!-- DERIVATION: KNN classifier from density estimates -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · KNN Classifier as the Bayes Classifier</span>
+        <span class="deriv-badge">Non-parametric → Plug into Bayes</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Step 1 — KNN density estimate for joint distribution</div>
+        <p>Using the KNN estimate $P_x(x) = k/(nV)$, the joint density of $x$ and class label $y_i$ is estimated by counting only points of class $i$ within the volume:</p>
+        <div class="math-block">
+          $$\hat{P}(x, y_i) = \frac{k_i}{n \cdot V}$$
+        </div>
+
+        <div class="deriv-step">Step 2 — Estimate the posterior $P(y_i | x)$ via Bayes' theorem</div>
+        <div class="math-block">
+          $$\hat{P}(y_i \mid x) = \frac{\hat{P}(x, y_i)}{\sum_{j=1}^m \hat{P}(x, y_j)} = \frac{k_i / (nV)}{\sum_{j=1}^m k_j / (nV)} = \frac{k_i}{\sum_j k_j} = \frac{k_i}{k}$$
+        </div>
+        <p>The $nV$ factors cancel. The posterior estimate is simply the fraction of the $k$ nearest neighbours that belong to class $i$.</p>
+
+        <div class="deriv-step">Step 3 — Apply the Bayes classifier rule</div>
+        <p>The Bayes classifier predicts the class with the highest posterior:</p>
+        <div class="math-block">
+          $$h_B(x) = \underset{i}{\arg\max}\; \hat{P}(y_i \mid x) = \underset{i}{\arg\max}\; \frac{k_i}{k} = \underset{i}{\arg\max}\; k_i$$
+        </div>
+
+        <div class="deriv-result">
+          <strong>The KNN classifier predicts the class that has the most representatives among the $k$ nearest neighbours.</strong> This is the Bayes classifier with KNN density estimates. The derivation shows that KNN classification is not a heuristic — it is a principled implementation of the optimal Bayes decision rule using non-parametric density estimation. Majority vote among neighbours is Bayes-optimal density estimation in disguise.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      This derivation should feel satisfying. We started in Chapter 2 with the abstract Bayes classifier $h_B(x) = \arg\max_y P(y|x)$ — theoretically optimal, practically useless without knowing $P_{XY}$. We then spent chapters 4 and 5 learning to estimate $P_{XY}$ parametrically. Now KNN gives us a completely different path to the same destination: estimate $P(y|x)$ non-parametrically by counting class representatives among neighbours, then apply Bayes. The KNN classifier is the Bayes classifier all the way down.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Parzen Window Density Estimate on NIFTY Returns</span>
+        <span class="we-badge">🇮🇳 Bandwidth Selection</span>
+      </div>
+      <div class="we-body">
+        <p>Five daily NIFTY log-returns: $D = \{-1.5\%, -0.5\%, 0.0\%, +0.8\%, +1.6\%\}$. We want to estimate the density at $x = 0.5\%$ using a 1D Parzen window with bandwidth $h$.</p>
+
+        <div class="we-step">Case A — Bandwidth $h = 1.0\%$</div>
+        <p>The window at $x = 0.5\%$ covers $[0.5 - 0.5, 0.5 + 0.5] = [0.0\%, 1.0\%]$. Count points in this interval: $\{0.0\%, 0.8\%\}$ — two points. $k = 2$, $V = h = 1.0\%$.</p>
+        <div class="math-block">
+          $$\hat{P}_x(0.5\%) = \frac{k}{n \cdot h} = \frac{2}{5 \times 1.0\%} = 0.40 \text{ per percent}$$
+        </div>
+
+        <div class="we-step">Case B — Bandwidth $h = 0.4\%$</div>
+        <p>The window covers $[0.3\%, 0.7\%]$. Count points: $\{0.8\%\}$ is outside, $\{0.0\%\}$ is outside. Only nothing falls in — $k = 0$. Wait: $0.5\%$ is the query, not a data point. Check: $-1.5$, $-0.5$, $0.0$, $+0.8$, $+1.6$. None in $[0.3, 0.7]$. $k = 0$.</p>
+        <div class="math-block">
+          $$\hat{P}_x(0.5\%) = \frac{0}{5 \times 0.4\%} = 0$$
+        </div>
+        <p>The narrow window finds no data and estimates zero density — clearly wrong. The true density is positive in this region.</p>
+
+        <div class="we-step">Case C — Bandwidth $h = 3.0\%$</div>
+        <p>The window covers $[-1.0\%, 2.0\%]$. Count points: $\{-0.5\%, 0.0\%, +0.8\%, +1.6\%\}$ — four points. $k = 4$.</p>
+        <div class="math-block">
+          $$\hat{P}_x(0.5\%) = \frac{4}{5 \times 3.0\%} = 0.267 \text{ per percent}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Key lesson:</strong> The optimal bandwidth is neither too small (zero estimates, high variance) nor too large (flat estimates, high bias). Case A with $h = 1.0\%$ gives the most sensible estimate for this small dataset. In practice, bandwidth is chosen by cross-validation: hold out each point, estimate the density at it using the remaining points, and choose $h$ to maximise the held-out log-likelihood.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · KNN Classifier for NIFTY Market State</span>
+        <span class="we-badge">🇮🇳 3-Class Classification · $K = 3$</span>
+      </div>
+      <div class="we-body">
+        <p>We classify today's market state as Bullish (B), Neutral (N), or Bearish (R) based on two features: $x_1$ = INDIA VIX level, $x_2$ = NIFTY 5-day momentum (%). Six labelled training days:</p>
+        <div class="math-block">
+          $$\begin{array}{lccc}
+          \text{Day} & x_1\text{ (VIX)} & x_2\text{ (Mom\%)} & \text{Label} \\
+          \hline
+          1 & 13 & +2.1 & B \\
+          2 & 14 & +1.5 & B \\
+          3 & 16 & -0.3 & N \\
+          4 & 17 & -0.8 & N \\
+          5 & 24 & -2.5 & R \\
+          6 & 26 & -3.1 & R
+          \end{array}$$
+        </div>
+
+        <div class="we-step">Query point: VIX = 15, Momentum = +0.6%</div>
+        <p>Compute Euclidean distances from query $(15, 0.6)$ to all training points (normalise features to same scale first — here VIX range $\approx 13$, Mom range $\approx 5.2$, so distances are approximate):</p>
+        <div class="math-block">
+          $$d_1 = \sqrt{(15-13)^2 + (0.6-2.1)^2} = \sqrt{4 + 2.25} = 2.50$$
+          $$d_2 = \sqrt{(15-14)^2 + (0.6-1.5)^2} = \sqrt{1 + 0.81} = 1.35$$
+          $$d_3 = \sqrt{(15-16)^2 + (0.6+0.3)^2} = \sqrt{1 + 0.81} = 1.35$$
+          $$d_4 = \sqrt{(15-17)^2 + (0.6+0.8)^2} = \sqrt{4 + 1.96} = 2.44$$
+          $$d_5 = \sqrt{(15-24)^2 + (0.6+2.5)^2} = \sqrt{81 + 9.61} = 9.52$$
+          $$d_6 = \sqrt{(15-26)^2 + (0.6+3.1)^2} = \sqrt{121 + 13.69} = 11.60$$
+        </div>
+
+        <div class="we-step">$K = 3$ nearest neighbours</div>
+        <p>Sorted distances: Day 2 (1.35, B), Day 3 (1.35, N), Day 4 (2.44, N). The 3 nearest neighbours are: B, N, N.</p>
+        <div class="math-block">
+          $$k_B = 1, \quad k_N = 2, \quad k_R = 0$$
+          $$\hat{P}(B|x) = 1/3, \quad \hat{P}(N|x) = 2/3, \quad \hat{P}(R|x) = 0$$
+        </div>
+
+        <div class="we-answer">
+          <strong>KNN prediction: Neutral.</strong> With VIX at 15 (mildly elevated) and positive momentum of +0.6%, the market state is classified as Neutral — sitting between the clearly Bullish (low VIX, high momentum) and clearly Bearish (high VIX, negative momentum) training examples. The 2/3 posterior probability for Neutral reflects genuine uncertainty — the query point is in a transitional zone between regimes.
+        </div>
+      </div>
+    </div>
+
+    <div class="cliffhanger">
+      <div class="cliffhanger-label">Chapter 7 Preview</div>
+      <p>Non-parametric methods are powerful but have a fundamental limitation: they have <strong>no learnable parameters</strong>. At test time, every prediction requires searching through all training data — computation scales with $n$. They also scale poorly with dimension $d$ (the curse of dimensionality). Chapter 7 returns to parametric models — but now with a complete understanding of what we want from them: linear regression, logistic regression, and the bias-variance tradeoff made fully rigorous.</p>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 06</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch06 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In a Parzen window estimator, increasing the bandwidth $h$ has what effect on the density estimate?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Decreases bias and increases variance — more data points contribute, improving accuracy.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Increases bias and decreases variance — the estimate becomes smoother and flatter, averaging over more data but losing local structure.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Has no effect on bias or variance — only the number of training points matters.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Increases both bias and variance — more data in the window makes the estimate less stable.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Increasing $h$ makes the window larger, so more training points contribute to the estimate at every query point. This reduces variance — the estimate is more stable because it averages over more data. But it also increases bias: by averaging over a wider region, the estimate loses the ability to capture local structure. In the extreme $h \to \infty$, every training point contributes equally everywhere, producing a flat estimate regardless of the true shape — maximum bias, minimum variance.<br/><br/>
+          This is the bias-variance tradeoff in density estimation, directly analogous to hypothesis class complexity in ERM. The bandwidth $h$ is the "complexity parameter" of the Parzen estimator.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch06 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The KNN density estimator uses an <strong>adaptive neighbourhood</strong> — the volume $V(x)$ changes with the query point $x$. What is the key advantage of this over a fixed-volume Parzen window?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>KNN is always more accurate than Parzen windows regardless of the data distribution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>KNN requires no hyperparameter, while Parzen windows require choosing $h$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>KNN automatically uses finer resolution in dense regions and coarser resolution in sparse regions, giving better estimates in both. A fixed-volume window can over-smooth dense regions or give zero estimates in sparse ones.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>KNN is computationally cheaper because it only looks at $k$ points instead of all $n$.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The adaptive neighbourhood is KNN's defining advantage. In a dense region, the $k$ nearest neighbours are very close to the query point — $V(x)$ is small, giving a fine-resolution estimate. In a sparse region, you need to search further — $V(x)$ is large, giving a smoother but stable estimate. A fixed-bandwidth Parzen window cannot do this: it either has $h$ too small (zero estimates in sparse regions) or $h$ too large (over-smoothed estimates in dense regions).<br/><br/>
+          Option B is wrong: KNN still has a hyperparameter — $k$. Choosing $k$ is analogous to choosing $h$. Option D is wrong: KNN still requires computing distances to all $n$ training points to find the $k$ nearest ones.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch06 / q03</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A KNN classifier with $K = 5$ is applied to a query point. Among the 5 nearest neighbours: 3 have label "NIFTY Up" and 2 have label "NIFTY Down". What does the classifier predict, and what are the <strong>posterior probability estimates</strong> for each class?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Predicts Up with $P(\text{Up}|x) = 1.0$, $P(\text{Down}|x) = 0.0$ — majority vote means the minority is ignored.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>Predicts Up with $P(\text{Up}|x) = 3/5 = 0.6$ and $P(\text{Down}|x) = 2/5 = 0.4$ — the posterior is the fraction of neighbours in each class.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Predicts Up with $P(\text{Up}|x) = 0.5$ — with $K = 5$, the classifier always outputs 50-50 for binary problems.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Cannot determine the posterior without knowing the volume $V$ of the neighbourhood.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          From the derivation: $\hat{P}(y_i|x) = k_i/k$. With $k_{\text{Up}} = 3$ and $k_{\text{Down}} = 2$ out of $k = 5$ total neighbours, the posterior estimates are $\hat{P}(\text{Up}|x) = 3/5 = 0.6$ and $\hat{P}(\text{Down}|x) = 2/5 = 0.4$. The classifier predicts the class with the higher posterior — Up — which corresponds to simple majority vote.<br/><br/>
+          Option A is wrong: the minority class is not ignored — it contributes to the posterior estimate. The KNN posterior gives calibrated probability estimates, not just hard labels. Option D is wrong: the volume $V$ cancels in the ratio $k_i/(nV) \div \sum_j k_j/(nV) = k_i/k$. The volume is irrelevant for classification.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch06 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A quant wants to estimate the density of NIFTY daily returns at the point $x = -3\%$ (a large down day) using 500 historical observations. She has very few observations near $-3\%$. Which non-parametric approach is most appropriate, and why?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Parzen window with small bandwidth — to avoid contaminating the estimate with returns far from $-3\%$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Parzen window with large bandwidth — since there are few observations, a wider window captures more data.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>KNN with an appropriate $k$ — the adaptive neighbourhood automatically expands to find $k$ neighbours in the sparse tail region, giving a stable estimate without manual bandwidth tuning for this specific region.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Neither — non-parametric methods cannot estimate density in tail regions with few observations.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The tail region around $-3\%$ is sparse — few observations, so any fixed-bandwidth Parzen window has a problem. Small $h$: finds almost no points, gives an estimate near zero (and zero for some query points). Large $h$: captures many returns far from $-3\%$, contaminating the tail estimate with the bulk of the return distribution.<br/><br/>
+          KNN handles this naturally: it grows the neighbourhood until it finds $k$ points, however far that requires searching. The resulting $V$ is large in the tail (reflecting sparsity), and the estimate $k/(nV)$ is correspondingly small — correctly indicating low tail density. The adaptive neighbourhood is exactly what's needed in regions with non-uniform data density, which describes financial return distributions perfectly: dense near the mean, sparse in the tails.<br/><br/>
+          Option D is wrong: non-parametric methods can estimate tail density; they just need enough total data and the right approach.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 06</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Q1–3 are direct applications of the $k/(nV)$ formula. Q4–7 require connecting non-parametric estimation to the broader framework. Q8–10 explore the limits of non-parametric methods.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">Given 8 data points in 1D: $\{-3, -1, 0, 0.5, 1, 2, 4, 6\}$. Estimate the density at $x = 1$ using a Parzen window with $h = 2$. Show your counting of $k$ and compute $\hat{P}_x(1)$.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">For the same dataset, estimate the density at $x = 1$ using KNN with $k = 3$. Find the 3 nearest neighbours, compute $V$ (the volume of the smallest interval containing them), and apply the formula $P_x(x) = k/(nV)$.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">A KNN classifier with $K = 7$ is applied to a query point. Among the 7 nearest neighbours: 4 labelled "Up", 2 "Down", 1 "Flat". (a) What does the classifier predict? (b) What are $\hat{P}(\text{Up}|x)$, $\hat{P}(\text{Down}|x)$, $\hat{P}(\text{Flat}|x)$? (c) Verify that the posteriors sum to 1.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">The Parzen window estimate can be written as $\hat{P}_x(x) = \frac{1}{n}\sum_i \frac{1}{h^d}\phi\!\left(\frac{x-x_i}{h}\right)$. Show that this is a valid density estimate: it integrates to 1 over all of $\mathbb{R}^d$, provided $\phi$ itself integrates to 1 (i.e. $\phi$ is a proper density). What does this tell you about the choice of Gaussian vs hypercube window functions?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">Explain the "curse of dimensionality" for non-parametric density estimation. If $n = 1000$ data points are spread uniformly over $[0,1]^d$, how many points fall in a hypercube of side $h = 0.1$ centred at a query point? Compute this for $d = 1, 2, 5, 10$ and comment on what happens to $k$ and therefore the density estimate as $d$ grows.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">The KNN density estimate $P_x(x) = k/(nV(x))$ is not a proper density — it does not integrate to 1 over all of $\mathbb{R}^d$. Show this by constructing a simple 1D example and computing the integral numerically. Does this limitation affect the KNN classifier? Why or why not?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">The KNN classifier with $K = 1$ is called the "1-NN classifier". Show that the 1-NN classifier achieves zero training error on any dataset with no duplicate points. Then explain why this makes the 1-NN classifier highly susceptible to overfitting, and what the relationship is between $K$ and the bias-variance tradeoff in KNN classification.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">Compare Parzen window density estimation to MLE with a Gaussian model for NIFTY daily returns. Under what conditions would you prefer the non-parametric approach? Under what conditions would the parametric MLE be better? Your answer should address: sample size, tail behaviour, computational cost, and interpretability.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">Silverman's rule of thumb for 1D KDE bandwidth selection is $h^* = 1.06\,\hat{\sigma}\, n^{-1/5}$, where $\hat{\sigma}$ is the sample standard deviation. (a) Show that this bandwidth goes to zero as $n \to \infty$ — meaning the Parzen estimator becomes consistent. (b) Explain intuitively why the optimal bandwidth decreases with more data. (c) Compute $h^*$ for $n = 250$ NIFTY daily returns with $\hat{\sigma} = 1.2\%$.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">The Cover-Hart theorem states that as $n \to \infty$, the 1-NN classifier achieves error rate at most $2 \times R^*$ where $R^*$ is the Bayes error. This means the 1-NN classifier is within a factor of 2 of optimal, using no assumptions about $P_{XY}$. (a) Argue intuitively why the nearest neighbour approaches the query point as $n \to \infty$. (b) Explain why the 1-NN error approaches $2R^*$ rather than $R^*$ — what is the source of the factor of 2? (c) What does this result say about the value of parametric assumptions when data is plentiful?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch5.html" class="ch-nav-btn">← Hidden Variables and EM</a>
+    <a href="ML_M_Ch7.html" class="ch-nav-btn primary">Next: Linear Models and the Bias-Variance Tradeoff →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎯 $k/(nV)$ computed correctly. Density confirmed.",
+  "✨ Nearest neighbours found. Posterior is exact.",
+  "🏆 Bandwidth chosen wisely. Bias-variance balance achieved.",
+  "🔥 KNN posterior sums to 1. Normalisation satisfied.",
+  "💡 Adaptive neighbourhood found the sparse region correctly.",
+  "🎓 Volume computed. Density estimate is non-parametric perfection.",
+  "📈 The counting argument holds. Answer verified.",
+  "🧮 Fixed $k$, grew $V$. Classic KNN. Correct.",
+  "⚡ Non-parametric and right. No model assumed, truth found.",
+  "🌟 Bayes classifier implemented via counting. Elegant and correct."
+];
+const wrongMsgs = [
+  "🌀 Count $k$ again — some points may be inside or outside the window.",
+  "📐 Volume $V$ computation needs revisiting.",
+  "📉 Bandwidth too extreme — check whether estimate makes sense.",
+  "🏦 Posterior probabilities should sum to 1. Check your $k_i$.",
+  "😰 The neighbourhood needs to contain exactly $k$ points.",
+  "🤔 Fixed $V$ or fixed $k$? The two strategies differ.",
+  "📊 The density formula is $k/(nV)$ — both $n$ and $V$ matter.",
+  "🎰 That was a parametric assumption sneaking in. Stay non-parametric."
+];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done) return;
+  if(!state[qid]) state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done) return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  const expl=document.getElementById(qid+'expl');
+  expl.classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    const m=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(30,158,94,0.1)';
+    feedback.style.color='var(--green)';
+    feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';
+    btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter) o.classList.add('correct');});
+    const m=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(220,38,38,0.06)';
+    feedback.style.color='#dc2626';
+    feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';
+    btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement) renderMathInElement(document.getElementById(qid+'expl'));
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+});
+</script>
+</body>
+</html>

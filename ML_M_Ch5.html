@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hidden Variables, Prior Beliefs, and the EM Algorithm · quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-f{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;font-style:italic;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.derivation{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.deriv-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.deriv-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.deriv-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.deriv-body{padding:1.5rem;background:var(--white);}
+.deriv-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.deriv-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.deriv-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.deriv-result strong{color:var(--green);}
+
+.proof-block{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.proof-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.proof-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.proof-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.proof-body{padding:1.5rem;background:var(--white);}
+.proof-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.proof-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.proof-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.proof-result strong{color:var(--green);}
+.proof-qed{text-align:right;font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--navy);margin-top:1rem;font-weight:700;}
+
+.algo-block{border:1.5px solid rgba(45,37,96,0.2);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.algo-header{background:rgba(45,37,96,0.06);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(45,37,96,0.12);}
+.algo-title{font-family:'DM Mono',monospace;font-size:0.78rem;font-weight:700;color:var(--navy);letter-spacing:0.05em;}
+.algo-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.algo-body{padding:1.4rem 1.6rem;background:var(--white);}
+.algo-line{font-family:'DM Mono',monospace;font-size:0.84rem;color:#2a2a3e;line-height:2;display:flex;align-items:baseline;gap:0.8rem;}
+.algo-kw{color:var(--navy);font-weight:700;}
+.algo-comment{color:var(--muted);font-size:0.75rem;}
+.algo-indent{padding-left:2rem;}
+.algo-indent2{padding-left:4rem;}
+.algo-sep{border:none;border-top:1px dashed var(--border);margin:0.8rem 0;}
+.algo-step-label{font-family:'DM Mono',monospace;font-size:0.68rem;background:var(--orange);color:white;padding:0.15rem 0.5rem;border-radius:3px;margin-left:0.5rem;font-weight:600;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.col-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;}
+.col-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.col-card p{font-size:0.88rem;line-height:1.7;color:#2a2a3e;margin-bottom:0.7rem;}
+.col-card p:last-child{margin-bottom:0;}
+@media(max-width:650px){.two-col{grid-template-columns:1fr;}}
+
+.compare-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.88rem;}
+.compare-table th{background:var(--navy);color:white;padding:0.65rem 1rem;text-align:left;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;}
+.compare-table td{padding:0.65rem 1rem;border-bottom:1px solid var(--border);color:#2a2a3e;line-height:1.6;}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table tr:nth-child(even) td{background:var(--off);}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.cliffhanger{background:var(--navy);border-radius:12px;padding:1.8rem 2rem;margin:2.5rem 0;text-align:center;}
+.cliffhanger-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.8rem;}
+.cliffhanger p{font-size:0.95rem;color:rgba(255,255,255,0.75);line-height:1.75;max-width:580px;margin:0 auto;}
+.cliffhanger strong{color:var(--orange2);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Hidden Variables and EM</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:62.5%"></div></div>
+      <span class="tb-progress-label">5 / 8</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html"><div class="si-num">1</div>What Is Learning?<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html"><div class="si-num">2</div>The Learning Machine<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch3.html"><div class="si-num">3</div>Empirical Risk and the Likelihood Game<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch4.html"><div class="si-num">4</div>Maximum Likelihood — Let the Data Speak<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="ML_M_Ch5.html"><div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">6</div>Non-parametric Density Estimation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">7</div>Linear Models and the Bias-Variance Tradeoff<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">8</div>Regularisation — Taming the Overfit<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Intermediate</span>
+      <span class="ch-num">Chapter 05 of 08 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Hidden Variables,<br/>Prior Beliefs, and the EM Algorithm</h1>
+    <p class="chapter-subtitle">Some structure in data is visible. Some is not. The EM algorithm is the principled answer to learning from data when half of what matters is hidden — and MAP estimation is the answer to learning when you have more prior knowledge than data.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The Problem Left Open</h3>
+
+    <p>
+      Chapter 4 ended with an obstacle. The GMM log-likelihood $\ell(\theta) = \frac{1}{N}\sum_i \log \sum_j \alpha_j \mathcal{N}(v_i; \mu_j, \Sigma_j)$ has no closed-form maximiser because the log sits outside a sum, coupling all components together. The root cause: we don't know which component generated each data point. That hidden information — the component assignment $z_i$ — is the <strong>latent variable</strong>.
+    </p>
+
+    <p>
+      This chapter builds the machinery to handle it, and introduces a second related problem: what happens when MLE gives catastrophically overconfident answers because $N$ is too small? Both problems share the same cure — bringing in information beyond what the data alone provides.
+    </p>
+
+    <h3>Latent Variable Models</h3>
+
+    <p>
+      A latent variable model posits that data is generated by a two-stage process. First, a hidden variable $Z$ is drawn from some distribution. Then, the observed data $x$ is drawn from a distribution conditioned on $Z$. The data $x$ is what we see. The variable $Z$ is never observed.
+    </p>
+
+    <div class="callout callout-definition">
+      A <strong>latent variable model</strong> defines the marginal distribution of observed data by summing (or integrating) over all possible values of the hidden variable $Z$:
+      $$P_\theta(x) = \sum_z P_\theta(z) \cdot P_\theta(x \mid z) \qquad \text{(discrete } Z\text{)}$$
+      $$P_\theta(x) = \int P_\theta(z) \cdot P_\theta(x \mid z)\, dz \qquad \text{(continuous } Z\text{)}$$
+      The full parameter set $\theta$ governs both the prior over $Z$ and the conditional distribution of $x$ given $Z$.
+    </div>
+
+    <p>
+      For a GMM specifically: $Z \in \{1, \ldots, M\}$ is the component label, $P_\theta(Z=j) = \alpha_j$ is the mixing weight, and $P_\theta(x \mid Z=j) = \mathcal{N}(x; \mu_j, \Sigma_j)$ is the component density. Marginalising over $Z$ recovers the mixture:
+      $$P_\theta(x) = \sum_{j=1}^M \alpha_j\, \mathcal{N}(x; \mu_j, \Sigma_j)$$
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏥 Hospital Patients</div>
+        <p>$Z$ = disease subtype (never directly observed on admission). $x$ = symptom profile. The mixture over undiagnosed subtypes generates the observed symptom distribution. Knowing $Z$ would make diagnosis straightforward — the whole problem is that we don't.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Returns</div>
+        <p>$Z$ = market regime: calm trending, normal, high-volatility crash. $x$ = daily log-return. The regime is never announced — you infer it from returns. A 3-component GMM models the three regimes, with $\alpha_j$ as the prior probability of each regime.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      A latent variable model says: "the data has hidden structure. There is a variable $Z$ that, if known, would make the problem tractable — each conditional $P_\theta(x|Z=j)$ is a simple Gaussian. The difficulty is that $Z$ is unobserved. We must reason about it probabilistically rather than directly." The whole point of EM is to reason about $Z$ even though we can never observe it.
+    </div>
+
+    <h3>The ELBO: A Tractable Lower Bound</h3>
+
+    <p>
+      The MLE objective $\ell(\theta) = \log P_\theta(x) = \log \sum_z P_\theta(x,z)$ has the log outside the sum — intractable. The key move: introduce an arbitrary distribution $q(z)$ over the latent variable, and use it to construct a lower bound that is tractable.
+    </p>
+
+    <!-- ELBO DERIVATION -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · The Evidence Lower Bound (ELBO)</span>
+        <span class="deriv-badge">Jensen's Inequality · Log is Concave</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Step 1 — Multiply and divide by q(z)</div>
+        <p>For any distribution $q(z)$ with the same support as $P_\theta(z|x)$:</p>
+        <div class="math-block">
+          $$\ell(\theta) = \log \sum_z P_\theta(x,z) = \log \sum_z q(z)\cdot\frac{P_\theta(x,z)}{q(z)} = \log\, \mathbb{E}_{q(z)}\!\left[\frac{P_\theta(x,z)}{q(z)}\right]$$
+        </div>
+
+        <div class="deriv-step">Step 2 — Apply Jensen's inequality</div>
+        <p>Since $\log$ is concave, Jensen's inequality gives $\log\,\mathbb{E}[Y] \geq \mathbb{E}[\log Y]$:</p>
+        <div class="math-block">
+          $$\ell(\theta) = \log\,\mathbb{E}_{q(z)}\!\left[\frac{P_\theta(x,z)}{q(z)}\right] \;\geq\; \mathbb{E}_{q(z)}\!\left[\log\frac{P_\theta(x,z)}{q(z)}\right] \;\triangleq\; F_\theta(q)$$
+        </div>
+
+        <div class="deriv-step">Step 3 — Interpret the ELBO</div>
+        <p>Expand $F_\theta(q)$ into two interpretable terms:</p>
+        <div class="math-block">
+          $$F_\theta(q) = \underbrace{\mathbb{E}_{q(z)}[\log P_\theta(x,z)]}_{\text{expected complete-data log-likelihood}} - \underbrace{\mathbb{E}_{q(z)}[\log q(z)]}_{-H(q)\;\text{(entropy of }q\text{)}}$$
+        </div>
+        <p>The first term measures how well $\theta$ explains both observed and latent data. The second term is the entropy of $q$ — it rewards spreading probability mass, preventing $q$ from collapsing to a point.</p>
+
+        <div class="deriv-result">
+          <strong>$F_\theta(q) \leq \ell(\theta)$ for all $q$.</strong> The ELBO is a lower bound on the log-likelihood for any choice of $q$. Crucially, $F_\theta(q)$ has a "sum inside the log" structure — the expectation is over $q$, and $\log P_\theta(x,z)$ is the complete-data log-likelihood which decomposes cleanly for a GMM. The bound is <em>computable</em>.
+        </div>
+      </div>
+    </div>
+
+    <h3>When Is the ELBO Tight?</h3>
+
+    <p>
+      The gap between the ELBO and the true log-likelihood has an exact expression — and it tells us precisely what $q$ to choose.
+    </p>
+
+    <!-- KL GAP DERIVATION -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · The ELBO Gap is KL Divergence</span>
+        <span class="deriv-badge">Tightness Condition</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Compute the gap</div>
+        <div class="math-block">
+          $$\ell(\theta) - F_\theta(q) = \log P_\theta(x) - \mathbb{E}_{q(z)}\!\left[\log\frac{P_\theta(x,z)}{q(z)}\right]$$
+        </div>
+        <p>Use $P_\theta(x,z) = P_\theta(x)\cdot P_\theta(z|x)$ to split the joint:</p>
+        <div class="math-block">
+          $$= \log P_\theta(x) - \mathbb{E}_{q(z)}\!\left[\log P_\theta(x) + \log P_\theta(z|x) - \log q(z)\right]$$
+          $$= \mathbb{E}_{q(z)}\!\left[\log\frac{q(z)}{P_\theta(z|x)}\right] = D_{KL}\!\left(q(z)\,\|\,P_\theta(z|x)\right)$$
+        </div>
+
+        <div class="deriv-step">Tightness condition</div>
+        <p>Since $D_{KL}(q \| P_\theta(z|x)) \geq 0$ with equality if and only if $q = P_\theta(z|x)$:</p>
+        <div class="math-block">
+          $$\ell(\theta) - F_\theta(q) = D_{KL}(q(z)\,\|\,P_\theta(z|x)) \geq 0$$
+        </div>
+
+        <div class="deriv-result">
+          <strong>The ELBO is tight — equals $\ell(\theta)$ — when $q^*(z) = P_\theta(z|x)$.</strong> The optimal $q$ is the true posterior over the latent variable given the observed data and current parameters. This is the definition of the E-step.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      The gap between $\ell(\theta)$ and $F_\theta(q)$ is the KL divergence between our guess $q(z)$ and the true posterior $P_\theta(z|x)$. When our guess is perfect — when we know exactly the posterior distribution over the hidden variable — the lower bound is tight and equals the log-likelihood. The EM algorithm alternates between making $q$ as good as possible (E-step, which sets the gap to zero) and making $\theta$ as good as possible (M-step, which increases the ELBO).
+    </div>
+
+    <h3>The EM Algorithm</h3>
+
+    <p>
+      Instead of maximising $\ell(\theta)$ directly (intractable), EM maximises the ELBO $F_\theta(q)$ jointly over both $\theta$ and $q$ by alternating between two tractable steps.
+    </p>
+
+    <!-- EM ALGORITHM BLOCK -->
+    <div class="algo-block">
+      <div class="algo-header">
+        <span class="algo-title">Algorithm · Expectation-Maximisation (EM)</span>
+        <span class="algo-badge">Monotone · Convergence Guaranteed</span>
+      </div>
+      <div class="algo-body">
+        <div class="algo-line"><span class="algo-kw">Initialise</span> <span>$\theta^0$ (random or heuristic)</span></div>
+        <div class="algo-sep"></div>
+        <div class="algo-line"><span class="algo-kw">For</span> <span>$t = 1, 2, \ldots$ until convergence <span class="algo-kw">do</span></span></div>
+        <div class="algo-line algo-indent">
+          <span><span class="algo-step-label">E-STEP</span> &nbsp; Set $q^{t+1}(z) = P_{\theta^t}(z \mid x)$</span>
+          <span class="algo-comment">← posterior over latent variables</span>
+        </div>
+        <div class="algo-line algo-indent2">
+          <span>Compute $F_\theta(q^{t+1}) = \mathbb{E}_{q^{t+1}(z)}\!\left[\log\dfrac{P_\theta(x,z)}{q^{t+1}(z)}\right]$</span>
+        </div>
+        <div class="algo-sep"></div>
+        <div class="algo-line algo-indent">
+          <span><span class="algo-step-label">M-STEP</span> &nbsp; Find $\theta^{t+1} = \underset{\theta}{\arg\max}\; F_\theta(q^{t+1})$</span>
+          <span class="algo-comment">← maximise ELBO over $\theta$</span>
+        </div>
+        <div class="algo-sep"></div>
+        <div class="algo-line"><span class="algo-kw">End For</span></div>
+      </div>
+    </div>
+
+    <p>
+      The E-step sets $q$ to the true posterior under current $\theta^t$, making the ELBO tight: $F_{\theta^t}(q^{t+1}) = \ell(\theta^t)$. The M-step then finds the $\theta$ that maximises this tight bound, necessarily increasing $\ell(\theta)$ or leaving it unchanged. Every iteration the log-likelihood is non-decreasing.
+    </p>
+
+    <h3>Convergence Proof</h3>
+
+    <!-- PROOF BLOCK -->
+    <div class="proof-block">
+      <div class="proof-header">
+        <span class="proof-title">Theorem · EM Never Decreases the Log-Likelihood</span>
+        <span class="proof-badge">$\ell(\theta^{t+1}) \geq \ell(\theta^t)$</span>
+      </div>
+      <div class="proof-body">
+        <div class="proof-step">Step 1 — E-step makes the ELBO tight</div>
+        <p>The E-step sets $q^{t+1}(z) = P_{\theta^t}(z|x)$. By the tightness condition derived above, the KL gap vanishes:</p>
+        <div class="math-block">
+          $$\ell(\theta^t) = F_{\theta^t}(q^{t+1})$$
+        </div>
+
+        <div class="proof-step">Step 2 — M-step increases the ELBO</div>
+        <p>The M-step finds $\theta^{t+1} = \arg\max_\theta F_\theta(q^{t+1})$, so by definition of the argmax:</p>
+        <div class="math-block">
+          $$F_{\theta^{t+1}}(q^{t+1}) \;\geq\; F_{\theta^t}(q^{t+1}) = \ell(\theta^t)$$
+        </div>
+
+        <div class="proof-step">Step 3 — ELBO is always a lower bound on the likelihood</div>
+        <p>By Jensen's inequality, the ELBO is a lower bound on the true log-likelihood for any $q$:</p>
+        <div class="math-block">
+          $$\ell(\theta^{t+1}) \;\geq\; F_{\theta^{t+1}}(q^{t+1})$$
+        </div>
+
+        <div class="proof-step">Step 4 — Chain the inequalities</div>
+        <div class="math-block">
+          $$\ell(\theta^{t+1}) \;\geq\; F_{\theta^{t+1}}(q^{t+1}) \;\geq\; F_{\theta^t}(q^{t+1}) \;=\; \ell(\theta^t)$$
+        </div>
+
+        <div class="proof-result">
+          <strong>$\ell(\theta^{t+1}) \geq \ell(\theta^t)$ at every iteration.</strong> EM monotonically increases (or maintains) the log-likelihood. The proof uses nothing beyond the tightness of the ELBO at the E-step and Jensen's inequality at the M-step.
+        </div>
+        <div class="proof-qed">□</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      EM guarantees monotone increase — not convergence to the <em>global</em> maximum. The GMM log-likelihood is non-convex, riddled with local optima. EM climbs reliably from wherever it starts, but "wherever it starts" matters enormously. In practice: run EM from 10–20 random initialisations, keep the solution with highest $\ell(\theta)$. This is the standard approach in all GMM implementations (scikit-learn's GaussianMixture does exactly this with the $n\_init$ parameter).
+    </div>
+
+    <h3>EM for GMMs: The Responsibility Formula</h3>
+
+    <p>
+      The general EM framework becomes concrete and beautiful when applied to Gaussian Mixture Models.
+    </p>
+
+    <p>
+      <strong>E-step — compute responsibilities.</strong> The posterior $P_{\theta^t}(Z=j \mid x_i)$ is computed by Bayes' theorem — prior times likelihood, normalised:
+    </p>
+
+    <div class="math-block">
+      $$r_{ij}^t \;\triangleq\; P_{\theta^t}(Z=j \mid x_i) = \frac{\alpha_j^t \cdot \mathcal{N}(x_i;\,\mu_j^t,\,\Sigma_j^t)}{\displaystyle\sum_{k=1}^M \alpha_k^t \cdot \mathcal{N}(x_i;\,\mu_k^t,\,\Sigma_k^t)}$$
+    </div>
+
+    <p>
+      $r_{ij}^t$ is the <strong>responsibility</strong> of component $j$ for data point $i$ at iteration $t$. It is a soft assignment: every component has some responsibility for every data point. $\sum_j r_{ij}^t = 1$ for each $i$.
+    </p>
+
+    <p>
+      <strong>M-step — update parameters.</strong> With responsibilities fixed, the ELBO separates into $M$ independent weighted problems, each with a closed-form solution:
+    </p>
+
+    <div class="math-block">
+      $$\mu_j^{t+1} = \frac{\displaystyle\sum_{i=1}^N r_{ij}^t\, x_i}{\displaystyle\sum_{i=1}^N r_{ij}^t} \qquad \Sigma_j^{t+1} = \frac{\displaystyle\sum_{i=1}^N r_{ij}^t\,(x_i - \mu_j^{t+1})(x_i - \mu_j^{t+1})^\top}{\displaystyle\sum_{i=1}^N r_{ij}^t} \qquad \alpha_j^{t+1} = \frac{\displaystyle\sum_{i=1}^N r_{ij}^t}{N}$$
+    </div>
+
+    <p>
+      Each component's new mean is the responsibility-weighted average of all data points. Each component's new mixing weight is its average responsibility. Each component's new covariance is the responsibility-weighted scatter matrix.
+    </p>
+
+    <div class="callout callout-intuition">
+      Compare EM to k-means clustering. k-means assigns each point to exactly one cluster (hard assignment $r_{ij} \in \{0,1\}$), then recomputes centroids. EM assigns each point to every cluster with a probability (soft assignment $r_{ij} \in [0,1]$), then recomputes all parameters. EM is probabilistic k-means. As component variances $\Sigma_j \to \epsilon I$ with $\epsilon \to 0$, the soft responsibilities sharpen to hard assignments and EM for GMMs converges to the k-means algorithm exactly.
+    </div>
+
+    <h3>When MLE Fails: The Small Data Problem</h3>
+
+    <p>
+      Everything we have built so far treats $\theta$ as a fixed unknown number — a deterministic parameter to be estimated from data. This works beautifully when $N$ is large. With small $N$, MLE can be dangerously overconfident.
+    </p>
+
+    <p>
+      <strong>The canonical example:</strong> You observe $D = \{1, 1, 1, 1\}$ — four coin flips, all heads. The MLE is:
+      $$\hat{\theta}_{ML} = \frac{\text{number of heads}}{n} = \frac{4}{4} = 1$$
+    </p>
+
+    <p>
+      The MLE declares the coin is perfectly biased — every future flip will land heads. If your prior knowledge says $\theta \approx 0.5$ (a fair coin is plausible), this is a dangerously wrong answer. Four flips is not enough evidence to completely overturn that belief.
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏥 Clinical Trial</div>
+        <p>4 patients treated, all recover. MLE: the drug cures 100% of patients. No doctor would conclude this. The prior that drugs rarely cure every patient matters — you need far more data before abandoning it.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Streak</div>
+        <p>NIFTY has 5 consecutive up-days. MLE: $P(\text{up}) = 1$. No trader bets their book on this. The prior that daily returns are roughly 50-50 directionally should survive 5 observations. MLE ignores that prior entirely.</p>
+      </div>
+    </div>
+
+    <h3>Bayesian Estimation: Bringing In Prior Knowledge</h3>
+
+    <p>
+      The Bayesian fix is conceptually simple: instead of treating $\theta$ as a fixed unknown, treat it as a <strong>random variable</strong> with a distribution — the <strong>prior</strong> $P(\theta)$. The prior encodes your beliefs about $\theta$ before seeing any data. Bayes' theorem combines prior and likelihood to give the <strong>posterior</strong>:
+    </p>
+
+    <div class="math-block">
+      $$P(\theta \mid x) = \frac{P(x \mid \theta)\cdot P(\theta)}{P(x)} \;\propto\; P(x \mid \theta)\cdot P(\theta)$$
+    </div>
+
+    <p>
+      The posterior is a complete distribution over $\theta$ given the data. It is the full Bayesian answer. Two common ways to turn the posterior into a point estimate:
+    </p>
+
+    <table class="compare-table">
+      <tr><th>Estimator</th><th>Definition</th><th>When to use</th></tr>
+      <tr><td><strong>MLE</strong></td><td>$\arg\max_\theta\, P(x|\theta)$</td><td>Large $N$; no reliable prior</td></tr>
+      <tr><td><strong>MAP</strong></td><td>$\arg\max_\theta\, P(\theta|x)$</td><td>Small $N$; prior knowledge available</td></tr>
+      <tr><td><strong>Posterior mean</strong></td><td>$\mathbb{E}[\theta|x]$</td><td>Full Bayesian; minimises squared error</td></tr>
+    </table>
+
+    <h3>MAP Estimation and Conjugate Priors</h3>
+
+    <div class="callout callout-definition">
+      The <strong>Maximum A Posteriori (MAP) estimate</strong> takes the mode of the posterior:
+      $$\theta_{MAP} = \underset{\theta}{\arg\max}\; P(\theta \mid x) = \underset{\theta}{\arg\max}\;\left[\log P(x \mid \theta) + \log P(\theta)\right]$$
+      MAP = MLE + a log-prior penalty. The prior acts as a regulariser — it penalises parameter values that are implausible before seeing data.
+    </div>
+
+    <p>
+      A prior is called <strong>conjugate</strong> to a likelihood if the posterior has the same functional form as the prior — just with updated parameters. Conjugate priors make MAP computation analytically tractable and are the primary tool for Bayesian ML in practice.
+    </p>
+
+    <p>
+      <strong>The Beta-Bernoulli example.</strong> For $x \sim \text{Bernoulli}(\theta)$, the conjugate prior is the Beta distribution:
+      $$P(\theta) = \text{Beta}(\theta;\, \alpha,\, \beta) \propto \theta^{\alpha-1}(1-\theta)^{\beta-1}, \qquad \theta \in [0,1]$$
+    </p>
+
+    <p>
+      After observing $n$ flips with $S = \sum_i x_i$ heads, the posterior is:
+      $$P(\theta \mid x) \propto P(x|\theta)\cdot P(\theta) \propto \theta^{S}(1-\theta)^{n-S} \cdot \theta^{\alpha-1}(1-\theta)^{\beta-1} = \theta^{S+\alpha-1}(1-\theta)^{n-S+\beta-1}$$
+    </p>
+
+    <p>
+      This is again a Beta distribution — Beta$(S+\alpha,\, n-S+\beta)$. The MAP estimate (mode of Beta$(a,b)$ is $\frac{a-1}{a+b-2}$):
+    </p>
+
+    <div class="math-block">
+      $$\theta_{MAP} = \frac{S + \alpha - 1}{n + \alpha + \beta - 2} \qquad \text{vs} \qquad \theta_{ML} = \frac{S}{n}$$
+    </div>
+
+    <div class="callout callout-intuition">
+      The Beta prior with parameters $(\alpha, \beta)$ acts like adding $\alpha - 1$ pseudo-heads and $\beta - 1$ pseudo-tails to the dataset before any real observations. For $\alpha = \beta = 2$: the prior contributes 1 pseudo-head and 1 pseudo-tail. Four real heads + one pseudo-head + one pseudo-tail = $\theta_{MAP} = 5/6 \approx 0.83$ instead of MLE's $4/4 = 1.0$. The prior pulls the estimate back toward 0.5. With $n \to \infty$, both MAP and MLE converge — the data overwhelms the prior. With small $n$, the prior dominates. This is correct behaviour.
+    </div>
+
+    <div class="callout callout-india">
+      MAP is Bayesian shrinkage applied to every serious quant model in practice. When a new options strategy is backtested on 3 months of NSE data and shows 40% annualised returns, MLE says the expected return is 40%. MAP says: combine this with the prior belief that most strategies return 8–12% — the posterior estimate is probably closer to 15–20%. Shrinkage estimators, Stein's paradox, and James-Stein shrinkage are all manifestations of the same Bayesian principle: when data is scarce, pull estimates toward a prior. Every systematic trading firm shrinks its parameter estimates — MAP is the mathematical formalisation.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · One EM Iteration on a 2-Component GMM</span>
+        <span class="we-badge">🇮🇳 NIFTY Return Regimes</span>
+      </div>
+      <div class="we-body">
+        <p>Six daily NIFTY log-returns observed: $x = \{-1.2, -0.8, -0.5, +0.9, +1.3, +1.8\}$ (in %). We fit a 2-component GMM with initial parameters: $\alpha_1^0 = \alpha_2^0 = 0.5$, $\mu_1^0 = -0.5\%$, $\mu_2^0 = +1.0\%$, $\sigma_1 = \sigma_2 = 1.0\%$ (fixed for this example).</p>
+
+        <div class="we-step">E-Step — compute responsibilities</div>
+        <p>For each data point $x_i$, compute $r_{i1}^0 = \frac{\alpha_1^0 \mathcal{N}(x_i;\mu_1^0,\sigma^2)}{\alpha_1^0 \mathcal{N}(x_i;\mu_1^0,\sigma^2) + \alpha_2^0 \mathcal{N}(x_i;\mu_2^0,\sigma^2)}$. With equal mixing weights, this reduces to the ratio of Gaussian densities:</p>
+        <div class="math-block">
+          $$r_{i1}^0 = \frac{\exp\!\left(-\frac{(x_i - \mu_1^0)^2}{2}\right)}{\exp\!\left(-\frac{(x_i-\mu_1^0)^2}{2}\right) + \exp\!\left(-\frac{(x_i-\mu_2^0)^2}{2}\right)}$$
+        </div>
+        <div class="math-block">
+          $$\begin{array}{lcccc}
+          x_i & (x_i - \mu_1^0)^2 & (x_i - \mu_2^0)^2 & r_{i1}^0 & r_{i2}^0 \\
+          \hline
+          -1.2 & 0.49 & 4.84 & 0.979 & 0.021 \\
+          -0.8 & 0.09 & 3.24 & 0.966 & 0.034 \\
+          -0.5 & 0.00 & 2.25 & 0.919 & 0.081 \\
+          +0.9 & 2.00 & 0.01 & 0.111 & 0.889 \\
+          +1.3 & 3.24 & 0.09 & 0.034 & 0.966 \\
+          +1.8 & 5.29 & 0.64 & 0.007 & 0.993
+          \end{array}$$
+        </div>
+        <p>The three negative returns are assigned mostly to component 1 (calm/negative regime); the three positive returns are assigned mostly to component 2 (positive regime). The soft assignments reflect proximity to each component mean.</p>
+
+        <div class="we-step">M-Step — update means</div>
+        <p>Responsibility-weighted means:</p>
+        <div class="math-block">
+          $$\mu_1^1 = \frac{0.979(-1.2)+0.966(-0.8)+0.919(-0.5)+0.111(0.9)+0.034(1.3)+0.007(1.8)}{0.979+0.966+0.919+0.111+0.034+0.007}$$
+          $$= \frac{-1.175-0.773-0.460+0.100+0.044+0.013}{3.016} = \frac{-2.251}{3.016} \approx -0.746\%$$
+        </div>
+        <div class="math-block">
+          $$\mu_2^1 \approx \frac{0.021(-1.2)+0.034(-0.8)+0.081(-0.5)+0.889(0.9)+0.966(1.3)+0.993(1.8)}{2.984} \approx +1.302\%$$
+        </div>
+
+        <div class="we-answer">
+          <strong>After one iteration:</strong> The means have moved from $(-0.5\%, +1.0\%)$ toward $(-0.75\%, +1.30\%)$ — converging toward the two natural clusters in the data. The responsibilities cleanly separate the data into a low-return regime and a high-return regime. Continuing to convergence would give means close to the empirical averages of each cluster, with mixing weights reflecting the fraction of data in each regime.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · MAP vs MLE on NIFTY Direction</span>
+        <span class="we-badge">🇮🇳 Beta Prior · Small Data Regime</span>
+      </div>
+      <div class="we-body">
+        <p>Over the last 6 trading days, NIFTY closed up on 5 and down on 1. A trader wants to estimate $\theta = P(\text{NIFTY up next day})$.</p>
+
+        <div class="we-step">MLE estimate</div>
+        <div class="math-block">
+          $$\hat{\theta}_{ML} = \frac{S}{n} = \frac{5}{6} \approx 0.833$$
+        </div>
+        <p>The MLE says there is an 83% chance of an up-day tomorrow. Based on 6 observations.</p>
+
+        <div class="we-step">MAP with Beta(3, 3) prior</div>
+        <p>This prior peaks at $\theta = 0.5$ and encodes a moderate belief that the market is roughly balanced. It contributes 2 pseudo-heads and 2 pseudo-tails:</p>
+        <div class="math-block">
+          $$\theta_{MAP} = \frac{S + \alpha - 1}{n + \alpha + \beta - 2} = \frac{5 + 3 - 1}{6 + 3 + 3 - 2} = \frac{7}{10} = 0.70$$
+        </div>
+
+        <div class="we-step">MAP with Beta(2, 2) prior</div>
+        <p>A weaker prior — contributes only 1 pseudo-head and 1 pseudo-tail:</p>
+        <div class="math-block">
+          $$\theta_{MAP} = \frac{5 + 2 - 1}{6 + 2 + 2 - 2} = \frac{6}{8} = 0.75$$
+        </div>
+
+        <div class="we-step">What happens as $n$ grows?</div>
+        <p>Suppose after 100 trading days we observe 58 up-days ($S = 58$):</p>
+        <div class="math-block">
+          $$\theta_{ML} = 58/100 = 0.580 \qquad \theta_{MAP}^{\text{Beta(3,3)}} = \frac{58+2}{100+4} = 60/104 \approx 0.577$$
+        </div>
+        <p>With large $n$, MAP and MLE converge — the data overwhelms the prior.</p>
+
+        <div class="we-answer">
+          <strong>The lesson:</strong> With 6 observations, the choice of prior matters enormously. A Beta(3,3) prior pulls the estimate from 83% to 70% — a 13 percentage point difference. A quant trading on a 70% vs 83% directional probability would size positions very differently. Always ask: how much data do I actually have, and does my estimator respect that?
+        </div>
+      </div>
+    </div>
+
+    <div class="cliffhanger">
+      <div class="cliffhanger-label">Chapter 6 Preview</div>
+      <p>We have now seen two paradigms for density estimation: <strong>parametric</strong> (MLE/MAP — assume a model family, estimate parameters) and <strong>latent variable</strong> (EM — handle hidden structure within a parametric family). Chapter 6 abandons the parametric assumption entirely. What if we estimate the density at any point directly from the data, with no model family assumed — letting the data speak its own shape?</p>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 05</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch05 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the E-step of EM, what is being computed, and why does it make the ELBO <strong>exactly equal</strong> to the log-likelihood at the current $\theta^t$?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>The gradient of the ELBO with respect to $\theta$, which sets the derivative to zero and finds the optimum.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>The posterior $P_{\theta^t}(z|x)$, which sets $q^{t+1} = P_{\theta^t}(z|x)$, driving the KL gap $D_{KL}(q \| P_{\theta^t}(z|x))$ to zero and making the ELBO tight.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>The marginal likelihood $P_{\theta^t}(x)$ by summing over all latent variable values.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>A random sample of $z$ values from the prior $P_\theta(z)$, which approximates the posterior by Monte Carlo.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The E-step computes the posterior $q^{t+1}(z) = P_{\theta^t}(z|x)$. We showed that $\ell(\theta) - F_\theta(q) = D_{KL}(q(z) \| P_\theta(z|x))$. When $q = P_{\theta^t}(z|x)$, the KL divergence between $q$ and $P_{\theta^t}(z|x)$ is zero (they are equal). Therefore the gap $\ell(\theta^t) - F_{\theta^t}(q^{t+1}) = 0$, making the ELBO tight: $F_{\theta^t}(q^{t+1}) = \ell(\theta^t)$.<br/><br/>
+          Option A describes the M-step, not the E-step. Option C describes computing the marginal directly, which is what we're trying to avoid (it involves the intractable log-sum). Option D is a Monte Carlo approach (used in variational inference variants) but not standard EM.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch05 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">EM guarantees $\ell(\theta^{t+1}) \geq \ell(\theta^t)$ at every iteration. Does this mean EM <strong>always finds the global maximum</strong> of $\ell(\theta)$?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Yes — since the log-likelihood is non-decreasing and bounded above, it must converge to the global maximum.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>Yes — the ELBO is a tight lower bound, so maximising it is equivalent to maximising the log-likelihood globally.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>No — EM converges to a local maximum or saddle point. The GMM log-likelihood is non-convex, and EM only climbs from its starting point. Multiple random initialisations are needed in practice.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>No — EM can decrease the log-likelihood at certain iterations when the ELBO approximation is poor.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The convergence guarantee ($\ell(\theta^{t+1}) \geq \ell(\theta^t)$) says EM never moves downhill. But non-decreasing does not imply convergence to the global maximum — it only means EM climbs toward whatever local maximum or saddle point it can reach from its starting point. The GMM log-likelihood has many local optima: different initialisations can produce completely different fitted mixture components.<br/><br/>
+          Option A is wrong: bounded and non-decreasing guarantees convergence to a limit, but that limit may be a local maximum. Option B is wrong: the ELBO being tight at each iterate does not mean the global optimum is found. Option D is wrong: the convergence proof rigorously shows EM never decreases the log-likelihood — this is guaranteed, not approximate.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch05 / q03</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In a 2-component GMM, the current responsibilities for 4 data points are $r_{i1} = \{0.9, 0.8, 0.2, 0.1\}$ and the data is $x = \{-2, -1, +3, +4\}$. What is the <strong>M-step update for $\mu_1$</strong>?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$\mu_1^{\text{new}} = \frac{-2 + (-1)}{2} = -1.5$ — simple average of the two negative points.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$\mu_1^{\text{new}} = \frac{-2 + (-1) + 3 + 4}{4} = 1.0$ — unweighted mean of all data.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$\mu_1^{\text{new}} = \frac{0.9(-2) + 0.8(-1) + 0.2(3) + 0.1(4)}{0.9 + 0.8 + 0.2 + 0.1} = \frac{-1.8 - 0.8 + 0.6 + 0.4}{2.0} = \frac{-1.6}{2.0} = -0.8$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$\mu_1^{\text{new}} = \frac{0.9(-2) + 0.8(-1)}{0.9 + 0.8} = \frac{-2.6}{1.7} \approx -1.53$ — only points with responsibility above 0.5.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The M-step update is: $\mu_1^{\text{new}} = \frac{\sum_i r_{i1} x_i}{\sum_i r_{i1}}$. Every data point contributes to the update, weighted by its responsibility. Numerator: $0.9(-2) + 0.8(-1) + 0.2(3) + 0.1(4) = -1.8 - 0.8 + 0.6 + 0.4 = -1.6$. Denominator: $0.9 + 0.8 + 0.2 + 0.1 = 2.0$. Result: $-0.8$.<br/><br/>
+          Option A is wrong: it ignores data points with low (but nonzero) responsibility. Option D is wrong: EM uses all data points with their responsibility weights — hard thresholding is k-means, not EM. The soft assignment is the core distinction between EM and k-means.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch05 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A Bernoulli model is fit to $n = 3$ observations, all 1s. Under MLE $\hat{\theta} = 1$. Under MAP with a Beta$(2,2)$ prior, $\hat{\theta} = 3/5 = 0.6$. A colleague says "the MAP estimate is wrong because the data clearly shows $\theta = 1$." What is the best response?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>The colleague is right — the data has spoken and we must trust it. MAP adds unnecessary bias.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>MAP is only valid when the true parameter is known in advance, which it is not here.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The colleague confuses the data with the truth. Three observations are insufficient to conclude $\theta = 1$. The Beta(2,2) prior contributes 2 pseudo-observations near 0.5 — with only 3 real observations, this prior is entirely reasonable and the MAP estimate is more reliable.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Both estimates are equally valid — the choice between MLE and MAP is purely a matter of personal preference.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The colleague commits the classic small-sample error: treating the MLE as the truth because it matches the data exactly. But MLE is a statistic — a function of the data — not the true parameter. With $n = 3$ observations, the MLE has enormous variance: if the true $\theta = 0.7$, three consecutive heads would occur with probability $0.7^3 = 0.343$ — over a third of the time. The data is not conclusive.<br/><br/>
+          The Beta(2,2) prior adds one pseudo-head and one pseudo-tail, contributing the equivalent of 2 "imaginary" observations near the centre. With only 3 real observations, this is a reasonable amount of regularisation. As $n$ grows, the MAP converges to MLE and the prior becomes irrelevant — with $n = 1000$ and 1000 ones, $\theta_{MAP} \approx 1001/1003 \approx 0.998$, essentially the same as MLE = 1. Option D is wrong: the choice has concrete consequences for estimation quality and is not arbitrary.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 05</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Q1–3 are direct computations. Q4–7 ask you to connect EM and MAP to the broader framework. Q8–10 require careful reasoning about convergence, model selection, and the prior-as-regulariser connection.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">For a 2-component GMM with $\alpha_1 = 0.4$, $\mu_1 = 0$, $\sigma_1 = 1$ and $\alpha_2 = 0.6$, $\mu_2 = 3$, $\sigma_2 = 1$, compute the responsibilities $r_{i1}$ and $r_{i2}$ for data points $x = \{-0.5, 1.5, 3.5\}$. Show full working. Which component does each point most likely belong to?<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">You observe 7 NIFTY expiry outcomes: up, up, down, up, up, down, up (5 ups, 2 downs). Compute (a) the MLE for $\theta = P(\text{up})$, (b) the MAP estimate with Beta(3,3) prior, and (c) the MAP estimate with Beta(5,5) prior. Interpret how the strength of the prior affects the estimate.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">Verify numerically that the ELBO lower bound holds for the following case: single Gaussian model $P_\theta(x) = \mathcal{N}(x; \theta, 1)$ with $\theta = 0$, single observation $x = 1$, and variational distribution $q(z)$ chosen as $\mathcal{N}(z; 0.5, 0.5)$. Compute both $\ell(\theta) = \log P_\theta(x)$ and $F_\theta(q)$ and confirm $\ell(\theta) \geq F_\theta(q)$.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">Show that EM for a single-component Gaussian model (no mixture, no latent variable) reduces to computing the sample mean in a single iteration, regardless of initialisation. What does this say about the role of latent variables in EM's complexity?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">Prove that MAP estimation reduces to MLE when the prior $P(\theta)$ is uniform over all $\theta$. Then argue: is a uniform prior truly "non-informative"? What property of the uniform prior makes it problematic as a prior of ignorance?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">Explain why conjugate priors are computationally convenient by working through the Gaussian-Gaussian conjugate pair: if $x|\mu \sim \mathcal{N}(\mu, \sigma^2)$ (known $\sigma^2$) and the prior is $\mu \sim \mathcal{N}(\mu_0, \tau^2)$, show that the posterior is also Gaussian and derive the MAP estimate. Interpret the MAP estimate as a weighted average of the prior mean and the sample mean.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">Derive the M-step update formula for the mixing weights $\alpha_j$ in a GMM from scratch. Your derivation should: write out the ELBO, differentiate with respect to $\alpha_j$ subject to $\sum_j \alpha_j = 1$ using a Lagrange multiplier, and show that $\alpha_j^{\text{new}} = \frac{\sum_i r_{ij}}{N}$.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">EM is coordinate ascent on the ELBO viewed as a function of $(q, \theta)$: the E-step maximises over $q$ with $\theta$ fixed, and the M-step maximises over $\theta$ with $q$ fixed. Given this interpretation, explain why EM converges to a stationary point. What property of the ELBO makes this coordinate ascent guaranteed to converge, and what would break that guarantee?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">You are fitting a 3-component GMM to NIFTY daily returns. Propose a principled initialisation strategy that reduces the chance of poor local optima. Your answer should: (a) identify what makes a bad initialisation for a GMM on financial returns, (b) propose at least two initialisation methods (e.g. k-means++, random restarts, spectral initialisation), and (c) explain how you would choose between competing local optima after convergence.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">MAP estimation with a Gaussian prior $P(\theta) = \mathcal{N}(\theta; 0, \lambda^{-1}I)$ is equivalent to ridge regression. Derive this connection explicitly: write the MAP objective for a linear regression model $P_\theta(y|x) = \mathcal{N}(y; \theta^\top x, \sigma^2)$ with this Gaussian prior, and show it equals the ridge regression objective $\min_\theta \sum_i (y_i - \theta^\top x_i)^2 + \lambda\|\theta\|^2$. What does the regularisation parameter $\lambda$ correspond to in the Bayesian picture?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch4.html" class="ch-nav-btn">← Maximum Likelihood</a>
+    <a href="ML_M_Ch6.html" class="ch-nav-btn primary">Next: Non-parametric Density Estimation →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎯 ELBO tight. KL gap: zero. Perfect E-step.",
+  "✨ Posterior computed correctly. Responsibilities assigned.",
+  "🏆 EM iteration complete. Log-likelihood non-decreasing.",
+  "🔥 The prior and likelihood agree on your answer.",
+  "💡 MAP estimate approved. Prior and data in harmony.",
+  "🎓 Jensen's inequality applied correctly throughout.",
+  "📈 Responsibility-weighted mean converged.",
+  "🧮 The convergence proof holds for this answer.",
+  "⚡ Conjugate prior recognised. Posterior in closed form.",
+  "🌟 Beta posterior mode computed exactly. Nicely done."
+];
+const wrongMsgs = [
+  "🌀 KL gap non-zero. E-step not yet complete.",
+  "📐 The ELBO is not tight here. Check your posterior.",
+  "📉 Log-likelihood decreased — that cannot happen with EM.",
+  "🏦 Responsibility weights don't sum to 1. Recompute.",
+  "😰 The prior disagrees with this estimate. Check Beta parameters.",
+  "🤔 Hard assignment detected. EM uses soft responsibilities.",
+  "📊 The ELBO lower bound is violated here. Jensen says no.",
+  "🎰 That was sampling from the wrong posterior. Try again."
+];
+const state = {};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done) return;
+  if(!state[qid]) state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done) return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  const expl=document.getElementById(qid+'expl');
+  expl.classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    const m=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(30,158,94,0.1)';
+    feedback.style.color='var(--green)';
+    feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';
+    btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter) o.classList.add('correct');});
+    const m=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(220,38,38,0.06)';
+    feedback.style.color='#dc2626';
+    feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';
+    btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement) renderMathInElement(document.getElementById(qid+'expl'));
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+});
+</script>
+</body>
+</html>

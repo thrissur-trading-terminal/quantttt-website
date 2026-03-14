@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Linear Models, Generalisation, and the Bias-Variance Tradeoff · quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-f{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;font-style:italic;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.derivation{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.deriv-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.deriv-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.deriv-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.deriv-body{padding:1.5rem;background:var(--white);}
+.deriv-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.deriv-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.deriv-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.deriv-result strong{color:var(--green);}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.col-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;}
+.col-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.col-card p{font-size:0.88rem;line-height:1.7;color:#2a2a3e;margin-bottom:0.7rem;}
+.col-card p:last-child{margin-bottom:0;}
+@media(max-width:650px){.two-col{grid-template-columns:1fr;}}
+
+.three-box{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.box-item{background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:1.2rem;text-align:center;}
+.box-item-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;font-weight:600;}
+.box-item-val{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--navy);margin-bottom:0.3rem;}
+.box-item-desc{font-size:0.8rem;color:var(--muted);line-height:1.5;}
+.box-bias .box-item-label{color:#dc2626;}
+.box-var .box-item-label{color:var(--orange);}
+.box-noise .box-item-label{color:var(--muted);}
+@media(max-width:650px){.three-box{grid-template-columns:1fr;}}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.cliffhanger{background:var(--navy);border-radius:12px;padding:1.8rem 2rem;margin:2.5rem 0;text-align:center;}
+.cliffhanger-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.8rem;}
+.cliffhanger p{font-size:0.95rem;color:rgba(255,255,255,0.75);line-height:1.75;max-width:580px;margin:0 auto;}
+.cliffhanger strong{color:var(--orange2);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Linear Models and Bias-Variance</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:87.5%"></div></div>
+      <span class="tb-progress-label">7 / 8</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html"><div class="si-num">1</div>What Is Learning?<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html"><div class="si-num">2</div>The Learning Machine<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch3.html"><div class="si-num">3</div>Empirical Risk and the Likelihood Game<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch4.html"><div class="si-num">4</div>Maximum Likelihood — Let the Data Speak<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch5.html"><div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch6.html"><div class="si-num">6</div>Non-parametric Density Estimation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="ML_M_Ch7.html"><div class="si-num">7</div>Linear Models and the Bias-Variance Tradeoff<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">8</div>Regularisation, SVMs, and the Kernel Trick<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Intermediate</span>
+      <span class="ch-num">Chapter 07 of 08 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Linear Models, Generalisation,<br/>and the Bias-Variance Tradeoff</h1>
+    <p class="chapter-subtitle">We return to parametric models with everything we've learned. Linear regression is not a simple heuristic — it is ERM, MLE, and the Bayes-optimal predictor under one roof. And the bias-variance decomposition gives us the first rigorous answer to the question every practitioner asks: why does my model work in training and fail in deployment?</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>ERM and Distribution Estimation Are the Same Thing</h3>
+
+    <p>
+      The course has presented two seemingly different perspectives on learning. Chapter 2 framed it as ERM: minimise $\hat{R}(h) = \frac{1}{N}\sum_i L(h(x_i), y_i)$ over a hypothesis class $\mathcal{H}$. Chapters 3–5 framed it as distribution estimation: minimise $D_{KL}(P_{\text{data}} \| P_\theta)$ over a parametric family. It is time to make explicit what we have been hinting at all along: these are the same optimisation problem.
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>Equivalence of ERM and divergence minimisation.</strong> Suppose we want to estimate $P_\theta(y|x)$ — the conditional distribution of labels given inputs. Model: $P_\theta(y|x) = \mathcal{N}(y;\, h_\theta(x),\, I)$. The MLE objective is:
+      $$\theta^* = \underset{\theta}{\arg\max}\; \frac{1}{N}\sum_{i=1}^N \log P_\theta(y_i|x_i) \;\propto\; \underset{\theta}{\arg\min}\; \frac{1}{N}\sum_{i=1}^N \|y_i - h_\theta(x_i)\|_2^2$$
+      This is ERM with squared error loss. Divergence minimisation $\equiv$ ERM. The probabilistic and optimisation perspectives are one.
+    </div>
+
+    <p>
+      This equivalence is the reason we can move freely between "minimise the loss" and "maximise the likelihood" — they describe the same parameter. The choice of loss function is the choice of noise model.
+    </p>
+
+    <h3>Linear Regression: ERM with a Linear Hypothesis Class</h3>
+
+    <p>
+      The simplest and most important parametric family. The hypothesis class is all affine functions of $x$:
+      $$\mathcal{H} = \{h_\theta : h_\theta(x) = \theta^\top x + \theta_0,\; \theta \in \mathbb{R}^d,\; \theta_0 \in \mathbb{R}\}$$
+    </p>
+
+    <p>
+      Using augmented notation — append a 1 to each input $x \leftarrow [x;\, 1] \in \mathbb{R}^{d+1}$ and fold $\theta_0$ into $\theta \in \mathbb{R}^{d+1}$ — we write $h_\theta(x) = \theta^\top x$ cleanly. The ERM objective with squared error is:
+    </p>
+
+    <div class="math-block">
+      $$\theta^* = \underset{\theta}{\arg\min}\; \frac{1}{N}\sum_{i=1}^N \|\theta^\top x_i - y_i\|_2^2$$
+    </div>
+
+    <p>
+      This has a closed-form solution. Stack all inputs as rows of a matrix $X \in \mathbb{R}^{N \times (d+1)}$ and all labels as $y \in \mathbb{R}^N$. The objective becomes $\frac{1}{N}\|X\theta - y\|_2^2$. Differentiating and setting to zero:
+    </p>
+
+    <div class="math-block">
+      $$\frac{\partial}{\partial \theta}\|X\theta - y\|_2^2 = 2X^\top(X\theta - y) = 0 \implies X^\top X\theta = X^\top y$$
+      $$\boxed{\theta^* = (X^\top X)^{-1} X^\top y}$$
+    </div>
+
+    <p>
+      This is the <strong>ordinary least squares (OLS)</strong> solution — the closed-form global minimiser of the squared error over all linear hypotheses.
+    </p>
+
+    <div class="callout callout-intuition">
+      $(X^\top X)^{-1} X^\top$ is called the <strong>Moore-Penrose pseudoinverse</strong> of $X$. It projects the label vector $y$ onto the column space of $X$ — finding the linear combination of the feature columns that best approximates $y$. When $X^\top X$ is invertible (which requires $N \geq d+1$ and no linearly dependent features), this is unique. When it is not invertible — more features than data points, or collinear features — the solution is not unique and regularisation (Chapter 8) is needed.
+    </div>
+
+    <div class="callout callout-india">
+      OLS is the workhorse of quantitative finance in India. Factor models for NIFTY 50 stocks — fitting returns as a linear combination of market beta, size, value, momentum — are ordinary least squares regressions. The Fama-French 3-factor model, used by every serious fund manager, is $\theta^* = (X^\top X)^{-1}X^\top y$ applied to stock returns. When a quant at a Mumbai fund says "I ran a regression," they are computing this formula.
+    </div>
+
+    <h3>Generalised Linear Models: Basis Functions</h3>
+
+    <p>
+      Linear regression is limited to linear relationships between $x$ and $y$. What if the true relationship is nonlinear? The hypothesis class $\mathcal{H}$ = linear functions may have too much bias.
+    </p>
+
+    <p>
+      The fix: apply a fixed nonlinear transformation $\Phi: \mathbb{R}^d \to \mathbb{R}^p$ to the inputs, then fit a linear model in the transformed space. The transformed dataset is $D_\Phi = \{(\Phi(x_i), y_i)\}$, and we solve:
+    </p>
+
+    <div class="math-block">
+      $$\hat{\theta}^* = \underset{\hat{\theta}}{\arg\min}\; \frac{1}{N}\sum_{i=1}^N \|\hat{\theta}^\top \Phi(x_i) - y_i\|_2^2 \implies \hat{\theta}^* = (\Phi^\top \Phi)^{-1}\Phi^\top y$$
+    </div>
+
+    <p>
+      where $\Phi \in \mathbb{R}^{N \times p}$ is the design matrix with rows $\Phi(x_i)^\top$. The model is linear in $\hat{\theta}$ but nonlinear in the original $x$ — a <strong>generalised linear model</strong>.
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📐 Polynomial Features</div>
+        <p>$\Phi(x) = [1, x, x^2, x^3, \ldots, x^p]$. Fit a degree-$p$ polynomial by solving linear regression in the feature space. Choose $p$ larger for more flexibility, smaller for less. This is exactly where bias-variance lives.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Factor Models</div>
+        <p>$\Phi(x) = [\text{VIX}, \text{VIX}^2, \text{PCR}, \log(\text{OI}), \ldots]$. Adding nonlinear transformations of raw features allows the model to capture regime-dependent relationships. The OLS solution still applies in the transformed space.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      The basis function $\Phi$ is a <strong>fixed, user-chosen</strong> transformation — not learned from data. This is a design choice, not an optimisation. Choosing $\Phi$ too simple (too few basis functions) gives high bias. Choosing $\Phi$ too complex (too many basis functions) gives high variance and overfitting. Chapter 8's regularisation addresses the latter. The right $\Phi$ is typically chosen by cross-validation.
+    </div>
+
+    <h3>Logistic Regression: Linear Models for Classification</h3>
+
+    <p>
+      For classification with $y \in \{0, 1\}$, a linear model $h_\theta(x) = \theta^\top x$ can predict any real value — but probabilities must lie in $[0,1]$. We need to squash the output into a probability.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>sigmoid function</strong> $\sigma: \mathbb{R} \to (0,1)$ is:
+      $$\sigma(t) = \frac{1}{1 + e^{-t}}$$
+      The <strong>logistic classifier</strong> defines $h_\theta(x) = \sigma(\theta^\top x)$ — the predicted probability that $y = 1$. The final hard classification is $\hat{y} = 1$ if $h_\theta(x) > \tau$ (threshold $\tau$, typically 0.5), else $\hat{y} = 0$.
+    </div>
+
+    <p>
+      The sigmoid has a natural probabilistic interpretation. If $P_\theta(y=1|x) = \sigma(\theta^\top x)$, then the log-likelihood under this model is the <strong>cross-entropy loss</strong>:
+      $$-\frac{1}{N}\sum_{i=1}^N \left[y_i \log \sigma(\theta^\top x_i) + (1-y_i)\log(1-\sigma(\theta^\top x_i))\right]$$
+    </p>
+
+    <p>
+      Minimising cross-entropy is MLE for the Bernoulli model with sigmoid link — logistic regression is ERM with cross-entropy loss and a linear hypothesis class. Unlike OLS, this has no closed-form solution and requires numerical optimisation (gradient descent).
+    </p>
+
+    <p>
+      <strong>K-class classification.</strong> For $y \in \{0, 1, \ldots, K-1\}$, replace the sigmoid with the <strong>softmax function</strong>. Define $z = \Theta x$ where $\Theta \in \mathbb{R}^{K \times d}$:
+    </p>
+
+    <div class="math-block">
+      $$h_\Theta(x) = \text{Softmax}(\Theta x), \qquad \text{Softmax}(z)_j = \frac{\exp(z_j)}{\sum_{k=1}^K \exp(z_k)}$$
+    </div>
+
+    <p>
+      Softmax transforms a $K$-dimensional real vector into a $K$-dimensional probability vector: all entries in $[0,1]$, summing to 1. The model outputs a full probability distribution over classes. Training: minimise cross-entropy loss numerically. This is the <strong>multinomial logistic classifier</strong> — the standard linear classifier for multi-class problems.
+    </p>
+
+    <div class="callout callout-intuition">
+      Sigmoid is softmax for $K=2$. Softmax is the canonical way to convert an arbitrary score vector into a probability distribution. In a NIFTY direction model with 3 classes (up/flat/down), softmax takes the raw linear scores for each class and converts them to probabilities summing to 1. The class with the highest softmax output is the prediction. Every neural network classifier ends with a softmax layer for exactly this reason.
+    </div>
+
+    <h3>Generalisation: The Train-Test Gap</h3>
+
+    <p>
+      We now have models. The question we deferred from Chapter 2 is: how do we know if a model learned from $D_{\text{train}}$ will perform well on new data?
+    </p>
+
+    <p>
+      Formally: sample two datasets i.i.d. from $P_{XY}$ — a training set $D_{\text{train}} = \{(x_i, y_i)\}_{i=1}^N$ and a test set $D_{\text{test}} = \{(x_i', y_i')\}_{i=1}^{N'}$. Perform ERM on $D_{\text{train}}$ to obtain $\hat{h}^*$. The performance of $\hat{h}^*$ on $D_{\text{test}}$ measures its generalisation.
+    </p>
+
+    <p>
+      Define the <strong>hypothesis learned from dataset $D$</strong> as $h_D$ — the output of ERM on $D$. The <strong>average hypothesis</strong> over all possible training sets:
+    </p>
+
+    <div class="math-block">
+      $$\bar{h}(x) = \mathbb{E}_{P_D}\!\left[h_D(x)\right]$$
+    </div>
+
+    <p>
+      This is not a single model — it is the average prediction at $x$ across all possible training datasets drawn from $P_{XY}$. It captures what the learning algorithm systematically predicts, independent of the specific data it happened to see.
+    </p>
+
+    <p>
+      The key quantity is the <strong>expected risk of the learned hypothesis</strong>:
+      $$\mathbb{E}_{P_D}\!\left[R(h_D)\right] = \mathbb{E}_{P_D}\, \mathbb{E}_{P_{XY}}\!\left[(h_D(x) - y)^2\right]$$
+    </p>
+
+    <p>
+      This is what a learning algorithm achieves on average, over all possible training sets. The bias-variance decomposition breaks this into three interpretable components.
+    </p>
+
+    <h3>The Bias-Variance Decomposition</h3>
+
+    <!-- DERIVATION: Bias-Variance -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · Bias-Variance-Noise Decomposition</span>
+        <span class="deriv-badge">4 Steps · Complete Proof</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Setup</div>
+        <p>We decompose the expected squared error $\mathbb{E}_{P_D}\,\mathbb{E}_{P_{XY}}[(h_D(x)-y)^2]$. The Bayes-optimal predictor under squared error is $h^*(x) = \mathbb{E}[y|x]$ (proved in Ch2). Define $\bar{h}(x) = \mathbb{E}_{P_D}[h_D(x)]$ as the average hypothesis.</p>
+
+        <div class="deriv-step">Step 1 — Add and subtract $\bar{h}(x)$</div>
+        <div class="math-block">
+          $$\mathbb{E}_{P_D}\!\left[(h_D(x)-y)^2\right] = \mathbb{E}_{P_D}\!\left[(h_D(x) - \bar{h}(x) + \bar{h}(x) - y)^2\right]$$
+        </div>
+        <p>Expand the square and take the expectation. The cross term $2\,\mathbb{E}_{P_D}[(h_D(x)-\bar{h}(x))](\bar{h}(x)-y) = 0$ because $\mathbb{E}_{P_D}[h_D(x)-\bar{h}(x)] = 0$ by definition of $\bar{h}$. So:</p>
+        <div class="math-block">
+          $$= \underbrace{\mathbb{E}_{P_D}\!\left[(h_D(x)-\bar{h}(x))^2\right]}_{\text{Variance}} + (\bar{h}(x) - y)^2$$
+        </div>
+
+        <div class="deriv-step">Step 2 — Add and subtract $h^*(x)$</div>
+        <p>Expand the second term $(\bar{h}(x)-y)^2$ by adding and subtracting $h^*(x) = \mathbb{E}[y|x]$:</p>
+        <div class="math-block">
+          $$(\bar{h}(x)-y)^2 = (\bar{h}(x)-h^*(x)+h^*(x)-y)^2$$
+          $$= (\bar{h}(x)-h^*(x))^2 + (h^*(x)-y)^2 + 2(\bar{h}(x)-h^*(x))(h^*(x)-y)$$
+        </div>
+
+        <div class="deriv-step">Step 3 — The cross term vanishes under $\mathbb{E}_{P_{XY}}$</div>
+        <p>Taking expectation over $P_{XY}$, the cross term involves $\mathbb{E}_{P_{XY}}[(h^*(x)-y)] = \mathbb{E}_{y|x}[y - \mathbb{E}[y|x]] = 0$. So:</p>
+        <div class="math-block">
+          $$\mathbb{E}_{P_{XY}}\!\left[(\bar{h}(x)-y)^2\right] = \underbrace{(\bar{h}(x)-h^*(x))^2}_{\text{Bias}^2} + \underbrace{\mathbb{E}_{P_{XY}}\!\left[(h^*(x)-y)^2\right]}_{\text{Noise (irreducible)}}$$
+        </div>
+
+        <div class="deriv-step">Step 4 — Assemble the full decomposition</div>
+        <div class="math-block">
+          $$\boxed{\mathbb{E}_{P_D}\,\mathbb{E}_{P_{XY}}\!\left[(h_D(x)-y)^2\right] = \underbrace{\mathbb{E}_{P_D}\!\left[(h_D(x)-\bar{h}(x))^2\right]}_{\text{Variance}} + \underbrace{(\bar{h}(x)-h^*(x))^2}_{\text{Bias}^2} + \underbrace{\mathbb{E}_{P_{XY}}\!\left[(h^*(x)-y)^2\right]}_{\text{Noise}}}$$
+        </div>
+
+        <div class="deriv-result">
+          <strong>The expected risk of any learned hypothesis decomposes exactly into three terms:</strong> Variance (sensitivity to training data), Bias² (systematic error of the hypothesis class), and Noise (irreducible error in the data-generating process). These three terms are independent — reducing one cannot always reduce another.
+        </div>
+      </div>
+    </div>
+
+    <h3>What Each Term Means</h3>
+
+    <div class="three-box">
+      <div class="box-item box-bias">
+        <div class="box-item-label">Bias²</div>
+        <div class="box-item-val">$(\bar{h} - h^*)^2$</div>
+        <div class="box-item-desc">How far is the average hypothesis from the true optimum? Measures the effect of restricting $\mathcal{H}$. High when the hypothesis class is too simple to express $h^*$.</div>
+      </div>
+      <div class="box-item box-var">
+        <div class="box-item-label">Variance</div>
+        <div class="box-item-val">$\mathbb{E}[(h_D - \bar{h})^2]$</div>
+        <div class="box-item-desc">How much does $h_D$ vary across different training sets? High when the hypothesis class is too complex — small changes in data produce large changes in the learned model.</div>
+      </div>
+      <div class="box-item box-noise">
+        <div class="box-item-label">Noise</div>
+        <div class="box-item-val">$\mathbb{E}[(h^* - y)^2]$</div>
+        <div class="box-item-desc">Irreducible error — even the Bayes-optimal predictor makes mistakes because $y$ has inherent randomness given $x$. No algorithm can reduce this below zero.</div>
+      </div>
+    </div>
+
+    <p>
+      <strong>Bias</strong> quantifies the effect of the hypothesis class $\mathcal{H}$. If $\mathcal{H}$ contains only linear functions but $h^*$ is quadratic, then $\bar{h}$ is the best linear approximation to $h^*$ — which may be far from $h^*$ everywhere. This is the error that persists even with infinite data.
+    </p>
+
+    <p>
+      <strong>Variance</strong> quantifies the effect of finite data. Even if $\mathcal{H}$ is perfectly expressive, a complex model fit to a small dataset will overfit: $h_D$ changes dramatically with the training set, while $\bar{h}$ averages out to something reasonable. The gap between $h_D$ and $\bar{h}$ is variance.
+    </p>
+
+    <p>
+      <strong>Noise</strong> is the Bayes error — the irreducible randomness in $P_{XY}$. For NIFTY daily direction prediction, even a perfect model knowing all relevant information still faces genuine uncertainty about the next day's direction. This is the floor that no algorithm can beat.
+    </p>
+
+    <div class="callout callout-intuition">
+      The bias-variance tradeoff is the tension between bias and variance as you vary the complexity of $\mathcal{H}$. Simpler $\mathcal{H}$: high bias (can't express $h^*$), low variance (stable predictions). Complex $\mathcal{H}$: low bias (can express $h^*$), high variance (overfits to specific training data). The optimal $\mathcal{H}$ is the one that minimises Bias² + Variance — not the simplest or the most complex, but the one that balances both. This is the central engineering problem of supervised learning, and it has no universal answer — it depends on $n$, $d$, and the true complexity of $h^*$.
+    </div>
+
+    <div class="callout callout-india">
+      Every quant at a prop desk in Mumbai lives the bias-variance tradeoff daily. A simple linear model of NIFTY returns (2 features, OLS) has high bias — it misses the nonlinear regime-dependent structure — but low variance — it barely changes with the specific 6-month training window. A deep neural network with 100 features has low bias but high variance — it fits the training period beautifully and fails spectacularly out of sample. The right model is somewhere between these extremes, and finding it is the job. Walk-forward validation is empirical bias-variance estimation: train on rolling windows, test on the next window, observe how performance varies with model complexity.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · OLS Linear Regression on NIFTY Returns</span>
+        <span class="we-badge">🇮🇳 Closed-Form Solution</span>
+      </div>
+      <div class="we-body">
+        <p>Predict next-day NIFTY return $y$ from INDIA VIX $x$. Four training observations:</p>
+        <div class="math-block">
+          $$\begin{array}{ccc}
+          i & x_i\text{ (VIX)} & y_i\text{ (return \%)} \\
+          \hline
+          1 & 13 & +0.8 \\
+          2 & 16 & +0.3 \\
+          3 & 20 & -0.5 \\
+          4 & 25 & -1.2
+          \end{array}$$
+        </div>
+
+        <div class="we-step">Step 1 — Build the design matrix (augmented with intercept)</div>
+        <div class="math-block">
+          $$X = \begin{bmatrix}13 & 1 \\ 16 & 1 \\ 20 & 1 \\ 25 & 1\end{bmatrix}, \quad y = \begin{bmatrix}0.8 \\ 0.3 \\ -0.5 \\ -1.2\end{bmatrix}$$
+        </div>
+
+        <div class="we-step">Step 2 — Compute $X^\top X$ and $X^\top y$</div>
+        <div class="math-block">
+          $$X^\top X = \begin{bmatrix}13^2+16^2+20^2+25^2 & 13+16+20+25 \\ 13+16+20+25 & 4\end{bmatrix} = \begin{bmatrix}1230 & 74 \\ 74 & 4\end{bmatrix}$$
+          $$X^\top y = \begin{bmatrix}13(0.8)+16(0.3)+20(-0.5)+25(-1.2) \\ 0.8+0.3-0.5-1.2\end{bmatrix} = \begin{bmatrix}-25.2 \\ -0.6\end{bmatrix}$$
+        </div>
+
+        <div class="we-step">Step 3 — Solve $\theta^* = (X^\top X)^{-1}X^\top y$</div>
+        <div class="math-block">
+          $$(X^\top X)^{-1} = \frac{1}{1230\times4 - 74^2}\begin{bmatrix}4 & -74 \\ -74 & 1230\end{bmatrix} = \frac{1}{444}\begin{bmatrix}4 & -74 \\ -74 & 1230\end{bmatrix}$$
+          $$\theta^* = \frac{1}{444}\begin{bmatrix}4(-25.2)+(-74)(-0.6) \\ -74(-25.2)+1230(-0.6)\end{bmatrix} = \frac{1}{444}\begin{bmatrix}-56.4 \\ 1124.8\end{bmatrix} \approx \begin{bmatrix}-0.127 \\ 2.534\end{bmatrix}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Fitted model:</strong> $\hat{y} = -0.127 \times \text{VIX} + 2.534$. The slope $-0.127$ says: every 1-point increase in INDIA VIX is associated with a 0.127% drop in next-day NIFTY return. At VIX = 18 (a typical level), the model predicts $-0.127(18) + 2.534 = 0.25\%$. The negative slope makes intuitive sense — higher volatility tends to accompany negative returns. Whether this linear relationship generalises out of sample is a different question, governed by bias-variance.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · Bias-Variance Tradeoff via Polynomial Models</span>
+        <span class="we-badge">📊 Complexity vs Generalisation</span>
+      </div>
+      <div class="we-body">
+        <p>Suppose the true relationship is $y = 0.5x^2 - x + \epsilon$ where $\epsilon \sim \mathcal{N}(0, 0.25)$. We compare three hypothesis classes on samples of size $N = 20$:</p>
+
+        <div class="we-step">Model 1: Linear ($h_\theta(x) = \theta_0 + \theta_1 x$)</div>
+        <p>Cannot express the quadratic truth. The average hypothesis $\bar{h}$ is the best linear approximation to $0.5x^2 - x$ — a line with positive slope through the middle of the parabola. <strong>Bias is high</strong> — the model systematically misses the curve. But across different training sets of 20 points, the fitted line barely changes. <strong>Variance is low</strong>.</p>
+        <div class="math-block">
+          $$\text{Bias}^2 \approx 0.8, \quad \text{Variance} \approx 0.05, \quad \text{Expected Error} \approx 1.1$$
+        </div>
+
+        <div class="we-step">Model 2: Quadratic ($h_\theta(x) = \theta_0 + \theta_1 x + \theta_2 x^2$)</div>
+        <p>Matches the true function class exactly. The average hypothesis $\bar{h} \approx h^*$. <strong>Bias is near zero</strong>. With 20 points and only 3 parameters, the quadratic is well-determined. <strong>Variance is moderate but acceptable</strong>.</p>
+        <div class="math-block">
+          $$\text{Bias}^2 \approx 0.02, \quad \text{Variance} \approx 0.12, \quad \text{Expected Error} \approx 0.39$$
+        </div>
+
+        <div class="we-step">Model 3: Degree-15 Polynomial</div>
+        <p>16 parameters for 20 data points. The model can pass through or near every training point — training error approaches zero. But different training sets of 20 points produce wildly different degree-15 polynomials. <strong>Variance is enormous</strong>. Average hypothesis is roughly right but individual $h_D$'s oscillate violently.</p>
+        <div class="math-block">
+          $$\text{Bias}^2 \approx 0.01, \quad \text{Variance} \approx 2.8, \quad \text{Expected Error} \approx 3.06$$
+        </div>
+
+        <div class="we-answer">
+          <strong>The optimal model is the quadratic — not because it has the lowest bias (degree-15 does) or the lowest variance (linear does), but because it minimises their sum.</strong> This is the bias-variance tradeoff in action. In practice with real data, you never know the true complexity of $h^*$. Cross-validation estimates the expected error empirically for each model and selects the complexity that minimises it.
+        </div>
+      </div>
+    </div>
+
+    <div class="cliffhanger">
+      <div class="cliffhanger-label">Chapter 8 Preview</div>
+      <p>We've seen that complex models overfit — their variance dominates. Chapter 2 introduced this as the generalisation gap. Chapter 8 gives the surgical fix: <strong>regularisation</strong>. By adding a penalty $\Omega(\theta)$ to the ERM objective, we constrain the hypothesis class and control variance — at the cost of slightly higher bias. Ridge regression, Lasso, and SVMs are all regularised ERM. And they all have a Bayesian interpretation through MAP estimation. The last chapter ties every thread together.</p>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 07</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch07 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A linear regression model trained on 3 years of NIFTY data achieves training MSE of 0.12 and test MSE of 0.15. A degree-10 polynomial model achieves training MSE of 0.02 and test MSE of 0.89. Which statement best diagnoses each model?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Linear model: underfitting. Polynomial model: better, since it achieves lower training error.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Linear model: slight underfitting but good generalisation (small train-test gap). Polynomial model: severe overfitting — very low training error but huge test error indicates high variance.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Linear model: overfitting. Polynomial model: underfitting.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Both models are performing well — any test MSE below 1.0 is acceptable for financial data.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The linear model's train-test gap is $0.15 - 0.12 = 0.03$ — small. The model generalises well, though its training error of 0.12 suggests it may have some bias (missing nonlinear structure). The polynomial model's gap is $0.89 - 0.02 = 0.87$ — enormous. This is the classic signature of high variance overfitting: the model memorised the training data (near-zero training error) but learned nothing generalisable.<br/><br/>
+          In bias-variance terms: the linear model has moderate bias, low variance. The polynomial has very low bias but catastrophically high variance. For deployment, you would choose the linear model — its test error is 0.15 vs 0.89.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch07 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the bias-variance decomposition, the <strong>noise term</strong> $\mathbb{E}[(h^*(x) - y)^2]$ is called "irreducible." Why can no learning algorithm reduce it below zero?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Because $h^*(x) = \mathbb{E}[y|x]$ is not learnable from finite data.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>Because linear models cannot approximate $h^*$ exactly.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>Because $h^*(x) = \mathbb{E}[y|x]$ is the best possible predictor, yet $y$ still has randomness around its conditional mean. This randomness is a property of $P_{XY}$ itself — no model, however complex, can predict what is genuinely random.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Because the noise term depends on the training dataset size $N$, and with infinite data it approaches zero.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          $h^*(x) = \mathbb{E}[y|x]$ is the Bayes-optimal predictor — it achieves the minimum possible expected squared error for any given $x$. But the conditional distribution $P(y|x)$ has variance: even knowing $x$ exactly, $y$ fluctuates around its conditional mean. This variance $\text{Var}(y|x) = \mathbb{E}[(y - \mathbb{E}[y|x])^2 | x]$ is the noise term, and it is a property of the data-generating process, not of the learning algorithm.<br/><br/>
+          For NIFTY daily returns: even if we know today's VIX, PCR, FII flow, and every other relevant feature, tomorrow's return still has genuine randomness — the market hasn't "decided" yet. That randomness is irreducible. The noise floor is the Bayes error; no algorithm, regardless of complexity or data volume, can do better than it.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch07 / q03</span>
+        <span class="mcq-diff">★★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A logistic classifier predicts $P(\text{NIFTY up} | \text{VIX}=18) = \sigma(\theta^\top x)$ where $\theta^\top x = 0.4$. What is the predicted probability of an up-day, and what is the hard classification at threshold $\tau = 0.5$?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$\sigma(0.4) = 0.4$, classify as Down (below 0.5 threshold).</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>$\sigma(0.4) = 1/(1+e^{-0.4}) \approx 0.599$, classify as Up (above 0.5 threshold).</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>$\sigma(0.4) = e^{0.4}/(1+e^{0.4}) \approx 0.401$, classify as Down.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$\sigma(0.4) = 0.5$ exactly — all positive inputs map to 0.5 in logistic regression.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The sigmoid function: $\sigma(t) = \frac{1}{1+e^{-t}}$. At $t = 0.4$: $e^{-0.4} \approx 0.670$, so $\sigma(0.4) = \frac{1}{1+0.670} = \frac{1}{1.670} \approx 0.599$.<br/><br/>
+          Since $0.599 > \tau = 0.5$, the hard classification is "NIFTY Up." The positive score $\theta^\top x = 0.4 > 0$ always maps to probability $> 0.5$ via sigmoid — the decision boundary is exactly at $\theta^\top x = 0$.<br/><br/>
+          Option C is the formula for softmax with one class, not sigmoid. Note that $\sigma(t) = e^t/(1+e^t) = 1/(1+e^{-t})$ — these are equivalent, but the numerical evaluation gives $\approx 0.599$, not 0.401.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch07 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A quant uses a degree-1 polynomial (linear model) to predict NIFTY intraday momentum. The model performs similarly on both training and test data, but both errors are large. What does the bias-variance framework say about this situation, and what should the quant do?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>High variance, low bias — the model needs regularisation to reduce overfitting.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>High noise — the problem is inherently unpredictable and no model can help.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>High bias, low variance — training and test errors are both large and similar, indicating the hypothesis class is too simple to capture the true relationship. The quant should increase model complexity: add more features, use basis functions, or try a more expressive hypothesis class.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>The model is performing optimally — equal training and test error means perfect generalisation.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The signature of high bias (underfitting): both training and test errors are large, and they are similar in magnitude (small generalisation gap). The model is too simple — it cannot capture the true structure of the data regardless of how much data you give it. The average hypothesis $\bar{h}$ is far from $h^*$ (high Bias²), but $h_D$ is close to $\bar{h}$ regardless of the specific training set (low Variance).<br/><br/>
+          The remedy is to increase model expressiveness: add polynomial features $\Phi(x) = [x, x^2, x^3, \ldots]$, include interaction terms, add more informative features, or use a non-linear model. This reduces bias at the cost of some variance — but the net effect on expected error should be positive if the increase in complexity is appropriate for the available data.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 07</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Q1–3 are direct computations. Q4–7 require connecting linear models, ERM, and the bias-variance framework. Q8–10 are harder — they ask you to reason precisely about generalisation.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">Given data $\{(x_i, y_i)\} = \{(1, 2), (2, 3), (3, 5)\}$, compute the OLS solution $\theta^* = (X^\top X)^{-1}X^\top y$ for a linear model $h_\theta(x) = \theta_0 + \theta_1 x$ (with intercept). State the fitted model and compute its training MSE.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">Compute $\sigma(t)$ for $t \in \{-2, -1, 0, 1, 2\}$. Verify that $\sigma(0) = 0.5$ and that $\sigma(-t) = 1 - \sigma(t)$ (the sigmoid is antisymmetric around 0.5). Interpret the antisymmetry property in terms of the logistic classifier's decision boundary.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">A softmax classifier has $K=3$ classes and outputs raw scores $z = [1.2, 0.5, -0.3]$. Compute the softmax probabilities for each class. Which class is predicted? Verify that the probabilities sum to 1.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">Show that the OLS solution $\theta^* = (X^\top X)^{-1}X^\top y$ is also the MLE for the linear model $P_\theta(y|x) = \mathcal{N}(y;\, \theta^\top x,\, \sigma^2 I)$. Your derivation should write the log-likelihood, simplify, and show it reduces to the least squares objective.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">Explain the difference between the hypothesis class $\mathcal{H}_1 = \{h: h(x) = \theta^\top x\}$ and $\mathcal{H}_2 = \{h: h(x) = \theta^\top \Phi(x)\}$ where $\Phi(x) = [x, x^2, x^3]$. Which has higher bias? Which has higher variance? How does the bias-variance tradeoff manifest when you choose between these two classes on a dataset with $N=50$?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">The average hypothesis $\bar{h}(x) = \mathbb{E}_{P_D}[h_D(x)]$ is not a model you can ever compute exactly — it requires averaging over all possible training datasets. Explain why it is nonetheless useful as a theoretical concept in the bias-variance decomposition. What practical quantity approximates $\bar{h}$ when you use cross-validation?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">A quant trains a NIFTY return model on 6 months of data and finds training MSE = 0.05. He reports this as the model's expected out-of-sample performance. Explain precisely why this is wrong using the bias-variance decomposition. Describe how to get an honest estimate of $\mathbb{E}_{P_D}[R(h_D)]$ without additional data.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">Prove that the cross term in the bias-variance derivation vanishes: show that $\mathbb{E}_{P_{XY}}[(h^*(x)-y)(\bar{h}(x)-h^*(x))] = 0$, where $h^*(x) = \mathbb{E}[y|x]$. Your proof should use the law of iterated expectations to condition on $x$ first, then use the definition of $h^*$.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">For a linear hypothesis class $\mathcal{H} = \{h: h(x) = \theta^\top x\}$ and squared error loss, show that the bias equals the squared error of the best linear predictor from the true $h^*$: $\text{Bias}^2 = \mathbb{E}_x[(\bar{h}(x) - h^*(x))^2]$ where $\bar{h}$ is the best linear fit to $h^*$. Under what conditions is the bias zero even for linear models?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">The variance term $\mathbb{E}_{P_D}[(h_D(x)-\bar{h}(x))^2]$ measures sensitivity to training data. For linear regression with $N$ training points and $d+1$ parameters, the variance of each prediction $h_D(x)$ scales as $O((d+1)/N)$ — more parameters, less data, higher variance. Using this, argue quantitatively why a degree-15 polynomial on $N=20$ points has catastrophically high variance, while a degree-2 polynomial on the same data does not.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch6.html" class="ch-nav-btn">← Non-parametric Density Estimation</a>
+    <a href="ML_M_Ch8.html" class="ch-nav-btn primary">Next: Regularisation, SVMs, and the Kernel Trick →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎯 Bias² + Variance + Noise = correct. Decomposition verified.",
+  "✨ OLS solution confirmed. $(X^\\top X)^{-1}X^\\top y$ applied correctly.",
+  "🏆 Generalisation gap diagnosed precisely. Well done.",
+  "🔥 Sigmoid output correct. Decision boundary clear.",
+  "💡 Bias and variance identified correctly. Model complexity calibrated.",
+  "🎓 The cross term vanishes. Derivation holds.",
+  "📈 Train-test gap interpreted correctly. Overfitting detected.",
+  "🧮 Softmax probabilities sum to 1. Normalisation confirmed.",
+  "⚡ Closed-form solution found. No gradient descent required.",
+  "🌟 Bias-variance tradeoff understood. Chapter complete."
+];
+const wrongMsgs = [
+  "🌀 Check the train-test gap — high or low variance?",
+  "📐 The sigmoid formula is $1/(1+e^{-t})$, not $e^t/(1+e^t)$ evaluated incorrectly.",
+  "📉 Training error and test error together tell the story. Check both.",
+  "🏦 The noise term is irreducible — it cannot be reduced by any algorithm.",
+  "😰 Bias is the systematic error, variance is sensitivity to data. Which is high here?",
+  "🤔 The OLS formula is $(X^\\top X)^{-1}X^\\top y$. Check your matrix arithmetic.",
+  "📊 Softmax: exponentiate each score, then normalise by their sum.",
+  "🎰 Equal train and test error means small gap — not necessarily good performance."
+];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done) return;
+  if(!state[qid]) state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done) return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  const expl=document.getElementById(qid+'expl');
+  expl.classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    const m=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(30,158,94,0.1)';
+    feedback.style.color='var(--green)';
+    feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';
+    btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter) o.classList.add('correct');});
+    const m=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(220,38,38,0.06)';
+    feedback.style.color='#dc2626';
+    feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';
+    btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement) renderMathInElement(document.getElementById(qid+'expl'));
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+});
+</script>
+</body>
+</html>

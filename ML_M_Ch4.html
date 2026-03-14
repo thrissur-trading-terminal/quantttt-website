@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Maximum Likelihood — Let the Data Speak · quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF; --off:#F7F5F2; --orange:#E8722A; --orange2:#F28C42;
+  --navy:#2D2560; --navy2:#3D3480; --green:#1E9E5E;
+  --text:#1a1a2e; --muted:#6b7280; --border:#e5e7eb; --light:#fdf6f0;
+  --sidebar-w:280px; --topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+/* LAYOUT */
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+/* CONTENT */
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+/* CHAPTER HEADER */
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-f{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;font-style:italic;}
+
+/* BODY TEXT */
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+/* CALLOUTS */
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+/* MATH BLOCK */
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* DERIVATION */
+.derivation{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.deriv-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.deriv-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.deriv-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.deriv-body{padding:1.5rem;background:var(--white);}
+.deriv-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.deriv-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.deriv-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.deriv-result strong{color:var(--green);}
+.deriv-note{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);border-radius:4px;padding:0.3rem 0.7rem;display:inline-block;margin-top:0.4rem;}
+
+/* WORKED EXAMPLE */
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.col-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;}
+.col-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.col-card p{font-size:0.88rem;line-height:1.7;color:#2a2a3e;margin-bottom:0.7rem;}
+.col-card p:last-child{margin-bottom:0;}
+@media(max-width:650px){.two-col{grid-template-columns:1fr;}}
+
+/* FAILURE CARD */
+.failure-card{background:rgba(220,38,38,0.04);border:1.5px solid rgba(220,38,38,0.15);border-radius:12px;padding:1.4rem 1.6rem;margin:1.5rem 0;}
+.failure-card-label{font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:#dc2626;margin-bottom:0.6rem;font-weight:600;}
+.failure-card p{font-size:0.93rem;line-height:1.75;color:#2a2a3e;margin-bottom:0.8rem;}
+.failure-card p:last-child{margin-bottom:0;}
+
+/* CLIFFHANGER */
+.cliffhanger{background:var(--navy);border-radius:12px;padding:1.8rem 2rem;margin:2.5rem 0;text-align:center;}
+.cliffhanger-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.8rem;}
+.cliffhanger p{font-size:0.95rem;color:rgba(255,255,255,0.75);line-height:1.75;max-width:580px;margin:0 auto;}
+.cliffhanger strong{color:var(--orange2);}
+
+/* DIVIDER */
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+/* TERMINAL */
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+/* CHAPTER NAV */
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Maximum Likelihood</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:50%"></div></div>
+      <span class="tb-progress-label">4 / 8</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html"><div class="si-num">1</div>What Is Learning?<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html"><div class="si-num">2</div>The Learning Machine<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch3.html"><div class="si-num">3</div>Empirical Risk and the Likelihood Game<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="ML_M_Ch4.html"><div class="si-num">4</div>Maximum Likelihood — Let the Data Speak<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">6</div>Linear Models and the Bias-Variance Tradeoff<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">7</div>Regularisation — Taming the Overfit<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked" href="#" onclick="return false;"><div class="si-num">8</div>From Margins to Neurons<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Foundational</span>
+      <span class="ch-num">Chapter 04 of 08 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Maximum Likelihood —<br/>Let the Data Speak</h1>
+    <p class="chapter-subtitle">The Bayes classifier is the theoretical ceiling. But implementing it demands something we don't have: the actual densities $P_X$, $P_Y$, and $P_{X|Y}$. This chapter is about estimating those densities from data — and showing that the principled way to do it always leads to the same place.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Why We Need Density Estimation</h3>
+
+    <p>
+      Chapter 2 gave us the Bayes classifier — the theoretically optimal decision rule under zero-one loss:
+      $$h_B(x) = \underset{y}{\arg\max}\; P(y \mid x)$$
+      Beautiful in theory. To use it in practice, we need $P(y|x)$ — the posterior probability of each class given the input. And we don't have it. We have data.
+    </p>
+
+    <p>
+      To implement the Bayes classifier from data $D = \{(x_i, y_i)\}$, we need to estimate three quantities:
+    </p>
+
+    <div class="math-block">
+      $$P_X \;\text{— marginal density of inputs} \qquad P_Y \;\text{— class priors} \qquad P_{X|Y} \;\text{— class-conditional densities}$$
+    </div>
+
+    <p>
+      From these, Bayes' theorem gives us $P(y|x) \propto P_{X|Y}(x|y) \cdot P_Y(y)$. All three quantities are density estimation problems. Maximum Likelihood Estimation is the principled tool for all of them — and this chapter works out what MLE actually gives us for the most important model families.
+    </p>
+
+    <div class="callout callout-india">
+      This exact pipeline is behind fraud detection at every major Indian payment gateway — PhonePe, Paytm, HDFC, ICICI. Given a transaction $x$ (amount, merchant category, location, time, device), estimate $P_{X|Y=\text{fraud}}$ and $P_{X|Y=\text{legit}}$ from historical labelled data using MLE, then use the Bayes classifier to flag suspicious transactions. The Naive Bayes classifier — which assumes features are conditionally independent given the class — makes this tractable at scale. Millions of transactions are classified per second using density estimates fit by MLE on historical fraud data.
+    </div>
+
+    <h3>MLE: The Formal Setup</h3>
+
+    <p>
+      Chapter 3 established the key equivalence. We restate it cleanly as our working definition for this chapter.
+    </p>
+
+    <div class="callout callout-definition">
+      Given $D = \{v_1, \ldots, v_N\}$ i.i.d. from unknown $P_v$, and a parametric model family $\{P_\theta : \theta \in \Theta\}$, the <strong>Maximum Likelihood Estimator</strong> is:
+      $$\theta^* = \underset{\theta}{\arg\max}\; \frac{1}{N}\sum_{i=1}^N \log P_\theta(v_i) = \underset{\theta}{\arg\max}\; \ell(\theta)$$
+      where $\ell(\theta)$ is the average log-likelihood. Equivalently, $\theta^*$ minimises $D_{KL}(P_v \| P_\theta)$ — it is the closest model in the parametric family to the true distribution, measured by KL divergence.
+    </div>
+
+    <p>
+      Three model families dominate ML in practice. We work out $\theta^*$ for each. The derivations are different in technique but identical in spirit: write $\ell(\theta)$, differentiate, set to zero, solve.
+    </p>
+
+    <h3>MLE for a Gaussian Model</h3>
+
+    <p>
+      The simplest continuous case. Model: $P_\theta(v) = \mathcal{N}(v;\, \theta,\, I)$ where $v \in \mathbb{R}^d$ and $\theta \in \mathbb{R}^d$ is the mean. Covariance is fixed at identity for now.
+    </p>
+
+    <!-- DERIVATION: Gaussian MLE -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · MLE for Gaussian Model</span>
+        <span class="deriv-badge">Closed Form · Sample Mean</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Step 1 — Write the log-likelihood</div>
+        <p>The Gaussian density is $P_\theta(v) = \frac{1}{(2\pi)^{d/2}}\exp\!\left(-\frac{1}{2}(v-\theta)^\top(v-\theta)\right)$. Taking the log:</p>
+        <div class="math-block">
+          $$\ell(\theta) = \frac{1}{N}\sum_{i=1}^N \log P_\theta(v_i) = -\frac{d}{2}\log(2\pi) - \frac{1}{N}\cdot\frac{1}{2}\sum_{i=1}^N \|v_i - \theta\|_2^2$$
+        </div>
+        <p>Maximising $\ell(\theta)$ over $\theta$ is equivalent to minimising $\frac{1}{N}\sum_i \|v_i - \theta\|_2^2$ — the mean squared distance from $\theta$ to the data. The constant $-\frac{d}{2}\log(2\pi)$ drops out.</p>
+        <div class="deriv-note">Maximising log-likelihood = minimising sum of squared distances from the mean. MLE and least squares are the same problem here.</div>
+
+        <div class="deriv-step">Step 2 — Differentiate and set to zero</div>
+        <div class="math-block">
+          $$\frac{\partial \ell}{\partial \theta} = \frac{1}{N}\sum_{i=1}^N \frac{\partial}{\partial \theta}\left[-\frac{1}{2}(v_i - \theta)^\top(v_i - \theta)\right] = \frac{1}{N}\sum_{i=1}^N (v_i - \theta) = 0$$
+        </div>
+
+        <div class="deriv-step">Step 3 — Solve</div>
+        <div class="math-block">
+          $$\sum_{i=1}^N v_i - N\theta = 0 \implies \boxed{\theta^* = \frac{1}{N}\sum_{i=1}^N v_i}$$
+        </div>
+
+        <div class="deriv-result">
+          <strong>The MLE for the mean of a Gaussian is the sample mean.</strong> Not surprising intuitively — but now we know exactly why: the sample mean is the parameter that maximises the probability of the observed data under the Gaussian model, and equivalently, the closest Gaussian (in KL divergence) to whatever distribution actually generated the data.
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏥 Hospital Patient Ages</div>
+        <p>Ages assumed $\mathcal{N}(\mu, \sigma^2)$. After observing 200 patients, MLE gives $\hat{\mu} = \bar{\text{age}}$ — the average age in the dataset. Nothing more, nothing less. The sample mean is the principled answer.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Log-Returns</div>
+        <p>Model $v_i \sim \mathcal{N}(\mu, \sigma^2)$. MLE: $\hat{\mu} = \frac{1}{N}\sum v_i$ (sample mean return), $\hat{\sigma}^2 = \frac{1}{N}\sum(v_i - \hat{\mu})^2$ (sample variance). Every quant who fits a normal distribution to returns is doing MLE, whether they use that language or not.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      The MLE gives the <em>best Gaussian fit</em> to the data — best within the Gaussian family, measured by KL divergence. If the true distribution is fat-tailed (as NIFTY daily returns demonstrably are), the MLE Gaussian is still wrong. It is the least wrong Gaussian, not the right model. The sample mean and variance are correct estimates of the Gaussian parameters — the question is whether a Gaussian was the right model to begin with. Model misspecification is always the first thing to check.
+    </div>
+
+    <h3>MLE for a Discrete Distribution</h3>
+
+    <p>
+      When $v_i$ takes values in a finite set $\{a_1, a_2, \ldots, a_m\}$ with unknown probabilities $\{p_1, p_2, \ldots, p_m\}$, the MLE problem is constrained: we need $p_j \geq 0$ and $\sum_j p_j = 1$.
+    </p>
+
+    <p>
+      To write the likelihood cleanly, we use the <strong>one-hot encoding</strong> trick. For each observation $v_i$, define an auxiliary vector $z_i \in \{0,1\}^m$ where $z_i^j = 1$ if $v_i = a_j$ and 0 otherwise. Exactly one entry of $z_i$ is 1 — the one corresponding to the observed outcome. Then:
+    </p>
+
+    <div class="math-block">
+      $$P_\theta(v_i) = \prod_{j=1}^m p_j^{z_i^j} \qquad \log P_\theta(v_i) = \sum_{j=1}^m z_i^j \log p_j$$
+    </div>
+
+    <p>
+      The log-likelihood becomes:
+    </p>
+
+    <div class="math-block">
+      $$\ell(\theta) = \frac{1}{N}\sum_{i=1}^N \sum_{j=1}^m z_i^j \log p_j$$
+    </div>
+
+    <!-- DERIVATION: Discrete MLE -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · MLE for Discrete Distribution via Lagrangian</span>
+        <span class="deriv-badge">Constrained Optimisation · Empirical Frequency</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Step 1 — Set up the constrained problem</div>
+        <p>Maximise $\ell(\theta) = \frac{1}{N}\sum_i \sum_j z_i^j \log p_j$ subject to $\sum_j p_j = 1$ and $p_j \geq 0$. The normalisation constraint is binding — without it the optimal solution would push all mass to the most frequent outcome and set others to zero (or worse, to infinity via the $\log$). We enforce it with a Lagrange multiplier $\lambda$.</p>
+
+        <div class="deriv-step">Step 2 — Write the Lagrangian</div>
+        <div class="math-block">
+          $$\mathcal{L}(p_1,\ldots,p_m,\lambda) = \frac{1}{N}\sum_{i=1}^N\sum_{j=1}^m z_i^j \log p_j + \lambda\!\left(\sum_{j=1}^m p_j - 1\right)$$
+        </div>
+
+        <div class="deriv-step">Step 3 — Differentiate w.r.t. $p_j$ and set to zero</div>
+        <div class="math-block">
+          $$\frac{\partial \mathcal{L}}{\partial p_j} = \frac{1}{N}\cdot\frac{\sum_{i=1}^N z_i^j}{p_j} + \lambda = 0 \implies p_j = -\frac{\sum_i z_i^j}{N\lambda}$$
+        </div>
+
+        <div class="deriv-step">Step 4 — Use the normalisation constraint to find $\lambda$</div>
+        <p>Summing over $j$: $\sum_j p_j = -\frac{1}{N\lambda}\sum_j \sum_i z_i^j = -\frac{1}{N\lambda}\cdot N = -\frac{1}{\lambda} = 1$, so $\lambda = -1$.</p>
+
+        <div class="deriv-step">Step 5 — Substitute back</div>
+        <div class="math-block">
+          $$\boxed{p_j^* = \frac{\sum_{i=1}^N z_i^j}{N} = \frac{\text{number of times } a_j \text{ occurred in } D}{N}}$$
+        </div>
+
+        <div class="deriv-result">
+          <strong>The MLE for a discrete distribution is the empirical frequency.</strong> The fraction of times each outcome occurred in the data. The Lagrangian does the real work: it enforces probability normalisation and automatically distributes the mass proportionally to observed counts. Without the constraint, this result would not hold.
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🎲 Biased Die</div>
+        <p>Observed outcomes from 8 rolls: $\{2, 3, 4, 1, 6, 3, 2, 3\}$. MLE: $\hat{p}_3 = 3/8$, $\hat{p}_2 = 2/8$, $\hat{p}_1 = \hat{p}_4 = \hat{p}_6 = 1/8$, $\hat{p}_5 = 0$. The die appears biased toward 3. (With only 8 rolls, this estimate has high variance — but it is the principled MLE.)</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 NIFTY Expiry Outcomes</div>
+        <p>Categorise 40 weekly expiries: Large Up 8, Small Up 14, Flat 6, Small Down 7, Large Down 5. MLE: $\hat{p}_{\text{LU}} = 0.20$, $\hat{p}_{\text{SU}} = 0.35$, $\hat{p}_{\text{F}} = 0.15$, $\hat{p}_{\text{SD}} = 0.175$, $\hat{p}_{\text{LD}} = 0.125$. This empirical distribution is the real-world measure — what Bayesian options pricing would use as $\mathbb{P}$ instead of the risk-neutral $\mathbb{Q}$.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      The Lagrangian is the standard technique for constrained optimisation: to maximise $f(x)$ subject to $g(x) = 0$, form $\mathcal{L}(x, \lambda) = f(x) + \lambda g(x)$ and solve $\nabla_x \mathcal{L} = 0$ and $\nabla_\lambda \mathcal{L} = 0$ simultaneously. The multiplier $\lambda$ enforces the constraint at the optimum. Here the constraint is probability normalisation — $\sum_j p_j = 1$ — and the Lagrangian automatically distributes the total probability mass according to observed frequencies. This same technique appears in SVMs, regularised regression, and portfolio optimisation. It is worth understanding once and recognising everywhere.
+    </div>
+
+    <h3>The Multimodal Problem: When One Gaussian Is Not Enough</h3>
+
+    <p>
+      Both MLE derivations above assumed a single parametric family — one Gaussian, one discrete distribution. Real data is often more complex. Many datasets are <strong>multimodal</strong> — they have multiple clusters, subpopulations, or regimes. A single Gaussian, however well fit by MLE, cannot capture this structure.
+    </p>
+
+    <div class="failure-card">
+      <div class="failure-card-label">🔴 The Single-Gaussian Failure</div>
+      <p>Fit a single Gaussian to a bimodal dataset. The MLE places the mean somewhere between the two modes — a location where almost no actual data points live. The model assigns high probability to a region the data avoids, and underestimates probability in both actual clusters. $D_{KL}(P_{\text{true}} \| P_\theta)$ remains large no matter how many data points you use — the Gaussian family simply cannot express the true shape.</p>
+      <p>This is not a data problem. It is a model family problem. The solution: expand $\mathcal{H}$.</p>
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">🏥 Hospital Age Distribution</div>
+        <p>Patients split between young adults (viral infections, mean age 28) and elderly (chronic conditions, mean age 68). Single Gaussian MLE: mean ≈ 48 — describes nobody in the ward. The bimodal truth requires two Gaussians.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 INDIA VIX Regimes</div>
+        <p>VIX spends most of its time in a calm regime (12–16) and occasionally spikes into a fear regime (25–45). A single Gaussian fit puts the mean around 16 with large variance — missing both regimes. A two-component mixture captures the structure naturally: one narrow Gaussian for calm, one wide Gaussian for fear.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      NIFTY daily returns are not unimodal. In trending bull markets, the return distribution is right-skewed with a positive mean. In volatile, mean-reverting regimes, it is approximately symmetric with much higher variance. A Gaussian Mixture Model with two or three components captures this regime structure far better than any single Gaussian. The mixing weights $\alpha_j$ become the estimated probabilities of being in each regime — a natural volatility regime detector built directly from return data.
+    </div>
+
+    <h3>Mixture Density Models</h3>
+
+    <p>
+      The solution to the multimodal problem is to define the model as a <strong>weighted sum</strong> of simpler component densities.
+    </p>
+
+    <div class="callout callout-definition">
+      A <strong>mixture density model</strong> with $M$ components is:
+      $$P_\theta(v) = \sum_{j=1}^M \alpha_j\, P_{\theta_j}(v)$$
+      where $\alpha_j \in [0,1]$, $\sum_j \alpha_j = 1$, and each $P_{\theta_j}$ is a component density with its own parameters $\theta_j$. The full parameter set is $\theta = \{\alpha_j, \theta_j\}_{j=1}^M$.
+
+      For a <strong>Gaussian Mixture Model (GMM)</strong>: each component is $P_{\theta_j}(v) = \mathcal{N}(v;\, \mu_j,\, \Sigma_j)$, so $\theta = \{\alpha_j, \mu_j, \Sigma_j\}_{j=1}^M$.
+    </div>
+
+    <p>
+      The mixing weight $\alpha_j$ is the prior probability that a randomly drawn data point came from component $j$. If you think of the data as generated by first choosing a component (a "type" of data point — a regime, a subpopulation) with probability $\alpha_j$, then drawing from that component's distribution, you recover the mixture density. This generative story introduces a <strong>hidden variable</strong>: which component each data point came from.
+    </p>
+
+    <div class="callout callout-intuition">
+      GMMs are <strong>universal density approximators</strong> for continuous random variables. With enough components, a Gaussian mixture can approximate any smooth continuous density to arbitrary precision. This is their power: they can model any shape — unimodal, bimodal, skewed, fat-tailed — given enough components and enough data. Neural networks have a similar universality property for function approximation; GMMs have it for density estimation. The trade-off is computational: fitting a GMM requires solving a much harder optimisation problem than fitting a single Gaussian.
+    </div>
+
+    <h3>Why Mixture MLE Is Hard</h3>
+
+    <p>
+      Take the GMM log-likelihood and try to maximise it directly:
+    </p>
+
+    <div class="math-block">
+      $$\ell(\theta) = \frac{1}{N}\sum_{i=1}^N \log P_\theta(v_i) = \frac{1}{N}\sum_{i=1}^N \log \sum_{j=1}^M \alpha_j\, \mathcal{N}(v_i;\, \mu_j,\, \Sigma_j)$$
+    </div>
+
+    <p>
+      The problem is the <strong>log of a sum</strong>. For a single Gaussian, the log collapsed the product into a tractable quadratic. Here the sum inside the log couples all $M$ components together. Setting $\frac{\partial \ell}{\partial \mu_j} = 0$ gives:
+    </p>
+
+    <div class="math-block">
+      $$\frac{\partial \ell}{\partial \mu_j} = \frac{1}{N}\sum_{i=1}^N \frac{\alpha_j\, \mathcal{N}(v_i;\mu_j,\Sigma_j)}{\sum_{k} \alpha_k\, \mathcal{N}(v_i;\mu_k,\Sigma_k)} \cdot \Sigma_j^{-1}(v_i - \mu_j) = 0$$
+    </div>
+
+    <p>
+      This equation involves $\mu_j$ on both sides — in the numerator directly, and in the denominator through the sum over all components. There is no closed-form solution. The MLE problem for a GMM has no analytical answer.
+    </p>
+
+    <div class="failure-card">
+      <div class="failure-card-label">🔴 The Log-of-Sum Obstacle</div>
+      <p><strong>Why it's fundamental, not numerical:</strong> If we knew which component each $v_i$ came from — if there were hidden labels $z_i \in \{1, \ldots, M\}$ telling us "this point came from component $j$" — the log-likelihood would factorise into $M$ independent Gaussian MLEs, each with a closed form. The difficulty is entirely caused by the missing labels.</p>
+      <p><strong>Direct gradient ascent fails:</strong> The objective is non-convex in $\theta$. Gradient ascent gets trapped in local optima. The updates have no clean form. A fundamentally different algorithmic idea is needed.</p>
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Gaussian MLE on NIFTY Returns</span>
+        <span class="we-badge">🇮🇳 Full Derivation</span>
+      </div>
+      <div class="we-body">
+        <p>Five daily NIFTY log-returns observed: $v = \{+0.4\%,\; -0.3\%,\; +1.1\%,\; -0.2\%,\; +0.6\%\}$. Model: $P_\theta(v) = \mathcal{N}(v;\, \mu,\, \sigma^2)$. Find the MLE for both $\mu$ and $\sigma^2$.</p>
+
+        <div class="we-step">Step 1 — MLE for $\mu$</div>
+        <p>From the derivation above, $\hat{\mu} = \frac{1}{N}\sum v_i$:</p>
+        <div class="math-block">
+          $$\hat{\mu} = \frac{0.4 + (-0.3) + 1.1 + (-0.2) + 0.6}{5} = \frac{1.6}{5} = 0.32\%$$
+        </div>
+
+        <div class="we-step">Step 2 — MLE for $\sigma^2$</div>
+        <p>Differentiating $\ell(\theta)$ w.r.t. $\sigma^2$ and setting to zero gives the sample variance (dividing by $N$, not $N-1$):</p>
+        <div class="math-block">
+          $$\hat{\sigma}^2 = \frac{1}{N}\sum_{i=1}^N (v_i - \hat{\mu})^2$$
+          $$= \frac{(0.4-0.32)^2 + (-0.3-0.32)^2 + (1.1-0.32)^2 + (-0.2-0.32)^2 + (0.6-0.32)^2}{5}$$
+          $$= \frac{0.0064 + 0.3844 + 0.6084 + 0.2704 + 0.0784}{5} = \frac{1.348}{5} = 0.2696\%^2$$
+        </div>
+        <p>So $\hat{\sigma} \approx 0.52\%$ daily volatility.</p>
+
+        <div class="we-step">Interpret the result</div>
+        <div class="we-answer">
+          <strong>The fitted model:</strong> $\hat{P}(v) = \mathcal{N}(v;\; 0.32\%,\; 0.2696\%^2)$. This is the closest Gaussian to the true NIFTY return distribution, measured by KL divergence — given just these 5 observations. With 5 data points, the estimates have enormous uncertainty. With 250 trading days (one year), the estimates would be far more reliable. The MLE is consistent: as $N \to \infty$, $\hat{\mu} \to \mu_{\text{true}}$ and $\hat{\sigma}^2 \to \sigma^2_{\text{true}}$ — but only if the true distribution is actually Gaussian. If it isn't, the MLE converges to the best Gaussian approximation, not to the truth.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · Discrete MLE on NIFTY Weekly Expiry Outcomes</span>
+        <span class="we-badge">🇮🇳 Empirical Distribution vs Black-Scholes</span>
+      </div>
+      <div class="we-body">
+        <p>Over 40 weekly NIFTY expiries, outcomes are categorised as follows. Compute the MLE (empirical distribution) and compare to what a Black-Scholes Gaussian model would imply.</p>
+
+        <div class="we-step">Observed data</div>
+        <div class="math-block">
+          $$\begin{array}{lcc}
+          \text{Outcome} & \text{Count} & \hat{p}_j^{\text{MLE}} \\
+          \hline
+          \text{Large Up } (>+1\%) & 8 & 8/40 = 0.200 \\
+          \text{Small Up } (0\%\text{ to }+1\%) & 14 & 14/40 = 0.350 \\
+          \text{Flat } (-0.5\%\text{ to }0\%) & 6 & 6/40 = 0.150 \\
+          \text{Small Down } (-1\%\text{ to }-0.5\%) & 7 & 7/40 = 0.175 \\
+          \text{Large Down } (<-1\%) & 5 & 5/40 = 0.125 \\
+          \hline
+          \text{Total} & 40 & 1.000
+          \end{array}$$
+        </div>
+
+        <div class="we-step">What does this tell us?</div>
+        <p>The empirical distribution shows <strong>positive skew</strong> — large up moves (20%) are more common than large down moves (12.5%) in this sample. The Gaussian model used by Black-Scholes with the same $\hat{\mu}$ and $\hat{\sigma}$ would assign roughly equal probability to symmetric tails. The discrepancy — real data is skewed, Gaussian is symmetric — is one source of the volatility skew in NIFTY option markets: OTM puts are overpriced relative to Black-Scholes because the market knows large down moves are genuinely less probable than they would be under a symmetric Gaussian.</p>
+
+        <div class="we-answer">
+          <strong>The key insight:</strong> the MLE empirical distribution is the real-world measure $\mathbb{P}$. Options are priced under the risk-neutral measure $\mathbb{Q}$, which differs from $\mathbb{P}$ by the market price of risk. The gap between $\hat{\mathbb{P}}$ (what the data says) and $\mathbb{Q}$ (what the options market prices) is where systematic trading strategies live. MLE on historical data gives you $\hat{\mathbb{P}}$. The market gives you $\mathbb{Q}$. Compare the two.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      We now have MLE in hand for the two fundamental model families. But the GMM — the model we need for multimodal data — has no closed-form MLE. The obstacle is the log-of-sum: without knowing which component each data point came from, the optimisation couples all components together in an intractable way.
+    </p>
+
+    <div class="cliffhanger">
+      <div class="cliffhanger-label">Chapter 5 Preview</div>
+      <p>What if we introduced the hidden component assignments $z_i$ explicitly as a <strong>latent variable</strong>, derived a lower bound on $\ell(\theta)$ that is actually tractable (the ELBO), and then alternated between inferring the latent variables and updating the parameters? This is the <strong>Expectation-Maximisation algorithm</strong> — one of the most elegant ideas in all of statistical ML. The machinery to understand it — Jensen's inequality, the ELBO, and the geometry of latent variable models — is all in Chapter 5.</p>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 04</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch04 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A quant fits a Gaussian to NIFTY daily log-returns and reports $\hat{\mu} = 0.04\%$ and $\hat{\sigma} = 1.2\%$. A colleague says "that's just the sample mean and variance — you haven't done any real estimation." Which response is most accurate?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>The colleague is right — sample statistics are not proper statistical estimators.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>The quant is right, but the Gaussian assumption needs to be stated explicitly to be valid.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>The colleague is technically correct but misses the deeper point: the sample mean and variance are the MLE for a Gaussian model, derived from minimising KL divergence to the true distribution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Neither is right — the MLE for a Gaussian uses median and MAD, not mean and variance.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The colleague is not wrong — $\hat{\mu}$ and $\hat{\sigma}$ are indeed the sample mean and variance. But calling them "just" sample statistics misses the principled reason they are the right quantities: they are the MLE for the Gaussian model, derived by maximising the log-likelihood (equivalently, minimising KL divergence). The sample mean is the unique solution to $\frac{\partial \ell}{\partial \mu} = 0$; the sample variance solves $\frac{\partial \ell}{\partial \sigma^2} = 0$.<br/><br/>
+          Option D is wrong: MLE for a Gaussian uses mean and variance. Median and MAD minimise different objectives (absolute error and a robust variant) and correspond to MLE under different model families (Laplace and Cauchy respectively).
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch04 / q02</span>
+        <span class="mcq-diff">★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Six coin flips are observed: $\{H, H, T, H, T, H\}$. Model: $P_\theta(H) = p$, $P_\theta(T) = 1-p$. What is the <strong>MLE for $p$</strong>, and why is the Lagrangian needed?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$\hat{p} = 0.5$ — the MLE always defaults to the uniform distribution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$\hat{p} = 4/6 = 2/3$ — the empirical frequency of heads. The Lagrangian enforces $p + (1-p) = 1$, which gives $\lambda = -1$ and yields the frequency formula directly.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$\hat{p} = 4/6 = 2/3$, but no Lagrangian is needed since this is a single-parameter problem.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$\hat{p} = 1$ — the MLE assigns all probability to the most common outcome.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          With 4 heads and 2 tails, the log-likelihood is $\ell(p) = \frac{1}{6}(4\log p + 2\log(1-p))$. For a two-outcome case, we have the implicit constraint $p + (1-p) = 1$, which is automatically satisfied by parameterising with a single $p$. But for $m > 2$ outcomes, the Lagrangian is essential to enforce $\sum_j p_j = 1$.<br/><br/>
+          Option C is partially right about the answer but wrong about the Lagrangian: even for the two-outcome case, the Lagrangian framework gives the same answer and generalises naturally to $m$ outcomes. Option D is wrong: unconstrained maximisation of $\log p$ alone (without the normalisation constraint enforced by the Lagrangian or the $1-p$ term) would indeed push $p \to 1$, but the constraint prevents this.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch04 / q03</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why does the log-likelihood for a Gaussian Mixture Model have <strong>no closed-form maximiser</strong>, while the log-likelihood for a single Gaussian does? What is the structural difference?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>GMMs have more parameters, making the gradient computation too complex to solve analytically.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>The Gaussian log-likelihood is concave everywhere, while the GMM log-likelihood is convex, making the GMM harder to maximise.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>For a single Gaussian, the log converts the product into a tractable sum. For a GMM, a sum appears inside the log, which cannot be simplified — the gradient equations involve the parameters on both sides and have no analytical solution.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>GMMs require computing matrix inverses, which have no closed form in high dimensions.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The key structural difference is the log-of-sum. For a single Gaussian: $\log P_\theta(v_i) = \log \mathcal{N}(v_i;\mu,\Sigma) = \text{const} - \frac{1}{2}(v_i-\mu)^\top \Sigma^{-1}(v_i-\mu)$. The log converts the exponential into a quadratic — tractable, with a closed-form gradient zero. For a GMM: $\log P_\theta(v_i) = \log \sum_j \alpha_j \mathcal{N}(v_i;\mu_j,\Sigma_j)$. The sum is inside the log. The gradient w.r.t. $\mu_j$ involves the ratio $\frac{\alpha_j \mathcal{N}(v_i;\mu_j,\Sigma_j)}{\sum_k \alpha_k \mathcal{N}(v_i;\mu_k,\Sigma_k)}$, which depends on all other component parameters simultaneously. Setting this to zero gives an equation where $\mu_j$ appears on both sides — no closed form.<br/><br/>
+          Option B has it backwards: the Gaussian log-likelihood is concave (which makes it easy to maximise). The GMM log-likelihood is non-concave (which makes it hard). Option A is wrong: the difficulty is structural, not a matter of computational complexity.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch04 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A NIFTY return model fit as a single Gaussian consistently <strong>underprices deep OTM puts</strong>. Which property of the true return distribution is the Gaussian failing to capture, and what model would address it?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>The Gaussian overestimates mean return. A model with lower $\mu$ would fix the put pricing.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>The Gaussian underestimates variance. Increasing $\hat{\sigma}$ in the same Gaussian model would fix it.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The Gaussian has thin tails and cannot model the excess kurtosis and negative skew of true NIFTY returns. A GMM with a low-volatility component and a high-volatility crash component would assign more probability to large negative moves.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>The Gaussian is symmetric, so OTM puts and calls would both be mispriced equally. The problem must be in the interest rate assumption, not the return model.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Deep OTM puts are underpriced by a Gaussian model because the Gaussian assigns too little probability to large negative returns — its tails decay as $e^{-x^2/2}$, much faster than empirically observed. NIFTY returns exhibit: (1) negative skew — large down moves are more frequent than large up moves of the same magnitude; (2) excess kurtosis — extreme moves are more common than the Gaussian predicts. Both properties require a fatter-tailed model.<br/><br/>
+          A two-component GMM — one narrow Gaussian for normal trading days and one wide Gaussian for volatile/crash days — captures both features. The crash component's wide variance assigns meaningful probability to the $-3\%$ to $-5\%$ daily moves that the single Gaussian treats as near-impossible. This is exactly why the volatility smile exists: the market prices options using an implied distribution that is fatter-tailed and left-skewed relative to any Gaussian.<br/><br/>
+          Option B is wrong: simply increasing $\sigma$ in the same Gaussian would overprice ATM options while still underfitting the tail shape. The problem is distributional form, not parameter value.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 04</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Q1–3 are direct computations. Q4–7 require connecting MLE to the broader framework. Q8–10 ask you to reason about model misspecification, consistency, and the limits of MLE.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">Compute the MLE for $\mu$ and $\sigma^2$ given NIFTY weekly returns: $\{+2.1\%, -0.8\%, +1.4\%, -1.2\%, +0.3\%, +1.9\%, -0.5\%\}$. State the fitted Gaussian model and interpret $\hat{\sigma}$ in plain English. <span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">In 20 IPL matches, team A won 13 and lost 7. Treating wins as i.i.d. Bernoulli($p$), compute the MLE for $p$. Then write down the log-likelihood $\ell(p)$, differentiate it, and verify your answer emerges from setting $\frac{d\ell}{dp} = 0$. <span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">A discrete RV takes values $\{1, 2, 3, 4, 5, 6\}$. Dataset of 12 observations: $\{3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 2\}$. (a) Write the one-hot encoding for observation $v_1 = 3$. (b) Compute the MLE probabilities for all six outcomes. (c) Verify $\sum_j \hat{p}_j = 1$. <span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">Derive the MLE for $\sigma^2$ in the Gaussian model $\mathcal{N}(\mu, \sigma^2 I)$ when both $\mu$ and $\sigma^2$ are unknown. Your derivation should differentiate $\ell(\theta)$ w.r.t. $\sigma^2$ and solve. Note that the MLE divides by $N$, not $N-1$ — why? What is the consequence for small samples? <span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">Show that the MLE for an exponential distribution $P_\theta(v) = \theta e^{-\theta v}$, $v \geq 0$ is $\hat{\theta} = 1/\bar{v}$ where $\bar{v}$ is the sample mean. Interpret this: if average inter-trade time on NSE is 0.5 seconds, what does MLE say about the rate parameter of the exponential model? <span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">You observe 5 NIFTY returns. Without computing anything, explain why a GMM with $M = 5$ components can achieve $\ell(\theta) \to \infty$ (i.e., infinite log-likelihood). Why is this a problem, and what does it say about the MLE for GMMs when the number of components is not constrained? <span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">Explain why implementing the Bayes classifier in practice requires density estimation. Given dataset $D = \{(x_i, y_i)\}$ with $y_i \in \{0, 1\}$, write down exactly which density estimation problems need to be solved, and state the MLE estimator for each under a Gaussian class-conditional model $P_{X|Y=k} = \mathcal{N}(\mu_k, \Sigma_k)$. <span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">The MLE is consistent: $\hat{\theta}^* \xrightarrow{p} \theta^*$ as $N \to \infty$ when the true distribution $P_v$ is in the model family $\{P_\theta\}$. What does $\hat{\theta}^*$ converge to when $P_v$ is <em>not</em> in the family — i.e., under model misspecification? State your answer precisely, and illustrate with the case of fitting a Gaussian to fat-tailed NIFTY returns. <span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">A Gaussian Mixture Model with $M = 2$ components is proposed for NIFTY daily returns: a "calm" regime $\mathcal{N}(\mu_1, \sigma_1^2)$ and a "volatile" regime $\mathcal{N}(\mu_2, \sigma_2^2)$ with mixing weights $(\alpha, 1-\alpha)$. Propose plausible values for all five parameters $\{\mu_1, \sigma_1, \mu_2, \sigma_2, \alpha\}$ based on your knowledge of NIFTY market behaviour. Justify each choice. Then write out the full log-likelihood $\ell(\theta)$ for $N$ observations and explain why the log-of-sum prevents a closed-form MLE. <span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">The MLE for a discrete distribution over $m$ outcomes can assign $\hat{p}_j = 0$ to outcomes that never appeared in the training data. In the context of a NIFTY regime classifier trained on 2 years of data, explain why $\hat{p}_j = 0$ for unseen regimes is catastrophically wrong in live trading — and describe two principled solutions (hint: Laplace smoothing and Bayesian priors both address this). Which solution does Ch5's MAP framework formalise? <span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch3.html" class="ch-nav-btn">← Empirical Risk and the Likelihood Game</a>
+    <a href="ML_M_Ch5.html" class="ch-nav-btn primary">Next: Hidden Variables, Prior Beliefs, and EM →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎯 Log-likelihood maximised. That answer is the MLE.",
+  "✨ Sample mean approves. Gradient is zero here.",
+  "🏆 Empirical frequency achieved. Lagrangian satisfied.",
+  "🔥 The data spoke. You listened correctly.",
+  "💡 KL divergence minimised. Model and truth are close.",
+  "🎓 MLE converged. Parameters locked in.",
+  "📈 That answer has the highest likelihood of any in the set.",
+  "🧮 Lagrange multiplier set to −1. Correct.",
+  "⚡ The log-likelihood surface has one maximum. You found it.",
+  "🌟 Consistent, efficient, and correct. MLE is pleased."
+];
+const wrongMsgs = [
+  "🌀 Log-likelihood not maximised here. Re-differentiate.",
+  "📐 The gradient is not zero at this answer. Try again.",
+  "📉 Empirical frequency disagrees with this selection.",
+  "🏦 The Lagrangian enforces a constraint you may have missed.",
+  "😰 Model misspecification detected in your answer.",
+  "🤔 KL divergence is higher here than at the correct answer.",
+  "📊 This answer is in the wrong tail of the solution space.",
+  "🎰 That was sampling from the wrong distribution. Try MLE."
+];
+const state = {};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done) return;
+  if(!state[qid]) state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false; btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done) return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  const expl=document.getElementById(qid+'expl');
+  expl.classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    const m=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(30,158,94,0.1)';
+    feedback.style.color='var(--green)';
+    feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';
+    btn.style.background='var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter) o.classList.add('correct');});
+    const m=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(220,38,38,0.06)';
+    feedback.style.color='#dc2626';
+    feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';
+    btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement) renderMathInElement(document.getElementById(qid+'expl'));
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+});
+</script>
+</body>
+</html>
