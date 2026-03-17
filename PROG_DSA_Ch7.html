@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Balanced BSTs — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* TREE DIAGRAM */
+.tree-diagram{background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.85rem;overflow-x:auto;}
+.tree-diagram .tree-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.8rem;}
+.tree-viz{line-height:2;color:var(--navy);}
+.tree-viz .hl{color:var(--orange);font-weight:700;}
+.tree-viz .bad{color:#dc2626;font-weight:700;}
+.tree-viz .good{color:var(--green);font-weight:700;}
+.tree-viz .note{color:var(--muted);font-size:0.78rem;font-style:italic;margin-top:0.4rem;}
+
+/* ROTATION DIAGRAM */
+.rotation-box{background:var(--code-bg);border-radius:10px;padding:1.2rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:1.9;overflow-x:auto;display:flex;gap:2rem;align-items:center;flex-wrap:wrap;}
+.rot-side{flex:1;min-width:180px;}
+.rot-arrow{color:var(--orange);font-size:1.2rem;font-weight:700;flex-shrink:0;}
+.rot-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+
+/* CASES BOX */
+.cases-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.case-box{background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:1.2rem;}
+.case-label{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.case-content{font-size:0.88rem;color:#2a2a3e;line-height:1.7;}
+.case-content code{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--navy2);}
+
+/* COMPLEXITY TABLE */
+.cx-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.cx-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.cx-table th:first-child{text-align:left;}
+.cx-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.cx-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.cx-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.cx-table tr.highlight td{background:rgba(30,158,94,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+  .cases-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> ›
+      <a href="PROG_DSA.html">Algorithms &amp; DS</a> ›
+      <span>Balanced BSTs</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:54%"></div></div>
+      <span class="tb-progress-label">7 / 13</span>
+    </div>
+    <a href="PROG_DSA.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithms &amp; Data Structures</div>
+  <a class="sidebar-item" href="PROG_DSA_Ch1.html"><div class="si-num">1</div>Computation Models<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch2.html"><div class="si-num">2</div>Sequences<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch3.html"><div class="si-num">3</div>Sorting I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch4.html"><div class="si-num">4</div>Hashing<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch5.html"><div class="si-num">5</div>Sorting II<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch6.html"><div class="si-num">6</div>Binary Trees<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DSA_Ch7.html"><div class="si-num">7</div>Balanced BSTs<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch8.html"><div class="si-num">8</div>Binary Heaps<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch9.html"><div class="si-num">9</div>Graph Traversal<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch10.html"><div class="si-num">10</div>Weighted Shortest Paths<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch11.html"><div class="si-num">11</div>Dynamic Programming I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch12.html"><div class="si-num">12</div>Dynamic Programming II<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DSA_Ch13.html"><div class="si-num">13</div>Complexity<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 07 of 13 · Algorithms and Data Structures</span>
+    </div>
+    <h1 class="chapter-title">Balanced BSTs</h1>
+    <p class="chapter-subtitle">Chapter 6 gave us a tree where every operation costs $O(h)$. The height $h$ can be $O(n)$ in the worst case. This chapter fixes that — permanently. AVL trees keep $h = O(\log n)$ after every insertion and deletion, by performing at most $O(\log n)$ local repairs called rotations.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The AVL Property — Height Balance</h3>
+
+    <div class="callout callout-definition">
+      The <strong>skew</strong> of a node is the height of its right subtree minus the height of its left subtree (where the height of an empty subtree is $-1$).
+      <br/><br/>
+      A node is <strong>height-balanced</strong> if its skew is $-1$, $0$, or $+1$.
+      <br/><br/>
+      An <strong>AVL tree</strong> is a binary tree in which every node is height-balanced. This is the AVL property, named after Adelson-Velsky and Landis (1962) — the first balanced BST ever proposed.
+    </div>
+
+    <h3>Why Height Balance Implies $O(\log n)$ Height</h3>
+
+    <p>
+      We need to show that an AVL tree on $n$ nodes has height $O(\log n)$. Equivalently, we show that any height-$h$ AVL tree has at least $F(h)$ nodes where $F(h) = 2^{\Omega(h)}$.
+    </p>
+    <p>
+      Let $F(h)$ be the minimum number of nodes in any height-$h$ AVL tree. An AVL tree of height $h$ must have a root, a subtree of height $h-1$ (the taller child), and — because the tree is height-balanced — a subtree of at least height $h-2$ (the shorter child). So:
+    </p>
+    <div class="math-block">
+      $$F(0) = 1, \quad F(1) = 2, \quad F(h) = 1 + F(h-1) + F(h-2) \geq 2F(h-2)$$
+    </div>
+    <p>
+      Solving: $F(h) \geq 2^{h/2}$. Therefore an AVL tree with $n$ nodes satisfies $n \geq F(h) \geq 2^{h/2}$, which gives $h \leq 2 \log_2 n = O(\log n)$.
+    </p>
+
+    <div class="callout callout-intuition">
+      The recurrence $F(h) = 1 + F(h-1) + F(h-2)$ is almost identical to the Fibonacci recurrence $\text{Fib}(h) = \text{Fib}(h-1) + \text{Fib}(h-2)$. The minimally-populated AVL trees are sometimes called <em>Fibonacci trees</em> for this reason. The Fibonacci sequence grows exponentially — that exponential growth is exactly what guarantees logarithmic height.
+    </div>
+
+    <h3>Rotations — Restructuring Without Reordering</h3>
+
+    <p>
+      When a node becomes imbalanced (skew $\pm 2$), we need to change the tree's <em>shape</em> without changing its <em>traversal order</em>. The operation that does this is a <strong>rotation</strong>.
+    </p>
+    <p>
+      A rotation takes two adjacent nodes $B$ and $D$ (where $D$ is the right child of $B$, or vice versa), and swaps which one is the parent. Crucially, it relinkss only $O(1)$ pointers and preserves the traversal order exactly.
+    </p>
+
+    <div class="rotation-box">
+      <div class="rot-side">
+        <div class="rot-label">Before rotate_left(B)</div>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffa657">B</span><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;\<br/>
+        &nbsp;&nbsp;&nbsp;A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffa657">D</span><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;\<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;C&nbsp;&nbsp;&nbsp;&nbsp;E
+      </div>
+      <div class="rot-arrow">⟶</div>
+      <div class="rot-side">
+        <div class="rot-label">After rotate_left(B)</div>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffa657">D</span><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;\<br/>
+        &nbsp;&nbsp;&nbsp;<span style="color:#ffa657">B</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E<br/>
+        &nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;\<br/>
+        &nbsp;&nbsp;A&nbsp;&nbsp;&nbsp;&nbsp;C
+      </div>
+    </div>
+
+    <p>
+      Traversal order before: $A, B, C, D, E$. Traversal order after: $A, B, C, D, E$. Identical — the rotation preserves order while changing depth. $A$ and $E$ move up/down one level; $C$ switches parents; $B$ and $D$ swap their parent-child relationship.
+    </p>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">subtree_rotate_left / right · O(1)</span>
+      </div>
+      <div id="cb1-py" class="code-panel active">
+        <pre><code class="language-python">def subtree_rotate_left(B):     # O(1) — promote B's right child D
+    """Left rotation: D becomes parent, B becomes D's left child."""
+    assert B.right
+    A, D  = B.left,  B.right
+    C, E  = D.left,  D.right
+    # swap items so B stays at same memory address (cleaner for parent pointers)
+    B.item, D.item = D.item, B.item
+    B, D = D, B                  # B now holds old D's item (root of subtree)
+    D.left,  D.right = B, E      # D (old B node) gets B and E as children
+    B.left,  B.right = A, C      # B (old D node) gets A and C as children
+    if A: A.parent = B
+    if E: E.parent = D
+    B.subtree_update()           # update augmentations bottom-up
+    D.subtree_update()
+
+def subtree_rotate_right(D):    # O(1) — promote D's left child B
+    """Right rotation: B becomes parent, D becomes B's right child."""
+    assert D.left
+    B, E  = D.left,  D.right
+    A, C  = B.left,  B.right
+    D.item, B.item = B.item, D.item
+    D, B = B, D
+    B.left,  B.right = A, D
+    D.left,  D.right = C, E
+    if A: A.parent = B
+    if E: E.parent = D
+    B.subtree_update()
+    D.subtree_update()</code></pre>
+      </div>
+      <div id="cb1-cpp" class="code-panel">
+        <pre><code class="language-cpp">// Left rotation: promote node's right child — O(1)
+template&lt;typename T&gt;
+void rotate_left(AVL_Node&lt;T&gt;* B) {
+    assert(B->right);
+    auto* D = static_cast&lt;AVL_Node&lt;T&gt;*&gt;(B->right);
+    auto* A = B->left;
+    auto* C = D->left;
+    auto* E = D->right;
+    // swap items so pointers from parent still point to "B"
+    swap(B->item, D->item);
+    swap(B, D);                     // B now holds D's item
+    D->left  = B; D->right = E;     // D (old B) keeps its position
+    B->left  = A; B->right = C;     // B (old D) holds D's old children
+    if (A) A->parent = B;
+    if (E) E->parent = D;
+    B->update(); D->update();        // recompute height/size bottom-up
+}
+
+template&lt;typename T&gt;
+void rotate_right(AVL_Node&lt;T&gt;* D) {
+    assert(D->left);
+    auto* B = static_cast&lt;AVL_Node&lt;T&gt;*&gt;(D->left);
+    auto* A = B->left;
+    auto* C = B->right;
+    auto* E = D->right;
+    swap(D->item, B->item);
+    swap(D, B);
+    B->left  = A; B->right = D;
+    D->left  = C; D->right = E;
+    if (A) A->parent = B;
+    if (E) E->parent = D;
+    B->update(); D->update();
+}</code></pre>
+      </div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">↗ Run C++ on Compiler Explorer (Godbolt)</a>
+    </div>
+
+    <h3>Rebalancing — Three Cases</h3>
+
+    <p>
+      After inserting or deleting a leaf, only ancestors of that leaf can become imbalanced. We walk from the leaf to the root, rebalancing each node with skew $\pm 2$. The key insight: at most $O(\log n)$ nodes need attention (there are only $O(\log n)$ ancestors), and each rebalancing requires at most 2 rotations.
+    </p>
+    <p>
+      Consider a node $B$ with skew $+2$ (right subtree is taller). Its right child is $D$. Three sub-cases based on $D$'s skew:
+    </p>
+
+    <div class="cases-grid">
+      <div class="case-box">
+        <div class="case-label">Case 1 — skew(D) = 0 or +1</div>
+        <div class="case-content">
+          Single left rotation on $B$. After: $D$ is the new root of this subtree. $B$'s skew becomes 0 or +1, $D$'s skew becomes $-1$. Subtree height decreases by 0 or 1.
+          <br/><br/>
+          <code>rotate_left(B)</code>
+        </div>
+      </div>
+      <div class="case-box">
+        <div class="case-label">Case 2 — skew(D) = −1</div>
+        <div class="case-content">
+          $D$'s left child $C$ exists. Double rotation: first rotate $D$ right, then rotate $B$ left. After: $C$ becomes the new root. Both $B$ and $D$ become children of $C$. Subtree height decreases by 1.
+          <br/><br/>
+          <code>rotate_right(D)</code><br/>
+          <code>rotate_left(B)</code>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The symmetric cases (skew $-2$) use right rotations instead. The complete rebalance logic:
+    </p>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">rebalance + maintain · O(log n) per insertion/deletion</span>
+      </div>
+      <div id="cb2-py" class="code-panel active">
+        <pre><code class="language-python">def height(A):
+    """Height of node A (-1 if A is None)."""
+    return A.height if A else -1
+
+def subtree_update(A):          # O(1) — recompute augmentations
+    A.height = 1 + max(height(A.left), height(A.right))
+    A.size   = 1 + (A.left.size  if A.left  else 0) \
+                 + (A.right.size if A.right else 0)
+
+def skew(A):                    # O(1)
+    return height(A.right) - height(A.left)
+
+def rebalance(A):               # O(1) — fix skew ±2 using ≤ 2 rotations
+    if skew(A) == 2:
+        if skew(A.right) < 0:          # Case 2: double rotation
+            A.right.subtree_rotate_right()
+        A.subtree_rotate_left()        # Case 1 or 2: single rotation
+    elif skew(A) == -2:
+        if skew(A.left) > 0:           # symmetric Case 2
+            A.left.subtree_rotate_left()
+        A.subtree_rotate_right()       # symmetric Case 1 or 2
+
+def maintain(A):                # O(log n) — rebalance from A up to root
+    """Called after any structural change at or below A."""
+    rebalance(A)                # fix A if needed (O(1))
+    subtree_update(A)           # recompute A's height and size (O(1))
+    if A.parent:
+        A.parent.maintain()     # propagate up the tree</code></pre>
+      </div>
+      <div id="cb2-cpp" class="code-panel">
+        <pre><code class="language-cpp">template&lt;typename T&gt;
+struct AVL_Node {
+    T item;
+    int height = 0, sz = 1;
+    AVL_Node *left = nullptr, *right = nullptr, *parent = nullptr;
+    AVL_Node(T x) : item(x) {}
+
+    void update() {                      // O(1)
+        int lh = left  ? left->height  : -1;
+        int rh = right ? right->height : -1;
+        height = 1 + max(lh, rh);
+        sz = 1 + (left  ? left->sz  : 0)
+                + (right ? right->sz : 0);
+    }
+    int skew() const {
+        int lh = left  ? left->height  : -1;
+        int rh = right ? right->height : -1;
+        return rh - lh;
+    }
+
+    void rebalance() {                   // O(1) — at most 2 rotations
+        if (skew() == 2) {
+            if (static_cast&lt;AVL_Node*&gt;(right)->skew() &lt; 0)
+                rotate_right(static_cast&lt;AVL_Node*&gt;(right));
+            rotate_left(this);
+        } else if (skew() == -2) {
+            if (static_cast&lt;AVL_Node*&gt;(left)->skew() &gt; 0)
+                rotate_left(static_cast&lt;AVL_Node*&gt;(left));
+            rotate_right(this);
+        }
+    }
+
+    void maintain() {                    // O(log n)
+        rebalance();
+        update();
+        if (parent) parent->maintain();
+    }
+};</code></pre>
+      </div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">↗ Run C++ on Compiler Explorer (Godbolt)</a>
+    </div>
+
+    <h3>The Augmentation Framework</h3>
+
+    <p>
+      Every binary tree can be augmented with additional information stored at each node. The rule is clean: augment a node with any <strong>subtree property</strong> — something computable from the node's item and its two children's augmentations in $O(1)$ time.
+    </p>
+    <p>
+      If you can compute the property in $O(1)$ from children, you can maintain it during any rotation or leaf modification without changing the $O(\log n)$ operation cost. The <code>subtree_update</code> function is where augmentations live.
+    </p>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Size_Node · augmented with subtree size for Sequence AVL</span>
+      </div>
+      <div id="cb3-py" class="code-panel active">
+        <pre><code class="language-python">class Size_Node(Binary_Node):
+    """AVL node augmented with subtree size — enables O(log n) get_at(i)."""
+
+    def subtree_update(self):       # O(1) — called after every structural change
+        super().subtree_update()    # recompute height first
+        self.size = 1
+        if self.left:  self.size += self.left.size
+        if self.right: self.size += self.right.size
+
+    def subtree_at(self, i):        # O(log n) — find i-th node in traversal order
+        assert 0 <= i
+        L = self.left.size if self.left else 0
+        if i < L:
+            return self.left.subtree_at(i)
+        elif i > L:
+            return self.right.subtree_at(i - L - 1)
+        else:
+            return self                         # i == L → this is the i-th node
+
+
+# With Size_Node, a Sequence AVL supports all operations in O(log n):
+# get_at(i)     → subtree_at(i).item
+# insert_at(i)  → subtree_at(i-1).insert_after(new_node)
+# delete_at(i)  → subtree_at(i).subtree_delete()</code></pre>
+      </div>
+      <div id="cb3-cpp" class="code-panel">
+        <pre><code class="language-cpp">// AVL node augmented with subtree size
+// Enables O(log n) get_at(i) for Sequence interface
+template&lt;typename T&gt;
+struct Size_AVL_Node : AVL_Node&lt;T&gt; {
+    using Base = AVL_Node&lt;T&gt;;
+    int size = 1;
+
+    Size_AVL_Node(T x) : Base(x) {}
+
+    void update() override {            // O(1)
+        Base::update();                 // recompute height first
+        size = 1;
+        auto* L = static_cast&lt;Size_AVL_Node*&gt;(this->left);
+        auto* R = static_cast&lt;Size_AVL_Node*&gt;(this->right);
+        if (L) size += L->size;
+        if (R) size += R->size;
+    }
+
+    // Find i-th node in traversal order — O(log n)
+    Size_AVL_Node* subtree_at(int i) {
+        int L = this->left ? static_cast&lt;Size_AVL_Node*&gt;(this->left)->size : 0;
+        if      (i &lt; L) return static_cast&lt;Size_AVL_Node*&gt;(this->left)->subtree_at(i);
+        else if (i &gt; L) return static_cast&lt;Size_AVL_Node*&gt;(this->right)->subtree_at(i - L - 1);
+        else            return this;
+    }
+};</code></pre>
+      </div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">↗ Run C++ on Compiler Explorer (Godbolt)</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example · AVL Insertion with Rebalancing</span>
+        <span class="we-badge">Keys: 10 → 20 → 30</span>
+      </div>
+      <div class="we-body">
+        <p>Insert keys 10, 20, 30 into an initially empty AVL tree. Show the tree after each insertion and any rebalancing that occurs.</p>
+
+        <div class="we-step">Insert 10 — trivial</div>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.8rem 1rem;font-family:'DM Mono',monospace;font-size:0.82rem;margin:0.5rem 0;">
+          10 (h=0, skew=0) ✓ balanced
+        </div>
+
+        <div class="we-step">Insert 20 — goes right of 10</div>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.8rem 1rem;font-family:'DM Mono',monospace;font-size:0.82rem;margin:0.5rem 0;">
+          10 (h=1, skew=+1) ✓ balanced<br/>
+          &nbsp;&nbsp;\<br/>
+          &nbsp;&nbsp;20 (h=0)
+        </div>
+
+        <div class="we-step">Insert 30 — goes right of 20. Now 10 has skew +2 — imbalanced!</div>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.8rem 1rem;font-family:'DM Mono',monospace;font-size:0.82rem;margin:0.5rem 0;">
+          10 (h=2, <span style="color:#dc2626;font-weight:700">skew=+2</span>) ← IMBALANCED<br/>
+          &nbsp;&nbsp;\<br/>
+          &nbsp;&nbsp;20 (h=1, skew=+1) ← Case 1 condition<br/>
+          &nbsp;&nbsp;&nbsp;&nbsp;\<br/>
+          &nbsp;&nbsp;&nbsp;&nbsp;30 (h=0)
+        </div>
+        <p>Node 20 has skew +1 (Case 1). Apply single left rotation on node 10:</p>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.8rem 1rem;font-family:'DM Mono',monospace;font-size:0.82rem;margin:0.5rem 0;">
+          20 (h=1, <span style="color:var(--green);font-weight:700">skew=0</span>) ✓ balanced<br/>
+          &nbsp;/&nbsp;&nbsp;\<br/>
+          10&nbsp;&nbsp;&nbsp;30 (both h=0, skew=0) ✓
+        </div>
+
+        <div class="we-answer">
+          <strong>Result:</strong> perfectly balanced tree, height 1. One left rotation fixed the imbalance. This is the textbook "right-right" case — three consecutive right insertions produce a right-skewed chain, which a single left rotation converts to a balanced tree. The same pattern occurs every time you insert sorted keys into an AVL tree: the tree auto-corrects within $O(\log n)$ rotations.
+        </div>
+      </div>
+    </div>
+
+    <h3>The Complete Performance Picture</h3>
+
+    <table class="cx-table">
+      <thead>
+        <tr>
+          <th>Data Structure</th>
+          <th>build</th>
+          <th>find(k) / get_at(i)</th>
+          <th>insert / delete</th>
+          <th>find_min/max</th>
+          <th>find_prev/next</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Hash Table</td>
+          <td>$\Theta(n)^{(e)}$</td>
+          <td class="cx-good">$\Theta(1)^{(e)}$</td>
+          <td class="cx-good">$\Theta(1)^{(e)}$</td>
+          <td class="cx-bad">$\Theta(n)$</td>
+          <td class="cx-bad">$\Theta(n)$</td>
+        </tr>
+        <tr>
+          <td>Unbalanced BST</td>
+          <td>$\Theta(nh)$</td>
+          <td class="cx-ok">$\Theta(h)$</td>
+          <td class="cx-ok">$\Theta(h)$</td>
+          <td class="cx-ok">$\Theta(h)$</td>
+          <td class="cx-ok">$\Theta(h)$</td>
+        </tr>
+        <tr class="highlight">
+          <td>AVL Tree (Set)</td>
+          <td>$\Theta(n \log n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+        </tr>
+        <tr class="highlight">
+          <td>AVL Tree (Sequence)</td>
+          <td>$\Theta(n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+          <td class="cx-good">$\Theta(\log n)$</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.78rem;color:var(--muted);margin-top:-0.8rem;margin-bottom:1.5rem;font-family:'DM Mono',monospace;">(e) expected · Sequence AVL build is O(n) via the recursive median-split construction from Ch6.</p>
+
+    <h3>Augmentation in Practice — The Bit-Counting Problem</h3>
+
+    <p>
+      The augmentation framework is general. As a final example beyond size and height: maintain a sequence of $n$ bits supporting two $O(\log n)$ operations: <code>flip(i)</code> and <code>count_ones_upto(i)</code> (number of 1-bits in the prefix up to index $i$).
+    </p>
+    <p>
+      Augment each node with <code>subtree_ones</code> — the count of 1-bits in its subtree. This is a valid subtree property: computed in $O(1)$ from children. After flipping bit $i$, update augmentations up the tree in $O(\log n)$. For <code>count_ones_upto(i)</code>, walk down the tree accumulating ones from left subtrees along the path.
+    </p>
+    <p>
+      This pattern — augmented Sequence AVL for prefix operations — is used directly in practice for rank/select data structures, Fenwick trees (binary indexed trees), and segment trees. Every one of these is either an AVL-style balanced tree or can be understood as one.
+    </p>
+
+    <div class="callout callout-india">
+      Python's <code>sortedcontainers.SortedList</code> is implemented using a B-tree (a generalisation of AVL trees with higher branching factor, better cache performance). It supports <code>add</code>, <code>discard</code>, <code>index</code> (rank query), and <code>bisect_left/right</code> (predecessor/successor) all in $O(\log n)$. For TTT's strategy pipeline, a <code>SortedList</code> of active strikes with augmented volume lets you answer "what is the total open interest in the 23500–24500 range?" in $O(\log n)$ per query — which is exactly a range-sum on an augmented AVL. The theory in this chapter is not academic scaffolding — it is the mechanism inside the tools you already use.
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 07</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / dsa / ch07 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A left rotation on node $B$ (where $D$ is $B$'s right child) promotes $D$ to be the new subtree root. Which of the following is preserved by the rotation?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>The heights of all nodes in the subtree</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>The traversal order of all nodes</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>The BST property (sorted order of keys)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Both B and C</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: D — both B and C.</strong><br/><br/>
+          Wait — re-read the options. B says "traversal order", C says "BST property (sorted order of keys)". These are actually the same thing for a BST: BST property ⟺ traversal order = sorted key order.<br/><br/>
+          The correct answer is D, because a rotation preserves traversal order by design, and since BST property ⟺ traversal order being sorted, it also preserves the BST property. Heights are <em>not</em> preserved — that is the whole point of rotations. A left rotation decreases the height of $B$'s subtree (or keeps it the same), which is exactly why we use it to fix imbalance. Option A is wrong.<br/><br/>
+          The key invariant: rotations change structure, never semantics.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','D')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / dsa / ch07 / q02</span>
+        <span class="mcq-diff">★★ AVL Property</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          An AVL tree has $n = 100$ nodes. What is the <strong>maximum possible height</strong> of this tree?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>7 — $\lfloor \log_2 100 \rfloor$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>13 — AVL height bound is $\approx 1.44 \log_2 n$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>50 — balanced means at most $n/2$ height</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>99 — AVL trees can still degenerate in worst case</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B — at most 13.</strong><br/><br/>
+          From the Fibonacci recurrence analysis: any height-$h$ AVL tree has at least $F(h) \geq 2^{h/2}$ nodes. Setting $n \geq 2^{h/2}$ gives $h \leq 2 \log_2 n$. For $n = 100$: $h \leq 2 \times 6.64 \approx 13.3$, so $h \leq 13$.<br/><br/>
+          More precisely, the exact bound is $h \leq \lfloor 1.44 \log_2(n+2) \rfloor - 1$. For $n = 100$: $h \leq 1.44 \times 6.66 - 1 \approx 8.6$, so $h \leq 8$ in practice. But the $2\log_2 n$ bound is the clean theoretical guarantee. Option A ($\log_2 n$) would be a perfect binary tree — AVL trees can be slightly taller. Options C and D contradict the AVL height proof.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / dsa / ch07 / q03</span>
+        <span class="mcq-diff">★★ Rebalancing</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          After inserting a node into an AVL tree, node $B$ has skew $+2$ and its right child $D$ has skew $-1$. How many rotations are needed to restore balance, and what are they?
+        </p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>1 rotation — left rotation on $B$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>1 rotation — right rotation on $D$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>2 rotations — right rotation on $D$, then left rotation on $B$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>2 rotations — left rotation on $B$, then right rotation on $D$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C — right rotation on $D$, then left rotation on $B$.</strong><br/><br/>
+          This is Case 2 (skew($D$) = $-1$). The double rotation pattern:<br/>
+          1. Right rotation on $D$ — this converts the configuration to Case 1 (makes $D$'s skew become $+1$ or $0$).<br/>
+          2. Left rotation on $B$ — now a standard single left rotation restores balance.<br/><br/>
+          The order matters: rotate the child first, then the imbalanced node. Doing it in reverse order (left on $B$ first) would not fix the imbalance — it would just move the problem. This "zigzag" pattern (right child has left-heavy subtree) always requires two rotations. The "straight-line" pattern (Case 1, skew($D$) ≥ 0) requires only one.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / dsa / ch07 / q04</span>
+        <span class="mcq-diff">★★★ Augmentation</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          You want to augment an AVL tree so that <code>subtree_sum(A)</code> returns the sum of all keys in $A$'s subtree in $O(1)$. Which statement is correct?
+        </p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>This is impossible — sum requires visiting all nodes in the subtree</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Store the sum but recompute from scratch after every rotation — $O(n)$ per operation</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>Store the sum at each node; update in $O(1)$ as <code>A.sum = A.key + left.sum + right.sum</code>; maintained during rotations via <code>subtree_update</code></span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Augmentation only works for properties based on subtree size, not arbitrary sums</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Subtree sum is a valid subtree property: it depends only on the item at the node and the sums at its two children. The formula <code>A.sum = A.key + (A.left.sum if A.left else 0) + (A.right.sum if A.right else 0)</code> computes it in $O(1)$ from children's stored values.<br/><br/>
+          By the augmentation theorem, any property computable in $O(1)$ from children can be maintained during rotations (which call <code>subtree_update</code> on the two nodes involved) and during leaf insertion/deletion (which calls <code>maintain</code> walking up the tree). Total augmentation maintenance cost: $O(\log n)$ per operation, matching the AVL cost. No extra asymptotic cost.<br/><br/>
+          This sum augmentation enables $O(\log n)$ range-sum queries: "total of all keys between $k_1$ and $k_2$" — navigate to both endpoints and combine subtree sums.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 07</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1–3 direct application. Q4–7 synthesis. Q8–10 careful argument.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">Insert keys $[3, 2, 1]$ into an empty AVL tree one at a time. After each insertion, show the tree with skew values at each node and identify which rebalancing (if any) is triggered. What is the final tree?
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">Insert keys $[10, 20, 15]$ into an empty AVL tree. After inserting 15, identify the imbalanced node, its skew, its child's skew, and which case (1 or 2) applies. Perform the required rotations and show the final balanced tree.
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">What is the minimum number of nodes in an AVL tree of height 4? Draw the tree. What is the minimum number for height 5?
+            <span class="tq-diff tq-easy">Easy</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">Prove that a left rotation on node $B$ takes $O(1)$ time and modifies exactly 6 pointer fields. List each pointer that changes and its new value. Then prove that the traversal order is preserved — specifically, show that the in-order sequence of the subtree is identical before and after the rotation.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">The <code>maintain</code> function walks from a modified node up to the root calling <code>rebalance</code> and <code>subtree_update</code> at each ancestor. Prove that this takes $O(\log n)$ total time by: (a) bounding the number of ancestors, and (b) showing each call is $O(1)$.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">Augment an AVL tree with a <code>subtree_max</code> field — the maximum key in the subtree. (a) Show how to compute it in $O(1)$ from children. (b) Describe how to use it to answer "does any key in the range $[L, R]$ exist?" in $O(\log n)$ time.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">The bit-counting problem from the chapter: implement <code>count_ones_upto(i)</code> in full Python using a Sequence AVL augmented with <code>subtree_ones</code>. Test it on a 10-bit sequence with several flips. Verify correctness against a brute-force prefix sum.
+            <span class="tq-diff tq-medium">Medium</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">Prove that the minimum number of nodes $F(h)$ in a height-$h$ AVL tree satisfies $F(h) \geq 2^{h/2}$. Use strong induction with the recurrence $F(h) = 1 + F(h-1) + F(h-2) \geq 2F(h-2)$. Conclude that any AVL tree on $n$ nodes has height $h \leq 2\log_2 n$.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">Why does insertion into an AVL tree require at most 1 or 2 rotations to rebalance, while deletion may require up to $O(\log n)$ rotations? Trace through what happens when a deletion decreases the height of a subtree and how that propagates up the tree.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">Design a data structure for NIFTY option analytics supporting: (a) insert new option record with key (strike, expiry) in $O(\log n)$; (b) delete in $O(\log n)$; (c) find all options with strike in $[23000, 24500]$ and return their total open interest in $O(\log n + k)$ where $k$ is the number of results. Describe the augmentation, the range query algorithm, and justify all complexities.
+            <span class="tq-diff tq-hard">Hard</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="PROG_DSA_Ch6.html" class="ch-nav-btn">← Binary Trees</a>
+    <a href="PROG_DSA_Ch8.html" class="ch-nav-btn primary">Next: Binary Heaps →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const STORAGE_KEY = 'quantttt-lang';
+
+function switchLang(btn, blockId, lang) {
+  btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(blockId + '-py').classList.toggle('active', lang === 'py');
+  document.getElementById(blockId + '-cpp').classList.toggle('active', lang === 'cpp');
+  const gb = document.getElementById(blockId + '-godbolt');
+  if (gb) gb.classList.toggle('show', lang === 'cpp');
+  localStorage.setItem(STORAGE_KEY, lang);
+  syncAllBlocks(lang);
+}
+
+function syncAllBlocks(lang) {
+  document.querySelectorAll('.code-block').forEach(block => {
+    const pyPanel  = block.querySelector('[id$="-py"]');
+    const cppPanel = block.querySelector('[id$="-cpp"]');
+    const pyBtn    = block.querySelector('.lang-btn:first-child');
+    const cppBtn   = block.querySelector('.lang-btn:last-child');
+    const gb       = block.querySelector('.godbolt-link');
+    if (pyPanel)  pyPanel.classList.toggle('active', lang === 'py');
+    if (cppPanel) cppPanel.classList.toggle('active', lang === 'cpp');
+    if (pyBtn)    pyBtn.classList.toggle('active', lang === 'py');
+    if (cppBtn)   cppBtn.classList.toggle('active', lang === 'cpp');
+    if (gb)       gb.classList.toggle('show', lang === 'cpp');
+  });
+}
+
+const correctMsgs = [
+  "🎯 Balanced and correct. The AVL property holds.",
+  "✨ Rotation executed. Traversal order preserved.",
+  "🏆 Skew fixed. Height is O(log n) once more.",
+  "🔥 Nailed it. The Fibonacci bound is satisfied.",
+  "💡 Augmentation maintained. O(1) update confirmed.",
+  "📐 Both rotations correct. Double rotation complete.",
+  "⚡ O(log n) and right. Carry on.",
+];
+
+const wrongMsgs = [
+  "🌀 Check which case applies — skew of child matters.",
+  "📉 The height bound is tighter than that. Re-read the proof.",
+  "😰 Rotation direction is wrong. Left promotes right child.",
+  "📐 Remember: rotations preserve traversal order, not heights.",
+  "🤔 Augmentation can be maintained — recheck the framework.",
+  "🔁 Trace the rotation pointer changes step by step.",
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'opts'));
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem(STORAGE_KEY) || 'py';
+  syncAllBlocks(saved);
+  if (window.hljs) hljs.highlightAll();
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$', right:'$$', display:true},
+        {left:'$',  right:'$',  display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
