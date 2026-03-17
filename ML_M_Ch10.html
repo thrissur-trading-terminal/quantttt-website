@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Recurrent Neural Networks · quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-f{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;font-style:italic;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.derivation{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.deriv-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.deriv-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.deriv-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.deriv-body{padding:1.5rem;background:var(--white);}
+.deriv-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.deriv-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.deriv-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.deriv-result strong{color:var(--green);}
+
+.failure-card{background:rgba(220,38,38,0.04);border:1.5px solid rgba(220,38,38,0.15);border-radius:12px;padding:1.4rem 1.6rem;margin:1.5rem 0;}
+.failure-card-label{font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:#dc2626;margin-bottom:0.6rem;font-weight:600;}
+.failure-card p{font-size:0.93rem;line-height:1.75;color:#2a2a3e;margin-bottom:0.8rem;}
+.failure-card p:last-child{margin-bottom:0;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.col-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;}
+.col-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.col-card p{font-size:0.88rem;line-height:1.7;color:#2a2a3e;margin-bottom:0.7rem;}
+.col-card p:last-child{margin-bottom:0;}
+@media(max-width:650px){.two-col{grid-template-columns:1fr;}}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.cliffhanger{background:var(--navy);border-radius:12px;padding:1.8rem 2rem;margin:2.5rem 0;text-align:center;}
+.cliffhanger-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.8rem;}
+.cliffhanger p{font-size:0.95rem;color:rgba(255,255,255,0.75);line-height:1.75;max-width:580px;margin:0 auto;}
+.cliffhanger strong{color:var(--orange2);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Recurrent Neural Networks</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:76.9%"></div></div>
+      <span class="tb-progress-label">10 / 13</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html"><div class="si-num">1</div>What Is Learning?<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html"><div class="si-num">2</div>The Learning Machine<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch3.html"><div class="si-num">3</div>Empirical Risk and the Likelihood Game<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch4.html"><div class="si-num">4</div>Maximum Likelihood — Let the Data Speak<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch5.html"><div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch6.html"><div class="si-num">6</div>Non-parametric Density Estimation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch7.html"><div class="si-num">7</div>Linear Models and the Bias-Variance Tradeoff<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch8.html"><div class="si-num">8</div>Regularisation, SVMs, and the Kernel Trick<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch9.html"><div class="si-num">9</div>Convolutional Neural Networks<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="ML_M_Ch10.html"><div class="si-num">10</div>Recurrent Neural Networks<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch11.html"><div class="si-num">11</div>Attention and Transformers<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch12.html"><div class="si-num">12</div>Ensembles and Decision Trees<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch13.html"><div class="si-num">13</div>Unsupervised Learning and Generative Models<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Intermediate</span>
+      <span class="ch-num">Chapter 10 of 13 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Recurrent<br/>Neural Networks</h1>
+    <p class="chapter-subtitle">CNNs exploit spatial structure. But language, clinical time-series, and financial tick data have a different kind of structure: order matters, inputs have variable length, and the meaning of any element depends on what came before. Recurrent Neural Networks process sequences by maintaining a hidden state that persists across time — and then we discover, with full mathematical proof, why training them on long sequences is fundamentally broken.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Why Sequential Data Breaks the MLP</h3>
+
+    <p>
+      An MLP takes a fixed-size input $x \in \mathbb{R}^d$ and produces an output. This is fine for images (fixed dimensions) and tabular data (fixed features). But many real-world problems involve sequences of variable length:
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📝 Language and Text</div>
+        <p>A sentence has variable length. "NIFTY fell" has 2 tokens; "NIFTY fell sharply after RBI policy announcement" has 8. An MLP cannot take inputs of different sizes. And the meaning of "fell" depends on the context built by the preceding words.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 Financial Time Series</div>
+        <p>A tick-by-tick sequence of NIFTY trades is variable length — some days have 2 million ticks, some have 3 million. More importantly, whether a price move at time $t$ is meaningful depends on the preceding sequence of prices, volumes, and order book states.</p>
+      </div>
+    </div>
+
+    <p>
+      The CNN's solution — local filters and parameter sharing — helps with fixed-size sequences but still can't handle variable-length inputs naturally, and its local receptive field may miss long-range dependencies. A fundamentally different architecture is needed: one that reads a sequence one element at a time, maintaining a <strong>summary of everything seen so far</strong> in a hidden state.
+    </p>
+
+    <h3>The RNN: State Across Time</h3>
+
+    <p>
+      Let $X = \{x_1, x_2, \ldots, x_\tau\}$ be a sequence of inputs where each $x_t \in \mathbb{R}^d$. An RNN processes this sequence step by step, maintaining a hidden state $h_t \in \mathbb{R}^m$ that is updated at each time step:
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>vanilla RNN</strong> update equations are:
+      $$z_t = W_h h_{t-1} + W_x x_t + b_1$$
+      $$h_t = \sigma(z_t)$$
+      $$\hat{y}_t = W_y h_t + b_2$$
+      Parameters: $W_h \in \mathbb{R}^{m \times m}$ (hidden-to-hidden), $W_x \in \mathbb{R}^{m \times d}$ (input-to-hidden), $W_y \in \mathbb{R}^{k \times m}$ (hidden-to-output), biases $b_1, b_2$. The <strong>same parameters are used at every time step</strong> — this is parameter sharing across time, the temporal analogue of the CNN's spatial parameter sharing.
+    </div>
+
+    <p>
+      The hidden state $h_t$ is the RNN's memory — it encodes a summary of the entire input history $\{x_1, \ldots, x_t\}$ in a fixed-size vector of dimension $m$, regardless of how long the sequence is. The output $\hat{y}_t$ at each step is computed from this summary.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of the hidden state as a running summary being updated as the sequence is read. At each step, the RNN decides: what from the previous summary $h_{t-1}$ is worth keeping, and what from the new input $x_t$ is worth incorporating? The update $h_t = \sigma(W_h h_{t-1} + W_x x_t + b_1)$ blends the two. The weight matrix $W_h$ governs how much of the previous memory persists; $W_x$ governs how strongly new inputs update the memory. These are learned from data.
+    </div>
+
+    <h3>RNN Tasks: Sequence Classification and Sequence-to-Sequence</h3>
+
+    <p>
+      The same RNN architecture supports different tasks depending on which outputs you use:
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📋 Sequence Classification</div>
+        <p>Read the entire sequence, then use the final hidden state $h_\tau$ to make a single prediction. Examples: sentiment classification of an earnings call transcript (positive/negative), classifying a NIFTY intraday session as trending/ranging/reversing from the full tick sequence.</p>
+        <p>Output: one label per sequence, produced from $h_\tau$.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🔄 Sequence-to-Sequence Regression</div>
+        <p>Produce an output at every time step. Examples: machine translation (input: Hindi sequence, output: English sequence), next-step prediction of NIFTY price from the history of returns up to time $t$.</p>
+        <p>Output: one prediction $\hat{y}_t$ per input $x_t$, produced at every step.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      NSE's surveillance system uses sequence models to detect spoofing and layering — manipulative order patterns where large orders are placed and cancelled to create artificial price pressure. The system reads the sequence of order book events (place, cancel, modify, execute) for each security and flags anomalous patterns. An RNN processes the variable-length order event sequence and produces a suspicion score — exactly the sequence classification task described above. The same architecture underlies fraud detection in UPI transaction sequences at NPCI.
+    </div>
+
+    <h3>Backpropagation Through Time (BPTT)</h3>
+
+    <p>
+      Training an RNN requires computing gradients of the loss with respect to parameters $W_h$, $W_x$, $W_y$. Since the same parameters are used at every step, the gradient must be accumulated across all time steps. This is called <strong>Backpropagation Through Time (BPTT)</strong> — unroll the RNN across $\tau$ steps, treat it as a very deep feedforward network with shared weights, and apply the chain rule.
+    </p>
+
+    <p>
+      The key gradient involves the loss at time $T$ with respect to the hidden state at time $t < T$. By the chain rule:
+    </p>
+
+    <div class="math-block">
+      $$\frac{\partial L_T}{\partial h_t} = \frac{\partial L_T}{\partial h_T} \cdot \frac{\partial h_T}{\partial h_t}$$
+    </div>
+
+    <p>
+      The term $\frac{\partial h_T}{\partial h_t}$ requires propagating the gradient back through all intermediate time steps $t, t+1, \ldots, T-1$. Each step contributes one Jacobian:
+    </p>
+
+    <div class="math-block">
+      $$\frac{\partial h_{k+1}}{\partial h_k} = \text{diag}(\sigma'(z_{k+1})) \cdot W_h$$
+    </div>
+
+    <p>
+      The full product over all intermediate steps is:
+    </p>
+
+    <div class="math-block">
+      $$\frac{\partial h_T}{\partial h_t} = \prod_{k=t}^{T-1} \frac{\partial h_{k+1}}{\partial h_k} = \prod_{k=t}^{T-1} \text{diag}(\sigma'(z_{k+1})) \cdot W_h$$
+    </div>
+
+    <h3>Vanishing Gradients: The Mathematical Proof</h3>
+
+    <p>
+      This product of matrices is where the problem lives. Taking the norm:
+    </p>
+
+    <!-- VANISHING GRADIENT DERIVATION -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · Exponential Decay of Gradients in Vanilla RNNs</span>
+        <span class="deriv-badge">Chain Rule · Norm Bound · $T - t$ steps</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Step 1 — Bound the norm of the product</div>
+        <p>Using the submultiplicativity of matrix norms ($\|AB\| \leq \|A\| \cdot \|B\|$):</p>
+        <div class="math-block">
+          $$\left\|\frac{\partial h_T}{\partial h_t}\right\| \leq \prod_{k=t}^{T-1} \left\|\text{diag}(\sigma'(z_{k+1}))\right\| \cdot \|W_h\|$$
+        </div>
+
+        <div class="deriv-step">Step 2 — Bound the sigmoid derivative</div>
+        <p>For the sigmoid activation $\sigma(z) = 1/(1+e^{-z})$, the derivative satisfies $0 < \sigma'(z) \leq 1/4$ for all $z$. So $\|\text{diag}(\sigma'(z_{k+1}))\| \leq 1/4$. Therefore:</p>
+        <div class="math-block">
+          $$\left\|\frac{\partial h_T}{\partial h_t}\right\| \leq \left(\frac{\|W_h\|}{4}\right)^{T-t}$$
+        </div>
+
+        <div class="deriv-step">Step 3 — Exponential decay</div>
+        <p>If $\|W_h\| < 4$, the bound $\left(\|W_h\|/4\right)^{T-t} \to 0$ exponentially as $T - t$ grows. With $T - t = 50$ (a 50-step sequence) and $\|W_h\| = 2$: the bound is $(2/4)^{50} = (0.5)^{50} \approx 10^{-15}$. The gradient has numerically vanished.</p>
+
+        <div class="deriv-result">
+          <strong>Vanishing gradient theorem:</strong> In a vanilla RNN with bounded activation derivatives and $\|W_h\| < 4$, the gradient $\frac{\partial L_T}{\partial h_t}$ decays exponentially in the distance $T - t$. For long sequences, gradients from early time steps are effectively zero — the network cannot learn long-range dependencies.
+        </div>
+      </div>
+    </div>
+
+    <div class="failure-card">
+      <div class="failure-card-label">🔴 Why This Is a Fundamental Problem</div>
+      <p>The vanishing gradient is not a bug that better initialisation or a different learning rate can fix. It is a structural consequence of multiplying many matrices together. For a sequence of length 100, the gradient from step 1 to step 100 has passed through 99 matrix multiplications. Each multiplication either shrinks or explodes the gradient exponentially.</p>
+      <p>In practice: vanilla RNNs can only learn dependencies spanning a few time steps. For financial time series where a pattern from 20 trading days ago is relevant to today's prediction, vanilla RNNs simply cannot capture it — the gradient signal has decayed to numerical zero before reaching those early steps.</p>
+    </div>
+
+    <div class="callout callout-warning">
+      There is also an <strong>exploding gradient</strong> problem when $\|W_h\| > 4$ — the gradient grows exponentially and training diverges. The standard fix for exploding gradients is <strong>gradient clipping</strong>: if $\|\nabla \mathcal{L}\| > \text{threshold}$, rescale the gradient to have norm equal to the threshold. This prevents divergence but does not solve the vanishing problem.
+    </div>
+
+    <h3>The Root Cause: Multiplicative State Updates</h3>
+
+    <p>
+      The vanishing gradient problem arises because the vanilla RNN's state update is <strong>multiplicative</strong>:
+      $$h_t = \sigma(W_h h_{t-1} + W_x x_t + b_1)$$
+    </p>
+
+    <p>
+      To get from $h_t$ to $h_T$, the gradient must pass through $T - t$ applications of $\sigma' \cdot W_h$ — a product that decays exponentially. The fix is conceptually simple: make the state update <strong>additive</strong> rather than purely multiplicative. If $h_t$ is constructed partly as $h_{t-1} + \text{something}$, then $\frac{\partial h_T}{\partial h_t}$ contains a direct path with a multiplicative factor of 1 at each step — no exponential decay.
+    </p>
+
+    <h3>The Solution: Additive Updates with Modulators</h3>
+
+    <p>
+      The additive update principle: instead of completely overwriting the hidden state at each step, <strong>interpolate</strong> between the previous state and a new candidate state, controlled by learned gating signals:
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>additive state update</strong> with modulators $\alpha_t$ and $\beta_t$:
+      $$h_t = \alpha_t \odot h_{t-1} + \beta_t \odot \tilde{h}_t$$
+      where $\tilde{h}_t = \sigma(W_2 x_t + W_1 h_{t-1})$ is the candidate new state, and $\odot$ denotes element-wise multiplication. The modulators $\alpha_t, \beta_t \in [0,1]^m$ are vectors of gating values — learned functions of the current input and previous state.
+    </div>
+
+    <p>
+      The key change: $h_{t-1}$ now contributes <strong>directly</strong> to $h_t$ via the $\alpha_t \odot h_{t-1}$ term, without passing through $\sigma(W_h \cdot)$. The gradient $\frac{\partial h_T}{\partial h_t}$ now expands as:
+    </p>
+
+    <div class="math-block">
+      $$\frac{\partial h_T}{\partial h_t} = \prod_{k=t}^{T-1}\left(\text{diag}(\alpha_{k+1}) + \epsilon_{k+1}\right)$$
+    </div>
+
+    <p>
+      where $\epsilon_{k+1}$ contains the gradient through the $\beta \odot \tilde{h}$ path. If $\alpha_{k+1} \approx 1$ (the gate is open, preserve the state), the dominant term in the product is $\text{diag}(\alpha_{k+1}) \approx I$ — the identity matrix. A product of near-identity matrices does not decay exponentially. Long-range gradients can survive.
+    </p>
+
+    <div class="callout callout-intuition">
+      The modulator $\alpha_t$ is a <strong>forget gate</strong>: $\alpha_t \approx 1$ means "keep the previous state almost intact," $\alpha_t \approx 0$ means "reset — this is a new context." The modulator $\beta_t$ is an <strong>input gate</strong>: $\beta_t \approx 1$ means "incorporate the new input fully," $\beta_t \approx 0$ means "ignore this input." The network learns when to remember and when to forget — adapting to the structure of the specific sequence it is processing. This gating mechanism is the core idea of the LSTM (Long Short-Term Memory) network, which instantiates exactly this principle with specific parametric forms for $\alpha_t$ and $\beta_t$.
+    </div>
+
+    <h3>Residual Connections: The Same Idea in a Different Form</h3>
+
+    <p>
+      The additive update principle is not unique to RNNs. In deep feedforward networks and CNNs, the same problem — gradient decay through many layers — is solved by <strong>residual connections</strong>:
+    </p>
+
+    <div class="math-block">
+      $$y = x + F(x)$$
+    </div>
+
+    <p>
+      The output is the input $x$ plus a learned residual $F(x)$. The gradient of the loss with respect to the input has a direct path: $\frac{\partial \mathcal{L}}{\partial x} = \frac{\partial \mathcal{L}}{\partial y} \cdot \left(1 + \frac{\partial F(x)}{\partial x}\right)$. The $+1$ ensures that even if $\frac{\partial F}{\partial x}$ vanishes, the gradient still flows with factor 1. This is how ResNets (Residual Networks) enabled training of networks with 100+ layers — the same additive structure prevents gradient decay with depth.
+    </p>
+
+    <div class="callout callout-intuition">
+      The additive update in RNNs and the residual connection in deep CNNs are the same mathematical idea expressed in different architectures. In both cases: instead of transforming the signal $x \to F(x)$, transform it as $x \to x + F(x)$. The identity path $x \to x$ is always available for gradients to travel through, bypassing the potentially vanishing transformation $F(x)$. This principle is universal: any time you stack many transformations, adding identity shortcuts prevents gradient decay.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Vanishing Gradient: Numerical Demonstration</span>
+        <span class="we-badge">📊 Exponential Decay in Practice</span>
+      </div>
+      <div class="we-body">
+        <p>Consider a scalar vanilla RNN: $h_t = \sigma(w_h h_{t-1} + w_x x_t)$ with $w_h = 0.9$ (a typical initialisation). Compute the gradient $\frac{\partial h_T}{\partial h_1}$ for several sequence lengths $T$.</p>
+
+        <div class="we-step">Gradient formula (scalar case)</div>
+        <p>In the scalar case, $\frac{\partial h_T}{\partial h_1} = \prod_{k=1}^{T-1} \sigma'(z_{k+1}) \cdot w_h$. With $\sigma'(z) \leq 0.25$ and $w_h = 0.9$, each factor is at most $0.25 \times 0.9 = 0.225$.</p>
+
+        <div class="we-step">Compute for various $T$</div>
+        <div class="math-block">
+          $$\begin{array}{lcc}
+          T & \text{Steps back} & \text{Gradient bound}\\
+          \hline
+          2 & 1 & 0.225^1 = 0.225\\
+          5 & 4 & 0.225^4 \approx 0.0026\\
+          10 & 9 & 0.225^9 \approx 1.5 \times 10^{-6}\\
+          20 & 19 & 0.225^{19} \approx 5 \times 10^{-13}\\
+          50 & 49 & 0.225^{49} \approx 10^{-31}
+          \end{array}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>By step 10, the gradient from step 1 is already at the level of floating-point noise ($10^{-6}$).</strong> By step 20 it is effectively zero. A NIFTY intraday model trying to learn that a gap-up opening at 9:15 AM is relevant to the 3:30 PM close — 50+ time steps later — will find that gradient signal completely extinguished before it reaches the first few time steps. The RNN simply cannot learn this dependency.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · RNN Forward Pass on a Financial Sequence</span>
+        <span class="we-badge">🇮🇳 NIFTY Intraday — Sequence Classification</span>
+      </div>
+      <div class="we-body">
+        <p>A tiny RNN with hidden size $m = 2$ processes 3 NIFTY intraday returns (in %) to classify the session as "trending" (+1) or "mean-reverting" (−1). Parameters: $W_h = \begin{bmatrix}0.5 & 0.1 \\ 0.1 & 0.5\end{bmatrix}$, $W_x = \begin{bmatrix}0.8 \\ -0.3\end{bmatrix}$ (1D input), $b_1 = \mathbf{0}$. Initial state $h_0 = \mathbf{0}$. Input sequence: $x_1 = +0.5\%$, $x_2 = +0.8\%$, $x_3 = +0.6\%$ (consistent positive returns — trending session).</p>
+
+        <div class="we-step">Step 1 — $t = 1$: $z_1 = W_h h_0 + W_x x_1$</div>
+        <div class="math-block">
+          $$z_1 = \begin{bmatrix}0.5&0.1\\0.1&0.5\end{bmatrix}\begin{bmatrix}0\\0\end{bmatrix} + \begin{bmatrix}0.8\\-0.3\end{bmatrix}(0.5) = \begin{bmatrix}0.4\\-0.15\end{bmatrix}$$
+          $$h_1 = \sigma(z_1) = \begin{bmatrix}\sigma(0.4)\\\sigma(-0.15)\end{bmatrix} \approx \begin{bmatrix}0.599\\0.463\end{bmatrix}$$
+        </div>
+
+        <div class="we-step">Step 2 — $t = 2$: $z_2 = W_h h_1 + W_x x_2$</div>
+        <div class="math-block">
+          $$z_2 = \begin{bmatrix}0.5&0.1\\0.1&0.5\end{bmatrix}\begin{bmatrix}0.599\\0.463\end{bmatrix} + \begin{bmatrix}0.8\\-0.3\end{bmatrix}(0.8) \approx \begin{bmatrix}0.986\\0.352\end{bmatrix}$$
+          $$h_2 \approx \begin{bmatrix}\sigma(0.986)\\\sigma(0.352)\end{bmatrix} \approx \begin{bmatrix}0.728\\0.587\end{bmatrix}$$
+        </div>
+
+        <div class="we-step">Step 3 — $t = 3$: after $x_3 = +0.6\%$, final state $h_3 \approx [0.81,\; 0.62]^\top$</div>
+        <p>The final hidden state $h_3$ is fed to a linear classifier $\hat{y} = w_y^\top h_3 + b_y$. With $w_y = [1, 1]^\top$, $\hat{y} \approx 0.81 + 0.62 = 1.43 > 0$ → predict "trending."</p>
+
+        <div class="we-answer">
+          <strong>The hidden state accumulates evidence of the trending pattern.</strong> Both components of $h_t$ increase monotonically across the three positive-return steps — the hidden state is tracking the momentum. With a longer sequence, this evidence would accumulate further. Note how $W_h$ allows the previous state to influence the next: $h_1$'s large first component (0.599) contributes 0.5 × 0.599 = 0.30 to $z_2$'s first component, carrying forward the memory of step 1.
+        </div>
+      </div>
+    </div>
+
+    <div class="cliffhanger">
+      <div class="cliffhanger-label">Chapter 11 Preview</div>
+      <p>The additive update principle — modulators, gating, residual connections — solves the vanishing gradient problem. But there is a deeper architectural question: does sequential processing (one step at a time) need to be the default? <strong>Attention mechanisms</strong> allow the network to directly connect any two positions in a sequence, regardless of distance, in a single operation. Chapter 11 derives the attention mechanism from first principles, shows why self-attention replaces recurrence, and builds the Transformer encoder-decoder from the ground up.</p>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 10</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch10 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">An RNN is trained to predict the next NIFTY return given the last 100 daily returns. After training, the model performs well on short-range patterns but seems to ignore patterns from more than 10 days ago. What is the most likely mathematical explanation?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>The model has overfit — it memorised the training data and ignores useful patterns.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>The hidden state dimension is too small to store 100 days of information.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>Vanishing gradients — during BPTT, the gradient from the loss at time $T$ with respect to hidden states more than 10 steps back has decayed exponentially to near zero, so the parameters received no useful signal to learn those long-range dependencies.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>The learning rate is too high — a smaller learning rate would allow the model to learn longer-range patterns.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The vanishing gradient proof shows that $\|\partial h_T/\partial h_t\| \leq (\|W_h\|/4)^{T-t}$. For $T - t = 10$ and typical $\|W_h\|$, this bound is already very small. For $T - t = 90$ (patterns from 90 days ago), the gradient is numerically zero. The parameters $W_h$, $W_x$ are updated by gradients that sum over all time steps — but the terms for distant steps are zero, so those dependencies are never learned regardless of training duration or learning rate.<br/><br/>
+          Option B is wrong: a hidden state of even modest dimension (say 64) could theoretically encode 100 days of information — the issue is not capacity but trainability. Option D is wrong: the vanishing gradient is independent of learning rate — it is a structural problem, not an optimisation parameter problem.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch10 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the additive state update $h_t = \alpha_t \odot h_{t-1} + \beta_t \odot \tilde{h}_t$, what happens when $\alpha_t \approx \mathbf{1}$ and $\beta_t \approx \mathbf{0}$ for several consecutive time steps? What does this represent semantically?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>The hidden state resets to zero — the network forgets all previous context.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>The hidden state is nearly unchanged — the network carries its existing memory forward without updating it, effectively ignoring uninformative inputs during those steps.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>The network enters an unstable regime where gradients explode.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The candidate state $\tilde{h}_t$ dominates and completely overwrites the previous memory.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          With $\alpha_t \approx \mathbf{1}$ and $\beta_t \approx \mathbf{0}$: $h_t \approx \mathbf{1} \odot h_{t-1} + \mathbf{0} \odot \tilde{h}_t = h_{t-1}$. The hidden state is preserved almost exactly. Semantically, this means the network has decided that the current inputs $x_t$ are not informative enough to update its memory — it holds its state, waiting for a relevant input.<br/><br/>
+          This is precisely the "memory" property that vanilla RNNs lack. A well-trained LSTM (which implements exactly this gating) learns to hold relevant information over long stretches of uninformative input. For example, in processing an earnings call transcript, the network might latch onto "revenue beat" early in the call and hold that information through many sentences of boilerplate text, until it becomes relevant again at the sentiment prediction step.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch10 / q03</span>
+        <span class="mcq-diff">★★ Mathematical</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The vanishing gradient bound is $\|\partial h_T / \partial h_t\| \leq (\|W_h\| \cdot \gamma)^{T-t}$ where $\gamma = \max_k \|\text{diag}(\sigma'(z_k))\|$. For the <strong>ReLU activation</strong> $\sigma(z) = \max(0, z)$, what is $\gamma$, and does the vanishing gradient problem disappear?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$\gamma = 0.25$ for ReLU — same as sigmoid, vanishing gradients are equally severe.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$\gamma = \infty$ for ReLU — the gradient explodes rather than vanishes.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$\gamma = 1$ where ReLU is active (derivative = 1) and $\gamma = 0$ where inactive (derivative = 0). Vanishing is reduced for active units but dead neurons (permanently inactive) still block gradient flow entirely.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>ReLU has no derivative so BPTT cannot be applied to ReLU RNNs.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          ReLU: $\sigma'(z) = 1$ if $z > 0$ (active), $0$ if $z \leq 0$ (inactive). So $\gamma = 1$ for active units. The bound becomes $(\|W_h\| \cdot 1)^{T-t} = \|W_h\|^{T-t}$. If $\|W_h\| < 1$, gradients still vanish (just more slowly than with sigmoid). If $\|W_h\| = 1$, gradients neither vanish nor explode for active neurons — a significant improvement.<br/><br/>
+          But the "dead neuron" problem: a ReLU unit with $z \leq 0$ has $\sigma'(z) = 0$, completely blocking gradient flow through that unit. If many units become permanently inactive (which can happen with poor initialisation or large learning rates), the effective $\gamma$ approaches 0 and gradients vanish just as badly. ReLU helps but does not solve the structural problem — that solution requires additive updates (LSTMs/GRUs) or attention mechanisms.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch10 / q04</span>
+        <span class="mcq-diff">★★ Synthesis</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A residual connection $y = x + F(x)$ and an RNN additive update $h_t = \alpha_t \odot h_{t-1} + \beta_t \odot \tilde{h}_t$ both solve the vanishing gradient problem. What is the <strong>common mathematical principle</strong> they share, and how does it guarantee gradient flow?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Both use normalisation layers to keep activations in a range where gradients are large.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Both increase the learning rate for early layers, compensating for gradient decay.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>Both create an additive identity path: the input (or previous state) is added directly to the output, giving the gradient a direct route with multiplicative factor $\geq 1$ even when the learned transformation vanishes.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Both use gating signals to selectively zero out uninformative gradients, keeping only the strongest signals.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          For residual connections: $\frac{\partial y}{\partial x} = 1 + \frac{\partial F(x)}{\partial x}$. Even if $\frac{\partial F}{\partial x} \to 0$ (the learned transformation vanishes), the gradient is at least 1 — it cannot vanish below 1 due to the identity term. Stacking $L$ such layers: $\frac{\partial \mathcal{L}}{\partial x_0} = \prod_l (1 + \frac{\partial F_l}{\partial x_l})$. Each factor is $\geq 1$ when $\frac{\partial F_l}{\partial x_l} \geq 0$, preventing decay.<br/><br/>
+          For the RNN additive update: $\frac{\partial h_T}{\partial h_t} = \prod_{k=t}^{T-1}(\text{diag}(\alpha_{k+1}) + \epsilon_{k+1})$. When $\alpha_{k+1} \approx 1$, each factor is near the identity $I$ — the product does not decay exponentially. The common principle: <strong>add the input directly to the output</strong>, creating an identity shortcut that the gradient can always travel through, regardless of what the learned transformation does.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 10</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Q1–3 are direct computations on the RNN equations. Q4–7 require connecting BPTT, vanishing gradients, and the additive update principle. Q8–10 are synthesis questions spanning this chapter and Ch9.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">Count the total number of learnable parameters in a vanilla RNN with input size $d = 5$, hidden size $m = 32$, and output size $k = 3$. Show your working for each weight matrix and bias vector.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">For a scalar RNN $h_t = \tanh(w_h h_{t-1} + w_x x_t)$ with $w_h = 1.5$: (a) What is the maximum value of $|\tanh'(z)|$? (b) Compute the bound on $|\partial h_{10}/\partial h_1|$. (c) Does the gradient vanish or explode? Compare to the case $w_h = 0.5$.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">Perform one full forward pass of a vanilla RNN on the sequence $x = [1.0, -0.5, 0.8]$ with scalar hidden state, $w_h = 0.7$, $w_x = 0.4$, $b = 0$, $h_0 = 0$, $\sigma = \tanh$. Then write out the chain rule expression for $\partial h_3 / \partial h_1$ and compute it numerically.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">Explain precisely why BPTT treats an RNN as a deep feedforward network with shared weights. For an RNN unrolled over $\tau$ steps, what is the "depth" of this equivalent network? Why does sharing weights across layers create a different optimisation landscape compared to a feedforward network of the same depth with independent weights?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">Gradient clipping addresses the exploding gradient problem but not vanishing gradients. (a) Describe the gradient clipping procedure mathematically. (b) Explain why clipping prevents explosion. (c) Explain why clipping cannot fix vanishing — what would "reverse clipping" (amplifying small gradients) do, and why is it not done in practice?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">The additive update $h_t = \alpha_t \odot h_{t-1} + \beta_t \odot \tilde{h}_t$ has $\alpha_t, \beta_t$ as learnable functions of $(h_{t-1}, x_t)$. Write out a specific parametric form for $\alpha_t$ using a sigmoid output (so that $\alpha_t \in [0,1]^m$). Count the additional parameters this gating introduces compared to a vanilla RNN. How does this relate to the LSTM architecture?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">In a sequence-to-sequence NIFTY return prediction model, the RNN reads 20 daily returns and predicts the next day's return at each step. (a) Draw the computational graph showing inputs, hidden states, outputs, and loss terms at each step. (b) During BPTT, which loss term's gradient reaches $h_1$ with the least decay? (c) If you could only supervise at one time step, which would give the best training signal for learning long-range dependencies?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">Compare RNNs and CNNs as sequence models for a 100-step financial time series. For each, state: (a) how long-range dependencies are captured, (b) the computational complexity for a sequence of length $T$, (c) whether the model can handle variable-length sequences, (d) the primary training difficulty. Conclude with a recommendation for modelling high-frequency NIFTY tick data and justify it.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">The vanishing gradient problem in RNNs and the bias problem in Chapter 7 are both about information loss — one during training, one during inference. Draw a precise analogy: what plays the role of "hypothesis class complexity" in the RNN context, and what plays the role of "noise floor"? Is there an irreducible lower bound on how well an RNN can learn long-range dependencies, analogous to Bayes error?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">Design an RNN-based system to classify NSE intraday sessions as "trending" or "mean-reverting" using 5-minute OHLCV bars. Specify: input features at each time step, hidden state size, task formulation (sequence classification or sequence-to-sequence), loss function, and how you would address the vanishing gradient problem. Then identify two specific failure modes this system would have on NSE data that a human expert would not — and connect each failure mode to a mathematical property of the RNN discussed in this chapter.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch9.html" class="ch-nav-btn">← Convolutional Neural Networks</a>
+    <a href="ML_M_Ch11.html" class="ch-nav-btn primary">Next: Attention and Transformers →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs=[
+  "🎯 Hidden state updated correctly. Memory persists.",
+  "✨ Vanishing gradient identified. BPTT understood.",
+  "🏆 Additive update grasped. Long-range dependency unlocked.",
+  "🔥 Gradient flow through identity path confirmed.",
+  "💡 Gate semantics correct. Forget and input gates calibrated.",
+  "🎓 BPTT chain rule applied correctly across all time steps.",
+  "📈 Sequential processing understood. State carried forward.",
+  "🧮 Exponential decay computed. Numerical proof complete.",
+  "⚡ Residual and additive update: same principle, same fix.",
+  "🌟 RNN forward pass complete. Hidden state encodes sequence history."
+];
+const wrongMsgs=[
+  "🌀 Vanishing gradients are structural — not fixable by learning rate.",
+  "📐 Check the chain rule: $\\partial h_T/\\partial h_t$ is a product over all intermediate steps.",
+  "📉 $\\alpha_t \\approx 1$, $\\beta_t \\approx 0$ means preserve state, not reset.",
+  "🏦 The identity path in residual connections gives gradient factor $\\geq 1$.",
+  "😰 Dead ReLU neurons have zero derivative — they block gradients too.",
+  "🤔 Parameter sharing in RNNs is across time steps, not spatial positions.",
+  "📊 The bound is $(\\|W_h\\| \\cdot \\gamma)^{T-t}$ — exponential in sequence length.",
+  "🎰 Gradient clipping rescales large gradients — it cannot amplify small ones."
+];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done) return;
+  if(!state[qid]) state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done) return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  const expl=document.getElementById(qid+'expl');
+  expl.classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    const m=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(30,158,94,0.1)';
+    feedback.style.color='var(--green)';
+    feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';
+    btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter) o.classList.add('correct');});
+    const m=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(220,38,38,0.06)';
+    feedback.style.color='#dc2626';
+    feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';
+    btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement) renderMathInElement(document.getElementById(qid+'expl'));
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Regularisation, SVMs, and the Kernel Trick · quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-f{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;font-style:italic;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.derivation{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.deriv-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.deriv-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.deriv-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.deriv-body{padding:1.5rem;background:var(--white);}
+.deriv-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.deriv-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.deriv-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.deriv-result strong{color:var(--green);}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.col-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;}
+.col-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.col-card p{font-size:0.88rem;line-height:1.7;color:#2a2a3e;margin-bottom:0.7rem;}
+.col-card p:last-child{margin-bottom:0;}
+@media(max-width:650px){.two-col{grid-template-columns:1fr;}}
+
+.compare-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.88rem;}
+.compare-table th{background:var(--navy);color:white;padding:0.65rem 1rem;text-align:left;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;}
+.compare-table td{padding:0.65rem 1rem;border-bottom:1px solid var(--border);color:#2a2a3e;line-height:1.6;}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table tr:nth-child(even) td{background:var(--off);}
+
+.equiv-bridge{background:var(--navy);border-radius:12px;padding:1.8rem 2rem;margin:2rem 0;text-align:center;}
+.equiv-bridge-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:1rem;}
+.equiv-row{display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;}
+.equiv-box{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:1rem 1.5rem;font-size:0.9rem;color:white;line-height:1.6;}
+.equiv-box strong{color:var(--orange2);}
+.equiv-arrow{font-size:1.6rem;color:var(--orange);font-family:'DM Mono',monospace;}
+.equiv-bridge-sub{font-family:'DM Mono',monospace;font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:1rem;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.completion-banner{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:16px;padding:2.5rem 2rem;margin:2.5rem 0;text-align:center;position:relative;overflow:hidden;}
+.completion-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:180px;height:180px;background:rgba(232,114,42,0.08);border-radius:50%;}
+.completion-banner-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange2);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.8rem;}
+.completion-banner h2{font-family:'Playfair Display',serif;font-size:1.8rem;color:white;margin-bottom:1rem;line-height:1.2;}
+.completion-banner h2 em{color:var(--orange2);font-style:italic;}
+.completion-banner p{font-size:0.93rem;color:rgba(255,255,255,0.65);line-height:1.75;max-width:520px;margin:0 auto 1.5rem;}
+.completion-stats{display:flex;justify-content:center;gap:3rem;flex-wrap:wrap;}
+.cs-item{text-align:center;}
+.cs-val{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;color:white;}
+.cs-val span{color:var(--orange2);}
+.cs-key{font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+.ch-nav-btn.completed{background:var(--green);color:white;border-color:var(--green);}
+.ch-nav-btn.completed:hover{background:#17854f;color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Regularisation, SVMs, and Kernels</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:61.5%"></div></div>
+      <span class="tb-progress-label">8 / 13</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html"><div class="si-num">1</div>What Is Learning?<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html"><div class="si-num">2</div>The Learning Machine<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch3.html"><div class="si-num">3</div>Empirical Risk and the Likelihood Game<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch4.html"><div class="si-num">4</div>Maximum Likelihood — Let the Data Speak<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch5.html"><div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch6.html"><div class="si-num">6</div>Non-parametric Density Estimation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch7.html"><div class="si-num">7</div>Linear Models and the Bias-Variance Tradeoff<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="ML_M_Ch8.html"><div class="si-num">8</div>Regularisation, SVMs, and the Kernel Trick<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch9.html"><div class="si-num">9</div>Convolutional Neural Networks<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch10.html"><div class="si-num">10</div>Recurrent Neural Networks<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch11.html"><div class="si-num">11</div>Attention and Transformers<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch12.html"><div class="si-num">12</div>Ensembles and Decision Trees<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch13.html"><div class="si-num">13</div>Unsupervised Learning and Generative Models<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Advanced</span>
+      <span class="ch-num">Chapter 08 of 13 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Regularisation, SVMs,<br/>and the Kernel Trick</h1>
+    <p class="chapter-subtitle">Every thread from the last seven chapters converges here. Regularisation fixes the overfitting problem with a Bayesian prior in disguise. SVMs find the provably optimal decision boundary by solving a beautifully structured constrained optimisation. Kernels dissolve the boundary between linear and nonlinear — letting you operate in infinite-dimensional feature spaces at finite cost.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The Overfitting Problem, Revisited</h3>
+
+    <p>
+      Chapter 7 gave us the diagnosis: when hypothesis class $\mathcal{H}$ is too expressive relative to the training set size $N$, the learned model $h_D$ has high variance — it overfits. The training error is small but the generalisation gap is large. The ERM objective $\hat{R}(\theta) = \frac{1}{N}\sum_i L(h_\theta(x_i), y_i)$ finds the parameters that best explain the training data, with no regard for whether those parameters generalise.
+    </p>
+
+    <p>
+      Regularisation adds a second term to the objective — a penalty $\Omega(\theta)$ that discourages parameters from taking extreme values. The regularised ERM objective is:
+    </p>
+
+    <div class="callout callout-definition">
+      <strong>Regularised ERM (Reg-ERM):</strong>
+      $$\hat{h}^*_\theta = \underset{h_\theta}{\arg\min}\;\frac{1}{N}\sum_{i=1}^N L(h_\theta(x_i), y_i) \quad \text{subject to}\quad \Omega(\theta) < \kappa$$
+      Equivalently, via Lagrangian with multiplier $\lambda$:
+      $$\hat{R}_r(\theta) = \frac{1}{N}\sum_{i=1}^N L(h_\theta(x_i), y_i) + \lambda\,\Omega(\theta)$$
+      The hyperparameter $\lambda > 0$ controls the regularisation strength. Large $\lambda$: strong penalty, high bias, low variance. Small $\lambda$: weak penalty, low bias, higher variance.
+    </div>
+
+    <div class="callout callout-intuition">
+      Regularisation is a principled way to encode the belief that "large parameters are a priori unlikely." A model with very large $\theta$ is making extreme predictions based on the specific noise pattern in the training data. Penalising $\|\theta\|$ says: among all hypotheses that fit the data well, prefer the simpler one with smaller parameters. This is Occam's Razor implemented as a convex penalty.
+    </div>
+
+    <h3>Ridge and Lasso: Two Choices of Penalty</h3>
+
+    <p>
+      The two dominant choices of $\Omega(\theta)$ lead to the two most widely used regularised regression methods:
+    </p>
+
+    <table class="compare-table">
+      <tr><th>Name</th><th>Penalty $\Omega(\theta)$</th><th>Objective</th><th>Key Property</th></tr>
+      <tr><td><strong>Ridge (L2)</strong></td><td>$\|\theta\|_2^2 = \sum_j \theta_j^2$</td><td>$\frac{1}{N}\sum(y_i - \theta^\top x_i)^2 + \lambda\|\theta\|_2^2$</td><td>Shrinks all parameters toward zero; closed-form solution</td></tr>
+      <tr><td><strong>Lasso (L1)</strong></td><td>$\|\theta\|_1 = \sum_j |\theta_j|$</td><td>$\frac{1}{N}\sum(y_i - \theta^\top x_i)^2 + \lambda\|\theta\|_1$</td><td>Sets many parameters exactly to zero; automatic feature selection</td></tr>
+    </table>
+
+    <p>
+      Ridge has a closed-form solution: $\theta^*_\text{Ridge} = (X^\top X + \lambda I)^{-1} X^\top y$. The $\lambda I$ term ensures invertibility even when $X^\top X$ is singular — solving the collinearity problem in OLS. Lasso has no closed-form solution (the $|\cdot|$ function is not differentiable at zero) but is solvable by convex optimisation methods such as coordinate descent.
+    </p>
+
+    <div class="callout callout-india">
+      Ridge regression is the standard tool for fitting multi-factor NIFTY return models. When 50 factor exposures are correlated (large-cap funds tend to hold similar stocks), $X^\top X$ is nearly singular and OLS estimates are unstable. Ridge's $\lambda I$ regularisation stabilises the solution. The parameter $\lambda$ is chosen by cross-validation over rolling windows. Lasso goes further: if only 5 of 50 factors are genuinely predictive, Lasso automatically zeroes out the other 45 — performing feature selection and parameter estimation simultaneously. This is why Lasso-based factor models are standard at quantitative funds.
+    </div>
+
+    <h3>Regularisation Is MAP Estimation in Disguise</h3>
+
+    <p>
+      The deep reason regularisation works is revealed by connecting it to Chapter 5's MAP estimation. Consider the MAP objective for a linear regression model:
+    </p>
+
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · Reg-ERM = MAP with a Specific Prior</span>
+        <span class="deriv-badge">Ridge = Gaussian Prior · Lasso = Laplace Prior</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">MAP objective for linear regression</div>
+        <p>With model $P_\theta(y|x) = \mathcal{N}(y;\, h_\theta(x),\, \sigma^2)$ and prior $P(\theta)$, the MAP estimate maximises:</p>
+        <div class="math-block">
+          $$\ell_r(\theta) = \log P(\theta|y,x) \propto \log P(y|x,\theta) + \log P(\theta)$$
+          $$\propto -\frac{1}{N}\sum_{i=1}^N \|y_i - h_\theta(x_i)\|_2^2 + \log P(\theta)$$
+        </div>
+
+        <div class="deriv-step">Case 1 — Gaussian prior: Ridge regression</div>
+        <p>Set $P(\theta) = \mathcal{N}(\theta;\, 0,\, \tau^2 I)$, so $\log P(\theta) = -\frac{1}{2\tau^2}\|\theta\|_2^2 + \text{const}$. Maximising $\ell_r$ is equivalent to minimising:</p>
+        <div class="math-block">
+          $$\underset{\theta}{\arg\min}\;\frac{1}{N}\sum_{i=1}^N \|y_i - h_\theta(x_i)\|_2^2 + \frac{\sigma^2}{\tau^2}\|\theta\|_2^2$$
+        </div>
+        <p>With $\lambda = \sigma^2/\tau^2$, this is exactly Ridge regression. The regularisation parameter $\lambda$ is the ratio of noise variance to prior variance — a small prior variance (strong prior belief that $\theta \approx 0$) gives large $\lambda$ (strong regularisation).</p>
+
+        <div class="deriv-step">Case 2 — Laplace prior: Lasso regression</div>
+        <p>Set $P(\theta) = \text{Laplace}(\theta;\, 0,\, b)$, so $\log P(\theta) = -\frac{1}{b}\|\theta\|_1 + \text{const}$. The MAP objective becomes:</p>
+        <div class="math-block">
+          $$\underset{\theta}{\arg\min}\;\frac{1}{N}\sum_{i=1}^N \|y_i - h_\theta(x_i)\|_2^2 + \frac{\sigma^2}{b}\|\theta\|_1$$
+        </div>
+        <p>This is exactly Lasso. The Laplace prior has heavier tails than the Gaussian — it places more probability mass near zero and also in the tails, encouraging sparse solutions (many $\theta_j = 0$, with a few large ones).</p>
+
+        <div class="deriv-result">
+          <strong>Ridge = MAP with Gaussian prior. Lasso = MAP with Laplace prior.</strong> Every regularised regression is a Bayesian estimate with a specific prior on the parameters. The choice of regulariser is the choice of prior. Regularisation is not a hack — it is principled Bayesian inference.
+        </div>
+      </div>
+    </div>
+
+    <!-- EQUIVALENCE BRIDGE -->
+    <div class="equiv-bridge">
+      <div class="equiv-bridge-label">The Grand Unification — All Roads Lead Here</div>
+      <div class="equiv-row">
+        <div class="equiv-box"><strong>ERM</strong><br/>$\min \hat{R}(\theta)$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Ch 2</span></div>
+        <div class="equiv-arrow">≡</div>
+        <div class="equiv-box"><strong>MLE</strong><br/>$\max \ell(\theta)$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Ch 3–4</span></div>
+        <div class="equiv-arrow">≡</div>
+        <div class="equiv-box"><strong>KL Min</strong><br/>$\min D_{KL}(P\|P_\theta)$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Ch 3</span></div>
+        <div class="equiv-arrow">≡</div>
+        <div class="equiv-box"><strong>Reg-ERM</strong><br/>$\min \hat{R} + \lambda\Omega$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Ch 8</span></div>
+        <div class="equiv-arrow">≡</div>
+        <div class="equiv-box"><strong>MAP</strong><br/>$\max \log P(\theta|D)$<br/><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Ch 5</span></div>
+      </div>
+      <div class="equiv-bridge-sub">One optimisation problem. Eight chapters. Five equivalent descriptions.</div>
+    </div>
+
+    <h3>Support Vector Machines: The Maximum Margin Classifier</h3>
+
+    <p>
+      Regularisation fixes overfitting for regression. For classification, there is a different approach to finding the "best" hypothesis — one based on geometry rather than probabilistic priors. When data is linearly separable, infinitely many hyperplanes separate the two classes. The SVM asks: which one is <em>optimal</em>?
+    </p>
+
+    <p>
+      Consider binary classification: $x \in \mathbb{R}^d$, $y \in \{-1, +1\}$. A linear classifier is defined by a discriminant function $g(x) = w^\top x + b$, predicting $\hat{y} = \text{sign}(g(x))$. A dataset is <strong>linearly separable</strong> if there exist $w, b$ such that:
+      $$w^\top x_i + b > 0 \quad \text{for all } y_i = +1 \qquad \text{and} \qquad w^\top x_i + b < 0 \quad \text{for all } y_i = -1$$
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>margin</strong> of a linear classifier $(w, b)$ is the perpendicular distance from the decision boundary $w^\top x + b = 0$ to the closest training point. For the canonical normalization where $|w^\top x_i + b| \geq 1$ for all training points, the margin equals $\frac{2}{\|w\|}$ — the distance between the two parallel supporting hyperplanes $w^\top x + b = +1$ and $w^\top x + b = -1$.
+    </div>
+
+    <p>
+      The SVM finds the hyperplane that maximises this margin. Maximising $\frac{2}{\|w\|}$ is equivalent to minimising $\|w\|^2$:
+    </p>
+
+    <div class="math-block">
+      $$\min_{w,b}\; \frac{1}{2} w^\top w \qquad \text{subject to}\quad (w^\top x_i + b)\,y_i \geq 1 \quad \forall\, i$$
+    </div>
+
+    <div class="callout callout-intuition">
+      Why maximise the margin? Intuitively, a classifier with a large margin is more robust — small perturbations in the data (noise, new test points near the boundary) are less likely to cross the decision boundary. The maximum-margin classifier is the most "confident" separator: it commits as little as possible to any specific training point, staying as far as possible from all of them. This geometric principle turns out to be equivalent to minimising a specific regularised risk — SVMs are regularised classifiers with a particular structure.
+    </div>
+
+    <h3>Solving the SVM: KKT Conditions</h3>
+
+    <p>
+      The SVM primal is a constrained quadratic optimisation problem — convex objective, linear constraints. It is solved via the Lagrangian and KKT (Karush-Kuhn-Tucker) conditions.
+    </p>
+
+    <!-- KKT DERIVATION -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · SVM via KKT Conditions</span>
+        <span class="deriv-badge">Primal → Dual · Support Vectors</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Step 1 — Write the Lagrangian</div>
+        <p>Introduce multipliers $\mu_i \geq 0$ for each constraint $[1 - y_i(w^\top x_i + b)] \leq 0$:</p>
+        <div class="math-block">
+          $$\mathcal{L}(w, b, \mu) = \frac{w^\top w}{2} + \sum_{i=1}^n \mu_i\left[1 - y_i(w^\top x_i + b)\right]$$
+        </div>
+
+        <div class="deriv-step">Step 2 — KKT stationarity conditions</div>
+        <p>Set gradients to zero:</p>
+        <div class="math-block">
+          $$\nabla_w \mathcal{L} = 0 \implies w^* = \sum_{i=1}^n \mu_i y_i x_i$$
+          $$\nabla_b \mathcal{L} = 0 \implies \sum_{i=1}^n \mu_i y_i = 0$$
+        </div>
+        <p>The optimal $w^*$ is a linear combination of the training points, weighted by $\mu_i y_i$. Only points with $\mu_i > 0$ contribute — these are the <strong>support vectors</strong> $S = \{x_i : \mu_i > 0\}$.</p>
+
+        <div class="deriv-step">Step 3 — KKT complementary slackness</div>
+        <p>$\mu_i^*\left[1 - y_i(w^\top x_i + b)\right] = 0$ for all $i$. A point either lies exactly on the margin boundary ($y_i(w^\top x_i + b) = 1$, called a support vector) or has $\mu_i = 0$ (interior point, irrelevant to the solution).</p>
+
+        <div class="deriv-step">Step 4 — Derive the dual problem</div>
+        <p>Substitute $w^* = \sum_i \mu_i y_i x_i$ back into $\mathcal{L}$ and simplify:</p>
+        <div class="math-block">
+          $$q(\mu) = \sum_{i=1}^n \mu_i - \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n \mu_i \mu_j y_i y_j\, x_i^\top x_j$$
+        </div>
+        <p>The dual problem maximises $q(\mu)$ subject to $\mu_i \geq 0$ and $\sum_i \mu_i y_i = 0$. It is quadratic in $\mu$ with linear constraints — standard QP solvers apply.</p>
+
+        <div class="deriv-result">
+          <strong>Key observation:</strong> the data $x$ appears only through inner products $x_i^\top x_j$. This is the crucial structural property that enables the kernel trick.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      Once $\mu^*$ is found, the optimal weight vector is $w^* = \sum_{s \in S} \mu_s y_s x_s$ — a sparse combination of support vectors only. The bias $b^*$ is recovered from any support vector $x_s$: $y_s(w^{*\top} x_s + b^*) = 1 \implies b^* = y_s - w^{*\top} x_s$.
+    </p>
+
+    <p>
+      Inference on a new point $x$: $\hat{y} = \text{sign}(w^{*\top} x + b^*) = \text{sign}\!\left(\sum_{s \in S} \mu_s y_s\, x_s^\top x + b^*\right)$.
+    </p>
+
+    <h3>Soft-Margin SVM: When Data Is Not Linearly Separable</h3>
+
+    <p>
+      Real data is rarely linearly separable. The hard-margin SVM has no solution when the classes overlap. The fix: introduce <strong>slack variables</strong> $\xi_i \geq 0$ that allow points to violate the margin by a controlled amount.
+    </p>
+
+    <div class="math-block">
+      $$\min_{w,b,\xi}\; \frac{1}{2}w^\top w + C\sum_{i=1}^n \xi_i \qquad \text{subject to}\quad (w^\top x_i + b)y_i \geq 1 - \xi_i,\quad \xi_i \geq 0$$
+    </div>
+
+    <p>
+      The hyperparameter $C > 0$ controls the tradeoff between margin maximisation and margin violation. Large $C$: few violations allowed, narrow margin, potentially overfits. Small $C$: many violations tolerated, wider margin, better generalisation. The dual problem is identical to the hard-margin case except $\mu_i$ is now bounded: $0 \leq \mu_i \leq C$.
+    </p>
+
+    <div class="callout callout-warning">
+      $C$ is the most important hyperparameter in a soft-margin SVM — it directly controls the bias-variance tradeoff. Choosing $C$ by cross-validation on a held-out set is mandatory. In financial data, where classes almost always overlap (up-days and down-days have similar feature distributions), the soft-margin SVM is the only practically usable version.
+    </div>
+
+    <h3>The Kernel Trick: Nonlinearity at Zero Extra Cost</h3>
+
+    <p>
+      The SVM dual problem only depends on the data through inner products $x_i^\top x_j$. Now consider mapping data to a higher-dimensional space: $\phi: \mathbb{R}^d \to \mathbb{R}^{d'}$ with $d' \gg d$. The dual becomes:
+    </p>
+
+    <div class="math-block">
+      $$\max_\mu \sum_i \mu_i - \frac{1}{2}\sum_i\sum_j \mu_i \mu_j y_i y_j\, \phi(x_i)^\top \phi(x_j)$$
+    </div>
+
+    <p>
+      Computing $\phi(x_i)^\top \phi(x_j)$ directly requires materialising the high-dimensional features — potentially expensive. The kernel trick: if there exists a function $K(x_i, x_j) = \phi(x_i)^\top \phi(x_j)$, we can compute the inner product in the high-dimensional space using only original features, without ever computing $\phi$ explicitly.
+    </p>
+
+    <div class="callout callout-definition">
+      A <strong>kernel function</strong> $K: \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$ satisfies $K(x, z) = \phi(x)^\top \phi(z)$ for some feature map $\phi$. By <strong>Mercer's theorem</strong>, a symmetric function $K$ is a valid kernel if and only if the $n \times n$ kernel matrix with entries $K_{ij} = K(x_i, x_j)$ is positive semi-definite for all datasets. Common valid kernels:
+      $$\text{Polynomial: } K(x,z) = (x^\top z + c)^d \qquad \text{Gaussian/RBF: } K(x,z) = \exp\!\left(-\frac{\|x-z\|^2}{2\sigma^2}\right)$$
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📐 Polynomial Kernel</div>
+        <p>$K(x,z) = (x^\top z + 1)^2$ in $\mathbb{R}^2$ implicitly maps to the feature space $\phi(x) = [x_1^2, x_2^2, \sqrt{2}x_1 x_2, \sqrt{2}x_1, \sqrt{2}x_2, 1]$ — 6 dimensions from 2, capturing all quadratic interactions. Computing $K$ costs $O(d)$; computing $\phi(x)^\top \phi(z)$ directly costs $O(d^2)$.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">📐 Gaussian (RBF) Kernel</div>
+        <p>$K(x,z) = \exp(-\|x-z\|^2/2\sigma^2)$ corresponds to an <em>infinite-dimensional</em> feature map. The SVM with an RBF kernel operates in a Hilbert space of infinite dimension — computing the inner product as a simple exponential of the distance. $\sigma$ is the bandwidth hyperparameter.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      The kernel trick is one of the most elegant ideas in all of ML. You want to classify with a nonlinear boundary — which requires a high-dimensional feature map. But you don't need the features explicitly; you only need their inner products. The kernel function computes those inner products cheaply, as if you had done the full feature expansion, without actually doing it. The SVM with an RBF kernel effectively finds the maximum-margin hyperplane in an infinite-dimensional space — something that sounds computationally impossible but is achieved in $O(n^2)$ kernel evaluations.
+    </div>
+
+    <div class="callout callout-india">
+      SVMs with RBF kernels are used in credit scoring at Indian NBFCs and banks. The feature space of a loan applicant — income, assets, bureau score, transaction history — is nonlinearly separable between default and non-default. An RBF kernel SVM finds a nonlinear boundary without specifying its form in advance. The support vectors are the most informative applicant profiles — those on the boundary between creditworthy and risky. Every bank's credit model has some version of this idea, even if implemented as gradient-boosted trees rather than explicit SVMs.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Ridge vs OLS on a Collinear NIFTY Factor Model</span>
+        <span class="we-badge">🇮🇳 Regularisation in Practice</span>
+      </div>
+      <div class="we-body">
+        <p>A quant fits a 2-factor model for NIFTY returns: $y = \theta_1 x_1 + \theta_2 x_2 + \epsilon$ where $x_1$ = FII buying and $x_2 \approx x_1$ (DII selling, highly correlated with FII). With $N = 10$ observations, $X^\top X \approx \begin{bmatrix} 100 & 98 \\ 98 & 100 \end{bmatrix}$, $X^\top y = \begin{bmatrix} 5 \\ 4.9 \end{bmatrix}$.</p>
+
+        <div class="we-step">OLS solution — unstable</div>
+        <div class="math-block">
+          $$(X^\top X)^{-1} = \frac{1}{100^2 - 98^2}\begin{bmatrix}100 & -98 \\ -98 & 100\end{bmatrix} = \frac{1}{396}\begin{bmatrix}100 & -98 \\ -98 & 100\end{bmatrix}$$
+          $$\theta^*_{\text{OLS}} = \frac{1}{396}\begin{bmatrix}100(5) - 98(4.9) \\ -98(5) + 100(4.9)\end{bmatrix} = \frac{1}{396}\begin{bmatrix}500 - 480.2 \\ -490 + 490\end{bmatrix} = \begin{bmatrix}0.05 \\ 0.0\end{bmatrix}$$
+        </div>
+        <p>Looks fine — but a tiny change in the data (replace $4.9$ with $5.0$ in $X^\top y$) gives $\theta^* = [0.05, 0.0]$ vs $[0.025, 0.025]$ — completely different factor attribution from nearly identical data. OLS is wildly unstable due to near-singularity.</p>
+
+        <div class="we-step">Ridge solution — stable</div>
+        <p>With $\lambda = 2$, $(X^\top X + \lambda I) = \begin{bmatrix}102 & 98 \\ 98 & 102\end{bmatrix}$, determinant $= 102^2 - 98^2 = (102+98)(102-98) = 800$:</p>
+        <div class="math-block">
+          $$\theta^*_{\text{Ridge}} = \frac{1}{800}\begin{bmatrix}102 & -98 \\ -98 & 102\end{bmatrix}\begin{bmatrix}5 \\ 4.9\end{bmatrix} = \frac{1}{800}\begin{bmatrix}510 - 480.2 \\ -490 + 499.8\end{bmatrix} = \begin{bmatrix}0.037 \\ 0.012\end{bmatrix}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>Ridge shrinks both coefficients toward zero and distributes the attribution more evenly.</strong> More importantly, the solution is stable: small changes in data produce small changes in $\theta^*$. The $\lambda I$ term in $(X^\top X + \lambda I)$ ensures the matrix is well-conditioned regardless of collinearity. In a real factor model with 20 correlated macro variables, Ridge regression is essential — OLS would produce absurd, unstable factor loadings.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · SVM Support Vectors on NIFTY Direction Data</span>
+        <span class="we-badge">🇮🇳 Maximum Margin · 2D Feature Space</span>
+      </div>
+      <div class="we-body">
+        <p>Four NIFTY trading days, 2 features: $x_1$ = INDIA VIX, $x_2$ = 5-day momentum (%). Labels: $y = +1$ (market up), $y = -1$ (market down).</p>
+        <div class="math-block">
+          $$\begin{array}{lccc}
+          \text{Day} & x_1\text{ (VIX)} & x_2\text{ (Mom\%)} & y \\
+          \hline
+          A & 13 & +2 & +1 \\
+          B & 15 & +1 & +1 \\
+          C & 20 & -1 & -1 \\
+          D & 22 & -2 & -1
+          \end{array}$$
+        </div>
+
+        <div class="we-step">Identify the decision boundary</div>
+        <p>The two classes are separated: low VIX + positive momentum = up, high VIX + negative momentum = down. The SVM finds the hyperplane $w_1 x_1 + w_2 x_2 + b = 0$ that maximises the margin. By symmetry, the boundary passes midway between the two classes — roughly along $x_1 \approx 17.5$ (or equivalently a line in the 2D feature space).</p>
+
+        <div class="we-step">Identify support vectors</div>
+        <p>The support vectors are the points closest to the decision boundary — the points that lie on the margin boundaries $w^\top x + b = \pm 1$. In this dataset: Day B $(15, +1)$ and Day C $(20, -1)$ are the closest points to the boundary from each class. These are the only points with $\mu_i > 0$. Days A and D lie well inside their respective half-spaces — $\mu_A = \mu_D = 0$.</p>
+
+        <div class="we-step">The key implication</div>
+        <div class="we-answer">
+          <strong>Only the support vectors matter.</strong> If you remove days A and D from the training set, the SVM solution is identical — they contribute nothing to $w^*$ since $\mu_A = \mu_D = 0$. The maximum-margin hyperplane is fully determined by the most informative points on the boundary. This sparsity is what makes SVMs computationally tractable and robust: a model trained on 1000 days may have only 50 support vectors determining its decision boundary.
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETION BANNER -->
+    <div class="cliffhanger">
+      <div class="cliffhanger-label">Chapter 9 Preview</div>
+      <p>SVMs with kernels showed that the right feature map can make any problem linearly separable — but we had to specify the kernel manually. What if the <strong>feature map itself was learned from data</strong>? That is the deep learning idea. Chapter 9 introduces Convolutional Neural Networks — where the feature extractor is not hand-designed but optimised end-to-end by gradient descent.</p>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 08</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch08 / q01</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A quant uses Ridge regression ($L_2$ regularisation) on a NIFTY factor model. A colleague says "Ridge just adds noise to the matrix — it's a numerical hack." What is the precise Bayesian interpretation that refutes this?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Ridge regression is equivalent to MLE with a larger dataset — it is not Bayesian.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Ridge regression is MAP estimation with a Gaussian prior $P(\theta) = \mathcal{N}(0, \tau^2 I)$ on the parameters. The $\lambda I$ term encodes the prior belief that parameters are likely small. It is principled inference, not a hack.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Ridge regression is MAP estimation with a Laplace prior, which encourages sparsity in the coefficients.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Ridge regression is a frequentist method with no Bayesian interpretation — the two frameworks are incompatible.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          As derived in this chapter: with Gaussian likelihood $P(y|x,\theta) = \mathcal{N}(y; h_\theta(x), \sigma^2)$ and Gaussian prior $P(\theta) = \mathcal{N}(0, \tau^2 I)$, the MAP objective is $\arg\min \frac{1}{N}\sum \|y_i - h_\theta(x_i)\|^2 + \frac{\sigma^2}{\tau^2}\|\theta\|_2^2$. This is exactly Ridge regression with $\lambda = \sigma^2/\tau^2$. The regularisation parameter $\lambda$ encodes the ratio of noise to prior uncertainty — not a numerical trick but a precise prior belief that parameters are unlikely to be very large.<br/><br/>
+          Option C is wrong: Laplace prior gives Lasso (L1), not Ridge (L2). Option D is wrong: MAP is a frequentist-Bayesian bridge — it computes a point estimate from the posterior, unifying both frameworks.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch08 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In a trained SVM on 500 NIFTY trading days, only 35 days are identified as support vectors. What happens to the decision boundary if the remaining 465 non-support-vector training points are removed?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>The decision boundary changes significantly — fewer training points means less information.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>The decision boundary becomes undefined — SVMs require all training points to compute $w^*$.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>The decision boundary is completely unchanged — since $w^* = \sum_{s \in S} \mu_s y_s x_s$ depends only on support vectors, the 465 non-support-vector points contribute $\mu_i = 0$ and are irrelevant.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The decision boundary shifts slightly — removing points always affects the margin calculation.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          From the KKT complementary slackness condition: $\mu_i^*[1 - y_i(w^\top x_i + b)] = 0$. For non-support-vector points that lie strictly inside their margin ($y_i(w^\top x_i + b) > 1$), the constraint is satisfied strictly, forcing $\mu_i^* = 0$. Since $w^* = \sum_i \mu_i y_i x_i$, these points contribute zero to $w^*$ and zero to $b^*$. Removing them changes nothing.<br/><br/>
+          This is one of the most practically important properties of SVMs: the solution is sparse in the training data. You can store only the 35 support vectors and discard the other 465 points entirely — the model is perfectly preserved. This makes SVMs memory-efficient at deployment time.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch08 / q03</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A data scientist wants to classify NIFTY trading days as trending or mean-reverting. The two classes are not linearly separable in the original 5-dimensional feature space. She applies an RBF kernel SVM. What is the RBF kernel <strong>implicitly computing</strong>, and why is this more powerful than expanding features manually?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>The RBF kernel computes the Euclidean distance between points, which is equivalent to a linear classifier in the original space.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>The RBF kernel squares each feature, mapping to a 25-dimensional space of all pairwise products.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>The RBF kernel implicitly computes an inner product in an infinite-dimensional feature space, where the two classes may be linearly separable. The kernel trick evaluates this inner product as a simple exponential $\exp(-\|x_i - x_j\|^2/2\sigma^2)$ without materialising the infinite-dimensional features.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The RBF kernel is a smoothing operation that averages nearby feature vectors, reducing noise before linear classification.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          By Mercer's theorem, the RBF kernel $K(x,z) = \exp(-\|x-z\|^2/2\sigma^2)$ corresponds to an inner product $\phi(x)^\top \phi(z)$ where $\phi$ maps to a Reproducing Kernel Hilbert Space (RKHS) of infinite dimension. The SVM with an RBF kernel finds the maximum-margin hyperplane in this infinite-dimensional space — a nonlinear decision boundary in the original 5D feature space.<br/><br/>
+          The power of the kernel trick: computing $K(x_i, x_j) = \exp(-\|x_i-x_j\|^2/2\sigma^2)$ costs $O(d)$ — just the distance between two 5-dimensional vectors. Computing the explicit inner product $\phi(x_i)^\top\phi(x_j)$ in the infinite-dimensional space would be impossible. The kernel gives you the answer without the computation.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch08 / q04</span>
+        <span class="mcq-diff">★★ Synthesis</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A quant asks: "Should I use Lasso or Ridge for my NIFTY factor model? I have 200 macro features but suspect only 10 are genuinely predictive." Which regulariser is more appropriate, and what is the precise Bayesian reason?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Ridge — it produces smaller coefficients overall, which is always better for financial models.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>Lasso — the belief that only 10 of 200 features are relevant is encoded by a Laplace prior, which concentrates mass near zero and has heavier tails, naturally producing sparse solutions where most coefficients are exactly zero.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>Ridge — it has a closed-form solution, making it more reliable than Lasso's iterative solver for financial applications.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Neither — with 200 features you need a neural network, not a linear model with regularisation.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The prior belief "only 10 of 200 features are relevant" is a sparsity belief — most $\theta_j$ should be exactly zero. The Laplace prior $P(\theta_j) \propto \exp(-|\theta_j|/b)$ encodes this: it has a sharp peak at zero (pulling coefficients to exactly zero) and heavier tails than Gaussian (allowing the 10 relevant coefficients to be large). This produces the Lasso penalty $\lambda\|\theta\|_1$, which shrinks irrelevant coefficients to exactly zero, performing automatic feature selection.<br/><br/>
+          Ridge's Gaussian prior shrinks all coefficients toward zero proportionally but never sets any exactly to zero — with 200 features, you get 200 small nonzero coefficients, harder to interpret and more prone to overfitting than Lasso's sparse solution.<br/><br/>
+          Option C is partially valid practically but misses the probabilistic reasoning. Option D is wrong: linear models with Lasso regularisation are often preferable to neural networks when $N$ is moderate and interpretability matters.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 08</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Q1–3 are direct computations and definitions. Q4–7 connect regularisation, SVMs, and the probabilistic framework. Q8–10 are synthesis questions that span the entire module.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">For the Ridge regression problem with $X^\top X = \begin{bmatrix}4 & 2 \\ 2 & 3\end{bmatrix}$, $X^\top y = \begin{bmatrix}6 \\ 5\end{bmatrix}$, and $\lambda = 1$, compute the Ridge solution $\theta^* = (X^\top X + \lambda I)^{-1}X^\top y$. Compare to the OLS solution and describe how Ridge shrinks the coefficients.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">Verify that $K(x, z) = (x^\top z)^2$ is a valid kernel for $x, z \in \mathbb{R}^2$ by: (a) finding the feature map $\phi(x)$ such that $K(x,z) = \phi(x)^\top \phi(z)$, and (b) showing the $2\times 2$ kernel matrix $K = \begin{bmatrix}K(x_1,x_1) & K(x_1,x_2) \\ K(x_2,x_1) & K(x_2,x_2)\end{bmatrix}$ is positive semi-definite for $x_1 = [1,0]^\top$, $x_2 = [0,1]^\top$.<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">For a hard-margin SVM with two support vectors at $x_+ = [2, 1]^\top$ ($y=+1$) and $x_- = [0, 1]^\top$ ($y=-1$), find $w^*$ and $b^*$ analytically. What is the margin width $2/\|w^*\|$?<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">Derive the Ridge regression solution $\theta^*_\text{Ridge} = (X^\top X + \lambda I)^{-1}X^\top y$ from the Reg-ERM objective $\min_\theta \|X\theta - y\|^2 + \lambda\|\theta\|^2$ by differentiating and setting to zero. Show that Ridge always has a unique solution even when $X^\top X$ is singular.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">Explain geometrically why Lasso ($L_1$) produces sparse solutions while Ridge ($L_2$) does not. Draw the constraint regions $\|\theta\|_1 \leq \kappa$ and $\|\theta\|_2^2 \leq \kappa$ in 2D and show why the $L_1$ ball has corners that align with the coordinate axes, causing the OLS loss ellipses to first contact the $L_1$ constraint at a corner (setting one coordinate to zero).<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">In the soft-margin SVM, the hyperparameter $C$ controls the bias-variance tradeoff. (a) Explain what happens as $C \to \infty$ (reverts to hard-margin). (b) Explain what happens as $C \to 0$ (all points become support vectors). (c) In terms of the bias-variance decomposition from Ch7, which direction is high-bias and which is high-variance?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">The SVM dual problem shows that data only enters through inner products $x_i^\top x_j$. Show that the same is true for the prediction function: $h(x) = \text{sign}(w^{*\top}x + b^*) = \text{sign}(\sum_{s\in S} \mu_s y_s x_s^\top x + b^*)$. Why does this mean that replacing $x_i^\top x_j$ with $K(x_i, x_j)$ in both the training and prediction steps is sufficient to "kernelise" the SVM?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">Trace the following path through the entire module: a quant wants to classify NIFTY trading days as "good for selling straddles" vs "bad for selling straddles." For each of the following models, identify which chapter(s) provide the mathematical foundations: (a) logistic regression, (b) KNN classifier, (c) Gaussian Mixture Model + Bayes classifier, (d) SVM with RBF kernel. For each, state the key assumption about $P_{XY}$ and the computational procedure for finding the optimal classifier.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">The hinge loss is defined as $L_\text{hinge}(h(x), y) = \max(0, 1 - y\cdot h(x))$. Show that ERM with hinge loss and an $L_2$ regulariser is equivalent to the soft-margin SVM primal problem. This demonstrates that the SVM is a regularised ERM with a specific loss function — completing the unification of all classifiers under the ERM framework.<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text"><strong>Module capstone.</strong> The probabilistic view (Ch1–5) and the geometric/optimisation view (Ch6–8) of ML are different languages for the same ideas. For each pair below, identify the correspondence and explain it in one precise sentence: (a) MLE ↔ ERM, (b) MAP ↔ Reg-ERM, (c) KL divergence ↔ cross-entropy loss, (d) latent variable model ↔ GMM density estimation, (e) ELBO lower bound ↔ Jensen's inequality. Then state: is there any fundamentally new idea in Ch6–8 that does not have a probabilistic counterpart, or are the two frameworks truly unified?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch7.html" class="ch-nav-btn">← Linear Models and Bias-Variance</a>
+    <a href="ML_M_Ch9.html" class="ch-nav-btn primary">Next: Convolutional Neural Networks →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎓 Module complete. The kernel of your understanding is positive semi-definite.",
+  "🎯 Regularisation term satisfied. Prior and likelihood in agreement.",
+  "✨ Support vector identified. Margin maximised.",
+  "🏆 MAP estimate correct. Gaussian prior acknowledged.",
+  "🔥 KKT conditions satisfied. Dual optimal. Primal recovered.",
+  "💡 The kernel trick worked. Infinite dimensions, finite computation.",
+  "📈 Ridge solution stable. $(X^\\top X + \\lambda I)^{-1}$ is always invertible.",
+  "🧮 Lasso sparse solution found. Laplace prior confirmed.",
+  "⚡ All threads converge. ERM = MLE = KL Min = MAP = Reg-ERM.",
+  "🌟 Final chapter complete. The unification is real."
+];
+const wrongMsgs = [
+  "🌀 Ridge uses $L_2$, Lasso uses $L_1$. Check which prior you need.",
+  "📐 KKT stationarity: $\\nabla_w \\mathcal{L} = 0 \\Rightarrow w^* = \\sum \\mu_i y_i x_i$.",
+  "📉 Non-support-vector points have $\\mu_i = 0$. They contribute nothing.",
+  "🏦 Ridge = Gaussian prior. Lasso = Laplace prior. Check the derivation.",
+  "😰 The kernel trick replaces $x_i^\\top x_j$ with $K(x_i, x_j)$ everywhere.",
+  "🤔 Mercer's theorem: $K$ is valid iff the kernel matrix is PSD.",
+  "📊 The margin is $2/\\|w\\|$, not $\\|w\\|$. Maximise margin = minimise $\\|w\\|^2$.",
+  "🎰 The soft-margin allows violations. Check your slack variable logic."
+];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done) return;
+  if(!state[qid]) state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done) return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  const expl=document.getElementById(qid+'expl');
+  expl.classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    const m=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(30,158,94,0.1)';
+    feedback.style.color='var(--green)';
+    feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Module Complete ↓';
+    btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter) o.classList.add('correct');});
+    const m=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(220,38,38,0.06)';
+    feedback.style.color='#dc2626';
+    feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';
+    btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement) renderMathInElement(document.getElementById(qid+'expl'));
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Convolutional Neural Networks · quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-f{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;font-style:italic;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.derivation{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.deriv-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.deriv-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.deriv-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.deriv-body{padding:1.5rem;background:var(--white);}
+.deriv-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.deriv-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.deriv-result{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.deriv-result strong{color:var(--green);}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.col-card{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;}
+.col-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);margin-bottom:0.6rem;font-weight:600;}
+.col-card p{font-size:0.88rem;line-height:1.7;color:#2a2a3e;margin-bottom:0.7rem;}
+.col-card p:last-child{margin-bottom:0;}
+@media(max-width:650px){.two-col{grid-template-columns:1fr;}}
+
+.compare-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.88rem;}
+.compare-table th{background:var(--navy);color:white;padding:0.65rem 1rem;text-align:left;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;}
+.compare-table td{padding:0.65rem 1rem;border-bottom:1px solid var(--border);color:#2a2a3e;line-height:1.6;}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table tr:nth-child(even) td{background:var(--off);}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.arch-diagram{background:var(--navy);border-radius:12px;padding:1.5rem 2rem;margin:2rem 0;overflow-x:auto;}
+.arch-row{display:flex;align-items:center;gap:0.6rem;flex-wrap:nowrap;min-width:max-content;}
+.arch-block{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:0.6rem 1rem;text-align:center;flex-shrink:0;}
+.arch-block-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.2rem;}
+.arch-block-val{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;font-weight:700;color:white;}
+.arch-block.highlight{background:rgba(232,114,42,0.2);border-color:rgba(232,114,42,0.4);}
+.arch-block.highlight .arch-block-val{color:var(--orange2);}
+.arch-arrow{color:rgba(255,255,255,0.3);font-size:1.2rem;flex-shrink:0;}
+
+.cliffhanger{background:var(--navy);border-radius:12px;padding:1.8rem 2rem;margin:2.5rem 0;text-align:center;}
+.cliffhanger-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.8rem;}
+.cliffhanger p{font-size:0.95rem;color:rgba(255,255,255,0.75);line-height:1.75;max-width:580px;margin:0 auto;}
+.cliffhanger strong{color:var(--orange2);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="ML.html">Machine Learning</a> ›
+      <a href="ML_M.html">Mathematical Foundations</a> ›
+      <span>Convolutional Neural Networks</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:69.2%"></div></div>
+      <span class="tb-progress-label">9 / 13</span>
+    </div>
+    <a href="ML_M.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">Mathematical Foundations of ML</div>
+  <a class="sidebar-item done" href="ML_M_Ch1.html"><div class="si-num">1</div>What Is Learning?<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch2.html"><div class="si-num">2</div>The Learning Machine<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch3.html"><div class="si-num">3</div>Empirical Risk and the Likelihood Game<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch4.html"><div class="si-num">4</div>Maximum Likelihood — Let the Data Speak<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch5.html"><div class="si-num">5</div>Hidden Variables, Prior Beliefs, and EM<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch6.html"><div class="si-num">6</div>Non-parametric Density Estimation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch7.html"><div class="si-num">7</div>Linear Models and the Bias-Variance Tradeoff<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="ML_M_Ch8.html"><div class="si-num">8</div>Regularisation, SVMs, and the Kernel Trick<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="ML_M_Ch9.html"><div class="si-num">9</div>Convolutional Neural Networks<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch10.html"><div class="si-num">10</div>Recurrent Neural Networks<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch11.html"><div class="si-num">11</div>Attention and Transformers<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch12.html"><div class="si-num">12</div>Ensembles and Decision Trees<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="ML_M_Ch13.html"><div class="si-num">13</div>Unsupervised Learning and Generative Models<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Intermediate</span>
+      <span class="ch-num">Chapter 09 of 13 · Mathematical Foundations of ML</span>
+    </div>
+    <h1 class="chapter-title">Convolutional<br/>Neural Networks</h1>
+    <p class="chapter-subtitle">Chapter 8 showed that the right feature map can make any problem linearly separable — but the kernel had to be hand-designed. CNNs remove that constraint entirely. The feature extractor is not chosen by the practitioner; it is learned from data by gradient descent. The key insight: for grid-structured data like images, two structural constraints — local receptive fields and parameter sharing — make this learning both tractable and powerful.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The MLP's Problem with Images</h3>
+
+    <p>
+      A fully connected MLP with input $x \in \mathbb{R}^d$ connects every input unit to every unit in the first hidden layer. For a modest $256 \times 256$ greyscale image, $d = 65{,}536$. With 1000 hidden units in the first layer, that is $65{,}536 \times 1{,}000 = 65.5$ million parameters — from the input layer alone. For a colour image, multiply by 3.
+    </p>
+
+    <p>
+      This is wasteful for two reasons. First, <strong>spatial locality</strong>: in natural images, nearby pixels are correlated and meaningful patterns are local — an edge, a curve, a texture patch. Connecting every pixel to every neuron ignores this structure. Second, <strong>translation invariance</strong>: a cat in the top-left corner of an image is the same cat in the bottom-right. The MLP has no way to share the knowledge about "what a cat looks like" across spatial positions — it must relearn it from scratch for every location.
+    </p>
+
+    <p>
+      CNNs address both problems with two structural constraints applied to the MLP: <strong>local receptive fields</strong> and <strong>parameter sharing</strong>.
+    </p>
+
+    <div class="callout callout-definition">
+      A <strong>Convolutional Neural Network (CNN)</strong> is a regularised MLP designed for data with grid-like topology (images, time-series, spectrograms). It enforces two inductive biases:
+      <br/><br/>
+      <strong>(i) Local receptive field:</strong> each neuron in a hidden layer connects only to a small spatial region of the input — not the entire input.
+      <br/><br/>
+      <strong>(ii) Parameter sharing:</strong> the weights of each local filter are shared across all spatial positions. The same filter is applied everywhere.
+    </div>
+
+    <h3>Local Receptive Fields and the Convolution Operation</h3>
+
+    <p>
+      Fix a filter of size $k \times k$ (e.g. $3 \times 3$). Slide it across a $P \times Q$ input image. At each position, compute the dot product between the filter weights $w \in \mathbb{R}^{k \times k}$ and the local patch of the image. The result at each position is one element of the output <strong>feature map</strong>.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>convolution operation</strong> for a single filter $w$ applied to input $x$ produces a feature map $z$ where each element is:
+      $$z_{i,j} = \sum_{m=0}^{k-1}\sum_{n=0}^{k-1} w_{m,n}\cdot x_{i+m,\; j+n} + b$$
+      The filter $w$ and bias $b$ are the learnable parameters. The same $w$ is used at every position $(i,j)$ — this is parameter sharing.
+    </div>
+
+    <div class="callout callout-intuition">
+      Think of the filter as a pattern detector. A filter with a horizontal gradient pattern will fire strongly wherever the input has a horizontal edge. A filter with a circular pattern fires at circular objects. Crucially, because the same filter is applied everywhere, it detects its pattern regardless of where in the image it appears. In a deep CNN, early layers learn edge detectors, middle layers learn texture and shape detectors, and deep layers learn object-level features — all from gradient descent on the training data, with no hand-engineering.
+    </div>
+
+    <h3>Output Dimensions: The Formula</h3>
+
+    <p>
+      Given an input of size $P \times Q$, a filter of size $k \times k$, stride $s$, and padding $p$, the output feature map has dimensions:
+    </p>
+
+    <div class="math-block">
+      $$\text{Output height} = \left\lfloor\frac{P + 2p - k}{s}\right\rfloor + 1 \qquad \text{Output width} = \left\lfloor\frac{Q + 2p - k}{s}\right\rfloor + 1$$
+    </div>
+
+    <p>
+      With no padding ($p=0$) and stride $s=1$ — the simplest case — a $P \times Q$ input with a $k \times k$ filter gives output of size $(P - k + 1) \times (Q - k + 1)$. Each convolution slightly reduces spatial dimensions unless padding compensates.
+    </p>
+
+    <!-- DERIVATION: output dimension -->
+    <div class="derivation">
+      <div class="deriv-header">
+        <span class="deriv-title">Derivation · Output Dimension Formula</span>
+        <span class="deriv-badge">Stride · Padding · No Magic</span>
+      </div>
+      <div class="deriv-body">
+        <div class="deriv-step">Setup</div>
+        <p>Input has $P$ positions along one dimension. Filter has size $k$. Stride $s$ means the filter jumps $s$ positions at a time. Padding $p$ adds $p$ zeros on each side, making the padded input have $P + 2p$ positions.</p>
+
+        <div class="deriv-step">Count valid positions</div>
+        <p>The filter of size $k$ can start at positions $0, s, 2s, \ldots$ The last valid start position is where the filter still fits: $\text{start} + k - 1 \leq P + 2p - 1$, i.e. $\text{start} \leq P + 2p - k$. The number of valid start positions (counting from 0 in steps of $s$) is:</p>
+        <div class="math-block">
+          $$\left\lfloor\frac{P + 2p - k}{s}\right\rfloor + 1$$
+        </div>
+
+        <div class="deriv-step">Common cases</div>
+        <p><strong>"Valid" padding</strong> ($p=0$, $s=1$): output = $P - k + 1$. Each convolution shrinks the input.</p>
+        <p><strong>"Same" padding</strong> ($p = \lfloor k/2 \rfloor$, $s=1$): output = $P$. Spatial dimensions preserved. This is the standard choice in modern networks.</p>
+
+        <div class="deriv-result">
+          <strong>The formula counts how many times a window of size $k$ fits into a padded input of size $P + 2p$, in steps of $s$.</strong> No memorisation needed — just count valid filter positions.
+        </div>
+      </div>
+    </div>
+
+    <h3>Multiple Filters and Depth</h3>
+
+    <p>
+      A single filter produces a single feature map — one detection channel. In practice, a convolutional layer uses $F$ filters simultaneously, producing $F$ feature maps. Each filter learns to detect a different pattern. The output of a convolutional layer is a 3D tensor of shape:
+      $$\left(\left\lfloor\frac{P+2p-k}{s}\right\rfloor + 1\right) \times \left(\left\lfloor\frac{Q+2p-k}{s}\right\rfloor + 1\right) \times F$$
+    </p>
+
+    <p>
+      For a colour (RGB) input with $C=3$ channels, each filter is $k \times k \times C$ — it spans all input channels. The number of parameters per filter is $k \times k \times C + 1$ (including bias). With $F$ filters, the total parameter count for one layer is $F \times (k^2 C + 1)$.
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📊 Parameter Count: MLP vs CNN</div>
+        <p>Input: $32 \times 32 \times 3$ (CIFAR image). First hidden layer: 100 neurons.</p>
+        <p>MLP: $32 \times 32 \times 3 \times 100 = 307{,}200$ parameters.</p>
+        <p>CNN ($3\times3$ filter, 32 filters): $3^2 \times 3 \times 32 + 32 = 896$ parameters. 343× fewer.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">🇮🇳 Chart Pattern Recognition</div>
+        <p>A CNN trained on NIFTY candlestick charts learns filters that detect head-and-shoulders, double-bottoms, and engulfing patterns — the same filters applied at every time position. Parameter sharing means the model can recognise a pattern regardless of when it appeared in the chart window.</p>
+      </div>
+    </div>
+
+    <h3>Hyperparameters of a Convolutional Layer</h3>
+
+    <table class="compare-table">
+      <tr><th>Hyperparameter</th><th>Meaning</th><th>Typical values</th></tr>
+      <tr><td><strong>Filter size $k$</strong></td><td>Spatial extent of each filter</td><td>$3\times3$ (standard), $1\times1$ (channel mixing), $5\times5$ (larger context)</td></tr>
+      <tr><td><strong>Number of filters $F$</strong></td><td>How many feature maps to produce</td><td>32, 64, 128, 256 — increasing with depth</td></tr>
+      <tr><td><strong>Stride $s$</strong></td><td>Step size when sliding the filter</td><td>1 (full resolution), 2 (halves spatial dims)</td></tr>
+      <tr><td><strong>Padding $p$</strong></td><td>Zeros added to border before convolution</td><td>0 (valid), $\lfloor k/2 \rfloor$ (same)</td></tr>
+      <tr><td><strong>Depth (layers)</strong></td><td>How many convolutional layers to stack</td><td>4–100+ in modern networks</td></tr>
+    </table>
+
+    <div class="callout callout-warning">
+      These hyperparameters are not learned — they are chosen by the architect. The filter weights are learned; the filter size is not. Choosing $k=3$ vs $k=5$ vs $k=7$ affects the receptive field (how much of the input each neuron can "see"), the parameter count, and the computational cost. Modern practice: almost exclusively use $3\times3$ filters, stack more layers for larger receptive fields, and use "same" padding to preserve spatial dimensions until you want to downsample.
+    </div>
+
+    <h3>Pooling: Reducing Spatial Dimensions</h3>
+
+    <p>
+      After several convolutional layers, the feature maps are downsampled using a <strong>pooling operation</strong>. Pooling reduces spatial dimensions without learnable parameters — it is a fixed aggregation over a local neighbourhood.
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📐 Max Pooling</div>
+        <p>Take the maximum value in each $k \times k$ window. Preserves the strongest activation — "was this feature present anywhere in this region?" Discards exact location, keeps existence information.</p>
+        <p>Most common. Makes the model more invariant to small translations of the input.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">📐 Average Pooling</div>
+        <p>Take the mean value in each $k \times k$ window. Retains information about the average activation strength. More commonly used in the final global pooling step before the classifier.</p>
+        <p>Global Average Pooling (GAP) collapses each entire feature map to a single number — replacing fully connected layers at the end of modern networks.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      Pooling does two things: it reduces the spatial resolution (fewer positions = fewer parameters in subsequent layers) and it provides a form of translation invariance (a feature shifted by one pixel in the input often produces the same max-pool output). After $n$ rounds of $2\times2$ max-pooling, the network can tolerate shifts of up to $2^n$ pixels without changing its output — crucial for robust recognition.
+    </div>
+
+    <h3>End-to-End Architecture: The Classification Pipeline</h3>
+
+    <p>
+      A standard CNN classifier stacks convolutional and pooling layers to progressively extract features, then flattens and uses fully connected layers for the final classification:
+    </p>
+
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-block"><div class="arch-block-label">Input</div><div class="arch-block-val">$H \times W \times C$</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-block highlight"><div class="arch-block-label">Conv + ReLU</div><div class="arch-block-val">$F$ filters</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-block highlight"><div class="arch-block-label">Pool</div><div class="arch-block-val">$\div 2$</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-block highlight"><div class="arch-block-label">Conv + ReLU</div><div class="arch-block-val">$2F$ filters</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-block highlight"><div class="arch-block-label">Pool</div><div class="arch-block-val">$\div 2$</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-block"><div class="arch-block-label">Flatten</div><div class="arch-block-val">1D vector</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-block"><div class="arch-block-label">FC + Softmax</div><div class="arch-block-val">$K$ classes</div></div>
+      </div>
+    </div>
+
+    <p>
+      The convolutional layers act as a <strong>learned feature extractor</strong> — they transform the raw input into a compact, semantically meaningful representation. The fully connected layers act as a <strong>classifier</strong> on that representation. This modularity is one of the most powerful ideas in deep learning: the same backbone (convolutional feature extractor) can be used with different classifiers for different tasks.
+    </p>
+
+    <h3>Famous Architectures</h3>
+
+    <p>
+      <strong>LeNet-5 (1998, LeCun et al.)</strong> — the architecture that started it all. Designed for handwritten digit recognition (MNIST). Two convolutional layers with average pooling, followed by three fully connected layers. Input: $32 \times 32$ greyscale. Showed that convolutional networks could be trained end-to-end by backpropagation on real tasks.
+    </p>
+
+    <p>
+      <strong>AlexNet (2012, Krizhevsky et al.)</strong> — won ImageNet (1.2 million images, 1000 classes) by a large margin, launching the modern deep learning era. Key innovations: ReLU activations (replacing sigmoid/tanh, fixing vanishing gradients in shallow networks), dropout for regularisation, data augmentation, and GPU training. Five convolutional layers, three fully connected layers, 60 million parameters.
+    </p>
+
+    <div class="callout callout-india">
+      The ImageNet moment in 2012 is directly relevant to Indian fintech. The same convolutional architectures that classified ImageNet photos now power: NACH mandate verification (signature matching at every bank), PAN card OCR (NSDL processes millions of documents), and cheque truncation (CTS system at RBI). Every time your UPI payment is verified, a CNN somewhere is reading the QR code or matching a facial scan. The mathematical structure is identical to what we derived above — local filters, parameter sharing, pooling, softmax.
+    </div>
+
+    <h3>Beyond Classification: Semantic Segmentation</h3>
+
+    <p>
+      Classification assigns a single label to the entire image. <strong>Semantic segmentation</strong> assigns a label to every pixel — "what class does this pixel belong to?" This requires the network's output to have the same spatial resolution as the input.
+    </p>
+
+    <p>
+      <strong>Fully Convolutional Networks (FCN)</strong> replace the final fully connected layers with convolutional layers, allowing any input size and producing spatial output maps. But repeated pooling reduces resolution — the output is coarser than the input. The fix is <strong>upsampling</strong> (transposed convolutions or bilinear interpolation) to restore resolution.
+    </p>
+
+    <p>
+      <strong>U-Net (2015)</strong> — the dominant architecture for biomedical and satellite image segmentation. An encoder-decoder structure:
+    </p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <div class="col-card-label">📉 Encoder (Contracting Path)</div>
+        <p>Standard CNN: Conv → Pool → Conv → Pool. Spatial resolution decreases, number of feature maps increases. The encoder extracts semantics at the cost of spatial detail.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-card-label">📈 Decoder (Expanding Path)</div>
+        <p>Upsample → Conv → Upsample → Conv. Spatial resolution restored. Skip connections from encoder layers concatenated at each decoder stage — restoring fine spatial detail lost during pooling.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      U-Net's skip connections are the key idea. The encoder "compresses" the image into a semantic representation (what is present) but loses spatial precision (where exactly). The decoder reconstructs spatial detail using the skip connections — direct copies of the encoder's feature maps at each resolution. This allows the network to simultaneously know what something is (from the deep encoder) and where it is (from the shallow skip connections). The same idea appears in ResNets as residual connections — gradient highways through the network.
+    </div>
+
+    <!-- WORKED EXAMPLE 1 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 1 · Computing Output Dimensions Through a CNN</span>
+        <span class="we-badge">📐 Full Forward Pass</span>
+      </div>
+      <div class="we-body">
+        <p>Trace a $32 \times 32 \times 1$ greyscale image through a small CNN with the following layers. Compute the output shape at each stage.</p>
+
+        <div class="we-step">Layer 1 — Conv: 8 filters, $5 \times 5$, stride 1, no padding</div>
+        <div class="math-block">
+          $$\text{Output} = \left(\left\lfloor\frac{32-5}{1}\right\rfloor+1\right) \times \left(\left\lfloor\frac{32-5}{1}\right\rfloor+1\right) \times 8 = 28 \times 28 \times 8$$
+        </div>
+        <p>Parameters: $5 \times 5 \times 1 \times 8 + 8 = 208$ (25 weights per filter × 8 filters + 8 biases).</p>
+
+        <div class="we-step">Layer 2 — Max Pool: $2 \times 2$, stride 2</div>
+        <div class="math-block">
+          $$\text{Output} = 14 \times 14 \times 8$$
+        </div>
+        <p>No learnable parameters. Spatial dimensions halved.</p>
+
+        <div class="we-step">Layer 3 — Conv: 16 filters, $3 \times 3$, stride 1, no padding</div>
+        <div class="math-block">
+          $$\text{Output} = \left(\left\lfloor\frac{14-3}{1}\right\rfloor+1\right) \times \left(\left\lfloor\frac{14-3}{1}\right\rfloor+1\right) \times 16 = 12 \times 12 \times 16$$
+        </div>
+        <p>Parameters: $3 \times 3 \times 8 \times 16 + 16 = 1{,}168$.</p>
+
+        <div class="we-step">Layer 4 — Max Pool: $2 \times 2$, stride 2</div>
+        <div class="math-block">
+          $$\text{Output} = 6 \times 6 \times 16 = 576 \text{ values}$$
+        </div>
+
+        <div class="we-step">Layer 5 — Flatten + FC: 10 output classes</div>
+        <p>Flatten: $6 \times 6 \times 16 = 576$ inputs. FC: $576 \times 10 + 10 = 5{,}770$ parameters.</p>
+
+        <div class="we-answer">
+          <strong>Total parameters: $208 + 0 + 1{,}168 + 0 + 5{,}770 = 7{,}146$.</strong> An equivalent MLP would need $32 \times 32 \times 100 + 100 \times 10 = 103{,}400$ parameters just for two layers — 14× more, with no spatial inductive bias. The CNN uses far fewer parameters precisely because the same filter weights are shared across all spatial positions.
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE 2 -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example 2 · What a Convolution Filter Detects</span>
+        <span class="we-badge">🇮🇳 Candlestick Pattern Recognition</span>
+      </div>
+      <div class="we-body">
+        <p>Consider a 1D convolutional filter applied to a time series of NIFTY closes $x = [x_1, x_2, \ldots, x_T]$ (treated as a 1D "image"). Filter size $k = 3$, single filter $w = [-1, 0, +1]$.</p>
+
+        <div class="we-step">Apply the filter</div>
+        <p>At each position $t$, the filter output is:</p>
+        <div class="math-block">
+          $$z_t = w_1 x_t + w_2 x_{t+1} + w_3 x_{t+2} = -x_t + x_{t+2}$$
+        </div>
+        <p>This is the two-step return: $x_{t+2} - x_t$. The filter detects local upward momentum.</p>
+
+        <div class="we-step">What different filters detect</div>
+        <div class="math-block">
+          $$w = [+1, -2, +1] \implies z_t = x_t - 2x_{t+1} + x_{t+2} \;\text{(second difference — detects curvature, reversals)}$$
+          $$w = [+1, +1, +1] \implies z_t = x_t + x_{t+1} + x_{t+2} \;\text{(local sum — detects high-volume regions)}$$
+        </div>
+
+        <div class="we-answer">
+          <strong>In a trained CNN on financial time series, the filters are not hand-designed.</strong> Gradient descent finds the filter weights that minimise the loss — and they naturally converge to momentum detectors, reversal detectors, volatility detectors, and more complex patterns depending on the task. This is the power of end-to-end learning: the feature engineering is done by optimisation, not by the practitioner.
+        </div>
+      </div>
+    </div>
+
+    <div class="cliffhanger">
+      <div class="cliffhanger-label">Chapter 10 Preview</div>
+      <p>CNNs exploit spatial structure in grid data. But many problems — language, clinical records, financial time series — are <strong>sequential</strong>: the order matters, and inputs can have variable length. Chapter 10 introduces Recurrent Neural Networks, where the network maintains a hidden state that persists across time steps. And then we hit the fundamental obstacle: training long RNNs by backpropagation causes gradients to <strong>vanish exponentially</strong> — and we'll prove exactly why.</p>
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 09</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch09 / q01</span>
+        <span class="mcq-diff">★ Computational</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A convolutional layer receives an input of size $64 \times 64 \times 3$. It applies 32 filters of size $5 \times 5$ with stride 1 and <strong>same padding</strong>. What is the output shape, and how many learnable parameters does this layer have?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Output: $60 \times 60 \times 32$, Parameters: $2{,}400$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Output: $64 \times 64 \times 32$, Parameters: $2{,}432$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Output: $64 \times 64 \times 32$, Parameters: $75$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Output: $60 \times 60 \times 32$, Parameters: $2{,}432$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          <strong>Output shape:</strong> Same padding preserves spatial dimensions. With $p = \lfloor 5/2 \rfloor = 2$, $s=1$: output height $= \lfloor(64 + 4 - 5)/1\rfloor + 1 = 64$. Same for width. With 32 filters: output = $64 \times 64 \times 32$.<br/><br/>
+          <strong>Parameters:</strong> Each filter has shape $5 \times 5 \times 3$ (height × width × input channels) + 1 bias = 76 parameters. With 32 filters: $76 \times 32 = 2{,}432$.<br/><br/>
+          Option A uses valid padding (no padding, output shrinks to $60 \times 60$). Option C only counts one filter's weights without biases or multiplying by 32.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch09 / q02</span>
+        <span class="mcq-diff">★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A colleague says "CNN parameter sharing means every pixel uses the same weights — so a CNN can't learn different features at different locations." What is wrong with this reasoning?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>They are right — CNNs cannot distinguish features by location, which is why they fail on non-grid data.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>Parameter sharing means the same filter is applied at every location, detecting the same feature type everywhere. But with multiple filters per layer and multiple layers, different feature maps capture different aspects. Later layers combine local features into complex location-specific patterns.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Parameter sharing only applies to the first layer — deeper layers have independent weights per position.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The colleague is wrong because pooling breaks translation invariance, compensating for parameter sharing.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Parameter sharing means filter $w$ is the same at every spatial position — it detects the same local pattern (e.g. a horizontal edge) wherever it appears. This is a feature, not a bug: it is exactly what enables translation invariance and reduces parameter count. The network doesn't need separate edge detectors for every pixel location.<br/><br/>
+          Different spatial information is captured because: (1) multiple filters in each layer detect different patterns, (2) pooling summarises spatial regions, and (3) deeper layers combine activations from many spatial positions, effectively integrating information over larger and larger regions of the input (the receptive field grows with depth). A unit in a deep layer has a very large effective receptive field and encodes complex, location-dependent context — even though each individual filter was shared.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch09 / q03</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In U-Net's encoder-decoder architecture, why are <strong>skip connections</strong> from encoder to decoder necessary? What problem do they solve that a plain encoder-decoder without skip connections cannot?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Skip connections speed up training by providing shorter gradient paths, but have no effect on output quality.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Skip connections prevent overfitting by adding noise to the decoder's input at each stage.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Repeated pooling in the encoder destroys fine spatial detail. Skip connections pass high-resolution feature maps directly to the decoder, allowing it to recover precise pixel-level boundaries that cannot be reconstructed from the compressed bottleneck alone.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Skip connections allow the network to use both RGB and greyscale inputs simultaneously.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The encoder progressively applies convolution and pooling, building deep semantic representations while halving spatial resolution at each pooling step. By the bottleneck, a $512\times512$ input might be compressed to $16\times16$ — 1024× reduction in spatial positions. The semantic content is preserved but the precise pixel locations are not.<br/><br/>
+          The decoder upsamples back to full resolution, but upsampling alone cannot recover the fine spatial details lost during pooling — it only interpolates from the coarse bottleneck. Skip connections provide the decoder with the encoder's feature maps at each resolution scale, which still carry the precise spatial information before pooling. The decoder can then use both "what is here" (from the deep path) and "exactly where is it" (from the skip connection) to produce accurate pixel-wise segmentation masks. Without skip connections, boundaries are blurry and spatially imprecise.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">ml / mathematical-foundations / ch09 / q04</span>
+        <span class="mcq-diff">★★ Conceptual</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A CNN trained on NIFTY candlestick chart images achieves 72% accuracy predicting next-day direction. A quant argues this is just "pattern matching with no theoretical basis." How does the framework of this course — specifically Ch8 and Ch9 — respond to that critique?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>The quant is right — CNNs are purely empirical and have no connection to statistical learning theory.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>The CNN is performing ERM with squared error loss, which has a clear theoretical basis.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The CNN is performing ERM with cross-entropy loss over a hypothesis class of convolutional networks. The feature extractor (convolutional layers) is a learned kernel map — exactly what Ch8's kernel trick did manually, now learned end-to-end. The theoretical basis is identical; only the hypothesis class changed.</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>CNNs require a different theoretical framework entirely — ERM does not apply to neural networks.</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          A CNN classifier is ERM: minimise $\frac{1}{N}\sum_i L(h_\theta(x_i), y_i)$ where $h_\theta$ is a composition of convolutional layers followed by a softmax classifier, and $L$ is cross-entropy loss. The hypothesis class $\mathcal{H}$ is the set of all functions representable by networks with the given architecture. This is exactly the ERM framework from Ch2.<br/><br/>
+          The connection to Ch8: the SVM with an RBF kernel implicitly maps inputs to a high-dimensional feature space, then finds the maximum-margin hyperplane in that space. The kernel (feature map) was fixed and hand-chosen. The CNN's convolutional layers perform a learned, nonlinear feature map $\phi_\theta(x)$ that is optimised jointly with the classifier. The theoretical structure is identical — $\phi$ is the feature map, the final FC layer is the linear classifier — but the feature map is no longer fixed: it is the learnable part.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <hr class="content-divider"/>
+
+  <!-- TERMINAL QUESTIONS -->
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions — Chapter 09</span>
+      <span class="terminal-badge">10 problems · No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Q1–3 are direct dimension calculations. Q4–7 require connecting CNN structure to the learning framework. Q8–10 push into architecture design and limitations.</p>
+      <div class="tq-list">
+
+        <div class="tq-item">
+          <div class="tq-num">1</div>
+          <div class="tq-text">An input of size $128 \times 128 \times 1$ passes through: Conv(16 filters, $3\times3$, stride 1, same padding) → MaxPool($2\times2$, stride 2) → Conv(32 filters, $3\times3$, stride 1, same padding) → MaxPool($2\times2$, stride 2). Compute the output shape after each layer and the total parameter count (excluding biases).<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">2</div>
+          <div class="tq-text">A $7 \times 7$ input is convolved with a $3 \times 3$ filter, stride 2, no padding. (a) Compute the output size using the formula. (b) Verify by manually counting how many positions the filter can be placed. (c) What padding would be needed to keep the output size equal to $\lceil 7/2 \rceil = 4$?<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">3</div>
+          <div class="tq-text">Apply the 1D filter $w = [1, -1]$ to the sequence $x = [3, 5, 2, 8, 1, 4]$ with stride 1, no padding. Write out all output values and interpret what this filter computes (hint: finite difference). What financial quantity does this correspond to if $x$ represents daily NIFTY closes?<span class="tq-diff tq-easy">Easy</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">4</div>
+          <div class="tq-text">Show that a $1 \times 1$ convolution with $F$ filters applied to an input of depth $C$ is equivalent to applying a fully connected layer to each spatial position independently. What is the parameter count? Why are $1 \times 1$ convolutions useful in deep networks like Inception?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">5</div>
+          <div class="tq-text">The receptive field of a unit in layer $L$ is the region of the input that influences its value. For a network with $L$ convolutional layers each using $k \times k$ filters with stride 1 and no pooling, show that the receptive field size is $k + (L-1)(k-1) = L(k-1) + 1$. Why does this grow linearly with depth, and what does it imply for how deep networks "see" large-scale patterns?<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">6</div>
+          <div class="tq-text">CNNs exploit two properties of natural images: locality (nearby pixels are correlated) and translation invariance (a pattern is the same regardless of location). Identify a financial dataset where these properties hold and one where they do not. For the one where they do not hold, explain why a plain MLP or RNN might be more appropriate than a CNN.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">7</div>
+          <div class="tq-text">In terms of the bias-variance tradeoff from Ch7, explain the effect of: (a) increasing the number of filters $F$, (b) increasing filter size $k$, (c) increasing depth (number of layers), (d) adding dropout after convolutional layers. For each, state whether it primarily affects bias or variance and why.<span class="tq-diff tq-medium">Medium</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">8</div>
+          <div class="tq-text">Global Average Pooling (GAP) collapses each $h \times w$ feature map to a single scalar (the spatial average). Suppose the final convolutional layer produces 256 feature maps of size $4 \times 4$, and there are 10 output classes. Compare the parameter counts for: (a) flatten + FC classification, (b) GAP + FC classification. What is the regularisation effect of GAP, and why does it reduce overfitting?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">9</div>
+          <div class="tq-text">Backpropagation through a convolutional layer requires computing gradients w.r.t. the filter weights. Show that the gradient of the loss $\mathcal{L}$ with respect to filter weight $w_{m,n}$ is: $\frac{\partial \mathcal{L}}{\partial w_{m,n}} = \sum_{i,j} \frac{\partial \mathcal{L}}{\partial z_{i,j}} \cdot x_{i+m,\; j+n}$. Interpret this: what operation is being performed, and why is it another convolution (cross-correlation)?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+        <div class="tq-item">
+          <div class="tq-num">10</div>
+          <div class="tq-text">Design a CNN architecture for classifying NIFTY options expiry outcomes (Large Up / Small Up / Flat / Small Down / Large Down) from a $20$-day window of 5 daily features (open, high, low, close, volume). Specify: input shape, all layer configurations with output dimensions, parameter counts, and justify each design choice using the principles from this chapter. How would you modify the architecture for the regression task of predicting the exact expiry return?<span class="tq-diff tq-hard">Hard</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="ML_M_Ch8.html" class="ch-nav-btn">← Regularisation, SVMs, and the Kernel Trick</a>
+    <a href="ML_M_Ch10.html" class="ch-nav-btn primary">Next: Recurrent Neural Networks →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎯 Output dimensions correct. Filter slid perfectly.",
+  "✨ Parameter count verified. Shared weights counted once.",
+  "🏆 Receptive field understood. Local pattern detected.",
+  "🔥 Skip connections: spatial detail preserved. U-Net approves.",
+  "💡 CNN = ERM with convolutional hypothesis class. Theory intact.",
+  "🎓 Same padding confirmed. Spatial dimensions preserved.",
+  "📈 Feature map understood. Translation invariance applied.",
+  "🧮 Convolution formula applied correctly.",
+  "⚡ Pooling reduced dimensions exactly as expected.",
+  "🌟 Architecture analysed correctly. Gradient flowing."
+];
+const wrongMsgs = [
+  "🌀 Check padding: same padding preserves size, valid padding shrinks it.",
+  "📐 Parameter count: $k \\times k \\times C_{in} \\times F + F$ (include biases and all input channels).",
+  "📉 Output size formula: $\\lfloor(P + 2p - k)/s\\rfloor + 1$. Check your arithmetic.",
+  "🏦 Parameter sharing means the same filter everywhere — not no filters.",
+  "😰 Skip connections carry spatial detail, not just gradients.",
+  "🤔 CNN is still ERM — the hypothesis class changed, not the framework.",
+  "📊 Pooling has no learnable parameters — just a fixed aggregation.",
+  "🎰 Filter size and number of filters are independent hyperparameters."
+];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done) return;
+  if(!state[qid]) state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done) return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  const expl=document.getElementById(qid+'expl');
+  expl.classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    const m=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(30,158,94,0.1)';
+    feedback.style.color='var(--green)';
+    feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';
+    btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter) o.classList.add('correct');});
+    const m=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.textContent=m;
+    feedback.style.background='rgba(220,38,38,0.06)';
+    feedback.style.color='#dc2626';
+    feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';
+    btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement) renderMathInElement(document.getElementById(qid+'expl'));
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+});
+</script>
+</body>
+</html>
