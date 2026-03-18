@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>APSP, Greedy &amp; MST &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>APSP, Greedy &amp; MST</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:62%"></div></div>
+      <span class="tb-progress-label">8 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 08 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">All-Pairs Shortest Paths, Greedy &amp; MST</h1>
+    <p class="chapter-subtitle">Three algorithm design paradigms meet in one chapter. DP solves all-pairs shortest paths via Floyd-Warshall in $O(V^3)$. Johnson's algorithm uses reweighting to get $O(VE + V^2 \log V)$ on sparse graphs. Greedy algorithms &mdash; armed with the exchange argument proof technique &mdash; solve MST, process scheduling, and event partitioning optimally.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Part I &mdash; All-Pairs Shortest Paths (APSP)</h3>
+
+    <p>Given a weighted directed graph $G = (V, E, w)$, compute $\delta(u, v)$ for all pairs $u, v \in V$. The naive approach: run single-source shortest paths from every vertex.</p>
+
+    <table style="width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.83rem;">
+      <thead><tr>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:left;">Situation</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:center;">Algorithm</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:center;">Dense ($E=\Theta(V^2)$)</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:center;">Sparse</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);">Unweighted</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;">$|V| \times$ BFS</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(V^3)$</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(VE)$</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);">Non-negative weights</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;">$|V| \times$ Dijkstra</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(V^3)$</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(VE + V^2\log V)$</td></tr>
+        <tr><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);">General weights</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;">Floyd-Warshall</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(V^3)$</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(V^3)$</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.5rem 0.9rem;">General, sparse</td><td style="padding:0.5rem 0.9rem;text-align:center;">Johnson&rsquo;s</td><td style="padding:0.5rem 0.9rem;text-align:center;color:var(--orange);">$O(V^3)$</td><td style="padding:0.5rem 0.9rem;text-align:center;color:var(--green);">$O(VE + V^2\log V)$</td></tr>
+      </tbody>
+    </table>
+
+    <h3>DP Attempt 1 &mdash; Edge-Count Relaxation ($O(V^4)$)</h3>
+    <p>Subproblem $d_{uv}^{(m)}$ = weight of shortest path $u \to v$ using at most $m$ edges. Recurrence: $d_{uv}^{(m)} = \min_x(d_{ux}^{(m-1)} + w(x,v))$. Base case: $d_{uv}^{(0)} = 0$ if $u=v$, else $\infty$. After $n-1$ rounds: $d_{uv}^{(n-1)} = \delta(u,v)$. Complexity: $O(V^3)$ subproblems $\times$ $O(V)$ per subproblem $= O(V^4)$. No better than $|V| \times$ Bellman-Ford.</p>
+
+    <p><strong>Speedup via matrix multiplication.</strong> Define $\oplus = \min$ and $\otimes = +$. Then $D^{(m)} = D^{(m-1)} \otimes W$ (tropical matrix multiplication). Using repeated squaring: $D^{(n-1)}$ in $O(\log n)$ multiplications, each $O(V^3)$ &rarr; $O(V^3 \log V)$. (Cannot use Strassen because $(\min, +)$ has no subtraction.)</p>
+
+    <h3>Floyd-Warshall &mdash; $O(V^3)$</h3>
+    <div class="callout callout-definition">
+      <strong>Better DP subproblem:</strong> $c_{uv}^{(k)}$ = weight of shortest path $u \to v$ whose <em>intermediate vertices</em> are all in $\{1, 2, \ldots, k\}$.<br/><br/>
+      <strong>Recurrence:</strong> does the shortest path use vertex $k$?
+      $$c_{uv}^{(k)} = \min\!\left(c_{uv}^{(k-1)},\;\; c_{uk}^{(k-1)} + c_{kv}^{(k-1)}\right)$$
+      Base case: $c_{uv}^{(0)} = w(u,v)$. Answer: $\delta(u,v) = c_{uv}^{(n)}$.<br/><br/>
+      <strong>Complexity:</strong> $O(V^3)$ subproblems, $O(1)$ per subproblem &rarr; $O(V^3)$. Space: $O(V^2)$ (overwrite in place).<br/><br/>
+      <strong>Negative cycle detection:</strong> if $c_{uu}^{(n)} < 0$ for any $u$, graph contains a negative-weight cycle.
+    </div>
+
+    <h3>Johnson&rsquo;s Algorithm &mdash; $O(VE + V^2 \log V)$</h3>
+    <p>Reweight edges to make all weights non-negative, then run Dijkstra from every vertex. The key: find $h: V \to \mathbb{R}$ such that $w_h(u,v) = w(u,v) + h(u) - h(v) \geq 0$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Why reweighting preserves shortest paths.</strong> For any path $p = v_0 \to v_1 \to \cdots \to v_k$:
+      $$w_h(p) = \sum_{i=1}^k w_h(v_{i-1}, v_i) = \sum_{i=1}^k [w(v_{i-1},v_i) + h(v_{i-1}) - h(v_i)] = w(p) + h(v_0) - h(v_k)$$
+      Every $u \to v$ path shifts by the same constant $h(u) - h(v)$, so the <em>shortest</em> path is unchanged. We can recover $\delta(u,v) = \delta_h(u,v) - h(u) + h(v)$.<br/><br/>
+      <strong>Finding $h$:</strong> we need $h(v) - h(u) \leq w(u,v)$ for all edges &mdash; a system of difference constraints. Add a virtual source $s$ with edges $(s, v, 0)$ for all $v$. Set $h(v) = \delta(s, v)$ (Bellman-Ford from $s$). The triangle inequality guarantees $h(v) - h(u) \leq w(u,v)$. If a negative cycle exists, Bellman-Ford detects it.<br/><br/>
+      <strong>Total time:</strong> $O(VE)$ (Bellman-Ford) $+ O(E)$ (reweight) $+ V \times O(E + V\log V)$ (Dijkstra from each $v$) $= O(VE + V^2\log V)$.
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">Floyd-Warshall + Johnson&rsquo;s APSP &middot; O(V³) / O(VE + V² log V)</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import heapq
+from math import inf
+
+# ── FLOYD-WARSHALL ── O(V^3) ─────────────────────────────────────────
+def floyd_warshall(n, edges):
+    """
+    APSP via Floyd-Warshall. O(V^3) time, O(V^2) space.
+    n: number of vertices (0-indexed).
+    edges: list of (u, v, w).
+    Returns dist[u][v] = delta(u,v), or -inf if negative cycle reachable.
+    """
+    dist = [[inf]*n for _ in range(n)]
+    for i in range(n): dist[i][i] = 0
+    for u, v, w in edges:
+        dist[u][v] = min(dist[u][v], w)   # handle multi-edges
+
+    # Relax through intermediate vertex k
+    for k in range(n):
+        for u in range(n):
+            for v in range(n):
+                if dist[u][k] + dist[k][v] < dist[u][v]:
+                    dist[u][v] = dist[u][k] + dist[k][v]
+
+    # Detect negative cycles: dist[u][u] < 0 for some u
+    has_neg_cycle = any(dist[i][i] < 0 for i in range(n))
+    return dist, has_neg_cycle
+
+
+# ── JOHNSON'S ALGORITHM ── O(VE + V^2 log V) ─────────────────────────
+def bellman_ford(n, edges, src):
+    """Bellman-Ford from src. Returns (dist, has_negative_cycle)."""
+    dist = [inf] * n
+    dist[src] = 0
+    for _ in range(n - 1):           # n-1 relaxation passes
+        for u, v, w in edges:
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+    # Check for negative cycle
+    for u, v, w in edges:
+        if dist[u] + w < dist[v]:
+            return dist, True
+    return dist, False
+
+def dijkstra(n, adj, src):
+    """Dijkstra with binary heap. O((V+E) log V)."""
+    dist = [inf] * n
+    dist[src] = 0
+    pq = [(0, src)]                   # (distance, vertex)
+    while pq:
+        d, u = heapq.heappop(pq)
+        if d > dist[u]: continue
+        for v, w in adj[u]:
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                heapq.heappush(pq, (dist[v], v))
+    return dist
+
+def johnsons(n, edges):
+    """
+    Johnson's APSP. O(VE + V^2 log V).
+    Best for sparse graphs with negative weights.
+    """
+    # Step 1: Add virtual source s=n, edges (n->v, 0) for all v
+    aug_edges = edges + [(n, v, 0) for v in range(n)]
+    h, neg_cycle = bellman_ford(n + 1, aug_edges, n)
+    if neg_cycle:
+        return None, True             # negative cycle detected
+
+    # Step 2: Reweight edges: w_h(u,v) = w(u,v) + h(u) - h(v) >= 0
+    adj = [[] for _ in range(n)]
+    for u, v, w in edges:
+        w_h = w + h[u] - h[v]
+        adj[u].append((v, w_h))
+
+    # Step 3: Dijkstra from every vertex
+    all_dist = []
+    for s in range(n):
+        d_h = dijkstra(n, adj, s)
+        # Recover original distances: delta(s,v) = d_h(s,v) - h(s) + h(v)
+        d = [d_h[v] - h[s] + h[v] if d_h[v] < inf else inf
+             for v in range(n)]
+        all_dist.append(d)
+    return all_dist, False</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// Floyd-Warshall + Johnson's APSP
+#include &lt;vector&gt;
+#include &lt;queue&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+const double INF = 1e18;
+using Edge = tuple&lt;int,int,double&gt;;
+
+// Floyd-Warshall — O(V^3)
+pair&lt;vector&lt;vector&lt;double&gt;&gt;, bool&gt;
+floyd_warshall(int n, const vector&lt;Edge&gt;&amp; edges) {
+    vector&lt;vector&lt;double&gt;&gt; d(n, vector&lt;double&gt;(n, INF));
+    for (int i=0;i&lt;n;i++) d[i][i]=0;
+    for (auto&amp; [u,v,w] : edges) d[u][v]=min(d[u][v],w);
+    for (int k=0;k&lt;n;k++)
+        for (int u=0;u&lt;n;u++)
+            for (int v=0;v&lt;n;v++)
+                if (d[u][k]+d[k][v] &lt; d[u][v])
+                    d[u][v]=d[u][k]+d[k][v];
+    bool neg = false;
+    for (int i=0;i&lt;n;i++) if (d[i][i]&lt;0) neg=true;
+    return {d, neg};
+}
+
+// Dijkstra — O((V+E) log V)
+vector&lt;double&gt; dijkstra(int n,
+    const vector&lt;vector&lt;pair&lt;int,double&gt;&gt;&gt;&amp; adj, int src) {
+    vector&lt;double&gt; d(n,INF); d[src]=0;
+    priority_queue&lt;pair&lt;double,int&gt;,
+        vector&lt;pair&lt;double,int&gt;&gt;, greater&lt;&gt;&gt; pq;
+    pq.push({0,src});
+    while (!pq.empty()) {
+        auto [dd,u]=pq.top(); pq.pop();
+        if (dd&gt;d[u]) continue;
+        for (auto [v,w]:adj[u])
+            if (d[u]+w&lt;d[v]) { d[v]=d[u]+w; pq.push({d[v],v}); }
+    }
+    return d;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Part II &mdash; Greedy Algorithms and the Exchange Argument</h3>
+
+    <p>A greedy algorithm makes the locally optimal choice at each step. Two properties justify correctness: <strong>optimal substructure</strong> (the optimal solution embeds optimal sub-solutions) and the <strong>greedy choice property</strong> (a local optimum is part of some global optimum). Proof technique: <em>exchange argument</em> &mdash; show that any solution not following the greedy rule can be transformed into one that does, without worsening the objective.</p>
+
+    <h3>Problem 1 &mdash; Shortest Processing Time First (SPTF)</h3>
+    <p>Schedule $n$ jobs in order to minimise total completion time $\sum C_i$. Each job $i$ takes time $t_i$; completion time of the $k$-th scheduled job is $\sum_{j=1}^k t_{p_j}$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Greedy rule:</strong> schedule jobs in increasing order of $t_i$ (SPTF).<br/><br/>
+      <strong>Exchange argument proof:</strong> suppose in some schedule, job $i$ comes before job $j$ with $t_i > t_j$. Swap them. The completion time of everything between $i$ and $j$ decreases by $t_i - t_j > 0$; everything before or after is unchanged. Total completion time strictly decreases. Therefore, any non-SPTF order can be improved, and SPTF is optimal. $\square$<br/><br/>
+      <strong>Time:</strong> $O(n \log n)$ (sort by $t_i$).
+    </div>
+
+    <h3>Problem 2 &mdash; Event Interval Partitioning (Cloning)</h3>
+    <p>Given $n$ events with start/finish times, find the minimum number of &ldquo;clones&rdquo; (machines/rooms) needed so each event is attended. A clone can handle a set of non-overlapping events.</p>
+
+    <div class="callout callout-definition">
+      <strong>Greedy rule:</strong> sort by start time; maintain a min-heap of finish times of the last event per clone. For each new event, if the earliest-finishing clone is already free, assign to it; else create a new clone.<br/><br/>
+      <strong>Correctness:</strong> when we create the $m$-th clone for event $(s_i, f_i)$, all $m-1$ existing clones are busy (their last event hasn&rsquo;t finished). Since all those events started before $s_i$ (sorted by start time), at time $s_i$ there are $m$ concurrent events. Any solution needs $\geq m$ clones. So our greedy solution is optimal. $\square$<br/><br/>
+      By Dilworth&rsquo;s theorem, the minimum number of chains needed to partition a partial order equals the size of the maximum antichain.
+    </div>
+
+    <h3>Part III &mdash; Minimum Spanning Tree</h3>
+
+    <p>Given undirected graph $G = (V, E, w)$, find a spanning tree of minimum total edge weight. The key structural insight:</p>
+
+    <div class="callout callout-definition">
+      <strong>Greedy-Choice Property for MST (Cut Property).</strong> For any cut $(S, V \setminus S)$ in $G$, any minimum-weight edge crossing the cut is in <em>some</em> MST.<br/><br/>
+      <strong>Proof (cut-and-paste).</strong> Let $e = \{u,v\}$ be the min-weight crossing edge and $T$ be any MST. If $e \in T$: done. If $e \notin T$: $T$ has a path from $u$ to $v$; that path must cross the cut via some edge $e' = \{u', v'\}$. Replace $e'$ with $e$: $T' = T \setminus \{e'\} \cup \{e\}$ is still a spanning tree, and $w(T') = w(T) - w(e') + w(e) \leq w(T)$. So $T'$ is also an MST containing $e$. $\square$
+      <br/><br/>
+      <strong>Optimal substructure.</strong> If $e \in \text{MST}(G)$, then MST$(G) \setminus \{e\} \cup \{e\}$ $=$ MST$(G)$; equivalently, the MST of $G/e$ (contract $e$) gives the MST of $G$ by adding $e$ back.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Prim&rsquo;s + Kruskal&rsquo;s MST + SPTF scheduling &middot; O(E log V) / O(E &alpha;(V))</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import heapq
+
+# ── PRIM'S MST ── O(E log V) with binary heap ────────────────────────
+def prim_mst(n, adj):
+    """
+    Prim's MST. adj[u] = list of (v, w).
+    Grows MST from vertex 0, always adding the min-weight crossing edge.
+    Returns (total_weight, mst_edges).
+    Uses binary heap: O((V+E) log V).
+    Fibonacci heap would give O(E + V log V).
+    """
+    in_mst = [False] * n
+    key     = [float('inf')] * n
+    parent  = [-1] * n
+    key[0]  = 0
+    pq      = [(0, 0)]           # (key, vertex)
+    total_w = 0
+    mst_edges = []
+
+    while pq:
+        w, u = heapq.heappop(pq)
+        if in_mst[u]: continue
+        in_mst[u] = True
+        total_w += w
+        if parent[u] != -1:
+            mst_edges.append((parent[u], u, w))
+
+        for v, edge_w in adj[u]:
+            if not in_mst[v] and edge_w < key[v]:
+                key[v]    = edge_w
+                parent[v] = u
+                heapq.heappush(pq, (edge_w, v))
+
+    return total_w, mst_edges
+
+
+# ── KRUSKAL'S MST ── O(E log E + E alpha(V)) ─────────────────────────
+def kruskal_mst(n, edges):
+    """
+    Kruskal's MST using Union-Find.
+    Sorts edges by weight, adds edge if it connects two different components.
+    Returns (total_weight, mst_edges).
+    """
+    # Union-Find with path compression + union by rank
+    parent = list(range(n))
+    rank   = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]   # path halving
+            x = parent[x]
+        return x
+
+    def union(x, y):
+        rx, ry = find(x), find(y)
+        if rx == ry: return False
+        if rank[rx] < rank[ry]: rx, ry = ry, rx
+        parent[ry] = rx
+        if rank[rx] == rank[ry]: rank[rx] += 1
+        return True
+
+    edges_sorted = sorted(edges, key=lambda e: e[2])
+    total_w, mst_edges = 0, []
+    for u, v, w in edges_sorted:
+        if union(u, v):
+            total_w += w
+            mst_edges.append((u, v, w))
+            if len(mst_edges) == n - 1:
+                break
+
+    return total_w, mst_edges
+
+
+# ── SPTF PROCESS SCHEDULING ── O(n log n) ────────────────────────────
+def sptf_schedule(jobs):
+    """
+    Shortest Processing Time First: minimise total completion time.
+    jobs: list of (job_id, processing_time).
+    Returns (schedule, total_completion_time).
+    Exchange argument: swapping any two out-of-order adjacent jobs
+    strictly decreases total completion time.
+    """
+    schedule = sorted(jobs, key=lambda j: j[1])   # sort by t_i
+    time, total = 0, 0
+    for job_id, t in schedule:
+        time  += t
+        total += time                              # completion time = cumsum
+    return schedule, total</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Prim's + Kruskal's MST
+#include &lt;vector&gt;
+#include &lt;queue&gt;
+#include &lt;numeric&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+using Edge = tuple&lt;double,int,int&gt;;  // (weight, u, v)
+
+// Prim's MST — O((V+E) log V) with binary heap
+pair&lt;double, vector&lt;Edge&gt;&gt;
+prim(int n, const vector&lt;vector&lt;pair&lt;int,double&gt;&gt;&gt;&amp; adj) {
+    vector&lt;bool&gt; in_mst(n,false);
+    vector&lt;double&gt; key(n,1e18); key[0]=0;
+    vector&lt;int&gt; par(n,-1);
+    priority_queue&lt;pair&lt;double,int&gt;,
+        vector&lt;pair&lt;double,int&gt;&gt;,greater&lt;&gt;&gt; pq;
+    pq.push({0,0});
+    double tot=0; vector&lt;Edge&gt; mst;
+    while (!pq.empty()) {
+        auto [w,u]=pq.top(); pq.pop();
+        if (in_mst[u]) continue;
+        in_mst[u]=true; tot+=w;
+        if (par[u]!=-1) mst.push_back({w,par[u],u});
+        for (auto [v,ew]:adj[u])
+            if (!in_mst[v]&amp;&amp;ew&lt;key[v])
+                {key[v]=ew;par[v]=u;pq.push({ew,v});}
+    }
+    return {tot,mst};
+}
+
+// Kruskal's MST — O(E log E + E alpha(V))
+pair&lt;double,vector&lt;Edge&gt;&gt;
+kruskal(int n, vector&lt;Edge&gt; edges) {
+    sort(edges.begin(),edges.end());
+    vector&lt;int&gt; par(n); iota(par.begin(),par.end(),0);
+    vector&lt;int&gt; rnk(n,0);
+    function&lt;int(int)&gt; find=[&amp;](int x){
+        return par[x]==x?x:par[x]=find(par[x]);};
+    double tot=0; vector&lt;Edge&gt; mst;
+    for (auto [w,u,v]:edges) {
+        int ru=find(u),rv=find(v);
+        if (ru==rv) continue;
+        if (rnk[ru]&lt;rnk[rv]) swap(ru,rv);
+        par[rv]=ru; if(rnk[ru]==rnk[rv]) rnk[ru]++;
+        tot+=w; mst.push_back({w,u,v});
+        if ((int)mst.size()==n-1) break;
+    }
+    return {tot,mst};
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Event partitioning (interval cloning) &middot; O(n log n)</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">import heapq
+
+def min_clones(events):
+    """
+    Minimum clones needed to attend all events without overlap.
+    Greedy: sort by start time, assign to earliest-finishing clone.
+    O(n log n): dominated by sort; heap ops O(n log k) where k = answer.
+
+    Correctness: when creating the m-th clone, m events are concurrent
+    at that moment => any solution needs >= m clones.
+    Connection to Dilworth's theorem: minimum chain partition of a
+    partial order (event i <= event j iff i.finish <= j.start)
+    equals size of maximum antichain (maximum concurrent events).
+    """
+    events_sorted = sorted(events, key=lambda e: e[0])  # sort by start
+    heap = []  # min-heap of finish times of each clone's last event
+
+    for start, finish in events_sorted:
+        if heap and heap[0] <= start:
+            # Reuse earliest-finishing clone (it's now free)
+            heapq.heapreplace(heap, finish)
+        else:
+            # No free clone: create a new one
+            heapq.heappush(heap, finish)
+
+    return len(heap)   # number of clones = size of heap
+
+
+def fractional_knapsack(items, capacity):
+    """
+    Fractional knapsack / fractional make-change.
+    items: list of (value_per_unit, max_weight).
+    Greedy: take most valuable items first, fractionally if needed.
+    O(n log n). Exchange argument proves optimality.
+    """
+    items_sorted = sorted(items, key=lambda x: -x[0])  # desc value/weight
+    total_value, remaining = 0.0, capacity
+    selected = []
+    for value_rate, max_wt in items_sorted:
+        if remaining <= 0: break
+        take = min(max_wt, remaining)
+        total_value += take * value_rate
+        selected.append((value_rate, take))
+        remaining -= take
+    return total_value, selected
+
+# Example: event partitioning
+events = [(1,4),(3,5),(0,6),(5,7),(3,9),(5,9),(6,10),(8,11),(8,12),(2,14)]
+print(f"Minimum clones needed: {min_clones(events)}")  # 3</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Event partitioning (interval scheduling minimisation)
+#include &lt;vector&gt;
+#include &lt;queue&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+int min_clones(vector&lt;pair&lt;int,int&gt;&gt; events) {
+    sort(events.begin(), events.end());    // sort by start time
+    priority_queue&lt;int,vector&lt;int&gt;,greater&lt;int&gt;&gt; heap; // min-heap of finish times
+    for (auto [s,f] : events) {
+        if (!heap.empty() &amp;&amp; heap.top() &lt;= s)
+            heap.pop();          // reuse earliest-finishing clone
+        heap.push(f);            // assign event, update finish time
+    }
+    return heap.size();          // clones = remaining heap entries
+}
+
+// Fractional knapsack — O(n log n)
+double fractional_knapsack(vector&lt;pair&lt;double,double&gt;&gt; items, double cap) {
+    // items: (value_per_unit, max_weight)
+    sort(items.begin(), items.end(),
+         [](auto&amp; a, auto&amp; b){ return a.first &gt; b.first; });
+    double total = 0;
+    for (auto [v, w] : items) {
+        if (cap &lt;= 0) break;
+        double take = min(w, cap);
+        total += take * v;
+        cap   -= take;
+    }
+    return total;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Correlation MST for Portfolio Construction</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; Pashupati / TTT</span>
+      </div>
+      <div class="we-body">
+        <p>Build a Minimum Spanning Tree of NSE instruments weighted by $1 - |\rho_{ij}|$ (dissimilarity). The MST reveals the backbone correlation structure: instruments connected by short edges are highly correlated, providing a basis for pairs trading or diversification.</p>
+        <div class="we-step">Apply Kruskal&rsquo;s to pairwise dissimilarity graph</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">import numpy as np
+
+# 5-instrument correlation matrix (NIFTY, BANKNIFTY, RELIANCE, HDFC, TCS)
+rho = np.array([
+    [1.00, 0.92, 0.45, 0.51, 0.38],
+    [0.92, 1.00, 0.41, 0.48, 0.35],
+    [0.45, 0.41, 1.00, 0.73, 0.29],
+    [0.51, 0.48, 0.73, 1.00, 0.31],
+    [0.38, 0.35, 0.29, 0.31, 1.00],
+])
+names = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'HDFC', 'TCS']
+
+# Build edge list: (u, v, 1 - |rho|)
+n = len(names)
+edges = [(i, j, round(1 - abs(rho[i,j]), 4))
+         for i in range(n) for j in range(i+1, n)]
+
+total_w, mst = kruskal_mst(n, edges)
+print(f"MST total dissimilarity: {total_w:.4f}")
+for u, v, w in sorted(mst, key=lambda e: e[2]):
+    print(f"  {names[u]:12s} -- {names[v]:12s}  rho={1-w:.2f}")
+
+# MST edges (by correlation strength):
+#   NIFTY       -- BANKNIFTY    rho=0.92  (strongest, index cluster)
+#   RELIANCE    -- HDFC         rho=0.73  (bluechip cluster)
+#   NIFTY       -- HDFC         rho=0.51  (index to financials bridge)
+#   TCS         -- NIFTY        rho=0.38  (tech cluster, weakest bridge)</code></pre>
+        <div class="we-answer">
+          <strong>Insight:</strong> the MST reveals two clusters — {NIFTY, BANKNIFTY} and {RELIANCE, HDFC} — connected through NIFTY-HDFC and TCS hanging off the tree. This is the minimum-spanning-tree approach to hierarchical clustering used in financial analysis. Johnson&rsquo;s algorithm would apply here if edge weights could be negative (e.g., using $\rho$ directly instead of $1-|\rho|$).
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Johnson&rsquo;s algorithm is the right choice when the graph is sparse ($E \ll V^2$) and has negative weights. For TTT&rsquo;s arbitrage detection graph where each instrument is a node and edges represent price relationships (log-price differences, which can be negative), Johnson&rsquo;s $O(VE + V^2\log V)$ beats Floyd-Warshall&rsquo;s $O(V^3)$ significantly. Kruskal&rsquo;s with Union-Find is used in portfolio construction tools at both TTT and Pashupati to build minimum spanning correlation trees &mdash; the same Union-Find from Ch5 drives the MST in near-linear time.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 08</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch08 / q01</span>
+        <span class="mcq-diff">&#9733; Floyd-Warshall</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Floyd-Warshall uses subproblem $c_{uv}^{(k)}$ = shortest path using intermediate vertices in $\{1,\ldots,k\}$. Why is this better than the edge-count subproblem $d_{uv}^{(m)}$ from DP Attempt 1?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>The vertex-set subproblem uses less memory: $O(V^2)$ vs $O(V^3)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Each $c_{uv}^{(k)}$ depends on only $O(1)$ previously computed values (two lookups: $c_{uv}^{(k-1)}$ and $c_{uk}^{(k-1)} + c_{kv}^{(k-1)}$), giving $O(1)$ per subproblem vs $O(V)$ for the edge-count DP</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>The vertex-set subproblem handles negative weights while the edge-count DP does not</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Floyd-Warshall has fewer subproblems: $O(V^2)$ vs $O(V^3)$ for the edge-count DP</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Both DPs have $O(V^3)$ subproblems (indexed by $(u, v, k)$ or $(u, v, m)$ respectively). The difference is cost per subproblem. Edge-count DP: $d_{uv}^{(m)} = \min_x(d_{ux}^{(m-1)} + w(x,v))$ &mdash; must iterate over all $V$ intermediate vertices $x$, giving $O(V)$ per cell and $O(V^4)$ total. Floyd-Warshall: $c_{uv}^{(k)} = \min(c_{uv}^{(k-1)},\; c_{uk}^{(k-1)} + c_{kv}^{(k-1)})$ &mdash; only two lookups, $O(1)$ per cell and $O(V^3)$ total. The key insight was to parameterise by the vertex set of intermediates (all $\leq k$) rather than edge count.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch08 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Johnson&rsquo;s Reweighting</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In Johnson&rsquo;s algorithm, why does $h(v) = \delta(s, v)$ (shortest distance from virtual source $s$) satisfy the constraint $h(v) - h(u) \leq w(u,v)$ for all edges?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Because Bellman-Ford converges to the correct shortest distances from $s$, and convergence implies this property</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>It is the triangle inequality: $\delta(s,v) \leq \delta(s,u) + w(u,v)$, rearranged as $\delta(s,v) - \delta(s,u) \leq w(u,v)$, i.e., $h(v) - h(u) \leq w(u,v)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Because the virtual source $s$ has zero-weight edges, making all $h(v) = 0$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Because Dijkstra&rsquo;s algorithm automatically satisfies difference constraints</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B &mdash; directly the triangle inequality.</strong><br/><br/>
+          For any edge $(u,v)$, the shortest path from $s$ to $v$ satisfies the triangle inequality: $\delta(s,v) \leq \delta(s,u) + w(u,v)$ (you can always go from $s$ to $u$ via the shortest path, then take edge $(u,v)$). Setting $h = \delta(s,\cdot)$ and rearranging: $\delta(s,v) - \delta(s,u) \leq w(u,v)$, i.e., $h(v) - h(u) \leq w(u,v)$. This is exactly the difference constraint needed. So $w_h(u,v) = w(u,v) + h(u) - h(v) = w(u,v) - (h(v)-h(u)) \geq 0$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch08 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; MST Cut Property</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Prim&rsquo;s and Kruskal&rsquo;s both build an MST using the cut property, but maintain different cuts. How does each algorithm&rsquo;s invariant correspond to a cut?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Prim&rsquo;s uses a cut between odd and even vertices; Kruskal&rsquo;s uses a cut between sorted and unsorted edges</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>Prim&rsquo;s cut is $(S, V\setminus S)$ where $S$ is the growing tree &mdash; it always adds the min-weight edge crossing this cut. Kruskal&rsquo;s cut is $(C_1, V\setminus C_1)$ for each component $C_1$ &mdash; the cheapest edge connecting two different components is always safe</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Both algorithms use the same cut: the globally minimum-weight edge not yet in the tree</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Prim&rsquo;s doesn&rsquo;t use the cut property; it uses a priority queue heuristic that happens to give optimal results</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          <strong>Prim&rsquo;s:</strong> maintains a single growing set $S$ (the current tree). At each step, the cut is $(S, V\setminus S)$. The invariant is that the tree inside $S$ is a sub-MST, and we add the minimum-weight edge crossing the cut. By the cut property, this edge is safe to add.<br/><br/>
+          <strong>Kruskal&rsquo;s:</strong> maintains a forest (multiple components). When considering edge $(u,v)$ with $u \in C_1$ and $v \in C_2$, the relevant cut is $(C_1, V \setminus C_1)$. Since we process edges in increasing weight order, $(u,v)$ is the minimum-weight edge leaving $C_1$ at the time we consider it (any lighter edges already created connections within the same component). By the cut property, this edge is in some MST.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch08 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Greedy Exchange Argument</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Fractional knapsack (take fractions of items) is solvable greedily, but 0-1 knapsack (items are indivisible) requires DP. What exactly breaks the greedy exchange argument for 0-1 knapsack?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>0-1 knapsack has no optimal substructure, so greedy cannot apply</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Greedy works on 0-1 knapsack too; the DP is just faster in practice</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The exchange argument requires substituting a fraction of one item for a fraction of another; with indivisible items, we can&rsquo;t make a partial swap, so the exchange may require taking a full lower-value item instead &mdash; which doesn&rsquo;t necessarily improve the solution</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>The greedy choice property holds for 0-1 knapsack but optimal substructure does not</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          In <strong>fractional knapsack</strong>, the exchange argument works as follows: if the optimal solution doesn&rsquo;t take item $i$ (highest value-to-weight ratio) first, we can replace a fraction $\epsilon$ of some lower-ratio item $j$ with $\epsilon \cdot (w_i/w_j)$ units of item $i$. Since $v_i/w_i > v_j/w_j$, value increases. This fraction swap is always possible, so greedy is optimal.<br/><br/>
+          In <strong>0-1 knapsack</strong>, we can&rsquo;t take fractions. Replacing one unit of item $j$ with item $i$ requires dropping all of $j$ and including all of $i$ &mdash; but item $i$ might be heavier, causing infeasibility, or we might not want all of $i$. Counterexample: capacity $=10$, items $\{(v=6,w=6), (v=5,w=5), (v=5,w=5)\}$. Greedy by value/weight picks item 1 (ratio 1.0) then can&rsquo;t fit either other (total $\geq 10$): value $=6$. Optimal: take items 2 and 3 for value $=10$.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 08</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Run Floyd-Warshall on the 4-vertex graph with edges: $(1,2,3)$, $(1,3,8)$, $(1,4,-4)$, $(2,4,1)$, $(2,3,2)$, $(3,2,-5)$, $(4,1,6)$, $(4,3,7)$. Fill all 16 cells of the final $C^{(4)}$ matrix and detect any negative cycles. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Given 5 jobs with processing times $[3, 1, 4, 1, 5]$ and 5 jobs with deadlines and weights, apply SPTF to find the order minimising total completion time. Calculate $\sum C_i$ for both the SPTF order and the original order, and verify the improvement. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Apply Kruskal&rsquo;s to find the MST of the complete graph on vertices $\{A,B,C,D,E\}$ with edge weights: $AB=4$, $AC=8$, $AD=7$, $AE=9$, $BC=2$, $BD=5$, $BE=6$, $CD=3$, $CE=1$, $DE=5$. Show the Union-Find state after each edge addition. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement Johnson&rsquo;s algorithm from scratch and test it on a 5-vertex graph with at least two negative-weight edges. Verify the reweighted graph has all non-negative weights, and that the recovered distances match Floyd-Warshall on the same graph. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Prove that the SPTF rule minimises total completion time using the potential function method: define $\Phi = \sum_{i &lt; j \text{ s.t. } t_{p_i} > t_{p_j}} (t_{p_i} - t_{p_j})$ (number of inversions weighted by processing times). Show that SPTF has $\Phi = 0$ and that any other schedule has $\Phi > 0$ and higher total cost. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Implement the event interval partitioning algorithm using a min-heap and test it on a random set of 20 intervals. Verify that the number of clones equals the maximum number of concurrent events (depth of interval stack) at any point. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The difference constraints system: given constraints $x_j - x_i \leq w_{ij}$, formulate it as a shortest-paths problem and solve using Bellman-Ford. Apply it to a scheduling problem: 5 tasks with constraints on their start times (e.g., task 3 must start at least 2 units after task 1 finishes). <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove the MST optimal substructure lemma: if $e \in T^*$ (some MST) and $T'$ is an MST of $G/e$ (graph with $e$ contracted), then $T' \cup \{e\}$ is an MST of $G$. Carefully handle the case of multi-edges introduced by contraction. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">The Borůvka MST algorithm: each component simultaneously selects its minimum-weight outgoing edge; repeat $O(\log V)$ times. Show this gives $O(E \log V)$ total time, and that it halves the number of components in each phase. How does this compare to Prim&rsquo;s and Kruskal&rsquo;s, and why does the Karger-Klein-Tarjan $O(V+E)$ algorithm use Borůvka as a subroutine? <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">Floyd-Warshall can detect negative cycles via $c_{uu}^{(n)} &lt; 0$. Can you modify Floyd-Warshall to find the <em>shortest negative cycle</em> (minimum total weight negative cycle) in a graph? What is the time complexity? Hint: the minimum negative cycle must consist of vertices all in $\{1,\ldots,n\}$. <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch7.html" class="ch-nav-btn">&larr; Advanced Dynamic Programming</a>
+    <a href="PROG_DAA_Ch9.html" class="ch-nav-btn primary">Next: Network Flow &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Floyd-Warshall: O(1) per cell. Vertex-set parameterisation wins.","✨ Johnson's reweighting: triangle inequality gives h(v)-h(u) ≤ w(u,v).","🏆 Prim's cut (S, V\\S). Kruskal's cut (C1, V\\C1) per component.","🔥 Fractional swap works for fractional knapsack. Indivisibility breaks it for 0-1.","💡 Exchange argument: swap adjacent jobs, show total cost decreases for SPTF.","📐 Cut property: min-weight crossing edge is in some MST. Proved by cut-and-paste.","⚡ Johnson's O(VE + V²logV) beats Floyd O(V³) when E << V²."];
+const wrongMsgs=["🌀 Both DPs have O(V^3) subproblems. The difference is O(1) vs O(V) per subproblem.","📉 Triangle inequality: δ(s,v) ≤ δ(s,u) + w(u,v). Rearrange: δ(s,v)-δ(s,u) ≤ w(u,v).","😰 Prim's cut is the tree boundary (S, V\\S). Kruskal's cut is per-component.","📐 Fractional knapsack: partial swap always possible. 0-1: must take/leave whole items.","🤔 Floyd-Warshall recurrence: c[u][v][k] = min(c[u][v][k-1], c[u][k][k-1]+c[k][v][k-1])."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

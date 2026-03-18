@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Amortization &amp; Union-Find &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Amortization &amp; Union-Find</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:38%"></div></div>
+      <span class="tb-progress-label">5 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 05 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Amortization &amp; Union-Find</h1>
+    <p class="chapter-subtitle">Amortized analysis asks: what is the average cost per operation over a sequence, even when individual operations vary wildly? Four methods &mdash; aggregate, accounting, charging, potential &mdash; each reveal the same truth from a different angle. Union-Find applies all of them to reach $O(\alpha(n))$ per operation: essentially constant, but provably not quite.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>What Is Amortized Analysis?</h3>
+    <p>Worst-case per-operation analysis is often too pessimistic. Table doubling costs $\Theta(n)$ when it fires &mdash; but it fires rarely. Amortized analysis spreads the cost of expensive operations over the cheap ones that precede them.</p>
+
+    <div class="callout callout-definition">
+      <strong>Amortized cost.</strong> For a sequence of $k$ operations, assign amortized costs $\hat{c}_1, \hat{c}_2, \ldots, \hat{c}_k$ (which may differ from actual costs $c_i$). The assignment is valid as long as:
+      $$\sum_{i=1}^{k} \hat{c}_i \geq \sum_{i=1}^{k} c_i \qquad \text{for every prefix of the sequence}$$
+      Then the total actual cost is at most $\sum \hat{c}_i$, and we can report $\max_i \hat{c}_i$ as the amortized per-operation bound. No assumption about input distribution &mdash; this is a worst-case guarantee on sequences.
+    </div>
+
+    <h3>Method 1 &mdash; Aggregate Method</h3>
+    <p>Compute the total cost of $k$ operations directly, then divide: $\hat{c} = \text{total} / k$.</p>
+
+    <p><strong>Table doubling.</strong> Starting from size 1, after $n$ insertions the table has doubled $\lfloor\log_2 n\rfloor$ times. Total doubling cost: $1 + 2 + 4 + \cdots + 2^{\lfloor\log_2 n\rfloor} = \Theta(n)$. Plus $n$ unit-cost insertions. Total: $\Theta(n)$. Amortized per insertion: $\Theta(1)$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Binary counter.</strong> Incrementing a $k$-bit counter from 0. Cost of one increment $= 1 + \text{trailing 1-bits flipped}$. Over $n$ increments: bit $i$ flips at most $\lfloor n/2^i \rfloor$ times. Total flips $\leq \sum_{i=0}^{k-1} n/2^i < 2n$. Amortized cost per increment: $O(1)$.
+    </div>
+
+    <h3>Method 2 &mdash; Accounting Method</h3>
+    <p>Prepay for future expensive operations by storing <em>credits</em> (coins) on data structure objects. An operation can store credits it doesn&rsquo;t need now; a later expensive operation spends stored credits. The invariant: credit balance never goes negative.</p>
+
+    <p><strong>Table doubling with accounting.</strong> Each insertion stores $c$ coins on the newly inserted element. When the table doubles from $m$ to $2m$: the $m/2$ elements inserted since the last doubling each contributed $c$ coins &rarr; total $cm/2$ coins available. Set $c = 2$: pays for $\Theta(m)$ doubling. Amortized cost per insertion: $O(1)$.</p>
+
+    <p><strong>2-3 tree insertions.</strong> Goal: $O(\log n)$ amortized per insert, $O(0)$ per delete. Naively save a $\log n$ coin on insert and spend on delete &mdash; but the tree may grow between insert and delete, making the coin insufficient. Use the <em>charging method</em> instead.</p>
+
+    <h3>Method 3 &mdash; Charging Method</h3>
+    <p>Operations can charge cost <em>retroactively</em> to past operations. Each past operation can be charged at most once (or a bounded number of times). The amortized cost equals actual cost minus charges received from future operations plus charges paid to past operations.</p>
+
+    <p><strong>Table doubling and halving.</strong> When doubling fires (table $\frac{1}{2}$ full $\to$ full), charge the $m/2$ insertions since last resize: each charged $O(1)$. When halving fires (table $\frac{1}{4}$ full $\to$ $\frac{1}{2}$ full), charge the $m/4$ deletions since last resize: each charged $O(1)$. Amortized cost per insert or delete: $O(1)$.</p>
+
+    <p><strong>Free deletion in 2-3 trees.</strong> Each delete charges the insert that brought the tree to its current size $n$. Each insert is charged at most once (before the tree shrinks and returns to size $n$, another insert must happen). Amortized insert: $O(\log n)$, amortized delete: $O(0)$.</p>
+
+    <h3>Method 4 &mdash; Potential Method</h3>
+    <p>Define a potential function $\Phi: \text{DS state} \to \mathbb{R}_{\geq 0}$, representing stored energy in the data structure. The amortized cost of each operation is:</p>
+    <div class="math-block">$$\hat{c}_i = c_i + \Delta\Phi_i = c_i + \Phi(\text{after}) - \Phi(\text{before})$$</div>
+    <p>Telescoping: $\sum \hat{c}_i = \sum c_i + \Phi(\text{final}) - \Phi(\text{initial})$. If $\Phi(\text{final}) \geq \Phi(\text{initial}) = 0$, then $\sum c_i \leq \sum \hat{c}_i$. The potential method is the <em>inverse</em> of the accounting method: specifying $\Phi$ determines $\Delta\Phi$ per operation; specifying credits per operation determines $\Phi$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Binary counter &mdash; potential method.</strong> Let $\Phi = c \cdot (\text{number of 1-bits})$. Incrementing flips $t$ trailing 1-bits to 0 and one 0-bit to 1: actual cost $= t + 1$, $\Delta\Phi = c(1 - t)$. Amortized cost $= (t+1) + c(1-t) = (1-c)t + (1+c)$. Choose $c = 1$: amortized cost $= 2 = O(1)$. $\Phi \geq 0$ always holds since bit-counts are non-negative. $\square$
+      <br/><br/>
+      <strong>Insert in 2-3 trees.</strong> Let $\Phi = \text{number of 3-nodes}$ (3-nodes are &ldquo;bad&rdquo;: they cause splits). A split converts one 3-node into two 2-nodes: $\Delta\Phi \leq 1 - (\text{splits})$. Amortized splits $=$ actual splits $+ \Delta\Phi \leq 1$. Each insert causes $O(1)$ amortized splits regardless of the worst-case $O(\log n)$ actual splits.
+      <br/><br/>
+      <strong>Insert and delete in 2-5 trees.</strong> In 2-3 trees, splits create 2-nodes which are bad for merges; a split-merge alternation has no amortised bound. Fix: use 2-5 trees. A split of a 5-node creates two 3-nodes (not 2-nodes). A merge of two 2-nodes creates a 3-node (not a 5-node). Neither operation creates bad nodes. Let $\Phi = \text{5-nodes} + \text{2-nodes}$. Both insert and delete have $O(1)$ amortized structural changes.
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">Dynamic array (table doubling) &middot; O(1) amortized append</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">class DynamicArray:
+    """
+    Dynamic array with table doubling and halving.
+    Amortized O(1) per append and delete (at end).
+    Demonstrates the potential method concretely:
+      Phi = 2*n - m  (where n = size, m = capacity)
+      Phi >= 0 always (since n >= m/2 after any resize).
+    """
+    def __init__(self):
+        self._data = [None]       # underlying storage, capacity m=1
+        self._n    = 0            # number of elements
+
+    def __len__(self): return self._n
+    def __getitem__(self, i): return self._data[i]
+
+    def append(self, val):
+        """O(1) amortized. Actual cost: O(n) when doubling fires, O(1) otherwise."""
+        if self._n == len(self._data):
+            self._resize(2 * len(self._data))   # double: O(n), rare
+        self._data[self._n] = val
+        self._n += 1
+        # Potential: Phi = 2*n - m
+        # After append (no resize): delta_Phi = 2*(n+1)-m - (2*n-m) = 2
+        # Amortized = 1 (actual) + 2 (delta_Phi) = 3 = O(1)
+        # After append (with resize to 2m): delta_Phi = 2 - 2*m (big drop pays for resize)
+
+    def pop(self):
+        """O(1) amortized. Halve when table is 1/4 full to avoid thrashing."""
+        if self._n == 0: raise IndexError
+        val = self._data[self._n - 1]
+        self._data[self._n - 1] = None
+        self._n -= 1
+        # Halve only at 1/4 full (not 1/2): avoids O(n) on alternating push/pop
+        if self._n > 0 and self._n == len(self._data) // 4:
+            self._resize(len(self._data) // 2)
+        return val
+
+    def _resize(self, new_cap):
+        """Copy to new allocation. O(n)."""
+        new_data = [None] * new_cap
+        for i in range(self._n):
+            new_data[i] = self._data[i]
+        self._data = new_data
+
+    def capacity(self): return len(self._data)
+
+
+def demo_amortized_cost():
+    """Measure actual vs amortized cost of n appends."""
+    arr = DynamicArray()
+    total_resizes = 0
+    resize_costs  = 0
+    n = 1024
+    for i in range(n):
+        old_cap = arr.capacity()
+        arr.append(i)
+        if arr.capacity() != old_cap:        # resize fired
+            total_resizes += 1
+            resize_costs  += old_cap          # O(old_cap) copy cost
+    print(f"n={n}: {total_resizes} resizes, "
+          f"total resize cost={resize_costs} ≈ {resize_costs/n:.1f}n")
+    # Output: 10 resizes, total resize cost≈2n (confirming O(1) amortized)</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// Dynamic array with table doubling and halving
+// Amortized O(1) per push_back and pop_back
+#include &lt;vector&gt;
+#include &lt;stdexcept&gt;
+using namespace std;
+
+class DynamicArray {
+    vector&lt;int&gt; data;    // underlying storage
+    int n = 0;           // logical size
+
+    void resize(int new_cap) {
+        data.resize(new_cap);    // O(n) copy
+    }
+
+public:
+    DynamicArray() { data.resize(1); }
+
+    // O(1) amortized: actual O(n) when doubling fires
+    void push_back(int val) {
+        if (n == (int)data.size())
+            resize(2 * data.size());   // double
+        data[n++] = val;
+        // Potential Phi = 2n - m:
+        // amortized = 1 + delta_Phi = 1 + 2 = 3 = O(1) (no resize)
+        // amortized = n + delta_Phi ≈ n - 2(n-1) ≈ O(1) (with resize)
+    }
+
+    // O(1) amortized: halve at 1/4 to avoid thrashing
+    int pop_back() {
+        if (n == 0) throw underflow_error("empty");
+        int val = data[--n];
+        if (n > 0 &amp;&amp; n == (int)data.size() / 4)
+            resize(data.size() / 2);   // halve
+        return val;
+    }
+
+    int size()     const { return n; }
+    int capacity() const { return data.size(); }
+};</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Part II &mdash; Union-Find (Disjoint Set Union)</h3>
+
+    <p>Maintain a collection of disjoint sets supporting three operations:</p>
+    <div class="callout callout-definition">
+      &mdash; <strong>MAKE-SET($x$)</strong>: create a new singleton set $\{x\}$. <br/>
+      &mdash; <strong>FIND-SET($x$)</strong>: return the representative of the set containing $x$. <br/>
+      &mdash; <strong>UNION($x$, $y$)</strong>: merge the sets containing $x$ and $y$.
+      <br/><br/>
+      Applications: connected components in dynamic graphs, Kruskal&rsquo;s MST algorithm, clustering, network connectivity.
+    </div>
+
+    <h3>Naive to Efficient: Four Representations</h3>
+
+    <p><strong>Linked list (naive):</strong> FIND-SET walks to head: $\Theta(n)$. UNION concatenates: $\Theta(n)$. Total for $n$ operations: $O(n^2)$.</p>
+
+    <p><strong>Linked list + weighted union (smaller-into-larger):</strong> always merge the shorter list into the longer. Each element&rsquo;s rep pointer moves only when its set at least doubles &rarr; at most $\log n$ times. Amortized UNION: $O(\log n)$. Total for $n$ ops: $O(n\log n)$.</p>
+
+    <p><strong>Forest of trees + union by rank:</strong> represent each set as a rooted tree, rep = root. UNION attaches the shorter tree under the taller. Height stays $O(\log n)$.</p>
+
+    <p><strong>Forest + union by rank + path compression:</strong> during FIND-SET, redirect all nodes on the path directly to the root. Future queries on those nodes cost $O(1)$. Combined: $O(\alpha(n))$ amortised per operation.</p>
+
+    <h3>Path Compression &mdash; Potential Analysis</h3>
+    <p>With path compression alone: define $\Phi = \sum_i \log \text{weight}[x_i]$ (sum of log-weights). Union increases root&rsquo;s weight, increasing $\Phi$ by at most $\log n$. During FIND-SET, each step moves $c$&rsquo;s subtree out of $p$&rsquo;s subtree. If $\text{weight}[c] \geq \frac{1}{2}\text{weight}[p]$: potential drops by $\geq 1$, paying for the step. At most $\log n$ steps have $\text{weight}[c] &lt; \frac{1}{2}\text{weight}[p]$. Total: $O(m\log n)$ for $m$ operations.</p>
+
+    <h3>The Inverse Ackermann Function $\alpha(n)$</h3>
+    <p>With both union by rank and path compression, the amortised bound drops to $O(\alpha(n))$ per operation &mdash; essentially constant for all practical purposes:</p>
+
+    <div class="callout callout-definition">
+      <strong>CLRS-Ackermann function:</strong>
+      $$A_k(j) = \begin{cases} j+1 & k=0 \\ A_{k-1}^{j+1}(j) & k \geq 1 \end{cases}$$
+      where $A_{k-1}^{j+1}(j)$ means applying $A_{k-1}$ repeatedly $j+1$ times starting from $j$.
+      <br/><br/>
+      Values: $A_0(1)=2$, $A_1(1)=3$, $A_2(1)=7$, $A_3(1)=2047$, $A_4(1) > 2^{2047}$.
+      <br/><br/>
+      <strong>Inverse:</strong> $\alpha(n) = \min\{k : A_k(1) \geq n\}$. For any $n$ that will ever arise in practice, $\alpha(n) \leq 4$. Not constant in theory (Tarjan 1975 proved the $O(m\alpha(n))$ bound is tight), but constant in every practical sense.
+      <br/><br/>
+      <strong>Theorem (Tarjan 1975):</strong> $m$ operations on $n$ elements with union by rank and path compression run in $\Theta(m\alpha(n))$ total time.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Union-Find with union by rank + path compression &middot; O(&alpha;(n))</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">class UnionFind:
+    """
+    Disjoint Set Union (DSU) with:
+      - Union by rank: attach smaller-rank tree under larger-rank root
+      - Path compression: flatten tree on every FIND-SET
+    Amortized O(alpha(n)) per operation — essentially O(1) in practice.
+    """
+    def __init__(self, n):
+        self.parent = list(range(n))   # parent[x] = x means x is a root
+        self.rank   = [0] * n          # upper bound on height of subtree
+        self.n_components = n
+
+    def find(self, x):
+        """
+        Find representative of x. Path compression: redirect all nodes
+        on the path directly to the root (two-pass or iterative).
+        """
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])  # path compression
+        return self.parent[x]
+
+    def union(self, x, y):
+        """
+        Merge sets containing x and y. Union by rank: attach smaller
+        rank tree under larger rank root. Return True if merged, False if same set.
+        """
+        rx, ry = self.find(x), self.find(y)
+        if rx == ry: return False          # already in same set
+
+        # Union by rank: smaller rank attaches under larger rank
+        if self.rank[rx] < self.rank[ry]:
+            rx, ry = ry, rx                # ensure rank[rx] >= rank[ry]
+        self.parent[ry] = rx               # attach ry under rx
+        if self.rank[rx] == self.rank[ry]:
+            self.rank[rx] += 1             # only increase rank on tie
+        self.n_components -= 1
+        return True
+
+    def connected(self, x, y):
+        """O(alpha(n)) amortized."""
+        return self.find(x) == self.find(y)
+
+    def component_count(self):
+        return self.n_components
+
+
+def kruskal_mst(n, edges):
+    """
+    Kruskal's MST using Union-Find.
+    edges: list of (weight, u, v). Returns MST edges.
+    O(E log E) — dominated by sorting; Union-Find is O(E * alpha(V)).
+    """
+    edges.sort()                           # sort by weight
+    uf  = UnionFind(n)
+    mst = []
+    for w, u, v in edges:
+        if uf.union(u, v):                 # adds edge only if u,v not connected
+            mst.append((w, u, v))
+        if len(mst) == n - 1:
+            break                          # MST complete
+    return mst</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Union-Find: union by rank + path compression
+// Amortized O(alpha(n)) per operation
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+struct UnionFind {
+    vector&lt;int&gt; parent, rank_;
+    int components;
+
+    UnionFind(int n) : parent(n), rank_(n, 0), components(n) {
+        iota(parent.begin(), parent.end(), 0);  // parent[i] = i
+    }
+
+    // Path compression (iterative — avoids stack overflow for large n)
+    int find(int x) {
+        while (parent[x] != x) {
+            parent[x] = parent[parent[x]];  // path halving (1-pass)
+            x = parent[x];
+        }
+        return x;
+    }
+
+    // Union by rank
+    bool unite(int x, int y) {
+        x = find(x); y = find(y);
+        if (x == y) return false;
+        if (rank_[x] &lt; rank_[y]) swap(x, y);
+        parent[y] = x;
+        if (rank_[x] == rank_[y]) rank_[x]++;
+        components--;
+        return true;
+    }
+
+    bool connected(int x, int y) { return find(x) == find(y); }
+};
+
+// Kruskal's MST using Union-Find
+struct Edge { int u, v, w; };
+vector&lt;Edge&gt; kruskal(int n, vector&lt;Edge&gt; edges) {
+    sort(edges.begin(), edges.end(),
+         [](auto&amp; a, auto&amp; b){ return a.w &lt; b.w; });
+    UnionFind uf(n);
+    vector&lt;Edge&gt; mst;
+    for (auto&amp; e : edges) {
+        if (uf.unite(e.u, e.v)) {
+            mst.push_back(e);
+            if ((int)mst.size() == n-1) break;
+        }
+    }
+    return mst;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Amortization methods illustrated &mdash; binary counter &amp; potential</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">class BinaryCounter:
+    """
+    Binary counter demonstrating potential method for amortized analysis.
+    Phi = number of 1-bits.
+    Amortized cost per increment = O(1), even though actual cost can be O(k).
+    """
+    def __init__(self, bits=16):
+        self.bits  = [0] * bits
+        self.total_actual_cost = 0
+
+    def increment(self):
+        """Flip trailing 1s to 0, then flip first 0 to 1."""
+        i, flips = 0, 0
+        while i < len(self.bits) and self.bits[i] == 1:
+            self.bits[i] = 0
+            i += 1
+            flips += 1
+        if i < len(self.bits):
+            self.bits[i] = 1
+            flips += 1
+        self.total_actual_cost += flips
+        return flips
+
+    def phi(self):
+        """Potential = number of 1-bits."""
+        return sum(self.bits)
+
+    def verify_amortized(self, n_increments):
+        """
+        Verify: total actual cost <= 2 * n_increments (O(1) amortized).
+        Amortized cost per increment = actual + delta_Phi = flips + (1 - flips) = 1 + ... = 2.
+        """
+        counter = BinaryCounter()
+        for i in range(n_increments):
+            counter.increment()
+        ratio = counter.total_actual_cost / n_increments
+        print(f"n={n_increments}: total_cost={counter.total_actual_cost}, "
+              f"ratio={ratio:.3f} (should be < 2)")
+
+# Verify for several n
+for n in [100, 1000, 10000, 100000]:
+    BinaryCounter().verify_amortized(n)
+
+
+def potential_method_demo():
+    """
+    Demonstrate potential method for table doubling.
+    Phi = 2*n - capacity. Show that amortized cost per append = O(1).
+    """
+    arr  = DynamicArray()
+    phi  = lambda: 2 * len(arr) - arr.capacity()
+    prev_phi = phi()
+    total_amortized = 0
+
+    for i in range(32):
+        prev_phi = phi()
+        arr.append(i)
+        new_phi  = phi()
+        actual   = 1 if arr.capacity() == (arr.capacity()) else arr.capacity() // 2 + 1
+        delta    = new_phi - prev_phi
+        amortized = 1 + delta        # always approximately 3 or less
+        total_amortized += abs(amortized)
+
+    print(f"Total amortized (32 appends) = {total_amortized}")  # ≈ 96 = 3*32</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Binary counter amortized analysis verification
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+#include &lt;iostream&gt;
+using namespace std;
+
+struct BinaryCounter {
+    vector&lt;int&gt; bits;
+    long long total_cost = 0;
+
+    BinaryCounter(int k=32) : bits(k, 0) {}
+
+    int phi() { return count(bits.begin(), bits.end(), 1); }
+
+    // Returns actual flip count for this increment
+    int increment() {
+        int i = 0, flips = 0;
+        while (i &lt; (int)bits.size() &amp;&amp; bits[i] == 1) {
+            bits[i++] = 0; ++flips;
+        }
+        if (i &lt; (int)bits.size()) { bits[i] = 1; ++flips; }
+        total_cost += flips;
+        return flips;
+    }
+};
+
+void verify_amortized(int n) {
+    BinaryCounter c;
+    for (int i = 0; i &lt; n; ++i) c.increment();
+    cout &lt;&lt; "n=" &lt;&lt; n &lt;&lt; " total=" &lt;&lt; c.total_cost
+         &lt;&lt; " ratio=" &lt;&lt; (double)c.total_cost/n
+         &lt;&lt; " (should be < 2)\n";
+}
+// verify_amortized(100000) -> ratio ≈ 1.99999</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Online Instrument Connectivity at TTT</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT Systems</span>
+      </div>
+      <div class="we-body">
+        <p>During a trading session, TTT&rsquo;s system needs to track which instruments are &ldquo;connected&rdquo; in a spread relationship (e.g., NIFTY and BankNifty move together, or calendar spreads). As new spread relationships are confirmed from market data, we need: (1) add a relationship (UNION), (2) check if two instruments are in the same cluster (FIND), (3) count distinct clusters.</p>
+        <div class="we-step">Model as Union-Find</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">instruments = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY',
+               'SENSEX', 'BANKEX', 'RELIANCE', 'HDFC']
+idx = {s: i for i, s in enumerate(instruments)}
+
+uf = UnionFind(len(instruments))
+
+# Add spread relationships discovered from market data
+relationships = [
+    ('NIFTY',     'BANKNIFTY'),   # highly correlated
+    ('BANKNIFTY', 'FINNIFTY'),    # financial sector cluster
+    ('SENSEX',    'BANKEX'),      # BSE cluster
+    ('RELIANCE',  'HDFC'),        # bluechip pair
+]
+for a, b in relationships:
+    uf.union(idx[a], idx[b])
+
+# Query: same cluster?
+print(uf.connected(idx['NIFTY'], idx['FINNIFTY']))   # True — chain
+print(uf.connected(idx['NIFTY'], idx['SENSEX']))     # False — different exchange
+print(f"Distinct clusters: {uf.component_count()}")  # 4
+
+# Each union/find: O(alpha(8)) = O(1) time
+# Total session: O(m * alpha(n)) for m operations on n instruments</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> Four clusters — {NIFTY, BANKNIFTY, FINNIFTY}, {MIDCPNIFTY}, {SENSEX, BANKEX}, {RELIANCE, HDFC}. $O(\alpha(n))$ per operation means even millions of relationship updates during a session complete in effectively linear time. Kruskal&rsquo;s MST (used to build minimum spanning correlation trees for portfolio construction) relies on exactly this Union-Find.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Python&rsquo;s <code>scipy.cluster.hierarchy</code> and <code>networkx</code> connected components both use Union-Find internally with union by rank and path compression. For TTT&rsquo;s Kruskal-based correlation tree (building a minimum spanning tree of instruments weighted by $1 - |\rho_{ij}|$), the bottleneck is sorting $O(n^2)$ correlation pairs &mdash; the Union-Find operations themselves are negligible at $O(\alpha(n))$. The amortization insight matters for the dynamic version: as new ticks arrive and correlations update, UNION and FIND run in near-constant time, allowing real-time clustering of instruments.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 05</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch05 / q01</span>
+        <span class="mcq-diff">&#9733; Potential Method</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">For the binary counter with $\Phi = c \cdot (\text{number of 1-bits})$, what value of $c$ makes the amortized cost per increment exactly $O(1)$, and what is that amortized cost?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$c = 2$, amortized cost $= 3$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$c = 1$, amortized cost $= 2$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$c = \log n$, amortized cost $= O(\log n)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$c = 1/2$, amortized cost $= 1$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B &mdash; $c=1$, amortized cost $= 2$.</strong><br/><br/>
+          Incrementing flips $t$ trailing 1-bits to 0 and one 0-bit to 1: actual cost $= t + 1$. $\Delta\Phi = c \cdot (1 - t)$ (one new 1-bit gained, $t$ 1-bits lost). Amortized cost $= (t+1) + c(1-t) = t(1-c) + (1+c)$. For this to be $O(1)$ independent of $t$, we need $c = 1$: amortized $= 0 \cdot t + 2 = 2 = O(1)$. Any $c \geq 1$ also works (gives amortized $\leq 1 + c$), but $c=1$ is the tightest choice.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch05 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Table Halving</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why does table halving trigger at $n = m/4$ (quarter full) rather than $n = m/2$ (half full)?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>To save more memory &mdash; $m/4$ full wastes less space than $m/2$ full</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>To avoid $O(n)$ cost on alternating push/pop: halving at $m/2$ would immediately trigger doubling on the next push, giving $O(n)$ per operation in sequence</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Because $m/4$ guarantees the table is always at least $25\%$ full after a resize</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>To match the doubling factor: doubling by $2\times$ requires halving at $1/4$ to balance</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B &mdash; avoid the thrashing scenario.</strong><br/><br/>
+          Suppose we halve at $n = m/2$. After halving: capacity $= m/2$, size $= m/2$ &mdash; the table is immediately full. The very next push triggers a doubling back to $m$. Then a pop triggers a halving back to $m/2$. Each push/pop costs $\Theta(n)$ &mdash; $O(n)$ amortized per operation, breaking our guarantee.<br/><br/>
+          Halving at $n = m/4$ instead: after halving, capacity $= m/2$, size $= m/4$ &mdash; the table is only half full. We need $m/4$ more pushes before doubling, or $m/4$ more pops before halving again. Either way, at least $\Omega(m)$ operations before the next resize &mdash; restoring the $O(1)$ amortized bound.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch05 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Union by Rank</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In Union-Find with only union by rank (no path compression), what is the worst-case height of a tree after $n$ MAKE-SET and $n-1$ UNION operations?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$O(n)$ &mdash; union by rank doesn&rsquo;t bound the height</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$O(\sqrt{n})$ &mdash; from the smaller-into-larger argument</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$O(\log n)$ &mdash; a tree of rank $k$ has at least $2^k$ nodes, so rank $\leq \log_2 n$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$O(\alpha(n))$ &mdash; same bound as the combined algorithm</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C &mdash; $O(\log n)$.</strong><br/><br/>
+          Key invariant: a tree of rank $k$ contains at least $2^k$ nodes. Proof by induction: a rank-0 tree has 1 node $\geq 2^0$. When two rank-$k$ trees merge to form rank-$(k+1)$: total nodes $\geq 2^k + 2^k = 2^{k+1}$. Since there are at most $n$ nodes total, the maximum rank is $\lfloor\log_2 n\rfloor$. Since rank $\geq$ height (rank is an upper bound on height), height $\leq \log_2 n$.<br/><br/>
+          Without path compression, FIND-SET costs $O(\log n)$ per operation (must walk up the tree of height $\log n$). With path compression added, this drops to $O(\alpha(n))$ amortised.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch05 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; 2-5 Trees</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why do 2-3 trees fail to give $O(1)$ amortized structural changes for <em>both</em> insert and delete simultaneously, and how do 2-5 trees fix this?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>2-3 trees are too unbalanced; 2-5 trees have a better height bound</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>In 2-3 trees a split creates 2-nodes (bad for merges) and a merge creates 3-nodes (bad for splits), enabling a split-merge alternation with no potential drop; 2-5 trees ensure splits/merges create &ldquo;middle&rdquo; nodes (3-nodes) that are bad for neither</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>2-3 trees require $O(\log^2 n)$ amortized for delete; 2-5 trees reduce this to $O(\log n)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>The issue is with 3-nodes only; using nodes with exactly 4 children avoids the problem</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B.</strong><br/><br/>
+          In 2-3 trees: a split of a 3-node creates two 2-nodes. 2-nodes are bad because a future delete can merge two 2-nodes into a 3-node &mdash; which is bad for the next insert. In the worst case: insert (split 3-node to two 2-nodes) $\to$ delete (merge two 2-nodes to 3-node) $\to$ insert again ... each operation costs $O(\log n)$ actual structural changes, with potential never dropping enough to cover future costs.<br/><br/>
+          In 2-5 trees: splitting a 5-node creates two 3-nodes (not 2-nodes). Merging two 2-nodes creates a 3-node (not a 5-node). 3-nodes are neither bad for splits (need 5-nodes for that) nor bad for merges (need 2-nodes for that). Potential $\Phi = \text{5-nodes} + \text{2-nodes}$: every structural change either doesn&rsquo;t create bad nodes or decreases $\Phi$, giving $O(1)$ amortized structural changes per operation. The general rule: $(a,b)$-trees with $b > 2a$ have this property.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 05</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Incrementing a binary counter from 0 to $n-1$ costs how many total bit flips? Use the aggregate method (sum over all bit positions). Verify your formula for $n = 16$, $n = 32$, $n = 64$. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Trace Union-Find operations on $\{0,1,2,3,4,5,6,7\}$: UNION(0,1), UNION(2,3), UNION(4,5), UNION(6,7), UNION(0,2), UNION(4,6), UNION(0,4). Draw the forest after each UNION. Apply path compression during FIND(7) and redraw. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Using the potential method with $\Phi = 2n - m$ (where $n$ = size, $m$ = capacity), compute the amortized cost of each append in a dynamic array: (a) when no resize occurs, (b) when doubling fires. Verify $\hat{c} = O(1)$ in both cases. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement the smaller-into-larger linked list Union-Find (no trees). Prove that FIND-SET runs in $\Theta(1)$ and UNION runs in $O(\log n)$ amortized. How does this compare to the tree-based implementation? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Prove using the potential method that path compression alone (without union by rank) gives $O(m\log n)$ total time for $m$ operations. Define $\Phi = \sum_i \log \text{weight}(x_i)$ and show the potential drop during FIND-SET pays for all steps except the last $O(\log n)$. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Implement Union-Find with both optimisations and use it to solve the online connectivity problem: given $n$ nodes and edges arriving one by one, report the number of connected components after each edge. Apply to NIFTY options chain: instruments become connected if their strikes are adjacent. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">Compare path compression and path halving (each node points to its grandparent, not root). Implement both. Show they give the same asymptotic bound $O(\alpha(n))$ and compare empirical performance on $10^6$ random UNION/FIND operations. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove the amortized insert and delete bounds for 2-5 trees formally using the potential function $\Phi = \text{5-nodes} + \text{2-nodes}$. Show: (a) insert into a non-5-node: $\Phi$ increases by at most 1, amortized cost $O(1)$; (b) split of a 5-node: $\Phi$ decreases by 1, amortized cost $O(1)$; (c) merge of two 2-nodes: $\Phi$ decreases by 1. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Compute $A_2(2)$, $A_2(3)$, and $A_3(2)$ using the CLRS-Ackermann recurrence $A_k(j) = A_{k-1}^{j+1}(j)$. For what value of $n$ does $\alpha(n)$ first exceed 4? Hint: you need $A_4(1) \geq n$, and $A_4(1) > 2^{2047}$. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">Tarjan&rsquo;s 1975 paper proved the $O(m\alpha(n))$ bound is tight: there exists a sequence of $m$ operations requiring $\Omega(m\alpha(n))$ time. Describe intuitively why path compression cannot do better than $O(\alpha(n))$ per operation, using the connection between the Ackermann function and the structure of paths that path compression must traverse. <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch4.html" class="ch-nav-btn">&larr; Hashing &amp; Augmentation</a>
+    <a href="PROG_DAA_Ch6.html" class="ch-nav-btn primary">Next: Randomized Algorithms &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Phi = 1-bits. c=1 gives amortized cost 2 = O(1).","✨ Path compression flattens tree. O(alpha(n)) amortized.","🏆 Union by rank: tree of rank k has 2^k nodes. Height O(log n).","🔥 2-5 trees: splits/merges create 3-nodes. Neither bad. O(1) amortized.","💡 Table halving at m/4 prevents thrashing on alternating push/pop.","📐 Potential method: amortized = actual + delta_Phi.","⚡ Alpha(n) <= 4 for all practical n. Near-constant Union-Find."];
+const wrongMsgs=["🌀 Compute: actual = t+1, delta_Phi = c*(1-t). Set coefficient of t to 0: need c=1.","📉 Halving at m/2 immediately refills on next push — O(n) cost per operation.","😰 Union by rank invariant: rank-k tree has >= 2^k nodes, so rank <= log2(n).","📐 2-3 tree splits create 2-nodes (bad for merges) — the potential alternates. 2-5 trees fix this.","🤔 Potential method requires Phi >= 0 always, and amortized = actual + delta_Phi."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Randomized Algorithms &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Randomized Algorithms</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:46%"></div></div>
+      <span class="tb-progress-label">6 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 06 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Randomized Algorithms</h1>
+    <p class="chapter-subtitle">Randomness as a design tool, not a sign of uncertainty. Monte Carlo algorithms trade a small error probability for guaranteed polynomial time. Las Vegas algorithms are always correct but run in expected polynomial time. Three canonical problems &mdash; matrix multiplication verification, Quicksort, and order-statistics selection &mdash; show how randomness defeats adversarial inputs and yields elegant expected-time analyses.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Monte Carlo vs Las Vegas</h3>
+
+    <div class="callout callout-definition">
+      <strong>Monte Carlo algorithm:</strong> always runs in polynomial time; output is correct with high probability. Error probability can be made exponentially small by repetition.
+      <br/><br/>
+      <strong>Las Vegas algorithm:</strong> always produces correct output; running time is a random variable with expected polynomial value. Randomized Quicksort and Randomized Select are Las Vegas.
+      <br/><br/>
+      The distinction matters: Monte Carlo algorithms are used when a small error is acceptable (e.g., checking, probabilistic primality testing). Las Vegas algorithms are used when correctness is non-negotiable (e.g., sorting).
+    </div>
+
+    <h3>Problem 1 &mdash; Freivalds&rsquo; Matrix Multiplication Checker</h3>
+
+    <p>Given $n \times n$ matrices $A$, $B$, $C$ over $\mathbb{F}_2$ (arithmetic mod 2), check whether $AB = C$ without computing the full product. Naively: $O(n^3)$. Freivalds&rsquo; algorithm: $O(n^2)$ per trial.</p>
+
+    <div class="callout callout-definition">
+      <strong>Freivalds&rsquo; Algorithm:</strong><br/>
+      1. Choose $r \in \{0,1\}^n$ uniformly at random (each bit independently $1/2$).<br/>
+      2. Compute $A(Br)$ and $Cr$ — each is a matrix-vector multiply: $O(n^2)$.<br/>
+      3. Output YES if $A(Br) = Cr$, else NO.<br/><br/>
+      <strong>Correctness:</strong> If $AB = C$: $A(Br) = (AB)r = Cr$ always &rarr; $\Pr[\text{YES}] = 1$.<br/>
+      If $AB \neq C$: Let $D = AB - C \neq 0$. We need $\Pr[Dr = 0] \leq 1/2$.<br/><br/>
+      <strong>Proof that $\Pr[Dr = 0] \leq 1/2$ when $D \neq 0$:</strong> Since $D \neq 0$, there exists some entry $d_{ij} \neq 0$. Fix $v = e_j$ (unit vector). Then $Dv \neq 0$ (since $(Dv)_i = d_{ij} \neq 0$). For any $r$ with $Dr = 0$, let $r' = r + v$. Then $Dr' = Dr + Dv = 0 + Dv \neq 0$. This gives a bijection between $\{r : Dr = 0\}$ and $\{r' : Dr' \neq 0\}$, so exactly half of all $r$ give $Dr = 0$. Thus $\Pr[Dr = 0] \leq 1/2$. $\square$<br/><br/>
+      <strong>Error reduction:</strong> Repeat $k$ times independently. $\Pr[\text{false YES after } k \text{ trials}] \leq (1/2)^k$. For $k = 30$: error $\leq 10^{-9}$.
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">Freivalds&rsquo; checker &middot; O(n²) Monte Carlo, error ≤ 2⁻ᵏ</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import numpy as np
+
+def freivalds_check(A, B, C, k=20):
+    """
+    Monte Carlo check: does A @ B == C?
+    O(k * n^2) time. Error probability <= 2^(-k).
+
+    If AB == C: always returns True.
+    If AB != C: returns False with probability >= 1 - 2^(-k).
+
+    Works over any field; here we use integers (exact arithmetic).
+    """
+    n = len(A)
+    for _ in range(k):
+        # Random binary vector r in {0,1}^n
+        r = np.random.randint(0, 2, size=(n, 1))
+
+        # Compute A(Br) and Cr — two matrix-vector products: O(n^2)
+        Br  = B @ r         # n x 1
+        ABr = A @ Br        # n x 1
+        Cr  = C @ r         # n x 1
+
+        if not np.array_equal(ABr, Cr):
+            return False    # definite NO: AB != C
+    return True             # probably YES (error <= 2^(-k))
+
+
+def freivalds_mod2(A, B, C, k=30):
+    """
+    Freivalds over GF(2) (mod 2 arithmetic) — the original formulation.
+    Even faster: bitwise operations.
+    """
+    n = len(A)
+    A, B, C = (np.array(M) % 2 for M in (A, B, C))
+    for _ in range(k):
+        r   = np.random.randint(0, 2, size=(n, 1))
+        Br  = B @ r % 2
+        ABr = A @ Br % 2
+        Cr  = C @ r % 2
+        if not np.array_equal(ABr, Cr):
+            return False
+    return True
+
+
+# Example: verify Strassen result
+import numpy as np
+n = 64
+A = np.random.randint(0, 10, (n, n))
+B = np.random.randint(0, 10, (n, n))
+C_correct = A @ B
+C_wrong   = C_correct.copy(); C_wrong[0, 0] += 1
+
+print(freivalds_check(A, B, C_correct))  # True  (always)
+print(freivalds_check(A, B, C_wrong))    # False (with prob >= 1 - 2^-20)</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// Freivalds' algorithm — O(k * n^2) Monte Carlo checker
+#include &lt;vector&gt;
+#include &lt;random&gt;
+#include &lt;cstdint&gt;
+using namespace std;
+using Mat = vector&lt;vector&lt;long long&gt;&gt;;
+
+// Matrix-vector product mod m (0 = exact integers)
+vector&lt;long long&gt; mat_vec(const Mat&amp; M, const vector&lt;long long&gt;&amp; v) {
+    int n = M.size();
+    vector&lt;long long&gt; res(n, 0);
+    for (int i = 0; i &lt; n; i++)
+        for (int j = 0; j &lt; n; j++)
+            res[i] += M[i][j] * v[j];
+    return res;
+}
+
+bool freivalds(const Mat&amp; A, const Mat&amp; B, const Mat&amp; C, int k = 20) {
+    int n = A.size();
+    mt19937 rng(random_device{}());
+    bernoulli_distribution coin(0.5);
+
+    for (int trial = 0; trial &lt; k; ++trial) {
+        // Random binary vector r
+        vector&lt;long long&gt; r(n);
+        for (auto&amp; ri : r) ri = coin(rng);
+
+        // Compute A(Br) and Cr in O(n^2)
+        auto Br  = mat_vec(B, r);
+        auto ABr = mat_vec(A, Br);
+        auto Cr  = mat_vec(C, r);
+
+        for (int i = 0; i &lt; n; i++)
+            if (ABr[i] != Cr[i]) return false;  // definite NO
+    }
+    return true;   // YES with probability >= 1 - 2^(-k)
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Problem 2 &mdash; Randomized Quicksort</h3>
+
+    <p>Deterministic Quicksort with a fixed pivot (first or last element) runs in $\Theta(n^2)$ on sorted input &mdash; easily triggered by any adversary who knows the pivot rule. Randomized Quicksort chooses the pivot uniformly at random, making the expected runtime $\Theta(n\log n)$ for <em>every</em> input.</p>
+
+    <div class="callout callout-definition">
+      <strong>Randomized Quicksort analysis via indicator variables (CLRS).</strong> For elements $z_i &lt; z_j$ (in sorted order), let $X_{ij} = 1$ if $z_i$ and $z_j$ are ever compared. Total comparisons $= \sum_{i &lt; j} X_{ij}$. $z_i$ and $z_j$ are compared iff one of them is chosen as pivot before any element strictly between them. This happens with probability $\frac{2}{j-i+1}$. Expected comparisons:
+      $$\mathbb{E}[\text{comparisons}] = \sum_{i=1}^{n}\sum_{j=i+1}^{n} \frac{2}{j-i+1} \leq 2\sum_{k=1}^{n}\frac{n}{k+1} = O(n\log n)$$
+    </div>
+
+    <p><strong>&ldquo;Paranoid&rdquo; Quicksort.</strong> To get a cleaner recurrence, repeat pivot selection until we get a <em>good pivot</em>: one where both $|L| \leq \frac{3}{4}n$ and $|G| \leq \frac{3}{4}n$. A uniformly random pivot is good with probability $> 1/2$ (the middle half of the sorted array). Expected number of trials before a good pivot: $\mathbb{E}[\text{trials}] \leq 2$ (geometric with $p > 1/2$). Recurrence:</p>
+    <div class="math-block">$$T(n) \leq T\!\left(\frac{n}{4}\right) + T\!\left(\frac{3n}{4}\right) + 2cn$$</div>
+    <p>Recursion tree: at every level, total work $= 2cn$. Maximum depth $= \log_{4/3} n$ (any path shrinks by at least $3/4$ each level). Total: $T(n) = \Theta(n\log n)$.</p>
+
+    <h3>Problem 3 &mdash; Randomized Select ($O(n)$ Expected)</h3>
+
+    <p>Find the $i$-th smallest element in an unsorted array. Median of Medians (Ch1) gives $O(n)$ worst-case. Randomized Select gives $O(n)$ <em>expected</em> time with a much simpler implementation.</p>
+
+    <div class="callout callout-definition">
+      <strong>Randomized Select (CLRS):</strong> pick a random pivot, partition, recurse on the side containing rank $i$. Expected time $T(n) = O(n)$.<br/><br/>
+      <strong>Proof by substitution.</strong> $T(n) \leq n + \frac{2}{n}\sum_{k=\lceil n/2\rceil}^{n-1} T(k)$. Guess $T(n) \leq cn$. Then:
+      $$T(n) \leq n + \frac{2}{n}\sum_{k=\lceil n/2\rceil}^{n-1} ck \leq n + \frac{2c}{n} \cdot \frac{3n^2}{8} = n + \frac{3cn}{4} = n\left(1 + \frac{3c}{4}\right)$$
+      Choose $c = 4$: $T(n) \leq n(1 + 3) = 4n = cn$. $\square$
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Randomized Quicksort + Randomized Select &middot; O(n log n) / O(n) expected</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import random
+
+# ── RANDOMIZED QUICKSORT ── O(n log n) expected, O(n^2) worst-case ──
+def randomized_quicksort(A, lo=0, hi=None):
+    """
+    In-place randomized quicksort. Las Vegas: always correct.
+    Expected O(n log n) for any input (random pivot defeats adversary).
+    Worst case O(n^2) with probability 0 for random pivot.
+    """
+    if hi is None: hi = len(A) - 1
+    if lo >= hi: return
+
+    # Random pivot: defeats adversarial sorted/reverse-sorted input
+    pivot_idx = random.randint(lo, hi)
+    A[pivot_idx], A[hi] = A[hi], A[pivot_idx]   # move pivot to end
+
+    # Partition (Lomuto scheme): O(n)
+    pivot = A[hi]
+    i = lo - 1
+    for j in range(lo, hi):
+        if A[j] <= pivot:
+            i += 1
+            A[i], A[j] = A[j], A[i]
+    A[i+1], A[hi] = A[hi], A[i+1]
+    q = i + 1
+
+    randomized_quicksort(A, lo, q - 1)
+    randomized_quicksort(A, q + 1, hi)
+
+
+# ── PARANOID QUICKSORT ── guaranteed balanced partition ──────────────
+def paranoid_quicksort(A, lo=0, hi=None):
+    """
+    Retry pivot until both sides <= 3/4 n.
+    E[retries per level] <= 2. Total: O(n log n) expected.
+    Recurrence: T(n) <= T(n/4) + T(3n/4) + 2cn.
+    """
+    if hi is None: hi = len(A) - 1
+    if lo >= hi: return
+
+    n = hi - lo + 1
+    while True:
+        pivot_idx = random.randint(lo, hi)
+        A[pivot_idx], A[hi] = A[hi], A[pivot_idx]
+        pivot = A[hi]
+        i = lo - 1
+        for j in range(lo, hi):
+            if A[j] <= pivot:
+                i += 1
+                A[i], A[j] = A[j], A[i]
+        A[i+1], A[hi] = A[hi], A[i+1]
+        q = i + 1
+        left_size  = q - lo
+        right_size = hi - q
+        if left_size <= 3*n//4 and right_size <= 3*n//4:
+            break   # good pivot found
+
+    paranoid_quicksort(A, lo, q - 1)
+    paranoid_quicksort(A, q + 1, hi)
+
+
+# ── RANDOMIZED SELECT ── O(n) expected ───────────────────────────────
+def randomized_select(A, i, lo=0, hi=None):
+    """
+    Find i-th smallest (1-indexed) in A[lo..hi].
+    Las Vegas: always correct. Expected O(n) time.
+    """
+    if hi is None: hi = len(A) - 1
+    if lo == hi: return A[lo]
+
+    # Random pivot, Lomuto partition
+    pivot_idx = random.randint(lo, hi)
+    A[pivot_idx], A[hi] = A[hi], A[pivot_idx]
+    pivot = A[hi]
+    j = lo - 1
+    for k in range(lo, hi):
+        if A[k] <= pivot:
+            j += 1
+            A[j], A[k] = A[k], A[j]
+    A[j+1], A[hi] = A[hi], A[j+1]
+    q = j + 1
+
+    rank = q - lo + 1        # rank of pivot within A[lo..hi]
+    if i == rank:
+        return A[q]
+    elif i < rank:
+        return randomized_select(A, i, lo, q - 1)
+    else:
+        return randomized_select(A, i - rank, q + 1, hi)</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Randomized Quicksort + Randomized Select
+#include &lt;vector&gt;
+#include &lt;random&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+mt19937 rng(random_device{}());
+
+// Lomuto partition around A[hi], returns pivot index
+int partition(vector&lt;int&gt;&amp; A, int lo, int hi) {
+    int pivot = A[hi], i = lo - 1;
+    for (int j = lo; j &lt; hi; j++)
+        if (A[j] &lt;= pivot) swap(A[++i], A[j]);
+    swap(A[i+1], A[hi]);
+    return i + 1;
+}
+
+// Randomized Quicksort — O(n log n) expected
+void rqs(vector&lt;int&gt;&amp; A, int lo, int hi) {
+    if (lo &gt;= hi) return;
+    // Random pivot defeats adversarial inputs
+    swap(A[uniform_int_distribution&lt;int&gt;(lo,hi)(rng)], A[hi]);
+    int q = partition(A, lo, hi);
+    rqs(A, lo, q-1);
+    rqs(A, q+1, hi);
+}
+
+// Randomized Select — O(n) expected, O(n^2) worst-case
+// Returns i-th smallest (0-indexed) in A[lo..hi]
+int rselect(vector&lt;int&gt;&amp; A, int lo, int hi, int i) {
+    if (lo == hi) return A[lo];
+    swap(A[uniform_int_distribution&lt;int&gt;(lo,hi)(rng)], A[hi]);
+    int q    = partition(A, lo, hi);
+    int rank = q - lo;
+    if (i == rank) return A[q];
+    if (i &lt;  rank) return rselect(A, lo, q-1, i);
+    return rselect(A, q+1, hi, i - rank - 1);
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Expected vs Worst-Case: The Key Distinction</h3>
+
+    <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.83rem;">
+      <thead><tr>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:left;">Algorithm</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:center;">Type</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:center;">Expected</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:center;">Worst-Case</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:center;">Correct?</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);font-weight:600;">Freivalds (1 trial)</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;">Monte Carlo</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(n^2)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(n^2)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--orange);">w.h.p. only</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);font-weight:600;">Rand. Quicksort</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;">Las Vegas</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(n\log n)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--orange);">$O(n^2)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">Always</td></tr>
+        <tr><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);font-weight:600;">Paranoid Quicksort</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;">Las Vegas</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(n\log n)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--orange);">$O(n^2)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">Always</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);font-weight:600;">Rand. Select</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;">Las Vegas</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(n)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--orange);">$O(n^2)$</td><td style="padding:0.55rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">Always</td></tr>
+        <tr><td style="padding:0.55rem 1rem;font-weight:600;">Median of Medians</td><td style="padding:0.55rem 1rem;text-align:center;">Deterministic</td><td style="padding:0.55rem 1rem;text-align:center;color:var(--green);">$O(n)$</td><td style="padding:0.55rem 1rem;text-align:center;color:var(--green);">$O(n)$</td><td style="padding:0.55rem 1rem;text-align:center;color:var(--green);">Always</td></tr>
+      </tbody>
+    </table>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Comparison: deterministic vs randomized Quicksort on adversarial inputs</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">import time, random, sys
+sys.setrecursionlimit(100000)
+
+def det_quicksort(A, lo=0, hi=None):
+    """Deterministic quicksort (last element pivot) — O(n^2) on sorted input."""
+    if hi is None: hi = len(A) - 1
+    if lo >= hi: return
+    pivot = A[hi]                        # FIXED pivot — adversary's target
+    i = lo - 1
+    for j in range(lo, hi):
+        if A[j] <= pivot:
+            i += 1
+            A[i], A[j] = A[j], A[i]
+    A[i+1], A[hi] = A[hi], A[i+1]
+    q = i + 1
+    det_quicksort(A, lo, q - 1)
+    det_quicksort(A, q + 1, hi)
+
+def benchmark(n=5000):
+    sorted_input = list(range(n))        # adversarial for det_quicksort
+
+    # Deterministic: O(n^2) on sorted input
+    A = sorted_input.copy()
+    t0 = time.perf_counter()
+    try:
+        det_quicksort(A)
+        t_det = time.perf_counter() - t0
+    except RecursionError:
+        t_det = float('inf')
+
+    # Randomized: O(n log n) expected on any input
+    A = sorted_input.copy()
+    t0 = time.perf_counter()
+    randomized_quicksort(A)
+    t_rand = time.perf_counter() - t0
+
+    print(f"n={n} sorted input:")
+    print(f"  Deterministic: {t_det*1000:.1f}ms  (O(n^2))")
+    print(f"  Randomized:    {t_rand*1000:.1f}ms  (O(n log n) expected)")
+    if t_det != float('inf'):
+        print(f"  Speedup: {t_det/t_rand:.1f}x")
+
+benchmark(3000)
+# Typical output: Deterministic: ~80ms, Randomized: ~2ms, Speedup: ~40x</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Benchmark: deterministic vs randomized quicksort on adversarial input
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+#include &lt;chrono&gt;
+#include &lt;iostream&gt;
+using namespace std;
+
+// Deterministic quicksort (last-element pivot) — O(n^2) on sorted input
+void det_qs(vector&lt;int&gt;&amp; A, int lo, int hi) {
+    if (lo &gt;= hi) return;
+    int pivot = A[hi], i = lo-1;
+    for (int j=lo; j&lt;hi; j++)
+        if (A[j] &lt;= pivot) swap(A[++i], A[j]);
+    swap(A[i+1], A[hi]);
+    int q = i+1;
+    det_qs(A, lo, q-1);
+    det_qs(A, q+1, hi);
+}
+
+void benchmark(int n) {
+    vector&lt;int&gt; sorted_v(n);
+    iota(sorted_v.begin(), sorted_v.end(), 0);   // adversarial input
+
+    // Deterministic
+    auto A = sorted_v;
+    auto t0 = chrono::high_resolution_clock::now();
+    det_qs(A, 0, n-1);
+    auto t_det = chrono::duration&lt;double&gt;(
+        chrono::high_resolution_clock::now()-t0).count();
+
+    // Randomized
+    A = sorted_v;
+    t0 = chrono::high_resolution_clock::now();
+    rqs(A, 0, n-1);
+    auto t_rand = chrono::duration&lt;double&gt;(
+        chrono::high_resolution_clock::now()-t0).count();
+
+    cout &lt;&lt; "n=" &lt;&lt; n &lt;&lt; " det=" &lt;&lt; t_det*1000 &lt;&lt; "ms"
+         &lt;&lt; " rand=" &lt;&lt; t_rand*1000 &lt;&lt; "ms"
+         &lt;&lt; " speedup=" &lt;&lt; t_det/t_rand &lt;&lt; "x\n";
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Randomized Order-Statistic for Option Strikes</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT Systems</span>
+      </div>
+      <div class="we-body">
+        <p>At TTT, when constructing a NIFTY options strategy at expiry, we need: (1) find the ATM strike (nearest to spot) &mdash; a median-like query; (2) verify that a proposed volatility surface matrix $V$ satisfies $V = AB$ for given factor matrices $A$, $B$ (a Freivalds-style check before calibration).</p>
+        <div class="we-step">Use Randomized Select for ATM strike, Freivalds for matrix check</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">import numpy as np
+
+# Available NIFTY strikes (unsorted, as received from feed)
+strikes = [24500, 23000, 23500, 24000, 25000, 22500, 21000, 23250]
+spot    = 23400
+
+# Find ATM strike: nearest to spot = find strike with minimum |s - spot|
+# Equivalent to selecting rank of spot in the transformed array
+diffs  = [abs(s - spot) for s in strikes]
+# Randomized select to find minimum difference in O(n) expected
+min_diff = randomized_select(diffs.copy(), 1)   # 1st smallest diff
+atm_idx  = diffs.index(min_diff)
+atm      = strikes[atm_idx]
+print(f"ATM strike: {atm}")    # 23500 (closest to spot 23400)
+
+# Freivalds check: verify vol surface factorisation V ≈ A @ B
+# (Monte Carlo — O(n^2) instead of O(n^3) full multiplication)
+n   = 50   # 50 expiries x 50 strikes
+A   = np.random.randn(n, n)
+B   = np.random.randn(n, n)
+V   = A @ B                    # correct surface
+V_perturbed = V.copy(); V_perturbed[0,0] += 1e-6  # tiny perturbation
+
+print(freivalds_check(A, B, V))            # True (always correct)
+print(freivalds_check(A, B, V_perturbed))  # False with prob >= 1 - 2^-20</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> ATM strike found in $O(n)$ expected time (vs $O(n\log n)$ for sorting). Vol surface check in $O(kn^2)$ vs $O(n^3)$ for full multiply &mdash; a $50\times$ speedup for a $50\times50$ matrix, running 20 trials for error probability $\leq 2^{-20} \approx 10^{-6}$.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Python&rsquo;s built-in <code>list.sort()</code> uses Timsort (deterministic, $O(n\log n)$ worst-case). <code>random.shuffle()</code> followed by sort is an anti-pattern &mdash; unnecessary. The real value of randomized algorithms in quant finance is in <strong>Monte Carlo simulation</strong> (pricing path-dependent options, VaR estimation) and <strong>randomized linear algebra</strong> (sketching for large covariance matrices, randomized SVD). Freivalds&rsquo; checker is used in distributed matrix computations to verify results from untrusted workers without re-doing the $O(n^3)$ computation. In TTT&rsquo;s context: verifying that a numerically computed factor decomposition of the implied vol surface satisfies $V \approx AB$ before using it for Greeks calculation.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 06</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch06 / q01</span>
+        <span class="mcq-diff">&#9733; Freivalds Error</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Freivalds&rsquo; algorithm has error probability $\leq 1/2$ per trial when $AB \neq C$. After running $k = 30$ independent trials and all return YES, what is the probability that $AB \neq C$?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$30/2 = 15\%$ &mdash; the error accumulates linearly</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$\leq (1/2)^{30} \approx 10^{-9}$ &mdash; independent trials multiply probabilities</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$1/2$ &mdash; each trial is independent so the last trial&rsquo;s error is $1/2$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$0$ &mdash; after 30 trials without a NO, the algorithm is certain $AB = C$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B &mdash; $\leq (1/2)^{30} \approx 10^{-9}$.</strong><br/><br/>
+          If $AB \neq C$, each trial independently outputs YES with probability $\leq 1/2$ (by the Freivalds bijection argument). For all $k$ trials to output YES when $AB \neq C$: $\Pr[\text{all YES} \mid AB \neq C] \leq (1/2)^k$. For $k=30$: $(1/2)^{30} = 1/2^{30} \approx 9.3 \times 10^{-10}$. This is far smaller than the probability of hardware error or cosmic ray bit-flips. Freivalds is used in practice for this reason.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch06 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Good Pivot Probability</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In Paranoid Quicksort, a pivot is &ldquo;good&rdquo; if both $|L|$ and $|G|$ are at most $\frac{3}{4}n$. What fraction of elements are good pivots, and what is the expected number of trials before finding one?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$1/4$ of elements are good pivots; expected $4$ trials</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$1/2$ of elements are good pivots; expected $\leq 2$ trials</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$3/4$ of elements are good pivots; expected $4/3$ trials</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Depends on the input; no fixed bound on the fraction</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B &mdash; $1/2$ of elements; expected $\leq 2$ trials.</strong><br/><br/>
+          An element is a bad pivot if it falls in the bottom $n/4$ or top $n/4$ of the sorted order. That&rsquo;s $n/2$ bad pivots total. So $n/2$ elements are good pivots &mdash; exactly the middle half. Probability of a uniformly random pivot being good $= n/2 \div n = 1/2$. Since trials are independent with success probability $\geq 1/2$, the number of trials follows a geometric distribution: $\mathbb{E}[\text{trials}] \leq 1/(1/2) = 2$. Each trial costs $O(n)$ (partition step), so expected cost per level $= 2 \cdot cn = O(n)$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch06 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Randomized Select</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Randomized Select is $O(n)$ expected but $O(n^2)$ worst-case. What sequence of events would cause the $O(n^2)$ worst case?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Any sorted input, since the pivot is always the minimum or maximum</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>A deterministic input that triggers the random number generator to behave periodically</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>The random pivot being the minimum (or maximum) element at every single recursion level &mdash; this has probability $(1/n)^n$ and gives $T(n) = T(n-1) + O(n) = O(n^2)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Calling select on an already-sorted array; the partition degenerates just like in deterministic quicksort</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Since the pivot is chosen <em>uniformly at random</em> regardless of input, the worst case is not triggered by any particular input &mdash; it&rsquo;s triggered by an unlucky sequence of random choices. Specifically: if at every recursion level we happen to pick the minimum element as pivot, the partition produces $|L|=0$, $|G|=n-2$. We recurse on a problem of size $n-1$: $T(n) = T(n-1) + O(n) = O(n^2)$. The probability of this happening for all $n$ levels is $(1/n) \cdot (1/(n-1)) \cdots (1/2) = 1/n!$ &mdash; astronomically small. The expected time is still $O(n)$; the $O(n^2)$ worst case almost never occurs in practice.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch06 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Monte Carlo vs Las Vegas</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">You need to check if a graph has a perfect matching. You have a Monte Carlo algorithm that runs in $O(n^2)$ and errs with probability $\leq 1/n$. You also have a Las Vegas algorithm that runs in $O(n^3)$ expected time and is always correct. For $n = 1000$ and a time budget of $10^7$ operations, which should you use?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Always Las Vegas &mdash; correctness must never be compromised</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>Monte Carlo: run it $k = \lceil\log_2 n\rceil = 10$ times ($10 \times 10^6 = 10^7$ ops, within budget), reducing error to $(1/n)^{10} \approx 10^{-30}$, far more reliable than hardware</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>Las Vegas: $O(n^3) = 10^9$ operations, exceeds budget &mdash; but correctness requires it</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Neither &mdash; Monte Carlo errors are unacceptable and Las Vegas is too slow</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B &mdash; use Monte Carlo with $k=10$ repetitions.</strong><br/><br/>
+          Las Vegas costs $O(n^3) = 10^9$ operations for $n=1000$ &mdash; $100\times$ over budget. Monte Carlo costs $O(n^2) = 10^6$ per trial. Running 10 trials costs $10^7$ operations (exactly the budget). After 10 trials, error $\leq (1/n)^{10} = (10^{-3})^{10} = 10^{-30}$. This is orders of magnitude smaller than the probability of a hardware failure ($\sim 10^{-15}$ per bit-hour). In practice, the result is &ldquo;correct enough&rdquo; for any real-world decision. This is the fundamental Monte Carlo trade-off: pay in reliability (with exponentially negligible error) to gain in speed.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 06</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Run Freivalds&rsquo; algorithm by hand on the $3\times3$ matrices $A = \begin{pmatrix}1&1\\0&1\end{pmatrix}$, $B = \begin{pmatrix}1&0\\1&1\end{pmatrix}$, $C = \begin{pmatrix}3&1\\1&1\end{pmatrix}$ (wrong), using $r = (1,1)^T$. Does the algorithm catch the error? Now try $r=(1,0)^T$. What does this tell you about worst-case $r$? <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Trace Randomized Select on $A=[7,2,5,1,9,3,6,8,4]$ to find the 5th smallest element, using pivot index 3 at the first call. Show the partition result and the recursive call. What is the answer? <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Construct an input of size $n=8$ for which deterministic Quicksort (last-element pivot) makes $\Theta(n^2)$ comparisons. Then show that Randomized Quicksort on the same input has $O(n\log n)$ expected comparisons by computing $\mathbb{E}[\text{comparisons}] = \sum_{i&lt;j} 2/(j-i+1)$ for $n=8$. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement a randomized primality test (Miller-Rabin) in Python. It is a Monte Carlo algorithm: composite numbers are always correctly identified as composite with probability $\geq 3/4$ per witness. How many witnesses do you need to reduce the error to below $10^{-20}$? Test on $n = 561$ (a Carmichael number that fools Fermat&rsquo;s test). <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Prove the indicator variable analysis of Randomized Quicksort: $\mathbb{E}[\text{comparisons}] = \sum_{i=1}^n\sum_{j=i+1}^n \frac{2}{j-i+1} \leq 2n\ln n$. Show the harmonic sum bound explicitly. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Implement and benchmark Freivalds&rsquo; checker vs NumPy&rsquo;s <code>np.allclose(A@B, C)</code> for $n=500$ matrices. How many Freivalds trials can you run in the time NumPy takes for one full multiplication? What does this say about the practical value of the Monte Carlo approach? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">Design a randomized algorithm for the following problem: given $n$ numbers, estimate the number of distinct values in $O(n)$ time and $O(1)$ space (the HyperLogLog idea). Use a random hash function and track the maximum number of leading zeros in any hash value. Argue why the expected estimate is correct within a constant factor. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Complete the Randomized Select expected-time proof: starting from $T(n) \leq n + \frac{2}{n}\sum_{k=\lceil n/2 \rceil}^{n-1}T(k)$, use substitution $T(n) \leq cn$ and show $c=4$ works. Fill in all the algebra for the sum $\sum_{k=n/2}^{n-1} k \leq 3n^2/8$. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">The Schwartz-Zippel lemma generalises Freivalds: for a non-zero multivariate polynomial $P(x_1,\ldots,x_n)$ of total degree $d$ and a random point $r$ from a set $S$, $\Pr[P(r)=0] \leq d/|S|$. Show that Freivalds&rsquo; algorithm is a special case with $P = D_{ij}$ for the entry-wise check, and that the bijection argument matches the $d=1$, $|S|=2$ case. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">Prove that no deterministic comparison-based sorting algorithm can achieve $o(n\log n)$ comparisons in the worst case (the comparison lower bound). Now explain why Randomized Quicksort&rsquo;s $O(n\log n)$ expected bound does not contradict this lower bound. What input would trigger the worst case for Randomized Quicksort, and with what probability? <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch5.html" class="ch-nav-btn">&larr; Amortization &amp; Union-Find</a>
+    <a href="PROG_DAA_Ch7.html" class="ch-nav-btn primary">Next: Advanced Dynamic Programming &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Freivalds: 30 trials, error ≤ (1/2)^30 ≈ 10^-9.","✨ Good pivot probability = 1/2. Expected 2 trials per level.","🏆 Paranoid Quicksort: T(n) ≤ T(n/4)+T(3n/4)+2cn = O(n log n).","🔥 Monte Carlo: 10 trials gives error 10^-30. More reliable than hardware.","💡 Randomized Select: worst case O(n^2) needs min pivot every level — probability 1/n!","📐 Freivalds bijection: D≠0 implies exactly half of r give Dr=0.","⚡ Las Vegas: always correct, expected poly time. Quicksort is Las Vegas."];
+const wrongMsgs=["🌀 Independent trials multiply: k=30 gives error ≤ (1/2)^30, not 30/2.","📉 Count the middle half: elements ranked n/4+1 to 3n/4 are good pivots — that's n/2 elements.","😰 Worst case for randomized select needs bad random choices (min pivot always), not bad input.","📐 Monte Carlo with k=10 trials: error ≤ (1/n)^10 = 10^-30. Budget: 10 × n² = 10^7 ops.","🤔 Las Vegas is always correct but randomized select is expected O(n), not O(n^2)."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

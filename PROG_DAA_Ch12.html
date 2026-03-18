@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fixed-Parameter &amp; Distributed Algorithms &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-adv{background:rgba(45,37,96,0.08);color:var(--navy2);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Fixed-Parameter &amp; Distributed Algorithms</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:92%"></div></div>
+      <span class="tb-progress-label">12 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-adv">Advanced</span>
+      <span class="ch-num">Chapter 12 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Fixed-Parameter &amp; Distributed Algorithms</h1>
+    <p class="chapter-subtitle">Two radically different responses to hard problems. Fixed-parameter algorithms accept exponential time but confine the blowup to a small parameter $k$ &mdash; giving exact solutions for the typical small-$k$ instances that arise in practice. Distributed algorithms run across networked processors, trading single-machine speed for parallelism, but confronting new challenges: symmetry breaking, message passing, and asynchrony.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Part I &mdash; Fixed-Parameter Tractability (FPT)</h3>
+
+    <p>An NP-hard problem allows three desirable algorithm properties: (1) solve hard problems, (2) run in polynomial time, (3) get exact solutions. Unless P = NP, no algorithm has all three. Approximation algorithms have (1) and (2). Fixed-parameter algorithms have (1) and (3): they are exact but not universally polynomial &mdash; their exponential blowup is confined to a small parameter $k$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Fixed-parameter tractable (FPT).</strong> A parameterized problem $(x, k)$ is FPT if there is an algorithm running in time $f(k) \cdot n^{O(1)}$ where $f: \mathbb{N} \to \mathbb{N}$ and the degree of the polynomial in $n$ is independent of $k$. The key: for small $k$, $f(k)$ is a manageable constant even if exponential in $k$.<br/><br/>
+      <strong>Equivalently:</strong> $(x, k)$ is FPT iff there is an algorithm running in time $f(k) + n^{O(1)}$ for some $f$. (The sum form and product form are equivalent: $f(k) \cdot n^c \leq f(k)^{c+1} + n^{c+1}$.)
+    </div>
+
+    <h3>Example: $k$-Vertex Cover</h3>
+    <p>Given graph $G=(V,E)$ and integer $k$: is there a vertex cover of size $\leq k$? This is NP-complete. But with $k$ as parameter, we can do much better than brute force.</p>
+
+    <p><strong>Brute force:</strong> try all $\binom{V}{k}$ subsets of size $k$, check each in $O(E)$. Total: $O(V^k \cdot E)$ — polynomial for fixed $k$, but the degree depends on $k$. This is NOT FPT.</p>
+
+    <div class="callout callout-definition">
+      <strong>Bounded search-tree algorithm.</strong> For any remaining edge $(u,v)$, at least one of $u$ or $v$ must be in the cover. Branch into two sub-problems: include $u$ (delete $u$ and all incident edges, recurse with $k-1$); or include $v$ (same). Return YES if either branch returns YES.<br/><br/>
+      <strong>Analysis:</strong> The recursion tree has depth $\leq k$ (each branch decreases $k$ by 1). At each node: $O(V)$ work to delete the vertex. Total nodes: $\leq 2^k$. Total time: $O(2^k \cdot V)$ — this IS FPT ($f(k) = 2^k$, polynomial factor $n = V$).<br/><br/>
+      Practical: for $k = 32$, $2^{32} \approx 4\times10^9$ — not great, but for $k \leq 20$ it&rsquo;s perfectly manageable.
+    </div>
+
+    <h3>Kernelization</h3>
+    <p>A <strong>kernel</strong> is a polynomial-time algorithm that reduces $(x, k)$ to an equivalent $(x', k')$ with $|x'| \leq f(k)$ (small input) and same YES/NO answer. Once we have a small kernel, we can solve it by any algorithm (even brute force) in time $g(f(k))$ — which depends only on $k$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Theorem:</strong> a problem is FPT $\Leftrightarrow$ it has a kernelization (not necessarily polynomial-size).<br/><br/>
+      <strong>$O(k^2)$ kernel for $k$-Vertex Cover:</strong><br/>
+      1. Remove self-loops and multi-edges (they don&rsquo;t affect covers).<br/>
+      2. Any vertex of degree $> k$ must be in the cover (else we&rsquo;d need $> k$ vertices just for its edges). Add it to the cover, delete it and its edges, decrease $k$.<br/>
+      3. Now max degree $\leq k$. If $|E'| > k^2$: answer NO (a size-$k$ cover can cover at most $k \cdot k = k^2$ edges; if there are more, it&rsquo;s impossible).<br/>
+      4. Remove isolated vertices. Now $|V'| \leq 2k^2$ (each of the $\leq k^2$ edges has 2 endpoints).<br/>
+      5. The kernel has size $O(k^2)$.
+    </div>
+
+    <p><strong>Combined algorithm:</strong> kernel in $O(VE)$, then bounded search-tree on the $O(k^2)$-sized kernel in $O(2^k \cdot k^2)$. Total: $O(VE + 2^k k^2)$. Best known: $O(kV + 1.274^k)$ [Chen, Kanj, Xia 2010].</p>
+
+    <h3>FPT and Approximation: Connection</h3>
+    <div class="callout callout-definition">
+      <strong>Theorem:</strong> if an optimisation problem has an EPTAS (Efficient PTAS: $f(1/\varepsilon) \cdot n^{O(1)}$ time for $(1+\varepsilon)$-approximation), then the associated decision problem (OPT $\leq k$?) is FPT.<br/><br/>
+      <strong>Proof sketch:</strong> run EPTAS with $\varepsilon = 1/(2k)$. If OPT $\leq k$, the EPTAS returns a solution of value $\leq (1 + 1/2k) \cdot k \leq k + 1/2$. Since OPT is integral, this means OPT $\leq k$ iff the returned value is $\leq k$. Time: $f(2k) \cdot n^{O(1)}$ — FPT in $k$. $\square$<br/><br/>
+      Contrapositive: if the decision problem is not FPT, then no EPTAS exists. This gives hardness of approximation results from parameterized complexity.
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">FPT Vertex Cover: bounded search-tree + O(k²) kernelization</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">from collections import defaultdict
+
+# ── BOUNDED SEARCH-TREE: O(2^k * V) ──────────────────────────────────
+def vertex_cover_fpt(adj, k):
+    """
+    FPT algorithm for k-Vertex Cover.
+    adj: adjacency dict {u: set of neighbours}.
+    k:   cover size budget.
+    Returns a vertex cover of size <= k, or None if impossible.
+    Time: O(2^k * V) — FPT in k.
+
+    Key insight: for any edge (u,v), at least one endpoint must be in cover.
+    Branch on which one: try u, or try v. Depth <= k, branching factor 2.
+    """
+    # Find any uncovered edge
+    for u in adj:
+        for v in adj[u]:
+            if v > u:   # avoid duplicate edges
+                # Must include u or v; try both
+                for chosen in [u, v]:
+                    # Tentatively add 'chosen' to cover
+                    removed_edges = {}
+                    new_adj = {x: set(adj[x]) for x in adj}  # deep copy
+                    # Remove 'chosen' and all its incident edges
+                    for neighbour in new_adj[chosen]:
+                        new_adj[neighbour].discard(chosen)
+                    del new_adj[chosen]
+
+                    result = vertex_cover_fpt(new_adj, k - 1)
+                    if result is not None:
+                        return result | {chosen}
+                return None   # neither worked
+
+    return set()   # no edges left — empty cover suffices
+
+
+# ── KERNEL: O(k^2) reduction ──────────────────────────────────────────
+def kernel_vertex_cover(edges, n_vertices, k):
+    """
+    Reduce k-Vertex Cover to a kernel of size O(k^2).
+    Returns (kernel_edges, kernel_k, forced_cover) or None if infeasible.
+    """
+    adj    = defaultdict(set)
+    forced = set()     # vertices forced into cover (degree > k)
+
+    for u, v in edges:
+        adj[u].add(v)
+        adj[v].add(u)
+
+    remaining_k = k
+
+    # Step 1: Force high-degree vertices
+    changed = True
+    while changed:
+        changed = False
+        for v in list(adj.keys()):
+            if len(adj[v]) > remaining_k:
+                forced.add(v)
+                for u in list(adj[v]):
+                    adj[u].discard(v)
+                    if not adj[u]: del adj[u]
+                del adj[v]
+                remaining_k -= 1
+                changed = True
+                if remaining_k < 0:
+                    return None   # infeasible
+
+    # Step 2: Count remaining edges
+    kernel_edges = [(u,v) for u in adj for v in adj[u] if v > u]
+    if len(kernel_edges) > remaining_k * remaining_k:
+        return None   # more edges than k^2 → impossible
+
+    # Step 3: Remove isolated vertices (already done by adj cleanup)
+    # kernel has <= 2k^2 vertices
+    return kernel_edges, remaining_k, forced
+
+
+def solve_vertex_cover(edges, n_vertices, k):
+    """
+    Full FPT pipeline: kernelize, then bounded search-tree on kernel.
+    Overall: O(VE + 2^k * k^2).
+    """
+    result = kernel_vertex_cover(edges, n_vertices, k)
+    if result is None:
+        return None   # infeasible
+    kernel_edges, k_remaining, forced = result
+
+    # Build adj for kernel
+    adj = defaultdict(set)
+    for u, v in kernel_edges:
+        adj[u].add(v); adj[v].add(u)
+
+    kernel_solution = vertex_cover_fpt(adj, k_remaining)
+    if kernel_solution is None:
+        return None
+
+    return forced | kernel_solution</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// FPT Vertex Cover: bounded search-tree O(2^k * V)
+#include &lt;vector&gt;
+#include &lt;set&gt;
+#include &lt;optional&gt;
+using namespace std;
+
+using Adj = vector&lt;set&lt;int&gt;&gt;;
+
+optional&lt;set&lt;int&gt;&gt; vc_fpt(Adj adj, int n, int k) {
+    // Find any uncovered edge
+    int eu = -1, ev = -1;
+    for (int u = 0; u &lt; n; ++u)
+        if (!adj[u].empty()) { eu=u; ev=*adj[u].begin(); break; }
+    if (eu == -1) return set&lt;int&gt;{};  // no edges: cover is empty
+    if (k == 0)   return nullopt;       // budget exhausted
+
+    // Try adding eu
+    auto try_vertex = [&](int v) -&gt; optional&lt;set&lt;int&gt;&gt; {
+        Adj a2 = adj;
+        for (int u : a2[v]) a2[u].erase(v);
+        a2[v].clear();
+        auto sub = vc_fpt(a2, n, k-1);
+        if (sub) { sub-&gt;insert(v); return sub; }
+        return nullopt;
+    };
+    auto r = try_vertex(eu);
+    if (r) return r;
+    return try_vertex(ev);
+}
+
+// Kernel: force degree-k+ vertices, check |E| <= k^2
+// Returns (kernel_adj, new_k, forced) or nullopt
+struct KernelResult {
+    Adj adj; int k; set&lt;int&gt; forced;
+};
+optional&lt;KernelResult&gt; kernelize(Adj adj, int n, int k) {
+    set&lt;int&gt; forced;
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        for (int v=0;v&lt;n;v++) {
+            if ((int)adj[v].size() &gt; k) {
+                forced.insert(v);
+                for (int u:adj[v]) adj[u].erase(v);
+                adj[v].clear(); k--; changed=true;
+                if (k&lt;0) return nullopt;
+            }
+        }
+    }
+    // Count edges
+    int edge_count=0;
+    for (int u=0;u&lt;n;u++) edge_count+=(int)adj[u].size();
+    edge_count/=2;
+    if (edge_count &gt; k*k) return nullopt;
+    return KernelResult{adj, k, forced};
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Part II &mdash; Distributed Algorithms</h3>
+    <p>A distributed algorithm runs on a network of $n$ processors (nodes of an undirected graph $G=(V,E)$), each running a local process that communicates via message-passing. Two key models:</p>
+
+    <div class="callout callout-definition">
+      <strong>Synchronous model:</strong> rounds proceed in lockstep. Each round: all nodes send messages on all ports &rarr; messages delivered &rarr; all nodes compute new state. Costs measured in rounds (time) and messages (communication).<br/><br/>
+      <strong>Asynchronous model:</strong> no global clock. Messages take arbitrary finite time. Any interleaving of sends/receives is possible. Harder to analyse; correctness must hold for all interleavings, time analysis requires assumptions on message delivery bounds.
+    </div>
+
+    <h3>Symmetry Breaking: Leader Election</h3>
+    <p>Given a connected graph, elect exactly one leader process. This is the canonical symmetry-breaking problem in distributed computing.</p>
+
+    <div class="callout callout-definition">
+      <strong>Theorem 1 (impossibility):</strong> in a clique of $n$ identical deterministic processes with no unique identifiers, no algorithm can guarantee leader election.<br/><br/>
+      <strong>Proof:</strong> by symmetry induction. All processes start in the same state. In each round: they all send the same messages (same state), receive the same messages (symmetric graph), make the same state transition. They remain in identical states forever. If one elects itself leader, all do — contradiction. $\square$<br/><br/>
+      <strong>Fix 1 — Unique Identifiers (UIDs).</strong> Each process starts with a unique ID from a totally ordered set. Algorithm for clique: each process broadcasts its UID; the one receiving the maximum UID becomes leader. 1 round, $n^2$ messages.<br/><br/>
+      <strong>Fix 2 — Randomness.</strong> Processes pick random IDs from $\{1, \ldots, r\}$ with $r = \lceil n^2/\varepsilon \rceil$. By union bound over $\binom{n}{2}$ pairs, all IDs are distinct with probability $\geq 1 - \varepsilon$. Repeat until unique maximum found. Expected $O(1)$ rounds.
+    </div>
+
+    <h3>Ring Leader Election: Hirschberg-Sinclair $O(n\log n)$</h3>
+    <p>Simple ring leader election: each node sends its UID clockwise; when it receives its own UID back, it has seen all UIDs and can elect the maximum. Cost: $n$ rounds, $n^2$ messages (each UID travels the full ring). Hirschberg-Sinclair improves to $O(n\log n)$ messages by <em>doubling search radii</em>: nodes search distance $1, 2, 4, \ldots$ in alternating directions, only forwarding a UID if it&rsquo;s larger than all previously seen. Nodes still active at phase $r$ searched $2^r$ hops &mdash; at most $n/2^r$ survive each phase, giving $O(n\log n)$ total.</p>
+
+    <h3>Distributed Maximal Independent Set (Luby&rsquo;s Algorithm)</h3>
+    <p>Compute an MIS of the graph distributedly. Deterministically impossible in some graphs (symmetry). Luby&rsquo;s randomised algorithm:</p>
+
+    <div class="callout callout-definition">
+      <strong>Luby&rsquo;s Algorithm (per round):</strong><br/>
+      1. Each active node picks a random ID from $\{1, \ldots, n^5\}$.<br/>
+      2. Each node broadcasts its ID to neighbours.<br/>
+      3. If a node&rsquo;s ID is larger than all its neighbours&rsquo; IDs: it joins the MIS, broadcasts &ldquo;in&rdquo; to neighbours.<br/>
+      4. Neighbours of MIS nodes are removed (they output &ldquo;out&rdquo;).<br/>
+      5. Repeat with remaining active nodes.<br/><br/>
+      <strong>Complexity:</strong> $O(\log n)$ rounds expected (each round removes at least a constant fraction of edges w.h.p.), $O(E \log n)$ messages total. Proved by showing each round kills at least half the edges in expectation.
+    </div>
+
+    <h3>Synchronous BFS Tree</h3>
+    <p>Root $v_0$ broadcasts a search message in round 1. Every node that receives a search message for the first time records the sender as its parent and forwards the search in round 2. Terminates in diameter $D$ rounds. Message complexity: $O(E)$ (each edge used at most once for the first delivery). Termination detected by <strong>convergecast</strong>: each leaf sends &ldquo;done&rdquo; to parent; parent sends &ldquo;done&rdquo; when it has received from all children and done its own work.</p>
+
+    <h3>Asynchronous BFS + Shortest Paths Trees</h3>
+    <p>Running the synchronous BFS algorithm asynchronously fails: a node may receive a shorter path later and need to update its parent. The fix is <strong>relaxation</strong>: nodes maintain their current best distance and update when a shorter path arrives, re-propagating to neighbours. Analogous to Bellman-Ford relaxation. Correctness holds for all interleavings; time analysis assumes messages delivered within $t$ time units.</p>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Synchronous distributed BFS tree + Leader Election simulation</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">from collections import defaultdict, deque
+
+# ── SYNCHRONOUS BFS TREE (simulation) ────────────────────────────────
+def sync_bfs_tree(graph, root):
+    """
+    Synchronous distributed BFS spanning tree.
+    Simulates round-by-round execution.
+    graph: dict {u: list of neighbours}.
+    Returns (parent, rounds, message_count).
+
+    Round r: all nodes with dist==r-1 send "search" to all neighbours.
+    A node records first sender as parent.
+
+    Messages: O(|E|) — each directed edge used at most once.
+    Rounds: O(diameter).
+    Termination: convergecast from leaves to root.
+    """
+    parent  = {root: None}   # root is its own parent (sentinel)
+    dist    = {root: 0}
+    round_n = 0
+    messages_sent = 0
+
+    # Queue of (sender, receiver) messages to deliver this round
+    frontier = [root]
+
+    while frontier:
+        round_n += 1
+        new_frontier = []
+        for u in frontier:
+            for v in graph[u]:
+                messages_sent += 1               # message sent
+                if v not in parent:              # first search arrival
+                    parent[v] = u
+                    dist[v]   = dist[u] + 1
+                    new_frontier.append(v)
+        frontier = new_frontier
+
+    return parent, round_n, messages_sent
+
+
+# ── LEADER ELECTION ON CLIQUE (with UIDs) ────────────────────────────
+def leader_election_clique(uids):
+    """
+    Clique leader election with UIDs.
+    1 round: all broadcast UIDs; max UID wins.
+    n messages (each of n nodes sends 1 broadcast = n-1 point-to-point).
+    Returns (leader_uid, rounds, messages).
+    """
+    n = len(uids)
+    # Round 1: all nodes broadcast their UID
+    received = {uid: set(uids) - {uid} for uid in uids}   # each receives all others
+    messages = n * (n - 1)   # n-1 messages per node
+
+    # Elect: max UID
+    leader = max(uids)
+    return leader, 1, messages
+
+
+# ── LUBY'S DISTRIBUTED MIS (simulation) ──────────────────────────────
+import random
+
+def luby_mis(graph):
+    """
+    Luby's randomised distributed MIS algorithm.
+    graph: dict {u: set of neighbours}.
+    Returns (MIS set, expected rounds).
+    O(log n) rounds expected. Each round: random ID, compare with neighbours.
+    """
+    active = set(graph.keys())
+    mis    = set()
+    rounds = 0
+    n      = len(active)
+
+    while active:
+        rounds += 1
+        ids    = {v: random.randint(1, n**5) for v in active}
+        local_max = set()
+
+        # Each node checks if it has the maximum ID among active neighbours
+        for v in active:
+            active_nbrs = {u for u in graph[v] if u in active}
+            if all(ids[v] > ids[u] for u in active_nbrs):
+                local_max.add(v)
+
+        # Add local maxima to MIS; remove them and their neighbours
+        to_remove = set()
+        for v in local_max:
+            mis.add(v)
+            to_remove.add(v)
+            to_remove |= {u for u in graph[v] if u in active}
+
+        active -= to_remove
+
+    return mis, rounds
+
+
+# ── CONVERGECAST: aggregate from leaves to root ───────────────────────
+def convergecast_count(parent, root):
+    """
+    Convergecast: each non-root sends its subtree count to parent.
+    Used for termination detection and computing aggregate functions.
+    Returns total node count (verifies = n).
+    O(V) messages, O(diameter) rounds.
+    """
+    children = defaultdict(list)
+    for v, p in parent.items():
+        if p is not None:
+            children[p].append(v)
+
+    count = {}
+    # Process in reverse BFS order (leaves first)
+    queue = deque()
+    in_degree = {v: len(children[v]) for v in parent}
+    for v in parent:
+        if not children[v]:   # leaf
+            queue.append(v)
+            count[v] = 1
+
+    while queue:
+        v = queue.popleft()
+        p = parent[v]
+        if p is not None:
+            count[p] = count.get(p, 1) + count[v]
+            in_degree[p] -= 1
+            if in_degree[p] == 0:
+                queue.append(p)
+
+    return count.get(root, 1)</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Synchronous BFS tree + Leader Election simulation
+#include &lt;vector&gt;
+#include &lt;queue&gt;
+#include &lt;unordered_map&gt;
+#include &lt;algorithm&gt;
+#include &lt;climits&gt;
+using namespace std;
+
+// Synchronous BFS tree — O(E) messages, O(diameter) rounds
+struct BFSResult {
+    vector&lt;int&gt; parent, dist;
+    int rounds, messages;
+};
+
+BFSResult sync_bfs(int n, const vector&lt;vector&lt;int&gt;&gt;&amp; adj, int root) {
+    vector&lt;int&gt; parent(n,-1), dist(n,-1);
+    dist[root]=0; parent[root]=root;
+    queue&lt;int&gt; frontier;
+    frontier.push(root);
+    int rounds=0, messages=0;
+
+    while (!frontier.empty()) {
+        ++rounds;
+        int sz = frontier.size();
+        while (sz--) {
+            int u = frontier.front(); frontier.pop();
+            for (int v : adj[u]) {
+                ++messages;
+                if (dist[v]==-1) {
+                    dist[v]=dist[u]+1;
+                    parent[v]=u;
+                    frontier.push(v);
+                }
+            }
+        }
+    }
+    return {parent, dist, rounds, messages};
+}
+
+// Leader election on clique with UIDs — 1 round, n*(n-1) messages
+int leader_election(const vector&lt;int&gt;&amp; uids) {
+    return *max_element(uids.begin(), uids.end());
+}
+
+// Asynchronous SP tree: Bellman-Ford relaxation distributed
+// Each node maintains current best dist, relaxes when shorter path arrives
+// Analogous to async Bellman-Ford; O(V*E) messages in worst case
+void async_sp_relax(int n, const vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt;&amp; adj,
+                    int root, vector&lt;int&gt;&amp; dist) {
+    dist.assign(n, INT_MAX); dist[root]=0;
+    // Process messages (simulated as priority queue)
+    priority_queue&lt;pair&lt;int,int&gt;,vector&lt;pair&lt;int,int&gt;&gt;,greater&lt;&gt;&gt; pq;
+    pq.push({0,root});
+    while (!pq.empty()) {
+        auto [d,u] = pq.top(); pq.pop();
+        if (d &gt; dist[u]) continue;
+        for (auto [v,w]: adj[u])
+            if (dist[u]+w &lt; dist[v])
+                { dist[v]=dist[u]+w; pq.push({dist[v],v}); }
+    }
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Ring leader election: naive O(n²) vs Hirschberg-Sinclair O(n log n)</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">def ring_leader_naive(uids):
+    """
+    Naive ring leader election: each UID travels the full ring clockwise.
+    Every node receives all n UIDs and elects the maximum.
+    O(n^2) messages: each of n UIDs travels n hops.
+    O(n) rounds.
+    Returns (leader, rounds, messages).
+    """
+    n = len(uids)
+    # Simulate: each UID travels around the ring
+    # Message i is UID of node i, travels n hops
+    messages = n * n    # n UIDs, each n hops
+    rounds   = n        # after n rounds, each UID completes circuit
+    leader   = max(uids)
+    return leader, rounds, messages
+
+
+def ring_leader_hirschberg_sinclair(uids):
+    """
+    Hirschberg-Sinclair: O(n log n) messages.
+    Phase r: each surviving node probes distance 2^r in both directions.
+    A node survives phase r if its UID is the max in a 2^(r+1)+1 neighbourhood.
+    At most n/2^r nodes survive each phase => total messages O(n log n).
+    Returns (leader, phases, messages_estimate).
+    """
+    n       = len(uids)
+    active  = list(range(n))    # indices of active nodes
+    messages = 0
+    phase    = 0
+
+    while len(active) > 1:
+        probe_dist = 2 ** phase
+        new_active = []
+        for i, idx in enumerate(active):
+            # Probe 2^phase hops clockwise and counterclockwise
+            # Survives if uid[idx] is max in 2*probe_dist+1 window
+            # (simplified simulation)
+            window = [uids[active[(i + j) % len(active)]]
+                      for j in range(-probe_dist, probe_dist + 1)]
+            messages += 4 * probe_dist   # 2 probes * 2 directions
+            if uids[idx] == max(window):
+                new_active.append(idx)
+        active  = new_active
+        phase  += 1
+
+    leader = uids[active[0]] if active else max(uids)
+    return leader, phase, messages
+
+# Comparison
+import random
+uids = [random.randint(1, 10000) for _ in range(1000)]
+_, _, m_naive = ring_leader_naive(uids)
+_, _, m_hs    = ring_leader_hirschberg_sinclair(uids)
+print(f"n=1000: naive messages={m_naive:,}, HS messages≈{m_hs:,}")
+# naive: 1,000,000  HS: ~40,000 (≈ 4n log n)</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Ring leader election comparison
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+using namespace std;
+
+// Naive: O(n^2) messages
+pair&lt;int,long long&gt; ring_leader_naive(const vector&lt;int&gt;&amp; uids) {
+    int n = uids.size();
+    return {*max_element(uids.begin(),uids.end()), (long long)n*n};
+}
+
+// Hirschberg-Sinclair: O(n log n) messages
+pair&lt;int,long long&gt; ring_leader_hs(const vector&lt;int&gt;&amp; uids) {
+    int n = uids.size();
+    vector&lt;int&gt; active(n);
+    iota(active.begin(), active.end(), 0);
+    long long messages = 0;
+    int phase = 0;
+
+    while ((int)active.size() &gt; 1) {
+        int probe = 1 &lt;&lt; phase;
+        vector&lt;int&gt; survivors;
+        for (int i=0;i&lt;(int)active.size();i++) {
+            int uid = uids[active[i]];
+            bool survives = true;
+            int sz = active.size();
+            for (int j=-probe;j&lt;=probe&amp;&amp;survives;j++)
+                if (uids[active[(i+j+sz)%sz]] &gt; uid) survives=false;
+            if (survives) survivors.push_back(active[i]);
+            messages += 4*probe;  // approximate
+        }
+        active = survivors; ++phase;
+    }
+    return {uids[active[0]], messages};
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; FPT Vertex Cover for Strategy Conflict Graph</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT Systems</span>
+      </div>
+      <div class="we-body">
+        <p>TTT runs 10 option strategies. Pairs of strategies conflict (share overlapping positions that violate risk limits). We need to find the minimum set of strategies to suspend to eliminate all conflicts &mdash; exactly a Vertex Cover problem. In practice, the number of conflicts is small ($k \leq 5$), making the FPT approach ideal.</p>
+        <div class="we-step">Kernelize first, then bounded search-tree</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">strategies = ['S01','S06','S08','S13','S15','S27','S27B','VOLT','CAL','COND']
+# Conflict pairs (strategy indices that cannot run simultaneously)
+conflicts = [(0,1),(0,2),(1,3),(2,4),(3,5),(4,6),(5,7),(6,8),(7,9)]
+
+# k = 3: can we suspend at most 3 strategies to resolve all conflicts?
+k = 3
+
+result = solve_vertex_cover(conflicts, len(strategies), k)
+if result:
+    print(f"Suspend: {[strategies[i] for i in result]}")
+    print(f"Suspended {len(result)} strategies (budget k={k})")
+else:
+    print(f"Cannot resolve all conflicts with k={k} suspensions")
+
+# FPT time: O(2^3 * 10 + 10*9) = O(80 + 90) = trivially fast
+# vs brute force: O(10^3 * 9) = O(9000) — also fast here but
+# for k=20, 10^20 * |E| vs 2^20 * V = 1M * V — massive difference</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> the bounded search-tree finds the exact minimum suspension set in $O(2^k \cdot n)$ time. For $k=3$, $n=10$: $80$ operations. For $k=20$, $n=10^6$: $2^{20} \cdot 10^6 \approx 10^{12}$ vs brute force $10^{120}$ — FPT wins completely when $k$ is small. The $O(k^2)$ kernel further shrinks the graph before the search tree.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      FPT algorithms appear in practice wherever NP-hard problems have small natural parameters. In quant finance: <strong>portfolio cardinality constraints</strong> (choose $k$ assets from $n$) are FPT in $k$. <strong>Graph coloring of strategy dependency graphs</strong> (schedule strategies into time-slots to avoid conflicts) is FPT in the number of colors. Distributed algorithms are the foundation of <strong>modern algo trading infrastructure</strong>: XTS WebSocket events are processed by distributed workers (Pashupati&rsquo;s execution system), requiring message ordering guarantees (similar to async BFS), leader election for primary/backup failover, and consistent state across nodes. Luby&rsquo;s MIS algorithm inspired randomised protocols in wireless network MAC layers (802.11 CSMA/CA).
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 12</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch12 / q01</span>
+        <span class="mcq-diff">&#9733; FPT Definition</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">An algorithm for $k$-Vertex Cover runs in time $O(V^k \cdot E)$ where $k$ is the cover size. Is this FPT?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Yes &mdash; for any fixed $k$, the running time is polynomial in $V$ and $E$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>No &mdash; the degree of the polynomial ($k$) depends on the parameter itself. FPT requires $f(k) \cdot n^{O(1)}$ where the exponent in $n$ is a constant independent of $k$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Yes &mdash; $V^k$ is bounded by $f(k) = V^k$ which depends only on the parameter</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>It depends on whether $k \leq \log V$ or $k > \log V$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B &mdash; NOT FPT.</strong><br/><br/>
+          FPT requires $f(k) \cdot n^{O(1)}$ where the exponent $O(1)$ is a <em>constant independent of $k$</em>. The algorithm $O(V^k \cdot E)$ has polynomial degree $k$ in $V$ &mdash; for different values of $k$, it&rsquo;s a different polynomial. For $k=1$: $O(VE)$; for $k=10$: $O(V^{10}E)$; for $k=100$: $O(V^{100}E)$. This is called XP (slice-wise polynomial) but is strictly weaker than FPT. It is polynomial for each fixed $k$ but NOT with the same polynomial across all $k$ values. The bounded search-tree algorithm $O(2^k \cdot V)$ IS FPT: $f(k) = 2^k$ and the polynomial factor is $n = V$ (degree 1, independent of $k$).
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch12 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Kernelization</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the $k$-Vertex Cover kernel, why does removing vertices of degree $> k$ not affect the answer?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>High-degree vertices are never useful for covering edges</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>A vertex of degree $> k$ must be in any cover of size $\leq k$: if we exclude it, we need one vertex for each of its $> k$ incident edges, exhausting the entire budget just for those edges</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>High-degree vertices are in the cover only when $k$ is large enough</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Removing them reduces the graph to a tree, which is easier to solve</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Vertex $v$ has degree $> k$. If $v \notin S$ (not in the cover), then all $> k$ incident edges must be covered by other vertices — one per edge, since no two incident edges share a non-$v$ endpoint. This requires $> k$ vertices just for $v$&rsquo;s edges, but the total cover budget is $k$. Contradiction: any cover of size $\leq k$ not containing $v$ is infeasible. Therefore $v$ must be in every valid cover. We can include $v$ in the cover unconditionally (it&rsquo;s in every optimal solution), remove it and its incident edges, and decrease $k$ by 1. This is correct (the answer is the same) and polynomial to compute.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch12 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Symmetry Breaking</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why is leader election impossible for deterministic, indistinguishable processes on a clique, but possible with UIDs?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>The clique has too many edges for messages to propagate efficiently</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Deterministic algorithms always select the last node alphabetically, causing conflicts</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Without UIDs, all processes are identical: they start in the same state, send the same messages, receive the same messages (symmetric graph), and make the same transitions — remaining forever identical. UIDs break symmetry by giving each process a unique initial state</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Leader election is impossible on all graphs without UIDs, not just cliques</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The proof is by symmetry induction: base case &mdash; round 0, all processes in the same start state. Inductive step &mdash; each process computes the same messages (same state), sends the same messages on each port, receives the same messages (symmetric clique), makes the same state transition. After $r$ rounds, all processes are in identical states. If the algorithm terminates and some process elects itself leader, all processes simultaneously elect themselves &mdash; contradicting &ldquo;exactly one leader.&rdquo;<br/><br/>
+          UIDs break this: processes start in different states (different UIDs), so the induction fails at round 0. After 1 round of UID exchange, each process knows a different set of information. The process with the maximum UID has unique knowledge (it saw its UID is the max) and can elect itself.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch12 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Synchronous vs Asynchronous BFS</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The synchronous BFS algorithm correctly builds a BFS spanning tree. Why does running the same algorithm asynchronously fail to produce a BFS tree (though it does produce a spanning tree)?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Messages are lost in asynchronous networks, causing nodes to miss their parent</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>Message delivery order is non-deterministic: a node may receive a message from a farther node before a message from a closer node, setting a non-shortest parent. The algorithm still produces a spanning tree but not necessarily a BFS tree (shortest-path tree)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>The algorithm produces cycles in asynchronous networks</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Asynchronous networks don&rsquo;t support parent pointers</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B.</strong><br/><br/>
+          In the synchronous BFS, round $r$ delivers all messages from distance-$r$ nodes simultaneously. A node sets its parent to the first message it receives, which is guaranteed to be from distance $r-1$ (the closest layer).<br/><br/>
+          Asynchronously, there is no guarantee on delivery order. A message from node $u$ at distance 3 might arrive at node $v$ before a message from node $w$ at distance 1 (because $w$&rsquo;s message experienced a slow channel). Node $v$ sets parent to $u$ (distance 3), resulting in a non-BFS spanning tree. The algorithm still builds a spanning tree (every node gets a parent, no cycles), but it may not be the BFS (shortest-path) tree.<br/><br/>
+          Fix: use relaxation (Bellman-Ford style) — nodes update their parent whenever they receive a message indicating a shorter path. This produces the correct SP tree but requires more messages and complex termination detection.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 12</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Run the bounded search-tree for $k$-Vertex Cover on the graph with edges $\{(1,2),(2,3),(3,4),(4,5),(5,1)\}$ (a 5-cycle) with $k=2$. Draw the full recursion tree showing both branches at each level, and find the minimum vertex cover. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Apply the $O(k^2)$ kernelization to the graph with $k=3$: $V=\{a,b,c,d,e,f,g,h\}$, edges $\{ab,ac,ad,ae,bc,cd,fg,gh\}$. Identify which vertices are forced into the cover (degree $>k$), compute the remaining kernel, and verify $|E'| \leq k^2$. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Simulate the clique leader election algorithm with UIDs on a clique of 5 processes with UIDs $\{17, 42, 8, 31, 55\}$. Show the single round of UID exchange, which process is elected, and calculate the exact message count. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement Luby&rsquo;s MIS algorithm and verify it finds a maximal independent set on a random $G(n=20, p=0.3)$ Erdős–Rényi random graph. Count the number of rounds needed and verify both independence (no two adjacent MIS nodes) and maximality (every non-MIS node has a MIS neighbour). <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Prove the kernelization theorem for vertex cover: after kernelization, the kernel has at most $2k^2$ vertices. Show the argument: (a) max degree $\leq k$ after forcing, (b) $|E'| \leq k^2$ else NO, (c) each edge has 2 endpoints so $|V'| \leq 2|E'| \leq 2k^2$. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Implement and simulate the synchronous BFS spanning tree algorithm on a 10-node graph. Track which round each node joins the tree, what its parent is, and the total message count. Verify it equals $O(|E|)$. Then simulate the same algorithm asynchronously with random delays on each edge — show that the resulting tree may not be a BFS tree. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The Hirschberg-Sinclair algorithm uses doubling probe distances to reduce ring leader election from $O(n^2)$ to $O(n\log n)$ messages. Prove: at the start of phase $r$, at most $n/2^r$ nodes are still active (have not lost a comparison). Use this to bound the total message count across all phases as $O(n\log n)$. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">The FPT-EPTAS connection: prove that if Vertex Cover has an EPTAS (runs in $f(1/\varepsilon) \cdot n^{O(1)}$ time giving $(1+\varepsilon)$-approximation), then the $k$-Vertex Cover decision problem is FPT. Specifically, set $\varepsilon = 1/(2k)$ and show this gives an exact answer for the decision problem in $f(2k) \cdot n^{O(1)}$ time. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Prove Luby&rsquo;s MIS terminates in $O(\log n)$ rounds in expectation. Key lemma: in each round, each edge is &ldquo;killed&rdquo; (at least one endpoint joins MIS or a neighbour does) with probability $\geq 1/2$. Show this implies the number of surviving edges halves in expectation each round, giving $O(\log |E|) = O(\log n)$ rounds. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">The W-hierarchy in parameterized complexity classifies problems by their hardness: FPT $\subseteq$ W[1] $\subseteq$ W[2] $\subseteq \ldots$. Clique parameterized by clique size is W[1]-complete (believed not FPT). Explain why this matters: (a) what would it mean if Clique were FPT? (b) Is Independent Set FPT? (c) What does W[1]-hardness of Clique imply about approximation? <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch11.html" class="ch-nav-btn">&larr; NP &amp; Approximation</a>
+    <a href="PROG_DAA_Ch13.html" class="ch-nav-btn primary">Next: Cryptography &amp; Cache-Oblivious &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 V^k NOT FPT: degree k depends on the parameter. FPT needs constant-degree poly.","✨ Degree > k forces vertex into cover: excluding it needs > k other vertices.","🏆 UIDs break symmetry: different initial states → different messages → leader determined.","🔥 Async BFS: non-deterministic delivery → node may set farther node as parent.","💡 FPT: f(k) * n^O(1) where O(1) is constant, not dependent on k.","📐 Kernel: force deg>k vertices, check |E|≤k^2, then |V|≤2k^2.","⚡ Luby's MIS: O(log n) rounds expected. Each round kills constant fraction of edges."];
+const wrongMsgs=["🌀 V^k means the exponent changes with k. FPT: f(k) * n^c where c is a FIXED constant.","📉 Degree > k vertex: if excluded, need one vertex per incident edge = > k vertices just for it.","😰 Without UIDs: all start same state, same transitions, same state forever — all elect themselves.","📐 Async BFS: still produces a spanning tree. Just not guaranteed to be the BFS (shortest-path) tree.","🤔 XP vs FPT: polynomial for each fixed k (XP) vs uniform polynomial across all k (FPT)."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

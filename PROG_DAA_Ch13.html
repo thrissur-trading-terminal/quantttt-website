@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cryptography &amp; Cache-Oblivious Algorithms &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-adv{background:rgba(45,37,96,0.08);color:var(--navy2);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Cryptography &amp; Cache-Oblivious Algorithms</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:100%"></div></div>
+      <span class="tb-progress-label">13 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-adv">Advanced</span>
+      <span class="ch-num">Chapter 13 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Cryptography &amp; Cache-Oblivious Algorithms</h1>
+    <p class="chapter-subtitle">Two seemingly unrelated topics united by one theme: algorithms designed for a specific model of the world. Cryptography designs algorithms that are hard to reverse without a secret key, building security from mathematical hardness. Cache-oblivious algorithms design for memory hierarchy without knowing the cache size, achieving optimal memory transfers automatically on any machine.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Part I &mdash; Cryptography</h3>
+
+    <h3>Hash Functions</h3>
+    <p>A cryptographic hash function $h: \{0,1\}^* \to \{0,1\}^d$ maps arbitrary-length inputs to fixed-length outputs. It is deterministic, public, and should behave like a random function (random oracle model). Common functions and output sizes: MD5 (128 bits, broken), SHA-1 (160 bits, weakened), SHA-256 (256 bits), SHA-512 (512 bits).</p>
+
+    <div class="callout callout-definition">
+      <strong>Desirable properties of cryptographic hash functions:</strong><br/>
+      <strong>1. One-way (preimage resistance):</strong> given $y$, hard to find $x$ with $h(x) = y$. Cost: $O(2^d)$.<br/>
+      <strong>2. Strong collision resistance:</strong> hard to find any $x \neq x'$ with $h(x) = h(x')$. Cost via birthday paradox: $O(2^{d/2})$.<br/>
+      <strong>3. Weak collision resistance (2nd preimage):</strong> given $x$, hard to find $x' \neq x$ with $h(x) = h(x')$.<br/>
+      <strong>4. Pseudorandomness:</strong> output indistinguishable from uniform random.<br/>
+      <strong>5. Non-malleability:</strong> given $h(x)$, hard to compute $h(f(x))$ for any $f$.<br/><br/>
+      Implications: $2 \Rightarrow 3$ (strong $\Rightarrow$ weak collision). $1 \not\Rightarrow 2$, $2 \not\Rightarrow 1$ (independent properties).
+    </div>
+
+    <h3>Symmetric-Key Encryption</h3>
+    <p>Alice and Bob share a secret key $k$. Encryption: $c = e_k(m)$. Decryption: $m = d_k(c)$. Examples: AES (Advanced Encryption Standard), DES, RC5. The core challenge: <strong>how do Alice and Bob agree on $k$ without ever meeting?</strong></p>
+
+    <h3>Diffie-Hellman Key Exchange</h3>
+    <div class="callout callout-definition">
+      Let $p$ be a large prime, $g$ a generator of $\mathbb{F}_p^*$. Both public.<br/><br/>
+      Alice picks secret $a$, sends $g^a \bmod p$. Bob picks secret $b$, sends $g^b \bmod p$.<br/>
+      Alice computes $(g^b)^a = g^{ab} \bmod p$. Bob computes $(g^a)^b = g^{ab} \bmod p$.<br/>
+      Shared key $k = g^{ab} \bmod p$. An eavesdropper sees $g^a$ and $g^b$ but cannot compute $g^{ab}$ (assuming the <strong>Discrete Logarithm Problem</strong> is hard).<br/><br/>
+      <strong>Vulnerability:</strong> man-in-the-middle attack. Eve intercepts both $g^a$ and $g^b$, establishing separate keys with Alice and Bob. Authentication is needed (public-key certificates).
+    </div>
+
+    <h3>RSA Public-Key Encryption</h3>
+    <div class="callout callout-definition">
+      <strong>Key generation:</strong> pick large primes $p, q$. Set $N = pq$, $\phi = (p-1)(q-1)$. Choose $e$ with $\gcd(e, \phi) = 1$ (e.g., $e = 65537$). Compute $d$ with $ed \equiv 1 \pmod{\phi}$ via extended Euclidean algorithm. Public key: $(N, e)$. Private key: $(d, p, q)$.<br/><br/>
+      <strong>Encryption:</strong> $c = m^e \bmod N$. <strong>Decryption:</strong> $m = c^d \bmod N$.<br/><br/>
+      <strong>Correctness:</strong> $c^d = (m^e)^d = m^{ed} = m^{1+k\phi} \equiv m \pmod N$ (by Fermat&rsquo;s little theorem for each prime factor). This works because $ed \equiv 1 \pmod \phi$ means $ed = 1 + k(p-1)(q-1)$.<br/><br/>
+      <strong>Security:</strong> relies on the hardness of factoring $N = pq$ (given $N$, find $p, q$) and the RSA problem (given $e$ and $c = m^e$, find $m$). Primality testing is in P (AKS 2004), but factoring remains believed hard.
+    </div>
+
+    <h3>Digital Signatures and MACs</h3>
+
+    <table style="width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.83rem;">
+      <thead><tr>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;"></th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:center;">Confidentiality</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:center;">Integrity</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);font-weight:600;">Symmetric</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;">Private-key encryption (AES)</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;">MAC (SHA3-keyed)</td></tr>
+        <tr><td style="padding:0.5rem 0.9rem;font-weight:600;">Asymmetric</td><td style="padding:0.5rem 0.9rem;text-align:center;">Public-key encryption (RSA)</td><td style="padding:0.5rem 0.9rem;text-align:center;">Digital signatures (RSA-sign)</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Digital signature:</strong> $\sigma = \text{Sign}(\text{sk}, m)$; anyone can verify with $\text{Verify}(\text{pk}, m, \sigma)$. RSA signature: $\sigma = m^d \bmod N$, verify $\sigma^e \equiv m \pmod N$. Naively broken by <em>multiplicative homomorphism</em>: $\sigma_1 \sigma_2 = (m_1 m_2)^d$ is a valid signature of $m_1 m_2$. Fix: hash-then-sign ($\sigma = h(m)^d \bmod N$).</p>
+
+    <p><strong>MAC (Message Authentication Code):</strong> symmetric integrity. $\sigma = \text{MAC}(k, m)$; verify by recomputing. Standard: HMAC = $h(k \| m)$ with SHA-3. Unlike a plain hash, MAC requires knowledge of $k$ to forge.</p>
+
+    <h3>Merkle Trees</h3>
+    <div class="callout callout-definition">
+      <strong>Problem:</strong> Alice stores $n$ files on an untrusted server. How to verify integrity with $O(1)$ trusted local storage?<br/><br/>
+      <strong>Merkle tree:</strong> binary tree where each leaf stores $h(x_i)$, each internal node stores $h(\text{left child} \| \text{right child})$. Alice stores only the root hash $\sigma_\text{root}$ locally (1 hash = $O(1)$ trusted storage).<br/><br/>
+      <strong>Verification of file $x_i$:</strong> Alice downloads $x_i$ and the $O(\log n)$ sibling hashes on the path to the root. She recomputes the path and checks against $\sigma_\text{root}$. If $x_i$ was modified, the leaf hash changes and propagates up &mdash; unless a hash collision exists.<br/><br/>
+      <strong>Update:</strong> modify $x_i$, recompute the $O(\log n)$ hashes on the path to root. Update $\sigma_\text{root}$.<br/><br/>
+      Used in: Bitcoin/blockchain (transaction integrity), git (commit object hashes), certificate transparency logs, and any distributed system needing integrity of large datasets.
+    </div>
+
+    <h3>NP-Completeness and Cryptography</h3>
+    <p>NP-hardness is about <em>worst-case</em> complexity. Cryptography needs <em>average-case</em> hardness &mdash; the problem must be hard for <em>typical</em> instances, not just contrived worst cases. This is why most NP-complete problems are poor bases for cryptography: 3-colorability is NP-complete but easy on random graphs (average-case trivial). The Merkle-Hellman knapsack system was broken using lattice basis reduction (low-density knapsacks). Modern cryptography is based on number-theoretic assumptions (discrete log, factoring) that appear hard on average for properly chosen parameters.</p>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">RSA key generation + Merkle tree + Diffie-Hellman demo</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import hashlib, math, random
+
+# ── RSA KEY GENERATION (educational, use cryptography library in prod) ──
+def extended_gcd(a, b):
+    """Extended Euclidean: returns (gcd, x, y) with a*x + b*y = gcd."""
+    if a == 0: return b, 0, 1
+    g, x, y = extended_gcd(b % a, a)
+    return g, y - (b//a)*x, x
+
+def mod_inverse(e, phi):
+    """Compute d = e^(-1) mod phi via extended Euclidean."""
+    g, d, _ = extended_gcd(e % phi, phi)
+    if g != 1: raise ValueError("No inverse — gcd != 1")
+    return d % phi
+
+def rsa_keygen(p, q, e=65537):
+    """
+    RSA key generation from two primes p, q.
+    Public key: (N, e). Private key: (d, p, q).
+    Security relies on difficulty of factoring N = p*q.
+    """
+    N   = p * q
+    phi = (p - 1) * (q - 1)
+    assert math.gcd(e, phi) == 1, "e must be coprime to phi"
+    d   = mod_inverse(e, phi)
+    return (N, e), (d, p, q)   # (public_key, private_key)
+
+def rsa_encrypt(m, public_key):
+    N, e = public_key
+    return pow(m, e, N)         # c = m^e mod N
+
+def rsa_decrypt(c, private_key):
+    d, p, q = private_key
+    N = p * q
+    return pow(c, d, N)         # m = c^d mod N
+
+# Example (use large primes in practice!)
+pk, sk = rsa_keygen(61, 53)
+m   = 42
+c   = rsa_encrypt(m, pk)
+m2  = rsa_decrypt(c, sk)
+print(f"Original: {m}, Ciphertext: {c}, Decrypted: {m2}")  # 42
+
+
+# ── MERKLE TREE ──────────────────────────────────────────────────────
+class MerkleTree:
+    """
+    Merkle tree for integrity verification of n data blocks.
+    Trusted storage: O(1) — just the root hash.
+    Verification of block i: O(log n) — path to root.
+    Update of block i: O(log n) — recompute path.
+    """
+    def __init__(self, blocks):
+        """blocks: list of bytes objects."""
+        self.n      = len(blocks)
+        self.leaves = [hashlib.sha256(b).hexdigest() for b in blocks]
+        self.tree   = self._build(self.leaves)
+
+    def _hash_pair(self, left, right):
+        return hashlib.sha256((left+right).encode()).hexdigest()
+
+    def _build(self, layer):
+        if len(layer) == 1: return layer
+        if len(layer) % 2 == 1: layer = layer + [layer[-1]]  # duplicate last
+        next_layer = [self._hash_pair(layer[i], layer[i+1])
+                      for i in range(0, len(layer), 2)]
+        return self._build(next_layer) + layer
+
+    @property
+    def root(self):
+        return self.tree[0]  # root hash (store locally — O(1))
+
+    def proof(self, i):
+        """Generate Merkle proof: O(log n) sibling hashes."""
+        idx   = len(self.tree) - self.n + i
+        path  = []
+        while idx > 0:
+            sibling = idx - 1 if idx % 2 == 1 else idx + 1
+            if sibling < len(self.tree):
+                path.append((sibling, self.tree[sibling]))
+            idx = (idx - 1) // 2
+        return path
+
+    def verify(self, block, i, proof, root):
+        """Verify block i against stored root hash. O(log n)."""
+        current = hashlib.sha256(block).hexdigest()
+        idx     = len(self.tree) - self.n + i
+        for sib_idx, sib_hash in proof:
+            if sib_idx == idx - 1:  # sibling is left
+                current = self._hash_pair(sib_hash, current)
+            else:
+                current = self._hash_pair(current, sib_hash)
+            idx = (idx - 1) // 2
+        return current == root
+
+# Example: 4 files
+files  = [b"file0", b"file1", b"file2", b"file3"]
+tree   = MerkleTree(files)
+print(f"Root hash: {tree.root[:16]}...")
+
+proof  = tree.proof(1)
+valid  = tree.verify(b"file1", 1, proof, tree.root)
+print(f"Proof valid: {valid}")           # True
+
+tampered = tree.verify(b"TAMPERED", 1, proof, tree.root)
+print(f"Tampered detected: {not tampered}")  # True
+
+
+# ── DIFFIE-HELLMAN KEY EXCHANGE ───────────────────────────────────────
+def diffie_hellman(p, g):
+    """
+    Diffie-Hellman key exchange over Z_p^*.
+    p: large prime, g: generator.
+    Returns (alice_secret, bob_secret, shared_key).
+    Security: discrete logarithm problem in Z_p^*.
+    """
+    a = random.randint(2, p-2)  # Alice's secret
+    b = random.randint(2, p-2)  # Bob's secret
+    A = pow(g, a, p)            # Alice sends g^a mod p
+    B = pow(g, b, p)            # Bob sends g^b mod p
+    alice_key = pow(B, a, p)    # Alice computes (g^b)^a = g^ab mod p
+    bob_key   = pow(A, b, p)    # Bob computes (g^a)^b = g^ab mod p
+    assert alice_key == bob_key
+    return a, b, alice_key
+
+p  = 23       # toy prime (use 2048-bit primes in practice)
+g  = 5        # generator
+_, _, k = diffie_hellman(p, g)
+print(f"DH shared key: {k}")</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// RSA + Diffie-Hellman + Merkle tree (conceptual sketch)
+// Production: use OpenSSL, libsodium, or Botan
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+using namespace std;
+
+// Modular exponentiation: base^exp mod m — O(log exp)
+uint64_t mod_pow(uint64_t base, uint64_t exp, uint64_t mod) {
+    uint64_t result = 1;
+    base %= mod;
+    while (exp &gt; 0) {
+        if (exp &amp; 1) result = (__uint128_t)result * base % mod;
+        base = (__uint128_t)base * base % mod;
+        exp &gt;&gt;= 1;
+    }
+    return result;
+}
+
+// Extended GCD: returns gcd(a,b), sets x,y s.t. ax+by=gcd
+int64_t ext_gcd(int64_t a, int64_t b, int64_t&amp; x, int64_t&amp; y) {
+    if (a==0){x=0;y=1;return b;}
+    int64_t x1,y1;
+    int64_t g = ext_gcd(b%a, a, x1, y1);
+    x = y1 - (b/a)*x1; y = x1;
+    return g;
+}
+
+// Mod inverse: e^(-1) mod phi
+int64_t mod_inv(int64_t e, int64_t phi) {
+    int64_t x, y;
+    ext_gcd(e, phi, x, y);
+    return (x % phi + phi) % phi;
+}
+
+struct RSAKey {
+    uint64_t N, e;  // public
+    uint64_t d;     // private
+};
+
+RSAKey rsa_keygen(uint64_t p, uint64_t q, uint64_t e=65537) {
+    uint64_t N   = p * q;
+    uint64_t phi = (p-1)*(q-1);
+    return {N, e, (uint64_t)mod_inv(e, phi)};
+}
+
+uint64_t rsa_enc(uint64_t m, uint64_t N, uint64_t e) { return mod_pow(m,e,N); }
+uint64_t rsa_dec(uint64_t c, uint64_t N, uint64_t d) { return mod_pow(c,d,N); }
+
+// Merkle tree root (simplified — real impl uses SHA-256)
+string merkle_root(vector&lt;string&gt; hashes) {
+    while (hashes.size() &gt; 1) {
+        if (hashes.size()%2) hashes.push_back(hashes.back());
+        vector&lt;string&gt; next;
+        for (size_t i=0;i&lt;hashes.size();i+=2)
+            next.push_back("H(" + hashes[i] + "|" + hashes[i+1] + ")");
+        hashes = next;
+    }
+    return hashes[0];
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Part II &mdash; Cache-Oblivious Algorithms</h3>
+
+    <h3>Memory Hierarchy and the I/O Model</h3>
+    <p>Modern computers have a hierarchy: CPU registers (bytes, ~1ns) → L1 cache (~10KB, ~1ns) → L2 (~100KB, ~10ns) → L3 (~MB, ~100ns) → RAM (~GB, ~100ns) → disk (~TB, ~10ms). Each level is larger and slower. Memory is transferred in <em>blocks</em> of $B$ words. The key cost metric: number of <strong>memory transfers</strong> (block reads/writes), not raw operations.</p>
+
+    <div class="callout callout-definition">
+      <strong>External Memory (EM) model:</strong> two-level memory (cache of size $M$, disk of infinite size). Cache has $M/B$ blocks of $B$ words each. Algorithm explicitly reads/writes blocks. Count: memory transfers $MT(N)$.<br/><br/>
+      <strong>Cache-oblivious (CO) model:</strong> same as EM but the algorithm does NOT know $B$ or $M$. Memory access to any word automatically fetches the containing block (LRU eviction if cache is full). Algorithm must achieve good $MT(N)$ without knowing the cache parameters. An algorithm that works optimally in CO model works optimally on any machine automatically.
+    </div>
+
+    <h3>LRU Is Near-Optimal</h3>
+    <p>Why LRU? Sleator-Tarjan 1985: $\text{LRU}_M \leq 2 \cdot \text{OPT}_{M/2}$. Partition the block-access sequence into maximal phases of $M/B$ distinct blocks. LRU uses $\leq M/B$ transfers per phase. OPT with $M/2$ cache must use $\geq M/(2B)$ per phase (needs at least half the blocks fresh each phase). So LRU with $M$ is within factor 2 of OPT with $M/2$.</p>
+
+    <h3>Scanning: $O(N/B + 1)$</h3>
+    <p>Sequential scan of $N$ elements: $\Theta(N/B + 1)$ transfers. The $+1$ covers the case $N &lt; B$. Cannot do better (must read each element at least once). Cache-oblivious: can&rsquo;t align with block boundary, so gets $\lceil N/B \rceil + 1 = O(N/B + 1)$ — same asymptotically.</p>
+
+    <h3>Cache-Oblivious Median Finding</h3>
+    <p>Apply the Median of Medians algorithm (Ch1) and analyse its memory transfers. Let $MT(N)$ be the transfers needed.</p>
+    <div class="callout callout-definition">
+      Steps: (1) partition into groups of 5 [free — already in cache], (2) sort each group [scan: $O(N/B+1)$], (3) recursive median of $N/5$ medians [$MT(N/5)$], (4) partition by median [3 parallel scans: $O(N/B+1)$], (5) recurse on $\leq 7N/10$ elements [$MT(7N/10)$].<br/><br/>
+      Recurrence: $MT(N) = MT(N/5) + MT(7N/10) + O(N/B + 1)$.<br/>
+      Base case: $MT(O(B)) = O(1)$ (fits in $O(1)$ blocks).<br/>
+      Solution: $MT(N) = O(N/B + 1)$ — optimal (must read all elements).
+    </div>
+
+    <h3>Cache-Oblivious Matrix Multiplication</h3>
+    <p>Naive matrix multiplication ($N^3$ operations): inner loop accesses one row of $X$ and one column of $Y$ per output element. If $Y$ is in row-major order, accessing column $j$ skips $N$ words per step: $O(N^2)$ cache misses for one column, $O(N^3)$ total. Very poor locality.</p>
+
+    <div class="callout callout-definition">
+      <strong>Cache-oblivious blocked multiplication:</strong> recursively divide $N\times N$ matrices into $N/2 \times N/2$ submatrices. Multiply via 8 recursive calls of size $N/2$ and add results.
+      $$MT(N) = 8 \cdot MT(N/2) + O(N^2/B + 1)$$
+      Base case: when three matrices fit in cache ($3 \cdot (N/2)^2 \leq M$, i.e., $N = O(\sqrt{M})$): $MT(O(\sqrt{M})) = O(M/B)$ (one scan fills cache).<br/><br/>
+      Recursion tree: cost per level is geometrically increasing $N^2/B, 8(N/2)^2/B, \ldots$ — leaves dominate. Number of leaves when $N = O(\sqrt{M})$: $(N/\sqrt{M})^3 = O(N^3/M^{3/2})$. Cost per leaf: $O(M/B)$.<br/><br/>
+      Total: $MT(N) = O\!\left(\frac{N^3}{B\sqrt{M}}\right)$.<br/><br/>
+      This matches the information-theoretic lower bound for cache-oblivious matrix multiply — optimal.
+    </div>
+
+    <h3>Cache-Oblivious Search: van Emde Boas Layout</h3>
+    <p>Binary search on $N$ sorted elements: naive layout gives $O(\log N)$ transfers (each comparison likely a cache miss). B-tree gives $O(\log_B N)$ but requires knowing $B$.</p>
+
+    <div class="callout callout-definition">
+      <strong>van Emde Boas (vEB) tree layout</strong> [Prokop 1999]: recursively lay out a complete BST by splitting at the middle level of edges. Each half-tree occupies a contiguous memory region. Crucially: when the recursion reaches a subtree of $\leq B$ nodes, it occupies $\leq 2$ blocks of memory.<br/><br/>
+      <strong>Search cost:</strong> a root-to-leaf search path visits $O(\log N)$ subtrees of size $\leq B$. Each such subtree occupies $\leq 2$ blocks. Total: $O(\log_B N)$ memory transfers — matching B-tree performance without knowing $B$!<br/><br/>
+      This extends to dynamic B-trees with $O(\log_B N)$ insert/delete (cache-obliviously).
+    </div>
+
+    <h3>Cache-Oblivious Sorting</h3>
+    <p>Optimal sorting in the EM model: $\Theta\!\left(\frac{N}{B}\log_{M/B}\frac{N}{B}\right)$ transfers. Binary mergesort is cache-oblivious but not optimal:</p>
+
+    <div class="callout callout-definition">
+      <strong>Binary mergesort:</strong> merge is 3 parallel scans.<br/>
+      $MT(N) = 2 \cdot MT(N/2) + O(N/B + 1)$, $MT(M) = O(M/B)$.<br/>
+      Solution: $MT(N) = O\!\left(\frac{N}{B}\log_{M/B}\frac{N}{M}\right)$ — better than naive but has extra $\log$ factor vs optimal.<br/><br/>
+      <strong>$M/B$-way mergesort (optimal in EM):</strong> split into $M/B$ subarrays, recursively sort, merge $M/B$-way (keeping one block per run in cache).<br/>
+      $MT(N) = O\!\left(\frac{N}{B}\log_{M/B}\frac{N}{B}\right)$ — optimal.<br/><br/>
+      <strong>Cache-oblivious sorting (Funnelsort):</strong> with the <em>tall cache assumption</em> $M = \Omega(B^{1+\varepsilon})$, an $N^\varepsilon$-way mergesort using recursive &ldquo;funnel&rdquo; merges achieves the optimal $O\!\left(\frac{N}{B}\log_{M/B}\frac{N}{B}\right)$ transfers without knowing $B$ or $M$.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Cache-oblivious matrix multiply + vEB tree layout + transfer counting</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import numpy as np
+
+# ── CACHE-OBLIVIOUS MATRIX MULTIPLICATION ────────────────────────────
+# Track memory transfers (simulated with block access counting)
+class CacheSimulator:
+    """Simplified cache simulator to count block transfers."""
+    def __init__(self, B=8, M=64):
+        self.B, self.M = B, M
+        self.cache = {}     # block_id -> last_access_time
+        self.time  = 0
+        self.transfers = 0
+
+    def access(self, addr):
+        """Access a word at address; fetch block if not in cache."""
+        block_id = addr // self.B
+        if block_id not in self.cache:
+            self.transfers += 1
+            if len(self.cache) >= self.M // self.B:
+                # LRU eviction
+                lru = min(self.cache, key=self.cache.get)
+                del self.cache[lru]
+            self.cache[block_id] = self.time
+        else:
+            self.cache[block_id] = self.time
+        self.time += 1
+
+
+def co_matmul(X, Y, B=8, M=64):
+    """
+    Cache-oblivious matrix multiplication via recursive subdivision.
+    No explicit blocking — the recursion naturally achieves cache-efficiency.
+    MT(N) = O(N^3 / (B * sqrt(M))) — optimal.
+
+    For demonstration: pure Python recursive; NumPy is much faster in practice.
+    """
+    n = len(X)
+    if n <= 1:
+        return [[X[0][0] * Y[0][0]]]
+
+    # Divide matrices into four n/2 x n/2 quadrants
+    h = n // 2
+    A11, A12 = [r[:h] for r in X[:h]], [r[h:] for r in X[:h]]
+    A21, A22 = [r[:h] for r in X[h:]], [r[h:] for r in X[h:]]
+    B11, B12 = [r[:h] for r in Y[:h]], [r[h:] for r in Y[:h]]
+    B21, B22 = [r[:h] for r in Y[h:]], [r[h:] for r in Y[h:]]
+
+    def add(P, Q):
+        return [[P[i][j]+Q[i][j] for j in range(len(P[0]))]
+                for i in range(len(P))]
+
+    # 8 recursive multiplications (like standard divide-and-conquer)
+    C11 = add(co_matmul(A11,B11), co_matmul(A12,B21))
+    C12 = add(co_matmul(A11,B12), co_matmul(A12,B22))
+    C21 = add(co_matmul(A21,B11), co_matmul(A22,B21))
+    C22 = add(co_matmul(A21,B12), co_matmul(A22,B22))
+
+    # Combine quadrants
+    result = [[0]*n for _ in range(n)]
+    for i in range(h):
+        result[i][:h]   = C11[i]
+        result[i][h:]   = C12[i]
+        result[h+i][:h] = C21[i]
+        result[h+i][h:] = C22[i]
+    return result
+
+
+# ── VAN EMDE BOAS TREE LAYOUT ─────────────────────────────────────────
+def veb_layout(sorted_arr):
+    """
+    Lay out a sorted array in van Emde Boas (vEB) tree order.
+    This gives O(log_B N) memory transfers for binary search,
+    without knowing B — cache-oblivious.
+
+    Recursively: take middle element as root, recurse on left half
+    (bottom subtrees) and right half (top subtrees).
+    Each subtree of size B fits in O(1) cache blocks.
+    """
+    n = len(sorted_arr)
+    if n <= 1:
+        return sorted_arr
+    if n == 2:
+        return [sorted_arr[0], sorted_arr[1]]
+
+    # Split at the midpoint of tree height (not array midpoint)
+    import math
+    h     = int(math.log2(n + 1))    # height of BST
+    h_top = h // 2
+    h_bot = h - h_top
+    top_size = (1 << h_top) - 1      # nodes in top subtree
+    bot_size = (1 << h_bot) - 1      # nodes in each bottom subtree
+
+    # Root of top subtree is at position top_size in a BFS ordering
+    # vEB layout recursively arranges bottom subtrees, then top subtree
+    top_subtree = sorted_arr[:top_size + 1]
+    bot_subtrees = [sorted_arr[top_size + 1 + i*(bot_size+1):
+                               top_size + 1 + (i+1)*(bot_size+1)]
+                    for i in range(top_size + 1)]
+
+    result = []
+    for sub in bot_subtrees:
+        result.extend(veb_layout(sub))
+    result.extend(veb_layout(top_subtree))
+    return result
+
+
+# ── BINARY MERGESORT TRANSFER ANALYSIS ───────────────────────────────
+def mergesort_transfers(N, B, M):
+    """
+    Estimate memory transfers for binary mergesort.
+    MT(N) = O(N/B * log_{M/B}(N/M)) — not optimal.
+    Optimal: N/B * log_{M/B}(N/B).
+    """
+    if N <= M:
+        return N / B    # fits in cache: O(N/B) to load
+    # log_{M/B}(N/M) levels, each costs N/B
+    levels = math.log(N/M, M/B)
+    return N / B * levels
+
+import math
+N, B, M = 1_000_000, 64, 8192
+print(f"Binary mergesort transfers: {mergesort_transfers(N,B,M):.0f}")
+opt = N/B * math.log(N/B, M/B)
+print(f"Optimal: {opt:.0f}")
+print(f"Ratio: {mergesort_transfers(N,B,M)/opt:.2f}")</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Cache-oblivious matrix multiply — O(N^3 / (B*sqrt(M)))
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+using Matrix = vector&lt;vector&lt;double&gt;&gt;;
+
+// In-place C += A * B (for submatrices specified by offsets)
+void co_matmul(const Matrix&amp; A, const Matrix&amp; B, Matrix&amp; C,
+               int ra, int ca, int rb, int cb, int rc, int cc, int n) {
+    if (n == 1) {
+        C[rc][cc] += A[ra][ca] * B[rb][cb];
+        return;
+    }
+    int h = n / 2;
+    // 8 recursive calls — recursion achieves cache efficiency
+    // When submatrices fit in cache, stops incurring misses
+    co_matmul(A,B,C, ra,   ca,   rb,   cb,   rc,   cc,   h); // C11 += A11*B11
+    co_matmul(A,B,C, ra,   ca+h, rb+h, cb,   rc,   cc,   h); // C11 += A12*B21
+    co_matmul(A,B,C, ra,   ca,   rb,   cb+h, rc,   cc+h, h); // C12 += A11*B12
+    co_matmul(A,B,C, ra,   ca+h, rb+h, cb+h, rc,   cc+h, h); // C12 += A12*B22
+    co_matmul(A,B,C, ra+h, ca,   rb,   cb,   rc+h, cc,   h); // C21 += A21*B11
+    co_matmul(A,B,C, ra+h, ca+h, rb+h, cb,   rc+h, cc,   h); // C21 += A22*B21
+    co_matmul(A,B,C, ra+h, ca,   rb,   cb+h, rc+h, cc+h, h); // C22 += A21*B12
+    co_matmul(A,B,C, ra+h, ca+h, rb+h, cb+h, rc+h, cc+h, h); // C22 += A22*B22
+}
+// MT(N) = 8*MT(N/2) + O(N^2/B)
+// Base: MT(sqrt(M)) = O(M/B)
+// Total: O(N^3 / (B*sqrt(M))) — optimal cache-oblivious bound</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Crypto in quantitative finance: HMAC for trade message authentication</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">import hmac, hashlib, json, time
+
+# ── HMAC FOR TRADE MESSAGE AUTHENTICATION ────────────────────────────
+def sign_order(order_dict, secret_key: bytes) -> str:
+    """
+    HMAC-SHA256 authentication of a trade order message.
+    Used in XTS API, FIX protocol, and most broker APIs.
+
+    Properties:
+    - Correctness: same key always produces same MAC
+    - Unforgeability: without secret_key, cannot produce valid MAC
+    - Unlike plain hash: adversary who knows MAC(k, m1) cannot
+      compute MAC(k, m2) for any new m2 (security from secret key)
+    """
+    message = json.dumps(order_dict, sort_keys=True).encode()
+    mac = hmac.new(secret_key, message, hashlib.sha256).hexdigest()
+    return mac
+
+def verify_order(order_dict, received_mac: str, secret_key: bytes) -> bool:
+    """
+    Verify HMAC. Use hmac.compare_digest to prevent timing attacks.
+    Timing attack: if we return early on first mismatch, an attacker
+    can deduce the correct MAC one byte at a time by measuring response time.
+    """
+    expected = sign_order(order_dict, secret_key)
+    return hmac.compare_digest(expected, received_mac)  # constant-time compare!
+
+
+# Example: XTS-style order authentication
+secret_key = b'ttt-secret-2025-xts-api-key'
+
+order = {
+    'order_id':   'TTT-20250327-001',
+    'instrument': 'NIFTY25MAR24000CE',
+    'quantity':   50,
+    'price':      245.50,
+    'side':       'BUY',
+    'timestamp':  int(time.time()),
+}
+mac = sign_order(order, secret_key)
+print(f"Order MAC (first 16 chars): {mac[:16]}...")
+
+# Verify legitimate order
+print(f"Legitimate order valid: {verify_order(order, mac, secret_key)}")
+
+# Tampered order (e.g., price changed by attacker)
+tampered_order = dict(order, price=1.0)   # attacker changes price
+print(f"Tampered order valid: {verify_order(tampered_order, mac, secret_key)}")
+# False — HMAC detects tampering
+
+
+# ── COMMITMENT SCHEME ─────────────────────────────────────────────────
+import os
+def commit(value: str) -> tuple:
+    """
+    Cryptographic commitment: hide value v until reveal.
+    Used in: sealed-bid auctions, fair coin flips, zero-knowledge proofs.
+    commit(v) = (commitment=h(r||v), randomness=r) — HIDING: h(r||v) leaks nothing
+    reveal(v, r): check commitment = h(r||v) — BINDING: can't find v' with h(r||v')=h(r||v)
+    """
+    r = os.urandom(32)   # 256 bits of randomness (prevents brute force)
+    commitment = hashlib.sha256(r + value.encode()).hexdigest()
+    return commitment, r
+
+def reveal(value: str, randomness: bytes, commitment: str) -> bool:
+    """Verify that commitment was to value."""
+    expected = hashlib.sha256(randomness + value.encode()).hexdigest()
+    return hmac.compare_digest(expected, commitment)
+
+# TTT use case: sealed-bid order submission
+bid_price = "24500"
+c, r = commit(bid_price)
+print(f"Committed to bid. Commitment: {c[:16]}...")
+# ... later, when all bids are submitted ...
+print(f"Reveal valid: {reveal(bid_price, r, c)}")       # True
+print(f"Cheat attempt: {reveal('23000', r, c)}")        # False</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// HMAC-SHA256 for order authentication (conceptual)
+// Production: use OpenSSL HMAC_SHA256 or libsodium crypto_auth
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include &lt;openssl/hmac.h&gt;  // link with -lssl -lcrypto
+
+string hmac_sha256(const string&amp; key, const string&amp; msg) {
+    unsigned char result[32];
+    unsigned int len = 32;
+    HMAC(EVP_sha256(),
+         key.data(), key.size(),
+         (unsigned char*)msg.data(), msg.size(),
+         result, &amp;len);
+    string hex;
+    char buf[3];
+    for (int i=0;i&lt;32;i++) { sprintf(buf,"%02x",result[i]); hex+=buf; }
+    return hex;
+}
+
+// Constant-time comparison (prevent timing attacks)
+bool secure_compare(const string&amp; a, const string&amp; b) {
+    if (a.size() != b.size()) return false;
+    unsigned char diff = 0;
+    for (size_t i=0;i&lt;a.size();i++) diff |= a[i]^b[i];
+    return diff == 0;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Cache-Oblivious vs Naïve Matrix Multiply on Large Vol Surface</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; Pashupati / TTT</span>
+      </div>
+      <div class="we-body">
+        <p>Pashupati&rsquo;s options analytics system computes implied vol surface factors daily: $V = A \cdot B$ where $A$ is a $512 \times 512$ matrix of factor loadings and $B$ is a $512 \times 512$ matrix of factor returns. Compare naïve vs cache-oblivious performance.</p>
+        <div class="we-step">Memory transfer analysis for $N=512$, $B=64$ words, $M=4096$ words</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">import math
+
+N, B, M = 512, 64, 4096   # matrix size, block size (words), cache (words)
+
+# Naïve row × column: column of Y has N=512 elements, stride N apart
+# Each column element is a cache miss → O(N^2) transfers just for one output row
+naive_transfers = N**3 / B   # assuming perfect row access, bad column access
+print(f"Naïve (best case):    {naive_transfers:,.0f} transfers")
+
+# Cache-oblivious recursive: MT(N) = O(N^3 / (B * sqrt(M)))
+co_transfers = N**3 / (B * math.sqrt(M))
+print(f"Cache-oblivious:      {co_transfers:,.0f} transfers")
+print(f"Speedup factor:       {naive_transfers / co_transfers:.1f}×")
+
+# sqrt(M) = sqrt(4096) = 64: speedup = 64x for this config
+# For N=1024, M=16384, B=64: speedup = sqrt(16384/64) = 16x
+
+# Memory transfer lower bound: Omega(N^3 / (B*sqrt(M)))
+lb = N**3 / (B * math.sqrt(M))
+print(f"Lower bound:          {lb:,.0f} transfers")
+print(f"CO achieves optimal: {abs(co_transfers - lb) < 1}")  # True</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> for $N=512$, $B=64$, $M=4096$: naïve transfers $\approx 33.5$ million, cache-oblivious $\approx 524$K — a $64\times$ improvement, equal to $\sqrt{M/B} = \sqrt{64} = 8$... wait, $\sqrt{M} = 64$, giving $64\times$. The CO algorithm is provably optimal. For Pashupati&rsquo;s daily Greeks calculation on 512-strike surfaces, this means the computation fits in L3 cache instead of spilling to RAM, reducing wall-clock time from ~seconds to ~milliseconds.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      <strong>Cryptography in Indian fintech:</strong> SEBI mandates encrypted communication for all broker API traffic. XTS API uses HMAC-SHA256 for order authentication (same structure as our demo above). The Diffie-Hellman key exchange is the basis of TLS 1.3 (used by every HTTPS connection to NSE/BSE). Merkle trees underpin the audit trails required by SEBI&rsquo;s data localisation rules — each trade record is part of a Merkle tree whose root is published to prevent retroactive modification.<br/><br/>
+      <strong>Cache-oblivious algorithms in finance:</strong> large covariance matrix operations (factor models, risk attribution) are memory-bandwidth-bound. NumPy/BLAS uses blocked matrix multiplication internally — essentially the cache-oblivious algorithm above with explicit block sizes tuned for the target CPU. For custom operations (e.g., Heston calibration with $500\times500$ implied vol surfaces), cache-oblivious divide-and-conquer implementations outperform naïve loops by $10\text{–}100\times$ on modern CPUs due to cache efficiency.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 13</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch13 / q01</span>
+        <span class="mcq-diff">&#9733; Hash Properties</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why can a birthday attack find a collision in a $d$-bit hash function in $O(2^{d/2})$ operations, not $O(2^d)$?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Because the hash function has a backdoor that allows finding collisions in $O(2^{d/2})$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>By the birthday paradox: among $O(2^{d/2})$ random inputs, a collision is likely because pairwise collision probability sums to $O(1)$ — we&rsquo;re finding any collision, not a collision with a specific target</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Because we can enumerate all $2^d$ outputs in $O(2^{d/2})$ using a sorted lookup table</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>The $O(2^d)$ bound is for preimage; collision always takes $O(2^{d/2})$ by definition</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B &mdash; the birthday paradox.</strong><br/><br/>
+          Preimage resistance (find $x$ with $h(x) = y$ for a specific $y$) requires $O(2^d)$ random tries. Collision resistance (find any $x \neq x'$ with $h(x) = h(x')$) only requires $O(2^{d/2})$ random inputs. Why? For $k$ random inputs, there are $\binom{k}{2} \approx k^2/2$ pairs. Each pair collides with probability $1/2^d$. Expected collisions $\approx k^2/(2 \cdot 2^d)$. Setting this to 1: $k \approx 2^{d/2}$. This is the birthday paradox: with $2^{d/2}$ people, there&rsquo;s a ~50% chance two share a birthday (with $2^d$ possible birthdays). SHA-256 targets $2^{128}$ collision resistance (not $2^{256}$) precisely because of this.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch13 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; RSA Correctness</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">RSA decryption computes $c^d \bmod N$ where $c = m^e \bmod N$ and $ed \equiv 1 \pmod{(p-1)(q-1)}$. Why does $m^{ed} \equiv m \pmod N$?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Because $ed = 1$, so $m^{ed} = m^1 = m$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$ed = 1 + k(p-1)(q-1)$, so $m^{ed} = m \cdot (m^{p-1})^{k(q-1)} \equiv m \cdot 1^{k(q-1)} \equiv m \pmod p$ by Fermat; similarly mod $q$; by CRT, $m^{ed} \equiv m \pmod{pq}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Because $N$ is prime, so Fermat&rsquo;s little theorem applies directly</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>It only works when $\gcd(m, N) = 1$; for other $m$, RSA fails</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B &mdash; Fermat&rsquo;s little theorem + Chinese Remainder Theorem.</strong><br/><br/>
+          Since $ed \equiv 1 \pmod{(p-1)(q-1)}$, write $ed = 1 + k(p-1)(q-1)$. By Fermat&rsquo;s little theorem for prime $p$: $m^{p-1} \equiv 1 \pmod p$ (when $\gcd(m,p)=1$). So $m^{ed} = m^{1+k(p-1)(q-1)} = m \cdot (m^{p-1})^{k(q-1)} \equiv m \cdot 1 \equiv m \pmod p$. Similarly $m^{ed} \equiv m \pmod q$. When $\gcd(m,p)=p$ (i.e., $p \mid m$): both sides are $0 \bmod p$. By CRT (since $p,q$ coprime): $m^{ed} \equiv m \pmod{N=pq}$. This is why RSA uses two primes: to apply Fermat&rsquo;s theorem to each prime factor of $N$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch13 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Cache-Oblivious Matrix Multiply</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The cache-oblivious matrix multiplication achieves $O(N^3 / (B\sqrt{M}))$ transfers. Why does the base case $MT(O(\sqrt{M})) = O(M/B)$ give this bound, and why is this optimal?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Because the recursion tree has $O(N^3/M^{3/2})$ leaves, each costing $O(1)$, giving $O(N^3/M^{3/2})$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>When $N = O(\sqrt{M})$, three $N\times N$ matrices fit in cache ($3N^2 \leq M$): load them once in $O(M/B)$ transfers. The recursion tree has $(N/\sqrt{M})^3$ leaves, each costing $O(M/B)$: total $O(N^3/M^{3/2}) \cdot O(M/B) = O(N^3/(B\sqrt{M}))$. Optimal because any algorithm must read $N^3$ data with at most $B$ useful operations per transfer</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Because the recursion terminates when $N = B$, giving base cost $O(B^3/B)= O(B^2)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The $\sqrt{M}$ factor comes from the $\sqrt{M}$ registers in the CPU</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The recursion bottoms out when three $N\times N$ matrices fit in cache: $3N^2 \leq M \Rightarrow N = O(\sqrt{M/3}) = O(\sqrt{M})$. At that point, load all three matrices once: $3N^2/B = O(M/B)$ transfers. Then all $N^3$ multiplications are done from cache (0 additional transfers).<br/><br/>
+          Number of leaf sub-problems: the recursion tree has depth $\log_2(N/\sqrt{M})$ and branching factor 8, giving $(N/\sqrt{M})^{\log_2 8} = (N/\sqrt{M})^3$ leaves. Total: $(N/\sqrt{M})^3 \cdot O(M/B) = O(N^3 M^{-3/2} M B^{-1}) = O(N^3 / (B\sqrt{M}))$.<br/><br/>
+          Optimality: by an information-theoretic argument, computing $N^3$ multiply-adds requires reading $\Omega(N^3)$ memory words; with block size $B$ and reuse from a cache of size $M$, you need $\Omega(N^3/(B\sqrt{M}))$ transfers. This matches.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch13 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; NP-hardness vs Cryptographic Hardness</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why is NP-completeness an unreliable basis for cryptography, even though it guarantees hardness in some sense?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>NP-complete problems can always be solved in polynomial time with approximation algorithms</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>NP-completeness guarantees worst-case hardness (hard for some instances), but cryptography needs average-case hardness (hard for random instances chosen as keys). An NP-complete problem may be easy on almost all instances used as keys</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>NP-complete problems are always in P for special input structures used in cryptography</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Cryptography only uses problems from P, not NP-complete problems</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B &mdash; worst-case vs average-case hardness.</strong><br/><br/>
+          NP-completeness says: there exist instances of the problem that are hard (no polynomial algorithm solves all of them, assuming P $\neq$ NP). But cryptography encrypts with a random key $k$ drawn from some distribution. The adversary tries to break a <em>randomly generated</em> instance. For cryptography to be secure, we need the problem to be hard for <em>random instances</em>, not just worst-case instances.<br/><br/>
+          Example: 3-colorability is NP-complete, but a random $G(n, p)$ with $p \gg \log n/n$ is almost certainly not 3-colorable — and is easy to verify (no 3-coloring exists). Using 3-colorability for encryption would produce instances the adversary can immediately reject.<br/><br/>
+          The Merkle-Hellman knapsack failed for exactly this reason: the knapsack instances it generates have low density (a special structure), and Lagarias-Odlyzko showed low-density knapsacks are easy. Modern cryptography bases security on problems believed to be average-case hard: discrete log, factoring, lattice problems.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 13</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Implement RSA with toy primes $p=61$, $q=53$, $e=17$. Find $N$, $\phi$, $d$ using the extended Euclidean algorithm. Encrypt and decrypt the message $m=42$. Verify $m^{ed} \equiv m \pmod N$ using Fermat&rsquo;s little theorem mod $p$ and mod $q$ separately. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Build a Merkle tree for 8 data blocks (use any hash function). Verify block 3 using only the 3 sibling hashes on its path to the root. Show all intermediate hash computations. Then simulate a tampering attack on block 5 and show it is detected. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Compute the memory transfers for a naïve scan of $N=10^6$ elements with block size $B=64$ words and cache $M=8192$ words. Now compute transfers for binary mergesort and cache-oblivious matrix multiply of a $100\times100$ matrix. Which algorithm benefits most from cache-awareness? <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Diffie-Hellman with $p=23$, $g=5$: simulate Alice choosing $a=6$ and Bob choosing $b=15$. Compute $g^a \bmod p$, $g^b \bmod p$, and the shared key $g^{ab} \bmod p$. Then simulate a man-in-the-middle attack with Eve choosing $e=4$: what does Eve compute, and what do Alice and Bob each think the shared key is? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Implement the van Emde Boas tree layout for $n=15$ elements (a full binary tree of height 3). Show the memory layout, then simulate a binary search for element 11 and count cache misses with $B=2$ (block size 2). Compare to binary search in sorted-array order. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Analyse the memory transfers of naïve $N\times N$ matrix-vector multiply (dense matrix, dense vector). Show that if the matrix is stored in row-major order, transfers $= O(N^2/B + N)$. Now show that if the matrix is stored in column-major order and we access row by row, transfers $= O(N^2)$ (no spatial locality). <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The RSA signature scheme $\sigma = h(m)^d \bmod N$ is more secure than $\sigma = m^d \bmod N$. Show specifically that hashing prevents (a) the multiplicative forgery attack $(m_1 m_2, \sigma_1 \sigma_2)$, and (b) the &ldquo;choose-signature-first&rdquo; attack (pick $\sigma^*$, compute $m^* = (\sigma^*)^e$). Why does collision resistance of $h$ matter? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove that binary mergesort achieves $MT(N) = O\!\left(\frac{N}{B}\log_{M/B}\frac{N}{M}\right)$. Start from $MT(N) = 2 \cdot MT(N/2) + O(N/B)$ with base case $MT(M) = O(M/B)$. Unroll the recursion, sum the geometric series, and identify the number of recursion levels. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Prove the information-theoretic lower bound for comparison-based sorting in the EM model: any algorithm must perform $\Omega\!\left(\frac{N}{B}\log_{M/B}\frac{N}{B}\right)$ memory transfers. Hint: consider the number of distinct outputs (sorted permutations) and the information revealed per transfer ($B$ comparisons per transfer, $M/B$-way branching). <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">The LRU bound $\text{LRU}_M \leq 2 \cdot \text{OPT}_{M/2}$ implies that cache-oblivious algorithms designed for LRU are within a factor 2 of optimal. Explain why this means the $O(N^3/(B\sqrt{M}))$ cache-oblivious matrix multiply bound also holds for the offline optimal algorithm (with $M/2$ cache). Is the factor-2 gap significant in practice? Why or why not? <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav" style="margin-top:2rem;">
+    <a href="PROG_DAA_Ch12.html" class="ch-nav-btn">&larr; FPT &amp; Distributed</a>
+    <div style="flex:1;text-align:center;padding:0 1rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;color:var(--green);letter-spacing:0.05em;">&#x2713; MODULE COMPLETE</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.3rem;">All 13 chapters of Algorithm Design &amp; Analysis</div>
+    </div>
+    <a href="PROG_DAA.html" class="ch-nav-btn primary">Back to Module &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Birthday paradox: 2^(d/2) inputs give ~1 expected collision among all pairs.","✨ RSA: m^ed = m*(m^(p-1))^(k(q-1)) ≡ m mod p by Fermat. CRT gives mod N.","🏆 CO matmul: (N/√M)^3 leaves × O(M/B) per leaf = O(N^3/(B√M)). Optimal!","🔥 NP-hardness = worst case. Crypto needs average-case hardness for random keys.","💡 Merkle tree: O(1) trusted storage, O(log n) verification. Used in blockchain.","📐 Cache-oblivious: no knowledge of B or M. Achieves optimal transfers on any machine.","⚡ HMAC prevents timing attacks via compare_digest. MAC(k,m) needs secret key to forge."];
+const wrongMsgs=["🌀 Birthday attack: pairwise collision probability sums over C(k,2) pairs. Expected collision at k≈2^(d/2).","📉 RSA: m^ed = m^(1+k*phi). By Fermat mod p: m^(p-1)≡1, so m^ed≡m. CRT gives mod N.","😰 CO matmul base: 3 matrices fit in cache → M/B transfers to load. Leaf count = (N/√M)^3.","📐 NP-complete = worst case hard. Random instances of 3-coloring are easy (dense random graphs not 3-colorable).","🤔 SHA-256 targets 2^128 collision resistance because birthday attack halves the bit-security."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Module Complete! 🎓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

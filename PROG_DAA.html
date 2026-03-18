@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Algorithm Design and Analysis — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* NAV */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 60px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo .acc { color: var(--orange); }
+.tb-logo sup { color: var(--orange); font-size: 0.65em; vertical-align: super; }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.tb-breadcrumb a:hover { color: var(--orange); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* HERO */
+.module-hero {
+  padding: 100px 5% 4rem;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.module-hero::after {
+  content: '';
+  position: absolute; right: -60px; top: 0; bottom: 0; width: 38%;
+  background: linear-gradient(135deg, var(--light) 0%, #fde8d4 100%);
+  clip-path: polygon(14% 0, 100% 0, 100% 100%, 0% 100%);
+  z-index: 0;
+}
+.hero-inner { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; }
+.module-tag {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--orange); background: rgba(232,114,42,0.08);
+  border: 1px solid rgba(232,114,42,0.2);
+  padding: 0.3rem 0.9rem; border-radius: 100px;
+  margin-bottom: 1.5rem;
+}
+.module-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  color: var(--navy); line-height: 1.1;
+  letter-spacing: -0.5px; margin-bottom: 1rem;
+}
+.module-sub {
+  font-size: 1.05rem; color: var(--muted);
+  max-width: 580px; line-height: 1.8;
+  margin-bottom: 2rem;
+}
+.module-stats {
+  display: flex; gap: 2.5rem; flex-wrap: wrap;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.stat-item { }
+.stat-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2rem; font-weight: 700;
+  color: var(--navy); line-height: 1;
+}
+.stat-num span { color: var(--orange); }
+.stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-top: 0.3rem;
+}
+
+/* SOURCE STRIP */
+.source-strip {
+  background: var(--navy); padding: 0.7rem 5%;
+  display: flex; align-items: center; gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.source-label {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: rgba(255,255,255,0.4); letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.source-pill {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: var(--orange); background: rgba(232,114,42,0.12);
+  border: 1px solid rgba(232,114,42,0.25);
+  padding: 0.25rem 0.75rem; border-radius: 4px;
+}
+
+/* LANG BADGE */
+.lang-strip {
+  background: var(--off); border-bottom: 1px solid var(--border);
+  padding: 0.65rem 5%;
+  display: flex; align-items: center; gap: 1rem;
+}
+.lang-label {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.lang-badge {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  padding: 0.22rem 0.7rem; border-radius: 4px;
+  border: 1.5px solid var(--border);
+}
+.lang-py  { background: rgba(30,158,94,0.08); color: var(--green); border-color: rgba(30,158,94,0.3); }
+.lang-cpp { background: rgba(45,37,96,0.06); color: var(--navy2); border-color: rgba(45,37,96,0.2); }
+.lang-note { font-size: 0.8rem; color: var(--muted); margin-left: 0.5rem; }
+
+/* MAIN LAYOUT */
+.module-body {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 5% 6rem;
+}
+
+/* SECTION HEADER */
+.section-header {
+  display: flex; align-items: center; gap: 1rem;
+  margin-bottom: 1.5rem; margin-top: 3rem;
+}
+.section-header:first-child { margin-top: 0; }
+.section-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--orange); letter-spacing: 0.15em;
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.section-eyebrow::before {
+  content: ''; display: inline-block;
+  width: 20px; height: 2px;
+  background: var(--orange); border-radius: 2px;
+}
+.section-title-sm {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--navy);
+}
+
+/* CHAPTER GRID */
+.ch-grid {
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+
+/* CHAPTER ITEM */
+.ch-item {
+  display: flex; align-items: center; gap: 1.2rem;
+  padding: 1rem 1.3rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--white);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.ch-item.live:hover {
+  border-color: var(--orange);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(232,114,42,0.1);
+}
+.ch-item.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--off);
+}
+.ch-num-badge {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--off);
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  font-weight: 600; color: var(--muted);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.ch-item.live:hover .ch-num-badge {
+  background: var(--orange); color: white; border-color: var(--orange);
+}
+.ch-item.active-ch .ch-num-badge {
+  background: var(--orange); color: white; border-color: var(--orange);
+}
+.ch-info { flex: 1; }
+.ch-name {
+  font-size: 0.95rem; font-weight: 600;
+  color: var(--navy); margin-bottom: 0.2rem;
+}
+.ch-desc {
+  font-size: 0.8rem; color: var(--muted); line-height: 1.5;
+}
+.ch-meta {
+  display: flex; align-items: center; gap: 0.6rem;
+  flex-shrink: 0;
+}
+.badge-live {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--green); background: rgba(30,158,94,0.08);
+  border: 1px solid rgba(30,158,94,0.25);
+  padding: 0.18rem 0.55rem; border-radius: 4px;
+  font-weight: 600;
+}
+.badge-soon {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--muted); background: var(--off);
+  border: 1px solid var(--border);
+  padding: 0.18rem 0.55rem; border-radius: 4px;
+}
+.badge-mcq {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  color: var(--orange); background: rgba(232,114,42,0.08);
+  padding: 0.15rem 0.5rem; border-radius: 3px;
+}
+.ch-arrow {
+  color: var(--border); font-size: 1rem;
+  transition: color 0.2s, transform 0.2s;
+}
+.ch-item.live:hover .ch-arrow {
+  color: var(--orange); transform: translateX(3px);
+}
+
+/* COMPLEXITY TAG */
+.ch-complexity {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  padding: 0.15rem 0.5rem; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.cx-found { background: rgba(30,158,94,0.1);  color: var(--green); }
+.cx-inter { background: rgba(232,114,42,0.1); color: var(--orange); }
+.cx-adv   { background: rgba(45,37,96,0.08);  color: var(--navy2); }
+.cx-cx    { background: rgba(220,38,38,0.07); color: #dc2626; }
+
+/* PREREQ NOTICE */
+.prereq-notice {
+  background: rgba(45,37,96,0.04);
+  border: 1.5px solid rgba(45,37,96,0.12);
+  border-radius: 10px;
+  padding: 1rem 1.3rem;
+  display: flex; align-items: flex-start; gap: 0.8rem;
+  margin-bottom: 2rem;
+  font-size: 0.87rem; color: var(--muted); line-height: 1.7;
+}
+.prereq-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+.prereq-notice strong { color: var(--navy); }
+
+/* WHAT YOU WILL LEARN */
+.learn-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1rem; margin-bottom: 3rem;
+}
+.learn-card {
+  background: var(--off);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 1.2rem;
+}
+.learn-icon { font-size: 1.4rem; margin-bottom: 0.6rem; }
+.learn-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--navy); margin-bottom: 0.4rem;
+}
+.learn-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+/* DIVIDER */
+.divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+/* FOOTER */
+footer {
+  background: var(--navy); padding: 2.5rem 5%;
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 1.5rem;
+}
+.foot-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem; font-weight: 700; color: white;
+}
+.foot-name span { color: var(--orange); }
+.foot-sub { font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-top: 0.2rem; }
+.foot-copy {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem; color: rgba(255,255,255,0.2);
+}
+
+@media (max-width: 900px) {
+  .module-hero::after { display: none; }
+  .learn-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .ch-desc { display: none; }
+  .module-stats { gap: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">
+      quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> ›
+      <span>Algorithm Design and Analysis</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <a href="index.html" class="tb-home">← Back to Home</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="module-hero">
+  <div class="hero-inner">
+    <div class="module-tag">Programming · Module 02</div>
+    <h1 class="module-title">Algorithm Design<br/>and Analysis</h1>
+    <p class="module-sub">From divide &amp; conquer to approximation algorithms — the graduate-level MIT 6.046J curriculum covering randomised algorithms, network flow, linear programming, NP-completeness, and the theoretical toolkit for hard problems.</p>
+    <div class="module-stats">
+      <div class="stat-item">
+        <div class="stat-num">13<span>+</span></div>
+        <div class="stat-label">Chapters</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">52<span>+</span></div>
+        <div class="stat-label">Practice Problems</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Languages</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">₹<span>0</span></div>
+        <div class="stat-label">Cost</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SOURCE STRIP -->
+<div class="source-strip">
+  <span class="source-label">Inspired by</span>
+  <span class="source-pill">MIT 6.046J · Design and Analysis of Algorithms · Spring 2015</span>
+  <span class="source-pill">Demaine · Devadas · Lynch</span>
+</div>
+
+<!-- LANG STRIP -->
+<div class="lang-strip">
+  <span class="lang-label">Implementations in</span>
+  <span class="lang-badge lang-py">Python 3</span>
+  <span class="lang-badge lang-cpp">C++17</span>
+  <span class="lang-note">— toggle between languages inside each chapter</span>
+</div>
+
+<!-- BODY -->
+<div class="module-body">
+
+  <!-- WHAT YOU WILL LEARN -->
+  <div class="section-header" style="margin-top:0;">
+    <span class="section-eyebrow">What you will learn</span>
+  </div>
+  <div class="learn-grid">
+    <div class="learn-card">
+      <div class="learn-icon">🎲</div>
+      <div class="learn-title">Randomised Algorithms</div>
+      <div class="learn-desc">Expected-time and with-high-probability analysis. Randomised Quicksort, skip lists, hashing — algorithms that use randomness to beat deterministic lower bounds.</div>
+    </div>
+    <div class="learn-card">
+      <div class="learn-icon">🌊</div>
+      <div class="learn-title">Network Flow &amp; LP</div>
+      <div class="learn-desc">Max-flow min-cut theorem, Ford-Fulkerson, Edmonds-Karp. Linear programming duality, simplex method — how continuous optimisation underlies discrete algorithms.</div>
+    </div>
+    <div class="learn-card">
+      <div class="learn-icon">📐</div>
+      <div class="learn-title">Hardness &amp; Approximation</div>
+      <div class="learn-desc">NP-completeness, reductions, why some problems resist polynomial algorithms — and approximation algorithms and FPT techniques for surviving NP-hard problems in practice.</div>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- PREREQ -->
+  <div class="prereq-notice">
+    <span class="prereq-icon">⚠️</span>
+    <div>
+      <strong>Prerequisites.</strong> This module requires PROG_DSA (MIT 6.006 — Algorithms and Data Structures). You should be comfortable with asymptotic notation, graph algorithms (BFS/DFS/Dijkstra/Bellman-Ford), dynamic programming (SRT BOT), and basic complexity (P vs NP). If you have not completed PROG_DSA, <a href="PROG_DSA.html" style="color:var(--orange);">start there first →</a>
+    </div>
+  </div>
+
+  <!-- CHAPTER LIST -->
+  <div class="section-header">
+    <span class="section-eyebrow">Chapters</span>
+    <span class="section-title-sm">13 chapters · Python + C++</span>
+  </div>
+
+  <div class="ch-grid">
+
+    <!-- Ch1 — LIVE -->
+    <a class="ch-item live active-ch" href="PROG_DAA_Ch1.html">
+      <div class="ch-num-badge">01</div>
+      <div class="ch-info">
+        <div class="ch-name">Divide &amp; Conquer + Master Theorem</div>
+        <div class="ch-desc">Interval scheduling, convex hull, Strassen matrix multiplication, median finding. Recurrence solving via substitution, recursion trees, and the Master Theorem.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-found">Foundational</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch2 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch2.html">
+      <div class="ch-num-badge">02</div>
+      <div class="ch-info">
+        <div class="ch-name">Fast Fourier Transform</div>
+        <div class="ch-desc">Polynomial representations, DFT, nth roots of unity, FFT algorithm, IFFT. O(n log n) polynomial multiplication from O(n²) — the algorithm that changed signal processing.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-found">Foundational</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch3 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch3.html">
+      <div class="ch-num-badge">03</div>
+      <div class="ch-info">
+        <div class="ch-name">Advanced Data Structures I — vEB and Skip Lists</div>
+        <div class="ch-desc">van Emde Boas trees for O(log log u) successor/predecessor. Skip lists with randomised level promotion, with-high-probability O(log n) search.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-inter">Intermediate</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch4 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch4.html">
+      <div class="ch-num-badge">04</div>
+      <div class="ch-info">
+        <div class="ch-name">Hashing, Augmentation and B-Trees</div>
+        <div class="ch-desc">Universal and perfect hashing. Order-statistics trees, range trees, orthogonal range search. 2-3 trees and B-trees for external memory — why databases use them.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-inter">Intermediate</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch5 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch5.html">
+      <div class="ch-num-badge">05</div>
+      <div class="ch-info">
+        <div class="ch-name">Amortization and Union-Find</div>
+        <div class="ch-desc">Aggregate, accounting, and potential methods. Union-Find with union-by-rank and path compression. The inverse Ackermann function α(n) — nearly constant in practice.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-inter">Intermediate</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch6 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch6.html">
+      <div class="ch-num-badge">06</div>
+      <div class="ch-info">
+        <div class="ch-name">Randomized Algorithms</div>
+        <div class="ch-desc">Matrix multiplication verification. Randomised Quicksort and Select — expected O(n log n) and O(n). Las Vegas vs Monte Carlo. Paranoid analysis and Chernoff bounds.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-inter">Intermediate</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch7 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch7.html">
+      <div class="ch-num-badge">07</div>
+      <div class="ch-info">
+        <div class="ch-name">Advanced Dynamic Programming</div>
+        <div class="ch-desc">Longest palindromic subsequence, optimal BST, alternating coin game. Boolean expression parenthesisation. Rectangular blocks — DP on partial orders.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-inter">Intermediate</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch8 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch8.html">
+      <div class="ch-num-badge">08</div>
+      <div class="ch-info">
+        <div class="ch-name">All-Pairs Shortest Paths, Greedy and MST</div>
+        <div class="ch-desc">Matrix multiplication APSP, Johnson's algorithm. Greedy choice and optimal substructure. Prim's and Kruskal's MST algorithms — and the exchange argument proof technique.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-inter">Intermediate</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch9 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch9.html">
+      <div class="ch-num-badge">09</div>
+      <div class="ch-info">
+        <div class="ch-name">Network Flow</div>
+        <div class="ch-desc">Flow networks, max-flow min-cut theorem. Ford-Fulkerson, Edmonds-Karp O(VE²). Bipartite matching, vertex cover, baseball elimination — flow as a modelling language.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-adv">Advanced</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch10 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch10.html">
+      <div class="ch-num-badge">10</div>
+      <div class="ch-info">
+        <div class="ch-name">Linear Programming</div>
+        <div class="ch-desc">LP formulation, geometric intuition, standard form. Strong duality, complementary slackness. Simplex method. Max-flow as LP — connecting continuous and combinatorial optimisation.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-adv">Advanced</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch11 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch11.html">
+      <div class="ch-num-badge">11</div>
+      <div class="ch-info">
+        <div class="ch-name">NP-Completeness and Approximation Algorithms</div>
+        <div class="ch-desc">3SAT, circuit SAT, reduction chains. Vertex cover 2-approximation, set cover O(log n). Metric TSP 2-approximation and Christofides ⅔-approximation.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-cx">Complexity</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch12 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch12.html">
+      <div class="ch-num-badge">12</div>
+      <div class="ch-info">
+        <div class="ch-name">Fixed-Parameter Algorithms and Distributed Computing</div>
+        <div class="ch-desc">FPT algorithms, kernelisation for vertex cover. Synchronous and asynchronous distributed models, BFS spanning trees, Luby's MIS, leader election.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-adv">Advanced</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+    <!-- Ch13 — LIVE -->
+    <a class="ch-item live" href="PROG_DAA_Ch13.html">
+      <div class="ch-num-badge">13</div>
+      <div class="ch-info">
+        <div class="ch-name">Cryptography and Cache-Oblivious Algorithms</div>
+        <div class="ch-desc">RSA encryption, digital signatures, MACs, Merkle trees. Cache-oblivious model, van Emde Boas layout, cache-oblivious sorting — algorithms that work without knowing the cache size.</div>
+      </div>
+      <div class="ch-meta">
+        <span class="ch-complexity cx-adv">Advanced</span>
+        <span class="badge-live">● Live</span>
+        <span class="badge-mcq">4 MCQ</span>
+      </div>
+      <span class="ch-arrow">→</span>
+    </a>
+
+  </div><!-- end ch-grid -->
+
+</div><!-- end module-body -->
+
+<footer>
+  <div>
+    <div class="foot-name">quan<span>(t)<sup style="font-size:0.7em;vertical-align:super;">4</sup></span>.com</div>
+    <div class="foot-sub">by Thrissur Trading Terminal · Thrissur, Kerala</div>
+  </div>
+  <div class="foot-copy">© 2025 quan(t)⁴.com · Free forever</div>
+</footer>
+
+</body>
+</html>

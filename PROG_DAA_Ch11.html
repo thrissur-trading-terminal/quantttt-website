@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NP-Completeness &amp; Approximation &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-cx{background:rgba(220,38,38,0.08);color:#dc2626;}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>NP-Completeness &amp; Approximation</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:85%"></div></div>
+      <span class="tb-progress-label">11 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-cx">Complexity</span>
+      <span class="ch-num">Chapter 11 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">NP-Completeness &amp; Approximation Algorithms</h1>
+    <p class="chapter-subtitle">NP-completeness is a proof that a problem is <em>at least as hard</em> as every other problem in NP. Once you know a problem is NP-complete, the right response is not despair but strategy: approximation algorithms find provably near-optimal solutions in polynomial time. This chapter builds the NP-completeness chain from 3SAT through Vertex Cover and Set Cover, then proves approximation ratios for each.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Part I &mdash; Complexity Classes</h3>
+
+    <div class="callout callout-definition">
+      <strong>P</strong> = decision problems solvable in polynomial time $O(n^k)$ for some constant $k$.<br/><br/>
+      <strong>NP</strong> = decision problems where YES answers have polynomial-length certificates verifiable in polynomial time. Equivalently: problems solvable by a nondeterministic polynomial-time algorithm.<br/><br/>
+      <strong>NP-hard</strong>: problem $X$ is NP-hard if every problem $Y \in \text{NP}$ reduces to $X$ in polynomial time. If $X \in P$ then $P = NP$.<br/><br/>
+      <strong>NP-complete</strong>: $X$ is NP-complete if $X \in \text{NP}$ and $X$ is NP-hard. The most important class in computational complexity.<br/><br/>
+      <strong>$P \subseteq NP$:</strong> any polynomial-time algorithm is also a polynomial-time verifier (the certificate is just empty). Whether $P = NP$ remains the greatest open problem in computer science.
+    </div>
+
+    <h3>Karp Reductions</h3>
+    <p>A <strong>Karp reduction</strong> from $A$ to $B$ is a polynomial-time function $R$ such that $A(x) = B(R(x))$ for all inputs $x$. We write $A \leq_P B$. Implications: if $B \in P$ then $A \in P$; if $A$ is NP-hard then $B$ is NP-hard.</p>
+
+    <div class="callout callout-definition">
+      <strong>Proving NP-completeness: two-step recipe.</strong><br/>
+      <strong>Step 1 — Show $X \in \text{NP}$:</strong> exhibit a polynomial-time verifier. Given a certificate (candidate solution), can we verify it in polynomial time?<br/>
+      <strong>Step 2 — Show $X$ is NP-hard:</strong> give a polynomial-time reduction from a known NP-complete problem $Y$ to $X$. Show: (a) the reduction runs in polynomial time; (b) YES instances of $Y$ map to YES instances of $X$; (c) YES instances of $X$ map to YES instances of $Y$.
+    </div>
+
+    <h3>The NP-Completeness Chain</h3>
+
+    <p><strong>3SAT</strong> (Cook 1971): Given a CNF formula where each clause has exactly 3 literals, is there a satisfying assignment? 3SAT is NP-complete (the first — every NP problem can be compiled to a circuit, which converts to a 3-CNF formula). Certificate: variable assignment; verifier: evaluate formula.</p>
+
+    <p><strong>3-Dimensional Matching (3DM)</strong>: Given disjoint sets $X, Y, Z$ of $n$ elements each and triples $T \subseteq X\times Y\times Z$, is there $S \subseteq T$ covering each element exactly once? Reduces from 3SAT via variable/clause gadgets. Certificate: the set $S$; verifier: check each element covered exactly once.</p>
+
+    <p><strong>Subset Sum</strong>: Given integers $\{a_1,\ldots,a_n\}$ and target $t$, does any subset sum to $t$? Reduces from 3DM (encode triples as numbers in a large base $b$, target $= \sum b^i$). Weakly NP-hard (pseudo-polynomial DP solves it in $O(nT)$).</p>
+
+    <p><strong>Partition</strong>: Given $A$, partition into two equal-sum subsets? Reduction from Subset Sum: add $a_{n+1} = \sigma + t$, $a_{n+2} = 2\sigma - t$ where $\sigma = \sum A$. Weakly NP-complete.</p>
+
+    <p><strong>Vertex Cover</strong> $\leq_P$ <strong>Set Cover</strong>: For graph $G=(V,E)$, let $S = E$ (set of edges to be covered), and for each vertex $v$ create subset $S_v = \{\text{edges incident to }v\}$. A $k$-vertex cover $\Leftrightarrow$ a $k$-set cover. Therefore Set Cover is NP-hard.</p>
+
+    <p><strong>Clique</strong> $\leq_P$ <strong>Independent Set</strong>: $I$ is independent in $G$ $\Leftrightarrow$ $I$ is a clique in $\overline{G}$ (complement graph). The reduction runs in $O(|E|)$: compute $\overline{G}$, same $k$.</p>
+
+    <div class="callout callout-warning">
+      <strong>Strong vs Weak NP-hardness.</strong> <em>Weakly NP-hard</em> problems become polynomial when numbers are bounded (pseudo-polynomial algorithms exist): Subset Sum, Partition, Knapsack. <em>Strongly NP-hard</em> problems remain hard even when all numbers are polynomial in $n$: 3SAT, Vertex Cover, Hamiltonian Cycle, 4-Partition. For strongly NP-hard problems, no pseudo-polynomial algorithm exists (unless P = NP).
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">NP verifiers + reductions demo &middot; 3SAT, Subset Sum, Vertex Cover</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python"># ── 3SAT VERIFIER ── O(clauses * 3) ──────────────────────────────────
+def verify_3sat(clauses, assignment):
+    """
+    Verify a 3SAT certificate in polynomial time.
+    clauses: list of 3-tuples like [(1, -2, 3), (-1, 4, -5)]
+             positive = variable, negative = negated variable.
+    assignment: dict {var: True/False}.
+    O(clauses * 3) = O(n): clearly polynomial.
+    """
+    for clause in clauses:
+        # Each clause is satisfied if at least one literal is true
+        if not any(
+            (assignment.get(abs(lit), False) if lit > 0
+             else not assignment.get(abs(lit), False))
+            for lit in clause
+        ):
+            return False   # clause not satisfied
+    return True
+
+# Example: (x1 OR x3 OR NOT x2) AND (NOT x1 OR x4 OR NOT x5)
+clauses    = [(1, 3, -2), (-1, 4, -5)]
+assignment = {1: True, 2: False, 3: True, 4: True, 5: False}
+print("3SAT verified:", verify_3sat(clauses, assignment))   # True
+
+
+# ── SUBSET SUM (weak NP) ── pseudo-polynomial O(n*T) DP ──────────────
+def subset_sum_dp(nums, target):
+    """
+    Pseudo-polynomial DP: O(n*T) time, O(T) space.
+    Works because T is treated as a number, not its bit-length.
+    If T = 2^n, this is exponential in the input size (weak NP-hardness).
+    """
+    dp = {0}    # set of achievable sums
+    for x in nums:
+        dp = dp | {s + x for s in dp if s + x <= target}
+    return target in dp
+
+print("Subset sum:", subset_sum_dp([3,1,4,1,5,9,2,6], 11))  # True
+
+
+# ── VERTEX COVER VERIFIER ── O(E) ────────────────────────────────────
+def verify_vertex_cover(graph_edges, cover):
+    """Verify vertex cover: every edge has at least one endpoint in cover."""
+    cover_set = set(cover)
+    return all(u in cover_set or v in cover_set for u, v in graph_edges)
+
+# ── REDUCTION: Vertex Cover → Set Cover ──────────────────────────────
+def vc_to_set_cover(n_vertices, edges):
+    """
+    Karp reduction: Vertex Cover instance → Set Cover instance.
+    Universe S = E (set of edges, indexed 0..m-1).
+    Set_v = {edges incident to vertex v}.
+    k-vertex cover ↔ k-set cover.
+    Polynomial time: O(V + E).
+    """
+    universe = list(range(len(edges)))    # edges are elements
+    sets = {}
+    for v in range(n_vertices):
+        sets[v] = [i for i, (u, w) in enumerate(edges) if u==v or w==v]
+    return universe, sets
+
+edges = [(0,1),(0,2),(1,2),(1,3),(2,4),(3,4)]
+universe, sets = vc_to_set_cover(5, edges)
+print(f"Universe (edges): {universe}")
+print(f"Sets (per vertex): {sets}")</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// 3SAT verifier + Subset Sum DP
+#include &lt;vector&gt;
+#include &lt;unordered_map&gt;
+#include &lt;unordered_set&gt;
+#include &lt;numeric&gt;
+using namespace std;
+
+// 3SAT verifier — O(clauses * 3)
+bool verify_3sat(const vector&lt;vector&lt;int&gt;&gt;&amp; clauses,
+                  const unordered_map&lt;int,bool&gt;&amp; asgn) {
+    for (auto&amp; clause : clauses) {
+        bool sat = false;
+        for (int lit : clause) {
+            int var = abs(lit);
+            bool val = asgn.count(var) ? asgn.at(var) : false;
+            if ((lit > 0 &amp;&amp; val) || (lit &lt; 0 &amp;&amp; !val)) {
+                sat = true; break;
+            }
+        }
+        if (!sat) return false;
+    }
+    return true;
+}
+
+// Subset Sum — pseudo-polynomial O(n*T) via bitset DP
+bool subset_sum(const vector&lt;int&gt;&amp; nums, int T) {
+    vector&lt;bool&gt; dp(T+1, false);
+    dp[0] = true;
+    for (int x : nums)
+        for (int s = T; s &gt;= x; --s)
+            if (dp[s-x]) dp[s] = true;
+    return dp[T];
+}
+
+// Clique ↔ Independent Set reduction: complement graph
+// G' has edge (u,v) iff G does NOT have edge (u,v)
+// k-clique in G ↔ k-independent set in G'  (O(|E|))
+vector&lt;pair&lt;int,int&gt;&gt; complement_graph(int n,
+    const vector&lt;pair&lt;int,int&gt;&gt;&amp; edges) {
+    vector&lt;vector&lt;bool&gt;&gt; adj(n, vector&lt;bool&gt;(n,false));
+    for (auto [u,v]:edges) { adj[u][v]=adj[v][u]=true; }
+    vector&lt;pair&lt;int,int&gt;&gt; comp;
+    for (int i=0;i&lt;n;i++)
+        for (int j=i+1;j&lt;n;j++)
+            if (!adj[i][j]) comp.push_back({i,j});
+    return comp;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Part II &mdash; Approximation Algorithms</h3>
+    <p>When a problem is NP-complete, we can&rsquo;t solve it exactly in polynomial time (unless P=NP). But we can often find solutions guaranteed to be within a factor of optimal.</p>
+
+    <div class="callout callout-definition">
+      <strong>Approximation ratio $\rho(n)$:</strong> algorithm $A$ is a $\rho$-approximation if for every input it produces cost $C$ satisfying $\max(C/C_\text{opt}, C_\text{opt}/C) \leq \rho(n)$. The ratio applies in both directions so it works for both minimisation and maximisation.<br/><br/>
+      <strong>PTAS:</strong> Polynomial Time Approximation Scheme — for any $\varepsilon > 0$ gives $(1+\varepsilon)$-approximation in time poly$(n)$ (but possibly exponential in $1/\varepsilon$).<br/><br/>
+      <strong>FPTAS:</strong> Fully Polynomial Time Approximation Scheme — runs in time poly$(n, 1/\varepsilon)$. Subset Sum has an FPTAS; TSP does not (unless P=NP).
+    </div>
+
+    <h3>Approximation 1 &mdash; Vertex Cover: 2-Approximation</h3>
+    <div class="callout callout-definition">
+      <strong>Algorithm (Approx-Vertex-Cover):</strong> while edges remain, pick any edge $(u,v)$, add both $u$ and $v$ to the cover, remove all edges incident to $u$ or $v$.<br/><br/>
+      <strong>Analysis:</strong> let $M$ = set of edges picked (a matching — no two share an endpoint). The algorithm returns $|V'| = 2|M|$. Any vertex cover must include at least one endpoint of every edge in $M$, and since no two edges in $M$ share an endpoint, $C_\text{opt} \geq |M|$. Therefore $C = 2|M| \leq 2 C_\text{opt}$. $\square$<br/><br/>
+      This is tight: there exist graphs where the algorithm returns exactly $2 C_\text{opt}$.
+    </div>
+
+    <h3>Approximation 2 &mdash; Set Cover: $(\ln n + 1)$-Approximation</h3>
+    <div class="callout callout-definition">
+      <strong>Algorithm (Greedy-Set-Cover):</strong> repeatedly pick the set $S_i$ covering the most uncovered elements; repeat until all elements covered.<br/><br/>
+      <strong>Analysis:</strong> let $|X| = n$ and $C_\text{opt} = t$ (optimal cover uses $t$ sets). At any step with $|X_k|$ uncovered elements, the $t$ optimal sets cover all of them, so at least one covers $\geq |X_k|/t$ elements. The greedy picks the best, so:
+      $$|X_{k+1}| \leq \left(1 - \frac{1}{t}\right)|X_k| \leq e^{-k/t} \cdot n$$
+      The algorithm terminates when $|X_k| = 0$, which requires $k > t\ln n$. Total cost $C \leq t\ln n + 1 = C_\text{opt}(\ln n + 1)$. $\square$<br/><br/>
+      The $\ln n$ bound is essentially tight: Feige (1998) proved that no polynomial-time algorithm achieves ratio $(1-\varepsilon)\ln n$ unless NP $\subseteq$ DTIME$(n^{O(\log\log n)})$.
+    </div>
+
+    <h3>Approximation 3 &mdash; Max-Degree Vertex Cover: $O(\log n)$-Approximation</h3>
+    <div class="callout callout-definition">
+      <strong>Algorithm (Natural-Vertex-Cover):</strong> repeatedly pick the vertex of maximum degree, add it to the cover, remove it and all incident edges.<br/><br/>
+      <strong>Analysis:</strong> let $m = C_\text{opt}$ = size of optimal cover, $|G_0| = n = |E|$. After $m$ iterations (removing optimal-cover vertices), we&rsquo;ve removed at least half the edges (since $m$ vertices cover some edges, and any $m$ vertices cover at most all edges). By induction: every $m$ iterations halves the edge count. Total iterations to remove all edges: $m \log n$. Since each iteration adds one vertex: $C \leq m\log n = C_\text{opt} \log n$. $\square$<br/><br/>
+      This is the same bound as Greedy-Set-Cover (vertex cover reduces to set cover). Both are $O(\log n)$.
+    </div>
+
+    <h3>Approximation 4 &mdash; Partition PTAS</h3>
+    <div class="callout callout-definition">
+      <strong>Problem:</strong> partition $n$ items into two groups minimising $\max(w(A), w(B))$ where $w(\cdot)$ is the total weight. Optimal $\geq L = \frac{1}{2}\sum s_i$.<br/><br/>
+      <strong>Algorithm (PTAS for Partition):</strong> given $\varepsilon > 0$, set $m = \lceil 1/\varepsilon \rceil - 1$. Phase 1: solve exactly for the $m$ largest items (cost $O(2^m) = O(2^{1/\varepsilon})$, exponential in $1/\varepsilon$ but independent of $n$). Phase 2: greedily assign remaining items to the lighter partition.<br/><br/>
+      <strong>Proof ratio is $(1+\varepsilon)$:</strong> if the last item $k$ was added in Phase 2, then $w(A) - s_k \leq w(B)$, so $w(A) \leq L + s_k/2$. Since $k > m$: all $m+1$ largest items $\geq s_k$, so $2L \geq (m+1)s_k$, giving $s_k \leq 2L/(m+1)$. Thus $w(A)/L \leq 1 + 1/(m+1) \leq 1 + \varepsilon$. $\square$
+    </div>
+
+    <h3>Metric TSP: 2-Approximation (MST-based)</h3>
+    <p>The Travelling Salesman Problem (find minimum-weight Hamiltonian cycle) is NP-hard. For <strong>metric TSP</strong> (edge weights satisfy the triangle inequality $c(u,w) \leq c(u,v)+c(v,w)$), there is a 2-approximation.</p>
+
+    <div class="callout callout-definition">
+      <strong>MST-Approximation for Metric TSP:</strong><br/>
+      1. Find MST $T$ of $G$.<br/>
+      2. Perform a pre-order DFS walk of $T$, listing vertices in visit order: $H$.<br/>
+      3. Return Hamiltonian cycle $H$ (shortcutting repeated vertices).<br/><br/>
+      <strong>Analysis:</strong> Removing any edge of $H^*$ (optimal cycle) gives a spanning tree, so $c(T) \leq c(H^*)$. Pre-order DFS walk traverses each edge twice: cost $2c(T)$. Shortcutting (triangle inequality) only decreases cost: $c(H) \leq 2c(T) \leq 2c(H^*)$. $\square$<br/><br/>
+      Christofides (1976) achieves ratio $3/2$ using minimum-weight perfect matching on odd-degree vertices. No better ratio is known in polynomial time for general metric TSP.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Approx Vertex Cover (2×) + Greedy Set Cover (ln n) + Metric TSP (2×)</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import heapq, math
+from collections import defaultdict
+
+# ── 2-APPROX VERTEX COVER ─────────────────────────────────────────────
+def approx_vertex_cover_2(edges):
+    """
+    2-approximation for Minimum Vertex Cover.
+    Pick any edge, add both endpoints, remove incident edges.
+    C <= 2 * C_opt. Proven tight (matching lower bound exists).
+    O(E) time.
+    """
+    cover     = set()
+    remaining = list(edges)
+    covered   = set()
+
+    for u, v in remaining:
+        if (u, v) in covered or (v, u) in covered:
+            continue                    # edge already covered
+        cover.add(u)
+        cover.add(v)
+        # Mark all edges incident to u or v as covered
+        for a, b in remaining:
+            if a == u or b == u or a == v or b == v:
+                covered.add((a, b))
+    return cover
+
+
+# ── GREEDY SET COVER (ln n + 1 approximation) ─────────────────────────
+def greedy_set_cover(universe, sets):
+    """
+    Greedy set cover: always pick the set covering the most uncovered elements.
+    Approximation ratio: ln(|universe|) + 1.
+    O(|universe| * |sets|) per iteration → O(n^2 * m) total.
+    Lower bound: no poly-time alg achieves (1-eps)*ln(n) unless NP ⊆ DTIME(n^(log log n)).
+    """
+    uncovered = set(universe)
+    cover     = []
+
+    while uncovered:
+        # Pick set with maximum intersection with uncovered elements
+        best = max(sets, key=lambda s: len(uncovered & sets[s]))
+        cover.append(best)
+        uncovered -= sets[best]
+
+    return cover
+
+
+# ── METRIC TSP: MST-BASED 2-APPROXIMATION ─────────────────────────────
+def metric_tsp_2approx(n, dist):
+    """
+    2-approximation for Metric TSP via MST + DFS preorder.
+    dist[i][j] must satisfy triangle inequality.
+    Returns (tour_cost, tour_order).
+    O(n^2) Prim + O(n) DFS = O(n^2) total.
+    """
+    # Step 1: Prim's MST (O(n^2) with adjacency matrix)
+    in_mst = [False]*n
+    key    = [float('inf')]*n
+    parent = [-1]*n
+    key[0] = 0
+    adj    = defaultdict(list)  # MST adjacency list
+
+    for _ in range(n):
+        # Find min-key vertex not in MST
+        u = min((i for i in range(n) if not in_mst[i]), key=lambda i: key[i])
+        in_mst[u] = True
+        if parent[u] != -1:
+            adj[parent[u]].append(u)
+            adj[u].append(parent[u])
+        for v in range(n):
+            if not in_mst[v] and dist[u][v] < key[v]:
+                key[v] = dist[u][v]; parent[v] = u
+
+    # Step 2: DFS preorder traversal (shortcutting = visiting unvisited)
+    visited = [False]*n
+    tour    = []
+
+    def dfs(u):
+        visited[u] = True
+        tour.append(u)
+        for v in sorted(adj[u]):   # sorted for determinism
+            if not visited[v]:
+                dfs(v)
+
+    dfs(0)
+
+    # Step 3: Compute tour cost (triangle inequality shortcutting is implicit)
+    tour_cost = sum(dist[tour[i]][tour[i+1]] for i in range(len(tour)-1))
+    tour_cost += dist[tour[-1]][tour[0]]   # return to start
+
+    return tour_cost, tour</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// 2-Approx Vertex Cover + Greedy Set Cover + Metric TSP
+#include &lt;vector&gt;
+#include &lt;set&gt;
+#include &lt;algorithm&gt;
+#include &lt;numeric&gt;
+#include &lt;climits&gt;
+using namespace std;
+
+// 2-approximation for vertex cover — O(E)
+set&lt;int&gt; approx_vertex_cover(int n, vector&lt;pair&lt;int,int&gt;&gt; edges) {
+    set&lt;int&gt; cover;
+    set&lt;pair&lt;int,int&gt;&gt; covered;
+    for (auto [u,v] : edges) {
+        if (covered.count({u,v}) || covered.count({v,u})) continue;
+        cover.insert(u); cover.insert(v);
+        // Mark incident edges (simplified: O(E) scan)
+        for (auto [a,b] : edges)
+            if (a==u||b==u||a==v||b==v)
+                {covered.insert({a,b});covered.insert({b,a});}
+    }
+    return cover;
+}
+
+// Metric TSP 2-approx: MST + DFS preorder — O(n^2)
+pair&lt;double,vector&lt;int&gt;&gt;
+metric_tsp(int n, const vector&lt;vector&lt;double&gt;&gt;&amp; d) {
+    // Prim's MST
+    vector&lt;bool&gt; inMST(n,false);
+    vector&lt;double&gt; key(n,1e18); key[0]=0;
+    vector&lt;int&gt; par(n,-1);
+    vector&lt;vector&lt;int&gt;&gt; adj(n);
+    for (int iter=0;iter&lt;n;iter++) {
+        int u=-1;
+        for (int i=0;i&lt;n;i++)
+            if (!inMST[i]&amp;&amp;(u==-1||key[i]&lt;key[u])) u=i;
+        inMST[u]=true;
+        if (par[u]!=-1){adj[par[u]].push_back(u);adj[u].push_back(par[u]);}
+        for (int v=0;v&lt;n;v++)
+            if (!inMST[v]&amp;&amp;d[u][v]&lt;key[v]){key[v]=d[u][v];par[v]=u;}
+    }
+    // DFS preorder
+    vector&lt;bool&gt; vis(n,false);
+    vector&lt;int&gt; tour;
+    function&lt;void(int)&gt; dfs=[&amp;](int u){
+        vis[u]=true; tour.push_back(u);
+        for (int v:adj[u]) if(!vis[v]) dfs(v);
+    };
+    dfs(0);
+    double cost=0;
+    for (int i=0;i+1&lt;(int)tour.size();i++) cost+=d[tour[i]][tour[i+1]];
+    cost+=d[tour.back()][tour[0]];
+    return {cost,tour};
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Partition PTAS + Subset Sum FPTAS &middot; (1+ε)-approximation</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">def partition_ptas(items, epsilon):
+    """
+    PTAS for load-balancing partition: minimise max(w(A), w(B)).
+    Phase 1: solve exactly for largest m = ceil(1/epsilon) - 1 items.
+    Phase 2: greedy assign remaining items.
+    Approximation ratio: 1 + epsilon.
+    Time: O(2^(1/epsilon) + n) — polynomial in n, exponential in 1/epsilon.
+    """
+    items_sorted = sorted(items, reverse=True)
+    m = max(1, math.ceil(1/epsilon) - 1)
+
+    # Phase 1: brute-force optimal partition of first m items
+    best_diff = float('inf')
+    best_mask = 0
+    for mask in range(1 << min(m, len(items_sorted))):
+        wA = sum(items_sorted[i] for i in range(min(m, len(items_sorted)))
+                 if mask & (1 << i))
+        wB = sum(items_sorted[i] for i in range(min(m, len(items_sorted)))
+                 if not mask & (1 << i))
+        if abs(wA - wB) < best_diff:
+            best_diff = abs(wA - wB)
+            best_mask = mask
+
+    A = [items_sorted[i] for i in range(min(m, len(items_sorted)))
+         if best_mask & (1 << i)]
+    B = [items_sorted[i] for i in range(min(m, len(items_sorted)))
+         if not best_mask & (1 << i)]
+
+    # Phase 2: greedy assignment of remaining items
+    for item in items_sorted[m:]:
+        if sum(A) <= sum(B):
+            A.append(item)
+        else:
+            B.append(item)
+
+    return max(sum(A), sum(B)), A, B
+
+
+def subset_sum_fptas(nums, target, epsilon):
+    """
+    FPTAS for Subset Sum approximation: find subset with sum in
+    [(1-epsilon)*target, target] if it exists.
+    Time: O(n^2 / epsilon) — polynomial in both n and 1/epsilon.
+    Strategy: round down all numbers by factor K=floor(epsilon*max/n),
+              run exact DP on rounded numbers, unscale answer.
+    """
+    if not nums: return 0, []
+    max_val = max(nums)
+    K = max(1, int(epsilon * max_val / len(nums)))
+    rounded = [x // K for x in nums]
+    target_r = target // K
+
+    # Exact DP on rounded numbers — O(n * target/K) = O(n^2/epsilon)
+    dp = {0: []}
+    for i, x in enumerate(rounded):
+        new_dp = {}
+        for s, path in dp.items():
+            ns = s + x
+            if ns <= target_r and ns not in new_dp:
+                new_dp[ns] = path + [i]
+        dp.update(new_dp)
+
+    # Find best achievable sum
+    best = max((s for s in dp if s*K <= target), default=0)
+    chosen = [nums[i] for i in dp[best]]
+    return sum(chosen), chosen</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Subset Sum FPTAS — O(n^2 / epsilon)
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;cmath&gt;
+using namespace std;
+
+// Round and solve: O(n * target/K) = O(n^2/epsilon)
+int subset_sum_fptas(const vector&lt;int&gt;&amp; nums, int T, double eps) {
+    if (nums.empty()) return 0;
+    int max_v = *max_element(nums.begin(),nums.end());
+    int K = max(1, (int)(eps * max_v / nums.size()));
+    int Tr = T / K;
+    vector&lt;int&gt; rounded(nums.size());
+    for (int i=0;i&lt;(int)nums.size();i++) rounded[i] = nums[i]/K;
+
+    // DP on rounded values
+    vector&lt;bool&gt; dp(Tr+1, false);
+    dp[0] = true;
+    for (int x : rounded)
+        for (int s=Tr;s&gt;=x;--s)
+            if (dp[s-x]) dp[s]=true;
+
+    // Best rounded sum * K approximates actual sum
+    for (int s=Tr;s&gt;=0;--s)
+        if (dp[s]) return s*K;  // unscale
+    return 0;
+}
+// Approximation guarantee: answer >= (1 - epsilon) * optimal</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Options Strategy Scheduling as Partition</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT / Pashupati</span>
+      </div>
+      <div class="we-body">
+        <p>TTT runs strategies on two execution servers. We want to assign strategies to servers minimising the maximum-loaded server (makespan). Each strategy has a fixed CPU requirement. This is exactly the Partition problem (minimise $\max(w(A), w(B))$).</p>
+        <div class="we-step">Apply PTAS with $\varepsilon = 0.1$ (10% guarantee)</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">strategies = {
+    'STRADDLE_01': 80, 'STRANGLE_06': 60, 'BUTTERFLY_08': 40,
+    'CALENDAR_13': 50, 'CONDOR_15':   45, 'VOLT_OTM_27': 35,
+    'STRADDLE_27B': 30, 'IRON_CONDOR': 55
+}
+loads = list(strategies.values())   # [80, 60, 40, 50, 45, 35, 30, 55]
+
+makespan, grpA, grpB = partition_ptas(loads, epsilon=0.1)
+L = sum(loads) / 2
+print(f"Total load:        {sum(loads)}")
+print(f"Optimal lower bd:  {L:.1f}")
+print(f"PTAS makespan:     {makespan} (ratio {makespan/L:.3f}, bound 1.1)")
+print(f"Group A loads:     {grpA} = {sum(grpA)}")
+print(f"Group B loads:     {grpB} = {sum(grpB)}")</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> the PTAS achieves makespan $\leq 1.1 \times L$ (at most 10% above the lower bound on optimum). For TTT&rsquo;s 8 strategies, the brute-force Phase 1 examines $2^9 = 512$ partitions of the heaviest 9 items — trivially fast. Phase 2 greedily assigns the remaining lighter strategies. The approximation guarantee is proven regardless of the load distribution.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      NP-completeness appears directly in financial optimisation. <strong>Portfolio selection</strong> with cardinality constraints ($\leq k$ assets) is NP-hard (reduces to Knapsack). <strong>Index tracking</strong> (choose $k$ stocks to replicate an index) is NP-hard. <strong>Strategy scheduling</strong> (minimise makespan on 2 servers) is NP-hard (Partition). In practice: use PTAS for scheduling, greedy for set cover, and LP relaxations with rounding for cardinality constraints. The key insight is that approximation guarantees apply to <em>every instance</em>, not just in expectation — making them reliable for production systems.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 11</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch11 / q01</span>
+        <span class="mcq-diff">&#9733; NP Definitions</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Which of the following is the correct relationship between P, NP, and NP-complete under the assumption P $\neq$ NP?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>NP-complete problems are the hardest problems in NP, and since P $\neq$ NP, no NP-complete problem has any polynomial-time algorithm</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>P $=$ NP-complete, since every problem in P reduces to every NP-complete problem</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>P $\subsetneq$ NP; NP-complete problems are in NP but not in P; if any NP-complete problem were in P, then P $=$ NP</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>NP-complete problems are outside NP; they are strictly harder than any problem in NP</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C.</strong><br/><br/>
+          NP-complete problems are <em>in NP</em> (they have polynomial certificates) and NP-hard (every NP problem reduces to them). Under P $\neq$ NP: P $\subsetneq$ NP, and NP-complete problems are not in P. If even one NP-complete problem had a polynomial-time algorithm, every NP problem would too (via reductions), giving P = NP — a contradiction. So P $\neq$ NP $\Rightarrow$ no NP-complete problem is in P. Option D is wrong: NP-complete problems are IN NP (they&rsquo;re not harder than NP, they are the hardest IN NP).
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch11 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Vertex Cover 2-approximation</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The 2-approximation for Vertex Cover adds both endpoints of each picked edge. Why does this guarantee a ratio of exactly 2 (not better)?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Because each edge contributes 2 vertices, and edges are counted twice in any cover</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>The matched edges $M$ form a lower bound: $C_\text{opt} \geq |M|$ (every optimal cover must include one endpoint per matched edge, and matched edges don&rsquo;t share endpoints). The algorithm uses $2|M|$ vertices, so $C = 2|M| \leq 2C_\text{opt}$. Tightness: bipartite graphs where one side is optimal but the algorithm takes both sides</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Because the optimal cover has size at least $|E|/2$ in the worst case</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Because the greedy matching always finds exactly half the optimal cover</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The algorithm picks a maximal matching $M$ (no two edges in $M$ share an endpoint). It adds $2|M|$ vertices (both endpoints of each matched edge). Any vertex cover must include at least one endpoint of every edge in $M$; since matched edges are vertex-disjoint, the optimal cover needs $\geq |M|$ vertices just for $M$ edges. So $C_\text{opt} \geq |M|$, giving $C = 2|M| \leq 2C_\text{opt}$.<br/><br/>
+          <strong>Tightness:</strong> consider the complete bipartite graph $K_{n/2,n/2}$. Optimal cover: take all $n/2$ vertices from one side (covers all edges). Algorithm picks $n/2$ edges of the perfect matching, adding all $n$ vertices: ratio $= n/(n/2) = 2$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch11 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Greedy Set Cover</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Greedy Set Cover achieves ratio $\ln n + 1$. Why does the greedy argument use the bound $|X_{k+1}| \leq (1 - 1/t)|X_k|$, where $t = C_\text{opt}$?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Because each iteration removes exactly $1/t$ fraction of elements by definition of the algorithm</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>At each step, $|X_k|$ uncovered elements can be covered by the $t$ optimal sets, so at least one covers $\geq |X_k|/t$ elements; greedy picks the best, so $|X_k| - |X_{k+1}| \geq |X_k|/t$, giving $|X_{k+1}| \leq (1-1/t)|X_k|$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Because the optimal cover has $t$ sets each of size $|X_k|/t$ by symmetry</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The bound comes from the Markov inequality applied to the set sizes</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          At iteration $k$, there are $|X_k|$ uncovered elements. The $t$ optimal sets together cover all of them (they still form a valid cover of the original universe, hence also of $X_k$). By the pigeonhole principle, at least one of the $t$ sets covers $\geq |X_k|/t$ currently uncovered elements. The greedy algorithm picks the set with maximum coverage, so it covers $\geq |X_k|/t$ elements: $|X_k| - |X_{k+1}| \geq |X_k|/t \Rightarrow |X_{k+1}| \leq (1-1/t)|X_k|$. Unrolling: $|X_k| \leq (1-1/t)^k n \leq e^{-k/t} n$. Setting $k = t\ln n$: $|X_k| \leq e^{-\ln n} n = 1$. So the algorithm terminates after $\leq t\ln n$ iterations.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch11 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; PTAS vs FPTAS</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">An algorithm for Partition runs in $O(2^{1/\varepsilon} + n)$ time and achieves ratio $1+\varepsilon$. Is this a PTAS or FPTAS, and why?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>FPTAS, because the exponent $1/\varepsilon$ is a polynomial function of $1/\varepsilon$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>PTAS but not FPTAS: it is polynomial in $n$ for any fixed $\varepsilon$, but exponential in $1/\varepsilon$; an FPTAS must run in time polynomial in <em>both</em> $n$ and $1/\varepsilon$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>Neither PTAS nor FPTAS, since $2^{1/\varepsilon}$ is not polynomial in $n$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>FPTAS if $\varepsilon \geq 1/\log n$, and PTAS otherwise</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B — PTAS but not FPTAS.</strong><br/><br/>
+          A PTAS requires polynomial time in $n$ for each fixed $\varepsilon > 0$. For any fixed $\varepsilon$, $2^{1/\varepsilon}$ is a constant, so $O(2^{1/\varepsilon} + n) = O(n)$ — polynomial in $n$. So this is a PTAS.<br/><br/>
+          An FPTAS additionally requires polynomial time in $1/\varepsilon$: runtime must be $O(n^a / \varepsilon^b)$ for constants $a, b$. The $2^{1/\varepsilon}$ term is exponential in $1/\varepsilon$ — not polynomial. So this is not an FPTAS.<br/><br/>
+          In contrast, the Subset Sum FPTAS runs in $O(n^2/\varepsilon)$ — polynomial in both. The practical difference: PTAS with $\varepsilon = 0.01$ requires $2^{100}$ computation; FPTAS with $\varepsilon = 0.01$ requires $O(100n^2)$ — hugely different.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 11</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Show that Independent Set is NP-complete by: (a) giving a polynomial-time verifier, (b) reducing from Clique via complement graph construction. Verify the reduction is correct on a 5-vertex example. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Run the 2-approximation for Vertex Cover on the graph with edges $\{ab, ac, bc, bd, ce, de\}$. Show the maximal matching found, the resulting cover, its size, and compare to the optimal cover. Compute the exact approximation ratio on this instance. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Run Greedy Set Cover on universe $\{1,2,3,4,5,6,7,8,9,10\}$ with sets $S_1=\{1,2,3,4,5\}$, $S_2=\{4,5,6,7\}$, $S_3=\{6,8,9\}$, $S_4=\{7,8,10\}$, $S_5=\{3,9,10\}$. Show each greedy selection, the resulting cover, and compare to optimal. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Prove that Hamiltonian Path is NP-complete via reduction from Hamiltonian Cycle (as in R8): split vertex $v$ into $v^+$ (all in-edges to $v$) and $v^-$ (all out-edges from $v$). Show both directions of the equivalence. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Implement the Christofides algorithm for metric TSP: (a) find MST, (b) find minimum-weight perfect matching on odd-degree vertices, (c) combine to get an Eulerian multigraph, (d) shortcut to Hamiltonian cycle. Show the ratio is $3/2$. Test on a 6-city random metric instance and compare to the 2-approximate MST tour. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Show that the Partition problem (as NP decision: is there a perfect partition?) reduces to Subset Sum (target = $\sum A / 2$), AND Subset Sum reduces to Partition (by adding elements $\sigma+t$ and $2\sigma-t$). This shows Partition $\equiv_P$ Subset Sum. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The natural max-degree greedy for Vertex Cover achieves $O(\log n)$ approximation. Construct the worst-case graph from L17 (with $k!$ vertices of different degrees) for $k=4$. Verify the greedy visits all bottom vertices before the optimal top vertices, giving a $\log k$ approximation gap. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove that general TSP (without triangle inequality) has no polynomial-time $\rho$-approximation for any $\rho$, unless P = NP. Hint: show that if such an approximation existed, you could decide Hamiltonian Cycle in polynomial time. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">The Knapsack problem (choose items with total weight $\leq W$ maximising total value) is weakly NP-hard but has an FPTAS running in $O(n^2/\varepsilon)$. Describe the FPTAS: round item values by factor $K = \lfloor \varepsilon \cdot v_\text{max}/n \rfloor$, run exact DP on rounded values, recover solution. Prove the approximation ratio $1-\varepsilon$. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">The PCP theorem (Probabilistically Checkable Proofs) implies that Set Cover cannot be approximated better than $(1-\varepsilon)\ln n$ in polynomial time unless NP $\subseteq$ DTIME$(n^{O(\log\log n)})$. Explain: (a) what a PCP verifier is, (b) why the hardness of approximation follows, (c) what this says about Greedy Set Cover being essentially optimal. <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch10.html" class="ch-nav-btn">&larr; Linear Programming</a>
+    <a href="PROG_DAA_Ch12.html" class="ch-nav-btn primary">Next: FPT &amp; Distributed Algorithms &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 NP-complete: in NP AND NP-hard. If any NP-complete problem is in P, then P=NP.","✨ 2-approx: matching M gives C_opt >= |M|. Algorithm uses 2|M| vertices. Tight on bipartite.","🏆 Greedy set cover: pigeonhole gives coverage >= |X_k|/t. Unrolling gives ln(n) bound.","🔥 PTAS but NOT FPTAS: poly in n for fixed ε, but 2^(1/ε) is exponential in 1/ε.","💡 NP-complete = NP + NP-hard. Reduction proves hardness; verifier proves membership.","📐 Subset Sum is weakly NP-hard: pseudo-poly O(nT) DP. Strongly NP-hard has no pseudo-poly alg.","⚡ Metric TSP 2-approx: c(MST) <= c(OPT). DFS walk costs 2c(MST) <= 2c(OPT)."];
+const wrongMsgs=["🌀 NP-complete problems are IN NP (have polynomial certificates). They are not harder than NP.","📉 Matching M: no two edges share endpoints → C_opt >= |M|. Algorithm outputs 2|M|. Ratio 2.","😰 Key step: at least one of the t optimal sets covers >= |X_k|/t currently uncovered elements (pigeonhole).","📐 FPTAS requires poly in BOTH n AND 1/ε. The 2^(1/ε) term is exponential in 1/ε.","🤔 Karp reduction: A reduces to B means solving B gives a solution for A. NP-hard if every NP problem reduces to it."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

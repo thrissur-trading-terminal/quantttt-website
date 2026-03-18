@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Advanced Data Structures I &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Advanced Data Structures I</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:23%"></div></div>
+      <span class="tb-progress-label">3 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 03 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Advanced Data Structures I</h1>
+    <p class="chapter-subtitle">Two data structures that achieve what balanced BSTs cannot. Van Emde Boas trees beat $O(\log n)$ per operation with $O(\log\log u)$ &mdash; exponentially faster for universe-bounded integers. Skip lists match BST performance using randomisation alone, with no rotations and no balancing invariants.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Part I &mdash; van Emde Boas Trees</h3>
+
+    <p>Goal: maintain a dynamic set of integers from $\{0, 1, \ldots, u-1\}$ and support <strong>Insert</strong>, <strong>Delete</strong>, and <strong>Successor</strong> in $O(\log\log u)$ time. Why is this remarkable? A balanced BST gives $O(\log n)$, which for $n = u^{O(1)}$ is $O(\log u)$. Van Emde Boas gives $O(\log\log u)$ — exponentially faster.</p>
+
+    <div class="callout callout-definition">
+      <strong>Application &mdash; Network routing.</strong> IP addresses are integers in $\{0, \ldots, 2^{32}-1\}$, so $u = 2^{32}$. $\log u = 32$, but $\log\log u = \log 32 = 5$. A router doing billions of lookups per second gains enormously from $O(5)$ vs $O(32)$ per operation. The vEB idea underlies many packet-processing systems.
+    </div>
+
+    <h3>Where Does $O(\log\log u)$ Come From?</h3>
+    <p>Two recurrences give this bound:</p>
+    <div class="math-block">$$T(\log u) = T\!\left(\frac{\log u}{2}\right) + O(1) \implies T(\log u) = O(\log\log u)$$</div>
+    <div class="math-block">$$T(u) = T(\sqrt{u}) + O(1) \implies T(u) = O(\log\log u)$$</div>
+    <p>The second is what vEB achieves: each operation recurses on a structure of size $\sqrt{u}$ exactly <strong>once</strong>.</p>
+
+    <h3>Building vEB: Four Steps</h3>
+
+    <p><strong>Step 1 — Bit vector.</strong> Store $V[x] = 1$ iff $x$ is in the set. Insert/Delete: $O(1)$. Successor: $O(u)$ (scan for next 1-bit). Too slow.</p>
+
+    <p><strong>Step 2 — Split into clusters.</strong> Divide $\{0,\ldots,u-1\}$ into $\sqrt{u}$ clusters of size $\sqrt{u}$. For element $x$: $\text{high}(x) = \lfloor x/\sqrt{u}\rfloor$ (cluster index), $\text{low}(x) = x \bmod \sqrt{u}$ (position within cluster). Successor drops to $O(\sqrt{u})$. Still too slow.</p>
+
+    <p><strong>Step 3 — Recurse on clusters + summary.</strong> Make each cluster a recursive vEB structure of size $\sqrt{u}$. Add a <em>summary</em> vEB of size $\sqrt{u}$ that tracks which clusters are non-empty. Recurrence: $T(u) = 2T(\sqrt{u}) + O(1) \Rightarrow T(u) = O(\log u)$. Better, but still not $O(\log\log u)$.</p>
+
+    <p><strong>Step 4 — Store min/max; don&rsquo;t recurse min.</strong> The key insight: if each operation recurses into at most <strong>one</strong> sub-structure, the recurrence becomes $T(u) = T(\sqrt{u}) + O(1) \Rightarrow O(\log\log u)$. Store min and max explicitly at each level. The min is <em>not</em> stored recursively in the cluster — this breaks the two-recursion chain.</p>
+
+    <div class="callout callout-definition">
+      <strong>vEB structure $V$ for universe $\{0,\ldots,u-1\}$, $u = 2^{2^k}$:</strong><br/>
+      &mdash; $V.\min$, $V.\max$: extremes stored directly (not in any cluster)<br/>
+      &mdash; $V.\text{cluster}[i]$: vEB of size $\sqrt{u}$ for each $0 \leq i &lt; \sqrt{u}$<br/>
+      &mdash; $V.\text{summary}$: vEB of size $\sqrt{u}$; $V.\text{summary}[i]=1$ iff $V.\text{cluster}[i]$ is non-empty<br/>
+      &mdash; $\text{high}(x) = \lfloor x/\sqrt{u}\rfloor$, $\text{low}(x) = x \bmod \sqrt{u}$, $\text{index}(i,j) = i\sqrt{u}+j$
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">van Emde Boas Tree &middot; O(log log u) Insert / Successor / Delete</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import math
+
+class VEB:
+    """
+    Van Emde Boas tree for universe {0, ..., u-1}.
+    u must be a power of 4 (so sqrt(u) is an integer power of 2).
+    All operations: O(log log u).
+    """
+    def __init__(self, u):
+        self.u    = u
+        self.min  = None          # not stored in cluster (key trick!)
+        self.max  = None
+        if u > 2:
+            sq = int(math.isqrt(u))
+            self.cluster = [VEB(sq) for _ in range(sq)]
+            self.summary = VEB(sq)
+
+    def _high(self, x): return x // int(math.isqrt(self.u))
+    def _low(self, x):  return x %  int(math.isqrt(self.u))
+    def _idx(self, i, j): return i * int(math.isqrt(self.u)) + j
+
+    def insert(self, x):
+        if self.min is None:          # empty structure
+            self.min = self.max = x
+            return
+        if x < self.min:
+            x, self.min = self.min, x  # swap: new x goes into cluster
+        if self.u > 2:
+            hi, lo = self._high(x), self._low(x)
+            if self.cluster[hi].min is None:
+                self.summary.insert(hi)      # first call: O(1) base case
+            self.cluster[hi].insert(lo)      # second call (only one recurses!)
+        if x > self.max:
+            self.max = x
+
+    def successor(self, x):
+        if self.u == 2:
+            return 1 if x == 0 and self.max == 1 else None
+        if self.min is not None and x < self.min:
+            return self.min
+        hi, lo = self._high(x), self._low(x)
+        # Look in same cluster first (one recursion)
+        if self.cluster[hi].max is not None and lo < self.cluster[hi].max:
+            j = self.cluster[hi].successor(lo)
+            return self._idx(hi, j)
+        # Else find next non-empty cluster (one recursion on summary)
+        succ_hi = self.summary.successor(hi)
+        if succ_hi is None:
+            return None
+        j = self.cluster[succ_hi].min
+        return self._idx(succ_hi, j)
+
+    def delete(self, x):
+        if self.min == self.max:       # only one element
+            self.min = self.max = None
+            return
+        if self.u == 2:
+            self.min = self.max = (1 if x == 0 else 0)
+            return
+        if x == self.min:              # find new min (from smallest cluster)
+            first_cluster = self.summary.min
+            x = self._idx(first_cluster, self.cluster[first_cluster].min)
+            self.min = x
+        hi, lo = self._high(x), self._low(x)
+        self.cluster[hi].delete(lo)    # first call
+        if self.cluster[hi].min is None:
+            self.summary.delete(hi)    # second call (only one recurses!)
+            if x == self.max:
+                sm = self.summary.max
+                self.max = None if sm is None else self._idx(sm, self.cluster[sm].max)
+        elif x == self.max:
+            self.max = self._idx(hi, self.cluster[hi].max)</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+using namespace std;
+
+struct VEB {
+    int u;
+    int vmin = -1, vmax = -1;       // -1 = None
+    vector&lt;unique_ptr&lt;VEB&gt;&gt; cluster;
+    unique_ptr&lt;VEB&gt; summary;
+
+    VEB(int u) : u(u) {
+        if (u &gt; 2) {
+            int sq = (int)round(sqrt(u));
+            cluster.resize(sq);
+            for (auto&amp; c : cluster) c = make_unique&lt;VEB&gt;(sq);
+            summary = make_unique&lt;VEB&gt;(sq);
+        }
+    }
+    int sq()  { return (int)round(sqrt(u)); }
+    int hi(int x) { return x / sq(); }
+    int lo(int x) { return x % sq(); }
+    int idx(int i, int j) { return i * sq() + j; }
+
+    void insert(int x) {
+        if (vmin == -1) { vmin = vmax = x; return; }
+        if (x &lt; vmin) swap(x, vmin);
+        if (u &gt; 2) {
+            int h = hi(x), l = lo(x);
+            if (cluster[h]-&gt;vmin == -1) summary-&gt;insert(h);
+            cluster[h]-&gt;insert(l);
+        }
+        if (x &gt; vmax) vmax = x;
+    }
+
+    int successor(int x) {
+        if (u == 2) return (x == 0 &amp;&amp; vmax == 1) ? 1 : -1;
+        if (vmin != -1 &amp;&amp; x &lt; vmin) return vmin;
+        int h = hi(x), l = lo(x);
+        if (cluster[h]-&gt;vmax != -1 &amp;&amp; l &lt; cluster[h]-&gt;vmax)
+            return idx(h, cluster[h]-&gt;successor(l));
+        int sh = summary-&gt;successor(h);
+        return sh == -1 ? -1 : idx(sh, cluster[sh]-&gt;vmin);
+    }
+
+    void del(int x) {
+        if (vmin == vmax) { vmin = vmax = -1; return; }
+        if (u == 2) { vmin = vmax = (x==0 ? 1 : 0); return; }
+        if (x == vmin) {
+            int fc = summary-&gt;vmin;
+            x = idx(fc, cluster[fc]-&gt;vmin);
+            vmin = x;
+        }
+        int h = hi(x), l = lo(x);
+        cluster[h]-&gt;del(l);
+        if (cluster[h]-&gt;vmin == -1) {
+            summary-&gt;del(h);
+            if (x == vmax) {
+                int sm = summary-&gt;vmax;
+                vmax = sm == -1 ? vmin : idx(sm, cluster[sm]-&gt;vmax);
+            }
+        } else if (x == vmax)
+            vmax = idx(h, cluster[h]-&gt;vmax);
+    }
+};</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <p><strong>Why Insert recurses only once:</strong> when the cluster is empty before Insert, the recursive call to <code>cluster[hi].insert(lo)</code> hits the base case ($O(1)$ because min was None), so the call to <code>summary.insert(hi)</code> is the only non-trivial recursion. When the cluster is non-empty, only <code>cluster[hi].insert(lo)</code> recurses. Never both. Hence $T(u) = T(\sqrt{u}) + O(1)$.</p>
+
+    <p><strong>Space:</strong> naively $\Theta(u)$. With hash tables for non-empty clusters only: $O(n\log\log u)$. With indirection for small structures: $O(n)$ (deterministic). In practice, the $O(n\log\log u)$ randomised version is used.</p>
+
+    <h3>Part II &mdash; Skip Lists</h3>
+
+    <p>A skip list is a randomised data structure that maintains a sorted set with $O(\log n)$ expected time per operation &mdash; without any rebalancing, rotations, or complex invariants. Invented by William Pugh (1989).</p>
+
+    <h3>The Idea: $\log n$ Linked Lists</h3>
+
+    <p>Start from a sorted linked list: search takes $\Theta(n)$. Improve by adding a second &ldquo;express&rdquo; list that skips over some elements. With 2 lists, optimal node placement gives $O(\sqrt{n})$ search. With $k$ lists: $O(k \cdot n^{1/k})$ search. With $\log n$ lists: $O(\log n)$ search &mdash; matching balanced BSTs.</p>
+
+    <div class="callout callout-intuition">Think of the NYC subway: the express line skips most stops, the local line hits every stop. You take the express as far as possible, then switch to local. A skip list is this multi-level express/local structure, built randomly so you never need to manually decide which stations are &ldquo;express&rdquo;.</div>
+
+    <h3>Randomised Insertion: Coin Flips for Promotion</h3>
+
+    <p>Every element is always in the bottom list (level 0). When inserting $x$, flip a fair coin repeatedly: each HEADS promotes $x$ to the next higher level, TAILS stops. This gives:</p>
+    <div class="math-block">$$\Pr[\text{promoted to level } k] = \left(\frac{1}{2}\right)^k \qquad \mathbb{E}[\text{levels for one element}] = \frac{1}{1-1/2} = 2$$</div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Skip List &middot; O(log n) expected search / insert / delete</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import random
+
+class SkipNode:
+    def __init__(self, key, level):
+        self.key  = key
+        self.next = [None] * (level + 1)   # forward pointers per level
+
+class SkipList:
+    """
+    Randomised skip list. O(log n) expected time for all operations.
+    With high probability O(log n) — probability 1 - O(1/n^c) for any c.
+    """
+    MAX_LEVEL = 16             # cap levels at log2(max_n)
+    P         = 0.5            # promotion probability
+
+    def __init__(self):
+        self.head  = SkipNode(float('-inf'), self.MAX_LEVEL)
+        self.level = 0         # current max level in use
+
+    def _random_level(self):
+        """Coin-flip promotion: geometric distribution, capped at MAX_LEVEL."""
+        lvl = 0
+        while random.random() < self.P and lvl < self.MAX_LEVEL:
+            lvl += 1
+        return lvl
+
+    def search(self, key):
+        """Returns True if key found. O(log n) expected."""
+        cur = self.head
+        for i in range(self.level, -1, -1):   # top level down
+            while cur.next[i] and cur.next[i].key < key:
+                cur = cur.next[i]              # go right
+        cur = cur.next[0]                      # drop to level 0
+        return cur is not None and cur.key == key
+
+    def insert(self, key):
+        """Insert key. O(log n) expected."""
+        update = [None] * (self.MAX_LEVEL + 1)  # nodes that need updating
+        cur = self.head
+        # Find insertion position at each level
+        for i in range(self.level, -1, -1):
+            while cur.next[i] and cur.next[i].key < key:
+                cur = cur.next[i]
+            update[i] = cur
+
+        new_level = self._random_level()
+        if new_level > self.level:             # new levels needed
+            for i in range(self.level + 1, new_level + 1):
+                update[i] = self.head
+            self.level = new_level
+
+        new_node = SkipNode(key, new_level)
+        for i in range(new_level + 1):
+            new_node.next[i] = update[i].next[i]
+            update[i].next[i] = new_node
+
+    def delete(self, key):
+        """Delete key. O(log n) expected."""
+        update = [None] * (self.MAX_LEVEL + 1)
+        cur = self.head
+        for i in range(self.level, -1, -1):
+            while cur.next[i] and cur.next[i].key < key:
+                cur = cur.next[i]
+            update[i] = cur
+
+        target = cur.next[0]
+        if target and target.key == key:
+            for i in range(self.level + 1):
+                if update[i].next[i] != target:
+                    break
+                update[i].next[i] = target.next[i]
+            # Shrink level if top levels now empty
+            while self.level > 0 and self.head.next[self.level] is None:
+                self.level -= 1</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;random&gt;
+#include &lt;limits&gt;
+using namespace std;
+
+struct SkipNode {
+    int key;
+    vector&lt;SkipNode*&gt; next;
+    SkipNode(int k, int lvl) : key(k), next(lvl+1, nullptr) {}
+};
+
+class SkipList {
+    static const int MAX_LEVEL = 16;
+    SkipNode* head;
+    int level = 0;
+    mt19937 rng{random_device{}()};
+    bernoulli_distribution coin{0.5};
+
+    int randomLevel() {
+        int lvl = 0;
+        while (coin(rng) &amp;&amp; lvl &lt; MAX_LEVEL) ++lvl;
+        return lvl;
+    }
+
+public:
+    SkipList() { head = new SkipNode(INT_MIN, MAX_LEVEL); }
+
+    bool search(int key) {
+        auto* cur = head;
+        for (int i = level; i &gt;= 0; --i)
+            while (cur-&gt;next[i] &amp;&amp; cur-&gt;next[i]-&gt;key &lt; key)
+                cur = cur-&gt;next[i];
+        cur = cur-&gt;next[0];
+        return cur &amp;&amp; cur-&gt;key == key;
+    }
+
+    void insert(int key) {
+        vector&lt;SkipNode*&gt; update(MAX_LEVEL+1);
+        auto* cur = head;
+        for (int i = level; i &gt;= 0; --i) {
+            while (cur-&gt;next[i] &amp;&amp; cur-&gt;next[i]-&gt;key &lt; key)
+                cur = cur-&gt;next[i];
+            update[i] = cur;
+        }
+        int nl = randomLevel();
+        if (nl &gt; level) {
+            for (int i = level+1; i &lt;= nl; ++i) update[i] = head;
+            level = nl;
+        }
+        auto* node = new SkipNode(key, nl);
+        for (int i = 0; i &lt;= nl; ++i) {
+            node-&gt;next[i] = update[i]-&gt;next[i];
+            update[i]-&gt;next[i] = node;
+        }
+    }
+};</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>With-High-Probability Analysis</h3>
+
+    <p>Expected $O(\log n)$ is good but not enough in isolation — a string of bad luck could make one search take $O(n)$. Skip lists give something stronger: <strong>with high probability (w.h.p.)</strong>.</p>
+
+    <div class="callout callout-definition">
+      <strong>With high probability (w.h.p.):</strong> event $E$ occurs w.h.p. if for any $\alpha \geq 1$, there is a choice of constants such that $\Pr[E] \geq 1 - O(1/n^\alpha)$. The error probability is <em>polynomially small</em> &mdash; negligible for any polynomial-time algorithm.
+      <br/><br/>
+      <strong>Key w.h.p. facts for skip lists:</strong><br/>
+      &mdash; The skip list has $O(\log n)$ levels w.h.p. (Proof: $\Pr[\text{element promoted } \geq c\log n \text{ times}] = 2^{-c\log n} = n^{-c}$; union bound over $n$ elements gives $n \cdot n^{-c} = n^{1-c}$.)<br/>
+      &mdash; Every search costs $O(\log n)$ w.h.p. (backwards analysis + Chernoff bounds on coin flips)
+    </div>
+
+    <h3>Backwards Analysis of Search</h3>
+
+    <p>Rather than analysing the search path forward, analyse it <strong>backwards</strong> from the found node upward. At each step we either go <em>left</em> (the current node wasn&rsquo;t promoted to the next level &mdash; TAILS) or <em>up</em> (it was &mdash; HEADS). The search ends when we reach the top level or the $-\infty$ sentinel. We need $O(\log n)$ HEADS (up-moves) and at most $O(\log n)$ TAILS total before HEADS occur. By Chernoff bounds, the total steps before $c\log n$ HEADS is at most $d\log n$ w.h.p.</p>
+
+    <div class="callout callout-warning">
+      <strong>Skip list vs BST in practice.</strong> Balanced BSTs (AVL, Red-Black) guarantee worst-case $O(\log n)$, while skip lists guarantee w.h.p. $O(\log n)$. But skip lists have a major practical advantage: insertion is trivially parallelisable (just update forward pointers at the relevant levels), while BST rotations require careful synchronisation in concurrent settings. This is why Redis, LevelDB, and Cassandra use skip lists for their sorted sets.
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Skip list level distribution + w.h.p. demonstration</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">import random, math, collections
+
+def simulate_skip_levels(n, trials=10_000):
+    """
+    Simulate level distribution for n-element skip list.
+    Verify w.h.p. bound: max level <= c*log2(n) with high probability.
+    """
+    max_levels = []
+    for _ in range(trials):
+        # Generate level for each of n elements
+        levels = []
+        for _ in range(n):
+            lvl = 0
+            while random.random() < 0.5:
+                lvl += 1
+            levels.append(lvl)
+        max_levels.append(max(levels))
+
+    c_log_n = math.ceil(2 * math.log2(n))   # c=2 threshold
+    exceeded = sum(1 for ml in max_levels if ml > c_log_n)
+    print(f"n={n}: E[max level]={sum(max_levels)/trials:.2f}, "
+          f"log2(n)={math.log2(n):.1f}, "
+          f"P(max > 2*log2(n)) = {exceeded/trials:.4f}")
+    # Should be very small (polynomial in 1/n)
+
+# Check for n=100, 1000, 10000
+for n in [100, 1000, 10000]:
+    simulate_skip_levels(n)
+
+def skip_list_successor(sl, key):
+    """
+    Successor query: smallest element > key. O(log n) expected.
+    Uses same search path as regular search.
+    """
+    cur = sl.head
+    for i in range(sl.level, -1, -1):
+        while cur.next[i] and cur.next[i].key <= key:
+            cur = cur.next[i]
+    # cur.next[0] is now the first element > key
+    return cur.next[0].key if cur.next[0] else None</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Demonstrate w.h.p. level bound for skip lists
+#include &lt;random&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+using namespace std;
+
+int simulate_max_level(int n, mt19937&amp; rng) {
+    bernoulli_distribution coin(0.5);
+    int max_lvl = 0;
+    for (int i = 0; i &lt; n; ++i) {
+        int lvl = 0;
+        while (coin(rng)) ++lvl;
+        max_lvl = max(max_lvl, lvl);
+    }
+    return max_lvl;
+}
+
+void verify_whp(int n, int trials = 10000) {
+    mt19937 rng(42);
+    int c_log_n = (int)ceil(2.0 * log2(n));
+    int exceeded = 0;
+    double total = 0;
+    for (int t = 0; t &lt; trials; ++t) {
+        int ml = simulate_max_level(n, rng);
+        total += ml;
+        if (ml &gt; c_log_n) ++exceeded;
+    }
+    cout &lt;&lt; "n=" &lt;&lt; n
+         &lt;&lt; " E[max_level]=" &lt;&lt; total/trials
+         &lt;&lt; " P(max > 2*log2(n))=" &lt;&lt; (double)exceeded/trials
+         &lt;&lt; endl;
+    // For n=1000: expect P(max > 20) ≈ 0.001 or less
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Strike Range Query on NSE Options Chain</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT Systems</span>
+      </div>
+      <div class="we-body">
+        <p>Given the NIFTY options chain with strikes in $\{15000, 15050, \ldots, 25000\}$ (universe size $u = 200,000/50 + 1 = 2001$, rounded up to power of 2: $u = 2048$), we need: (1) Insert a strike when it becomes liquid, (2) Delete when it expires, (3) Find successor strike for spread construction.</p>
+        <div class="we-step">vEB vs skip list comparison</div>
+        <table style="width:100%;border-collapse:collapse;font-size:0.83rem;">
+          <thead><tr>
+            <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:left;">Property</th>
+            <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:center;">vEB (u=2048)</th>
+            <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.55rem 0.9rem;text-align:center;">Skip List (n≈200)</th>
+          </tr></thead>
+          <tbody>
+            <tr><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);">Search/Successor</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);font-weight:700;">$O(\log\log 2048) = O(11) \approx 4$</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);font-weight:700;">$O(\log 200) \approx 8$ w.h.p.</td></tr>
+            <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);">Key type</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;">Integer-indexed only</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;">Any comparable key</td></tr>
+            <tr><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);">Space</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--orange);">$O(n\log\log u)$ with hash</td><td style="padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);">$O(n)$ expected</td></tr>
+            <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.5rem 0.9rem;">Concurrent access</td><td style="padding:0.5rem 0.9rem;text-align:center;">Complex</td><td style="padding:0.5rem 0.9rem;text-align:center;color:var(--green);">Easier to parallelise</td></tr>
+          </tbody>
+        </table>
+        <div class="we-answer">
+          <strong>Recommendation:</strong> for strike chains (integer keys, fixed universe), vEB wins on latency. For instrument masters with string keys (ISIN codes, ticker symbols), skip list is the right choice. Redis&rsquo;s sorted set (which powers many trading system leaderboards and order-by-price structures) is a skip list.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Python&rsquo;s <code>sortedcontainers.SortedList</code> (used heavily in quantitative trading systems) is implemented as a skip-list-like structure. Redis ZADD/ZRANGEBYSCORE, which many TTT-style systems use for sorted instrument lists and priority queues, is backed by a skip list internally. For vEB-style integer operations at extreme speed, the Linux kernel&rsquo;s <code>rb_tree</code> (red-black tree) is more common in practice &mdash; but vEB thinking informs cache-oblivious and van Emde Boas layout trees used in databases (Ch13).
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 03</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch03 / q01</span>
+        <span class="mcq-diff">&#9733; vEB Recurrence</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Without storing min/max separately, the vEB Successor makes 3 recursive calls giving $T(u) = 3T(\sqrt{u}) + O(1)$. What does this solve to?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$O(\log\log u)$ &mdash; same as the optimised version</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>$O(\log u)$ &mdash; linear in the log</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>$O((\log u)^{\log_2 3}) \approx O((\log u)^{1.585})$ &mdash; super-logarithmic</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$O(\sqrt{u})$ &mdash; same as the clustered bit vector</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C &mdash; $O((\log u)^{\log_2 3}) \approx O((\log u)^{1.585})$.</strong><br/><br/>
+          Substitute $m = \log u$: the recurrence $T(u) = 3T(\sqrt{u}) + O(1)$ becomes $T'(m) = 3T'(m/2) + O(1)$ with $a=3$, $b=2$, $f(m)=O(1)$. Since $m^{\log_2 3} \gg O(1)$, Case 1 of the Master Theorem gives $T'(m) = \Theta(m^{\log_2 3}) = \Theta((\log u)^{1.585})$. This is strictly worse than $O(\log u)$ for large $u$, but better than $O(\log u)$ only slightly. The key optimisation (store min, don&rsquo;t recurse it) is what makes vEB achieve $O(\log\log u)$.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch03 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; vEB Insert</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In vEB Insert, when a cluster is <strong>empty</strong> before the insertion, why is the recursive call <code>cluster[hi].insert(lo)</code> $O(1)$?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Because $\sqrt{u} = O(1)$ for small clusters</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>Because inserting into an empty vEB structure just sets min=max=x and returns immediately &mdash; no further recursion</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Because the cluster uses a hash table with $O(1)$ insert</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Because lo = 0 always when a cluster is first populated</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The first line of Insert checks: <code>if V.min is None: V.min = V.max = x; return</code>. When a cluster is empty, its min is None, so this base case fires immediately in $O(1)$ time &mdash; no recursive calls into sub-clusters or summary. This is precisely what makes Insert recurse only once: if the cluster was empty, <code>cluster[hi].insert(lo)</code> is $O(1)$, so only <code>summary.insert(hi)</code> recurses non-trivially. If the cluster was non-empty, <code>summary.insert(hi)</code> is $O(1)$ (the hi-th cluster is already recorded in summary), so only <code>cluster[hi].insert(lo)</code> recurses. Never both.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch03 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Skip List Levels</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A skip list has $n = 1024$ elements. With high probability, the maximum number of levels is at most $c\log_2 n$ for what value of $c$ (approximately)?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$c = 1/2$ &mdash; levels are $O(\frac{1}{2}\log n)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$c = 1$ &mdash; levels are exactly $\log_2 n = 10$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$c$ can be any constant $> 1$; larger $c$ gives smaller error probability $O(1/n^{c-1})$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$c = \sqrt{\log n}$ &mdash; from the Chernoff bound directly</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The w.h.p. bound is parametric. The probability that the max level exceeds $c\log_2 n$ is at most $n \cdot (1/2)^{c\log_2 n} = n \cdot n^{-c} = n^{1-c}$. For $c=2$: error $\leq 1/n$. For $c=3$: error $\leq 1/n^2$. For $c=\alpha+1$: error $\leq 1/n^\alpha$. So we can make the error probability $O(1/n^\alpha)$ for any $\alpha$ by choosing $c = \alpha+1$. This is the essence of the with-high-probability definition: we can trade a slightly larger constant in the $O(\log n)$ bound for polynomially smaller error probability.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch03 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Union Bound Application</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A sorting algorithm runs $n$ skip list searches, each costing $O(\log n)$ w.h.p. (error $\leq 1/n^2$). What is the probability that <strong>all</strong> $n$ searches are fast, and why does the algorithm still run in $O(n\log n)$ w.h.p.?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Probability $\geq 1 - 1/n^2$ &mdash; the individual w.h.p. bound applies to all searches jointly</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Probability $\geq 1 - n/n^2 = 1 - 1/n$ &mdash; still polynomially small error, so the algorithm is still w.h.p. $O(n\log n)$ for any fixed $\alpha$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>By the union bound, $\Pr[\text{any search slow}] \leq n \cdot 1/n^2 = 1/n$. So all $n$ searches are fast with probability $\geq 1-1/n$, which is w.h.p. for $\alpha=1$. Setting error $\leq 1/n^{\alpha+1}$ per search gives total error $\leq 1/n^\alpha$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Cannot bound &mdash; $n$ searches could all fail simultaneously</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C &mdash; union bound gives $1/n$ total error.</strong><br/><br/>
+          Boole&rsquo;s inequality (union bound): $\Pr[E_1 \cup E_2 \cup \cdots \cup E_n] \leq \sum_{i=1}^n \Pr[E_i]$. Each search fails with probability $\leq 1/n^2$, so $\Pr[\text{any of the } n \text{ searches fail}] \leq n \cdot 1/n^2 = 1/n$. All searches succeed with probability $\geq 1 - 1/n$. For stronger guarantees: set per-search error $\leq 1/n^{\alpha+1}$, giving total error $\leq n \cdot 1/n^{\alpha+1} = 1/n^\alpha$. This is why w.h.p. events are closed under polynomial unions &mdash; $\text{poly}(n)$ w.h.p. events combined are still w.h.p.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 03</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Trace through vEB Successor($V$, 3) on the structure containing $\{1, 9, 10, 15\}$ with $u=16$. Show $\text{high}(x)$, $\text{low}(x)$ at each step, which clusters are checked, and how the summary is consulted. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Build a skip list by inserting keys $[3, 6, 7, 9, 12, 19, 17, 26, 21]$ in that order. For each insertion, simulate coin flips (use the sequence H,T,H,H,T,T,H,T,H,H,T,T for the decisions). Draw the resulting multi-level structure. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Prove that $T(u) = T(\sqrt{u}) + O(1)$ solves to $T(u) = O(\log\log u)$ by the substitution $m = \log u$: show that $T'(m) = T'(m/2) + O(1)$ and solve this by the Master Theorem or telescoping. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement the vEB Delete operation from scratch (without looking at the code above). Test it by: insert $\{2, 3, 7, 11, 13\}$ into a $u=16$ vEB, then delete $3$, $7$, and $13$ one by one, verifying the correct min/max after each deletion. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Implement a skip list with a <code>range_query(lo, hi)</code> method that returns all elements in $[lo, hi]$ in $O(\log n + k)$ time where $k$ is the output size. Apply it to find all NIFTY strikes between 23500 and 24000. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">The backwards analysis of skip list search uses coin flips. Formalise: let $C(k, h)$ = expected number of coin flips to get $h$ HEADS given we start with at most $k$ total flips allowed. Show that $C(k, h) = O(h + k/2)$ for appropriate parameters, giving $O(\log n)$ total steps. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">Compare skip list and vEB tree on the following workload: $10^5$ inserts of random integers in $[0, 10^6)$, then $10^5$ successor queries. Implement both in Python and measure wall-clock time. Which is faster in practice? Does the answer change if queries are clustered (consecutive keys)? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove vEB Delete runs in $O(\log\log u)$ by showing that when the second recursive call fires (to delete from summary), the first call (to cluster) took $O(1)$ time, and vice versa. Draw the case analysis tree. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Apply the Chernoff bound $\Pr[Y \geq \mathbb{E}[Y] + r] \leq e^{-2r^2/m}$ to prove: the number of steps in a skip list search is at most $d\log n$ with probability $\geq 1 - 1/n^c$ for appropriate $c, d$. What values of $c$ and $d$ does the proof give? <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">The Patrascu-Thorup (2007) lower bound states: any data structure for Predecessor on a universe of size $u$ using $O(n \cdot \text{poly}(\log n))$ space requires $\Omega(\log\log u)$ time per query (for $u = n^{O(\log n)}$). Explain intuitively why this matches the vEB upper bound, making vEB optimal for this problem. <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch2.html" class="ch-nav-btn">&larr; Fast Fourier Transform</a>
+    <a href="PROG_DAA_Ch4.html" class="ch-nav-btn primary">Next: Hashing &amp; Augmentation &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 vEB recurses once. T(u)=T(√u)+O(1). O(log log u).","✨ Skip list level bound confirmed. Union bound applied.","🏆 Backwards analysis complete. O(log n) w.h.p.","🔥 Insert base case: empty vEB sets min=max=x in O(1).","💡 3 recursions give O((log u)^1.585) not O(log log u).","📐 W.h.p. events compose under polynomial unions.","⚡ Successor finds next non-empty cluster via summary in O(1)."];
+const wrongMsgs=["🌀 Count the recursive calls in Successor — the key is reducing from 3 to 1.","📉 Insert into empty vEB: min was None, so it sets min=max=x and returns. O(1).","😰 W.h.p. error probability: 1/n^c per operation, union bound over n ops = 1/n^(c-1).","📐 Substitute m=log u: T'(m) = T'(m/2) + O(1) telescopes to O(log m) = O(log log u).","🤔 The constant c is a trade-off: larger c = smaller error probability but bigger O(log n) constant."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

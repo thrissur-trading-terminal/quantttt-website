@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Linear Programming &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-adv{background:rgba(45,37,96,0.08);color:var(--navy2);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Linear Programming</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:77%"></div></div>
+      <span class="tb-progress-label">10 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-adv">Advanced</span>
+      <span class="ch-num">Chapter 10 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Linear Programming</h1>
+    <p class="chapter-subtitle">Optimise a linear objective subject to linear constraints — the universal language of constrained optimisation. LP subsumes max-flow, shortest paths, and difference constraints as special cases. Duality turns every LP into two mirror problems whose optimal values are equal, giving certificates of optimality without solving the problem twice. Simplex walks the polytope vertices to the optimum; interior-point methods race through the interior.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Standard Form</h3>
+    <p>Every LP can be written in <strong>standard form</strong>:</p>
+    <div class="math-block">$$\text{maximise} \quad c^\top x \qquad \text{subject to} \quad Ax \leq b,\; x \geq 0$$</div>
+    <p>where $x \in \mathbb{R}^d$ are the decision variables, $c \in \mathbb{R}^d$ is the objective coefficient vector, $A \in \mathbb{R}^{n\times d}$ encodes the $n$ inequality constraints, and $b \in \mathbb{R}^n$ is the right-hand-side vector. Non-standard forms convert to standard form via simple rules.</p>
+
+    <div class="callout callout-definition">
+      <strong>Conversion rules to standard form:</strong><br/>
+      &mdash; <strong>Minimise</strong> $c^\top x$: negate to maximise $-c^\top x$<br/>
+      &mdash; <strong>Unrestricted variable</strong> $x_j$ (no sign constraint): replace $x_j = x_j^+ - x_j^-$ with $x_j^+, x_j^- \geq 0$<br/>
+      &mdash; <strong>Equality constraint</strong> $a^\top x = b$: split into $a^\top x \leq b$ and $-a^\top x \leq -b$<br/>
+      &mdash; <strong>$\geq$ constraint</strong> $a^\top x \geq b$: negate to $-a^\top x \leq -b$
+    </div>
+
+    <h3>Geometric Intuition: The Feasible Polytope</h3>
+    <p>Each constraint $a_i^\top x \leq b_i$ defines a halfspace in $\mathbb{R}^d$. The feasible region is the intersection of $n$ halfspaces &mdash; a convex polytope. The objective $c^\top x = \text{const}$ is a family of parallel hyperplanes; we want the one tangent to the polytope in the direction of $c$. This tangent point is always a <strong>vertex</strong> (corner) of the polytope (or the LP is unbounded or infeasible).</p>
+
+    <h3>Motivating Example: Campaign Spending</h3>
+    <p>3 demographics, 4 policy issues. Coefficient table gives votes per dollar spent per issue per demographic. We need a majority in each demographic (population: Urban 100k, Suburban 200k, Rural 50k). Minimise total spending $x_1 + x_2 + x_3 + x_4$:</p>
+    <div class="math-block">$$\begin{aligned}
+    -2x_1 + 8x_2 + 0x_3 + 10x_4 &\geq 50{,}000 \quad \text{(Urban)}\\
+    5x_1 + 2x_2 + 0x_3 + 0x_4 &\geq 100{,}000 \quad \text{(Suburban)}\\
+    3x_1 - 5x_2 + 10x_3 - 2x_4 &\geq 25{,}000 \quad \text{(Rural)}\\
+    x_1, x_2, x_3, x_4 &\geq 0
+    \end{aligned}$$</div>
+    <p>Optimal solution: $x_1 \approx 18{,}468$, $x_2 \approx 3{,}829$, $x_3 = 0$, $x_4 \approx 5{,}631$. Total cost $\approx 27{,}928$ (i.e., $3{,}100{,}000 / 111$).</p>
+
+    <h3>LP Duality</h3>
+    <p>Every LP (the <em>primal</em>) has a <em>dual</em> LP. The dual&rsquo;s optimal value equals the primal&rsquo;s — this is the <strong>strong duality theorem</strong> (proved via the simplex algorithm or Farkas&rsquo; lemma).</p>
+
+    <div class="callout callout-definition">
+      <strong>Primal &mdash; dual correspondence:</strong>
+      <table style="width:100%;border-collapse:collapse;margin:0.8rem 0;font-size:0.83rem;">
+        <tr>
+          <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.5rem 1rem;text-align:left;">Primal (maximise)</th>
+          <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.5rem 1rem;text-align:left;">Dual (minimise)</th>
+        </tr>
+        <tr><td style="padding:0.5rem 1rem;border-bottom:1px solid var(--border);">Maximise $c^\top x$</td><td style="padding:0.5rem 1rem;border-bottom:1px solid var(--border);">Minimise $b^\top y$</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.5rem 1rem;border-bottom:1px solid var(--border);">Subject to $Ax \leq b$</td><td style="padding:0.5rem 1rem;border-bottom:1px solid var(--border);">Subject to $A^\top y \geq c$</td></tr>
+        <tr><td style="padding:0.5rem 1rem;">$x \geq 0$</td><td style="padding:0.5rem 1rem;">$y \geq 0$</td></tr>
+      </table>
+      <strong>Weak duality:</strong> for any primal feasible $x$ and dual feasible $y$: $c^\top x \leq b^\top y$. Proof: $c^\top x \leq (A^\top y)^\top x = y^\top A x \leq y^\top b = b^\top y$.<br/>
+      <strong>Strong duality:</strong> at optimality, $c^\top x^* = b^\top y^*$. The dual optimal $y^*$ is a certificate of primal optimality.
+    </div>
+
+    <h3>LP as a Certificate of Optimality</h3>
+    <p>The dual gives short optimality certificates. In the campaign example, multiplying constraints (1), (2), (3) by multipliers $\lambda_1, \lambda_2, \lambda_3 \geq 0$ and summing produces a lower bound on $x_1+x_2+x_3+x_4$. The certificate shows the proposed solution achieves that lower bound — hence it is optimal.</p>
+
+    <h3>LP Formulation: Max-Flow</h3>
+    <div class="callout callout-definition">
+      Given $G=(V,E)$ with capacities $c(e)$, source $s$, sink $t$:
+      $$\text{Maximise} \sum_{v\in V} f(s,v) \qquad \text{subject to}$$
+      $$f(u,v) = -f(v,u) \;\forall u,v \quad \text{(skew symmetry)}$$
+      $$\sum_v f(u,v) = 0 \;\forall u\neq s,t \quad \text{(conservation)}$$
+      $$f(u,v) \leq c(u,v) \;\forall u,v \quad \text{(capacity)}$$
+      The dual of this LP is the min-cut LP. Strong duality gives the max-flow min-cut theorem.
+    </div>
+
+    <h3>LP Formulation: Shortest Paths</h3>
+    <div class="callout callout-definition">
+      Given $G=(V,E)$ with weights $w(e)$, source $s$:
+      $$\text{Maximise} \sum_{v\in V} d(v) \qquad \text{subject to}$$
+      $$d(v) - d(u) \leq w(u,v) \;\forall (u,v)\in E \quad \text{(triangle inequality)}$$
+      $$d(s) = 0$$
+      We <em>maximise</em> (not minimise) the sum of distances so they don&rsquo;t collapse to $-\infty$. The LP is infeasible iff there is a negative cycle. This is exactly the difference constraints system from Ch8.
+    </div>
+
+    <h3>The Simplex Algorithm</h3>
+    <p>The simplex method exploits the vertex structure of the feasible polytope. Since the optimal is always at a vertex, we can search over vertices. Key insight: move from vertex to adjacent vertex only if the objective improves. When no improving neighbour exists — we&rsquo;re optimal.</p>
+
+    <div class="callout callout-definition">
+      <strong>Slack form.</strong> Introduce one slack variable $x_{d+i}$ per constraint $i$:
+      $$x_{d+i} = b_i - a_i^\top x \geq 0$$
+      Now all constraints are equalities. The $d$ original variables are <em>nonbasic</em> (start at 0); the $n$ slack variables are <em>basic</em> (start at $b_i$). A <em>basic feasible solution</em> sets all nonbasic variables to 0.
+      <br/><br/>
+      <strong>Pivot step:</strong><br/>
+      1. Choose a nonbasic variable $x_e$ with positive objective coefficient (it improves $z$ if increased).<br/>
+      2. Find the binding constraint: increase $x_e$ until one basic variable $x_l$ hits 0. This is the <em>leaving variable</em>.<br/>
+      3. Swap: $x_e$ becomes basic, $x_l$ becomes nonbasic. Rewrite all equations in terms of the new basis.<br/>
+      4. Repeat until no nonbasic variable has a positive coefficient.<br/>
+      <br/>
+      <strong>Termination:</strong> when all objective coefficients for nonbasic variables are $\leq 0$, the current basic solution is optimal.<br/>
+      <strong>Complexity:</strong> $O\!\binom{n+d}{n}$ pivots in the worst case (exponential), but fast in practice. Polynomial-time algorithms exist (ellipsoid, interior-point).
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">LP standard form + scipy solver &middot; primal and dual</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import numpy as np
+from scipy.optimize import linprog
+
+# ── CAMPAIGN SPENDING EXAMPLE ── minimise total spending ─────────────
+# Negate for maximise convention; linprog minimises by default
+# Primal: minimise x1+x2+x3+x4
+# Constraints (negated to <=):  -(-2x1+8x2+10x4) <= -50000  etc.
+
+c = [1, 1, 1, 1]     # minimise x1+x2+x3+x4
+
+# Constraints Ax <= b  (negate >= constraints)
+A = [[-(-2), -8,  0, -10],    # Urban: -(votes) <= -50000
+     [-5,    -2,  0,   0],    # Suburban
+     [-3,     5, -10,  2]]    # Rural
+b = [-50000, -100000, -25000]
+
+result = linprog(c, A_ub=A, b_ub=b, bounds=[(0,None)]*4,
+                 method='highs')
+print(f"Optimal spend: ${result.fun:,.0f}")
+print(f"x = {result.x.round(1)}")
+# Optimal spend: ~$27,928,  x ≈ [18468, 3829, 0, 5631]
+
+
+# ── LP DUALITY DEMONSTRATION ── weak duality certificate ─────────────
+def verify_weak_duality(c, A, b, x_primal, y_dual):
+    """
+    Weak duality: c^T x <= b^T y for any feasible primal x, dual y.
+    At optimality: c^T x* = b^T y* (strong duality).
+    """
+    primal_val = np.dot(c, x_primal)
+    dual_val   = np.dot(b, y_dual)
+    print(f"Primal value c^T x  = {primal_val:.4f}")
+    print(f"Dual   value b^T y  = {dual_val:.4f}")
+    print(f"Weak duality holds: {primal_val <= dual_val + 1e-9}")
+    print(f"Strong duality (at optimum): {abs(primal_val-dual_val) < 1e-6}")
+
+
+# ── MAX-FLOW AS LP ── demonstrating LP subsumes flow ─────────────────
+def max_flow_lp(n, edges, source, sink, capacities):
+    """
+    Solve max flow as an LP (educational; scipy linprog is not sparse-aware).
+    Maximise flow out of source subject to:
+      - Capacity: f(e) <= c(e) for each edge
+      - Conservation: inflow = outflow at each internal vertex
+      - Non-negativity: f(e) >= 0
+    """
+    m = len(edges)
+    # Variables: f[0..m-1] = flow on each edge
+    # Objective: -sum of flows out of source (negate to minimise)
+    c_obj = [0.0] * m
+    for i, (u,v) in enumerate(edges):
+        if u == source:
+            c_obj[i] = -1.0   # maximise source outflow
+
+    # Capacity constraints: f[i] <= cap[i]
+    A_ub = np.eye(m)
+    b_ub = capacities
+
+    # Conservation constraints (equality): for each internal node
+    A_eq, b_eq = [], []
+    internal = [v for v in range(n) if v != source and v != sink]
+    for node in internal:
+        row = [0.0] * m
+        for i, (u,v) in enumerate(edges):
+            if v == node: row[i] =  1.0   # inflow
+            if u == node: row[i] = -1.0   # outflow
+        A_eq.append(row)
+        b_eq.append(0.0)
+
+    result = linprog(c_obj, A_ub=A_ub, b_ub=b_ub,
+                     A_eq=A_eq if A_eq else None,
+                     b_eq=b_eq if b_eq else None,
+                     bounds=[(0,None)]*m, method='highs')
+    return -result.fun if result.success else None
+
+
+# ── SHORTEST PATHS AS LP ── difference constraints ────────────────────
+def shortest_paths_lp(n, edges, source):
+    """
+    Maximise sum(d) subject to d[v] - d[u] <= w(u,v) and d[source]=0.
+    Equivalent to finding shortest paths from source.
+    """
+    m = len(edges)
+    # Variables: d[0..n-1]
+    c_obj = [-1.0] * n     # maximise sum d[v]
+
+    A_ub, b_ub = [], []
+    for u, v, w in edges:
+        row = [0.0]*n
+        row[v] =  1.0
+        row[u] = -1.0
+        A_ub.append(row)
+        b_ub.append(w)
+
+    # d[source] = 0
+    A_eq = [[0.0]*n]; A_eq[0][source] = 1.0
+    b_eq = [0.0]
+
+    result = linprog(c_obj, A_ub=A_ub, b_ub=b_ub,
+                     A_eq=A_eq, b_eq=b_eq,
+                     bounds=[(None,None)]*n, method='highs')
+    return result.x if result.success else None</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// LP standard form — interface sketch
+// Production LP solvers in C++: GLPK, CPLEX, Gurobi, HiGHS
+// Below: conceptual structure only (use a real solver in practice)
+
+#include &lt;vector&gt;
+#include &lt;string&gt;
+using namespace std;
+
+struct LP {
+    int n_vars;      // d: number of decision variables
+    int n_cons;      // n: number of inequality constraints
+    vector&lt;double&gt; c;         // objective coefficients (maximise c^T x)
+    vector&lt;vector&lt;double&gt;&gt; A; // constraint matrix (A x <= b)
+    vector&lt;double&gt; b;         // RHS vector
+    // x >= 0 implicit
+
+    // Dual LP: minimise b^T y s.t. A^T y >= c, y >= 0
+    LP dual() const {
+        LP d;
+        d.n_vars = n_cons;      // dual variables = primal constraints
+        d.n_cons = n_vars;      // dual constraints = primal variables
+        d.c      = b;           // dual objective = primal RHS
+        d.b.resize(n_vars);
+        for (int j=0;j&lt;n_vars;j++) d.b[j] = -c[j]; // A^T y >= c → -A^T y <= -c
+        d.A.resize(n_vars, vector&lt;double&gt;(n_cons));
+        for (int j=0;j&lt;n_vars;j++)
+            for (int i=0;i&lt;n_cons;i++)
+                d.A[j][i] = -A[i][j];   // negated transpose
+        return d;
+    }
+    // At optimality: c^T x* = b^T y* (strong duality)
+    // Proof: follows from complementary slackness conditions
+};</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Simplex: Step-by-Step Worked Example</h3>
+    <p>Maximise $z = 3x_1 + x_2 + 2x_3$ subject to $x_1+x_2+3x_3 \leq 30$, $2x_1+2x_2+5x_3 \leq 24$, $4x_1+x_2+2x_3 \leq 36$, $x_1,x_2,x_3 \geq 0$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Initial slack form</strong> (basic variables $x_4, x_5, x_6$; nonbasic $x_1,x_2,x_3 = 0$):
+      $$z = 3x_1 + x_2 + 2x_3, \quad x_4 = 30-x_1-x_2-3x_3, \quad x_5 = 24-2x_1-2x_2-5x_3, \quad x_6 = 36-4x_1-x_2-2x_3$$
+      Basic solution: $(x_1,x_2,x_3,x_4,x_5,x_6) = (0,0,0,30,24,36)$, $z=0$.
+      <br/><br/>
+      <strong>Pivot 1:</strong> $x_1$ has the highest positive coefficient ($+3$). Binding constraint: $x_6 = 36-4x_1 \geq 0 \Rightarrow x_1 \leq 9$. Pivot: $x_1$ enters, $x_6$ leaves. Rewrite $x_1 = 9 - x_2/4 - x_3/2 - x_6/4$. Substitute into all equations. New $z = 27 + x_2/4 + x_3/2 - 3x_6/4$. New solution $(9,0,0,21,6,0)$, $z=27$.
+      <br/><br/>
+      <strong>Pivot 2:</strong> $x_3$ has positive coefficient ($+1/2$). Binding: $x_5 = 6 - 4x_3 \geq 0 \Rightarrow x_3 \leq 3/2$. Pivot $x_3$ in, $x_5$ out. New $z = 111/4 + x_2/16 - 11x_5/8 - 11x_6/16$. Solution $(33/4, 0, 3/2, 69/4, 0, 0)$, $z=111/4$.
+      <br/><br/>
+      <strong>Pivot 3:</strong> $x_2$ has positive coefficient. Pivot $x_2$ in. After substitution, all nonbasic coefficients are $\leq 0$. <strong>Optimal:</strong> $z=28$, at $(x_1,x_2,x_3)=(8,4,0)$.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Simplex implementation (educational) &middot; O(binom(n+d, n)) worst case</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import numpy as np
+
+def simplex(c, A, b):
+    """
+    Simplex algorithm in slack form. Maximise c^T x s.t. Ax <= b, x >= 0.
+    Educational implementation — not numerically robust; use scipy for production.
+
+    Returns (optimal_value, optimal_x) or raises if infeasible/unbounded.
+
+    Algorithm:
+    1. Introduce slack variables: B = A|I (n x (d+n)), extended cost c_ext.
+    2. Pivot: find entering variable (most positive objective coefficient),
+       find leaving variable (min-ratio test to stay feasible),
+       update tableau.
+    3. Stop when no positive objective coefficient remains.
+    """
+    d, n = len(c), len(b)
+    # Build initial tableau: [A | I | b] with objective row [-c | 0 | 0]
+    # Rows 0..n-1: constraints. Row n: objective.
+    tab = np.zeros((n+1, d+n+1))
+    tab[:n, :d] = A                        # constraint coefficients
+    tab[:n, d:d+n] = np.eye(n)            # slack variables
+    tab[:n, -1] = b                        # RHS
+    tab[n, :d] = -np.array(c, dtype=float) # objective (negated for min form)
+
+    basis = list(range(d, d+n))            # initial basis: slack variables
+
+    for _ in range(1000):                  # max iterations guard
+        # Find entering variable: most negative in objective row
+        pivot_col = np.argmin(tab[n, :-1])
+        if tab[n, pivot_col] >= -1e-9:
+            break                          # optimal: all coefficients >= 0
+
+        # Min-ratio test: find leaving variable
+        ratios = np.full(n, np.inf)
+        for i in range(n):
+            if tab[i, pivot_col] > 1e-9:
+                ratios[i] = tab[i, -1] / tab[i, pivot_col]
+        if np.all(np.isinf(ratios)):
+            raise ValueError("LP is unbounded")
+        pivot_row = np.argmin(ratios)
+
+        # Pivot: divide pivot row by pivot element, then eliminate column
+        tab[pivot_row] /= tab[pivot_row, pivot_col]
+        for i in range(n+1):
+            if i != pivot_row:
+                tab[i] -= tab[i, pivot_col] * tab[pivot_row]
+
+        basis[pivot_row] = pivot_col
+
+    # Extract solution
+    x = np.zeros(d + n)
+    for i, b_idx in enumerate(basis):
+        x[b_idx] = tab[i, -1]
+    return tab[n, -1], x[:d]   # objective value, original variables
+
+
+# Verify on the lecture example
+c_ex = [3, 1, 2]
+A_ex = [[1,1,3],[2,2,5],[4,1,2]]
+b_ex = [30, 24, 36]
+val, x_opt = simplex(c_ex, A_ex, b_ex)
+print(f"Optimal value: {val:.4f}")   # 28.0
+print(f"Optimal x: {x_opt}")         # [8, 4, 0]</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Simplex algorithm — educational tableau implementation
+// For production: use GLPK, HiGHS, CPLEX, or Gurobi
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;numeric&gt;
+#include &lt;limits&gt;
+#include &lt;stdexcept&gt;
+using namespace std;
+
+pair&lt;double, vector&lt;double&gt;&gt;
+simplex(const vector&lt;double&gt;&amp; c,
+        const vector&lt;vector&lt;double&gt;&gt;&amp; A,
+        const vector&lt;double&gt;&amp; b) {
+    int d = c.size(), n = b.size();
+    // Tableau: (n+1) x (d+n+1)
+    vector&lt;vector&lt;double&gt;&gt; T(n+1, vector&lt;double&gt;(d+n+1, 0));
+    for (int i=0;i&lt;n;i++) {
+        for (int j=0;j&lt;d;j++) T[i][j] = A[i][j];
+        T[i][d+i] = 1;          // slack
+        T[i][d+n] = b[i];       // rhs
+    }
+    for (int j=0;j&lt;d;j++) T[n][j] = -c[j]; // objective (negated)
+    vector&lt;int&gt; basis(n); iota(basis.begin(),basis.end(),d);
+
+    for (int iter=0;iter&lt;10000;iter++) {
+        // Find entering variable (most negative obj coefficient)
+        int pc = min_element(T[n].begin(), T[n].end()-1) - T[n].begin();
+        if (T[n][pc] &gt;= -1e-9) break;   // optimal
+
+        // Min-ratio test
+        int pr = -1; double min_r = 1e18;
+        for (int i=0;i&lt;n;i++)
+            if (T[i][pc]&gt;1e-9) {
+                double r = T[i][d+n]/T[i][pc];
+                if (r&lt;min_r) { min_r=r; pr=i; }
+            }
+        if (pr==-1) throw runtime_error("unbounded");
+
+        // Pivot
+        double piv = T[pr][pc];
+        for (auto&amp; x : T[pr]) x /= piv;
+        for (int i=0;i&lt;=n;i++)
+            if (i!=pr) {
+                double f = T[i][pc];
+                for (int j=0;j&lt;=d+n;j++) T[i][j] -= f*T[pr][j];
+            }
+        basis[pr] = pc;
+    }
+
+    vector&lt;double&gt; x(d, 0);
+    for (int i=0;i&lt;n;i++) if (basis[i]&lt;d) x[basis[i]]=T[i][d+n];
+    return {T[n][d+n], x};
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">LP in quant finance: portfolio optimisation (mean-variance as QP) &middot; scipy</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">import numpy as np
+from scipy.optimize import linprog, minimize
+
+# ── MINIMUM COST FLOW AS LP ── ────────────────────────────────────────
+def min_cost_flow_lp(n, edges, source, sink, demand, costs, capacities):
+    """
+    Minimum cost max-flow as LP.
+    edges: list of (u, v). costs[i], capacities[i] for each edge.
+    Minimise sum cost[i]*f[i] subject to:
+      - Capacity: 0 <= f[i] <= capacities[i]
+      - Conservation: inflow - outflow = demand at each node
+    """
+    m = len(edges)
+    # Objective: minimise cost^T f
+    c_obj = costs
+
+    # Conservation (equality): B f = demand
+    B = np.zeros((n, m))
+    for i, (u, v) in enumerate(edges):
+        B[u][i] = -1   # outflow
+        B[v][i] =  1   # inflow
+
+    bounds = [(0, cap) for cap in capacities]
+    result = linprog(c_obj, A_eq=B, b_eq=demand,
+                     bounds=bounds, method='highs')
+    return result.x if result.success else None
+
+
+# ── MARKOWITZ MEAN-VARIANCE (LP-RELAXED) ── ───────────────────────────
+def markowitz_max_return(mu, Sigma, risk_limit, long_only=True):
+    """
+    Maximise expected return mu^T w subject to:
+      - Portfolio risk w^T Sigma w <= risk_limit^2  (quadratic constraint!)
+      - Sum weights = 1
+      - w >= 0 (long only)
+
+    Note: this is a QP (quadratic programming), not a pure LP.
+    LP approximation: linearise variance using diagonal only.
+    True QP: use scipy minimize with method='SLSQP'.
+    """
+    n = len(mu)
+
+    def neg_return(w): return -np.dot(mu, w)
+    def grad_return(w): return -mu
+
+    constraints = [
+        {'type': 'eq',  'fun': lambda w: np.sum(w) - 1},            # weights sum to 1
+        {'type': 'ineq','fun': lambda w: risk_limit**2 - w@Sigma@w} # risk constraint
+    ]
+    bounds = [(0,1)]*n if long_only else [(None,None)]*n
+    w0 = np.ones(n)/n
+
+    result = minimize(neg_return, w0, jac=grad_return,
+                      method='SLSQP', bounds=bounds,
+                      constraints=constraints)
+    return result.x if result.success else None
+
+
+# Example: 4 NSE instruments
+mu = np.array([0.12, 0.18, 0.10, 0.15])    # expected annual returns
+Sigma = np.array([                           # covariance matrix
+    [0.04, 0.02, 0.01, 0.02],
+    [0.02, 0.09, 0.02, 0.03],
+    [0.01, 0.02, 0.03, 0.01],
+    [0.02, 0.03, 0.01, 0.06],
+])
+w_opt = markowitz_max_return(mu, Sigma, risk_limit=0.15)
+print("Optimal portfolio weights:", w_opt.round(3))
+print("Expected return:", np.dot(mu, w_opt).round(4))</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Min-cost flow as LP — structure sketch
+// Production: use GLPK/HiGHS/CPLEX for LP/QP
+#include &lt;vector&gt;
+using namespace std;
+
+// Min cost flow LP:
+// Minimise sum_i cost[i] * f[i]
+// s.t.  sum_{edges into v} f[e] - sum_{edges out of v} f[e] = demand[v]
+//        0 &lt;= f[e] &lt;= cap[e]
+//
+// This is a network-structured LP — special structure enables
+// the network simplex algorithm which is much faster in practice.
+
+// Markowitz mean-variance:
+// Maximise mu^T w
+// s.t.  w^T Sigma w &lt;= sigma_max^2  (quadratic constraint → QP not LP)
+//        1^T w = 1, w &gt;= 0
+// Solve with QP solvers (OSQP, ECOS, Gurobi QP, etc.)
+// LP approximation: diagonal Sigma → linear in w^2_i constraints</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Options Strategy Selection as LP</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT / Pashupati</span>
+      </div>
+      <div class="we-body">
+        <p>TTT runs multiple option strategies simultaneously. Each strategy has a capital requirement, a delta limit, and an expected return. Given total capital, max delta exposure, and max vega, find the optimal allocation across strategies.</p>
+        <div class="we-step">Formulate as LP and solve</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">import numpy as np
+from scipy.optimize import linprog
+
+# 5 strategies: straddle, strangle, butterfly, calendar, condor
+strategies = ['Straddle','Strangle','Butterfly','Calendar','Condor']
+# Per-lot: (expected_return, capital_needed, delta, vega)
+data = {
+    'ret':     [0.08, 0.05, 0.03, 0.06, 0.04],  # per lot
+    'capital': [50,   40,   20,   30,   35],      # in 1000s
+    'delta':   [0.0,  0.0,  0.0,  0.1,  0.05],   # net delta per lot
+    'vega':    [200,  150,  80,   120,  100],     # vega per lot
+}
+# Constraints: capital <= 120k, |delta| <= 0.5, vega <= 600
+# Minimise -expected_return (to maximise with linprog)
+c = [-r for r in data['ret']]
+A = [data['capital'],   # capital constraint
+     data['delta'],     # delta constraint (one-sided; delta>=0 for these)
+     data['vega']]      # vega constraint
+b = [120, 0.5, 600]
+
+# Each strategy: 0 to 5 lots
+bounds = [(0, 5)] * 5
+result = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method='highs')
+
+print("Optimal lots per strategy:")
+for s, lots in zip(strategies, result.x):
+    print(f"  {s:12s}: {lots:.2f} lots")
+print(f"Expected return: {-result.fun:.4f}")
+</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> LP allocates lots to the highest-return strategies (Straddle, Calendar) until capital or vega is exhausted. The dual variables (shadow prices) tell you how much each additional unit of capital, delta, or vega is worth — directly useful for risk limit setting. This is exactly how portfolio optimisation tools at systematic options desks work.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      LP is foundational to quantitative finance. <strong>Mean-variance portfolio optimisation</strong> (Markowitz) is a quadratic program (QP), a natural extension of LP. <strong>Risk parity</strong> and <strong>factor exposure control</strong> are LP constraints. At Pashupati, the daily portfolio rebalancing problem is formulated as a QP with transaction cost linearisation (turning it back to LP). Python&rsquo;s <code>scipy.optimize.linprog</code> uses HiGHS (a state-of-the-art interior-point + simplex solver). For large-scale problems (thousands of instruments), <code>cvxpy</code> provides a modelling layer over solvers like OSQP (operator splitting QP, open-source, fast for finance). The LP formulation of shortest paths and max-flow shows that many graph algorithms are secretly solving special-structure LPs — and LP duality is what gives us the min-cut theorem and Bellman-Ford correctness.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 10</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch10 / q01</span>
+        <span class="mcq-diff">&#9733; Duality</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The primal LP maximises $c^\top x$ subject to $Ax \leq b$, $x \geq 0$. What is the dual LP, and what does weak duality guarantee?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Dual minimises $c^\top y$ s.t. $A^\top y \geq b$, $y \geq 0$; weak duality: primal $\geq$ dual at optimality</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Dual minimises $b^\top y$ s.t. $A^\top y \geq c$, $y \geq 0$; weak duality: for any feasible $x, y$, the primal value $c^\top x \leq b^\top y$ (dual upper bounds primal)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Dual maximises $b^\top y$ s.t. $Ay \leq c$, $y \geq 0$; weak duality: primal $\leq$ dual always</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>The dual is the same as the primal; every LP is self-dual</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The dual of the standard-form primal (maximise $c^\top x$ s.t. $Ax \leq b$, $x \geq 0$) is: minimise $b^\top y$ subject to $A^\top y \geq c$, $y \geq 0$. Weak duality: for any primal feasible $x$ and dual feasible $y$: $c^\top x \leq (A^\top y)^\top x = y^\top Ax \leq y^\top b = b^\top y$. So every dual feasible solution provides an upper bound on the primal maximum. At optimality (strong duality): $c^\top x^* = b^\top y^*$ — the primal value equals the dual value, and the dual optimal $y^*$ is a certificate that $x^*$ is truly optimal.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch10 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Simplex Pivot</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the simplex algorithm, why does the min-ratio test (choosing the leaving variable as the basic variable with the smallest ratio $b_i / a_{ie}$) ensure feasibility is maintained?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>It maximises the amount of flow pushed, making the algorithm converge faster</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>As the entering variable $x_e$ increases, the first basic variable to hit zero is the one with the smallest ratio $b_i/a_{ie}$; stopping there keeps all other basic variables non-negative</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>It ensures the pivot element is always 1, simplifying the row operations</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The min-ratio test is optional; any leaving variable works as long as the objective improves</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          When we increase $x_e$ from 0, basic variable $x_{d+i}$ decreases by $a_{ie} \cdot x_e$. It becomes 0 (its lower bound) when $x_e = b_i / a_{ie}$. If we let $x_e$ exceed this value, $x_{d+i}$ becomes negative — violating feasibility. The min-ratio test finds the smallest such ratio: $\min_i \{b_i/a_{ie} : a_{ie} > 0\}$. This is the maximum we can increase $x_e$ before the first basic variable hits zero. That basic variable leaves the basis and $x_e$ enters. All other basic variables with $a_{ie} > 0$ would also have decreased, but since we stopped at the minimum ratio, they remain $\geq 0$. Basic variables with $a_{ie} \leq 0$ actually increase or stay the same when $x_e$ increases, so they&rsquo;re no problem.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch10 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; LP and Shortest Paths</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The shortest paths LP maximises $\sum_v d(v)$ subject to $d(v)-d(u) \leq w(u,v)$ and $d(s)=0$. Why maximise (not minimise), and when is this LP infeasible?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Maximise because longer paths are preferred; infeasible when the graph is disconnected</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Minimise would give the trivial solution $d(v)=0$ for all $v$; infeasible when edge weights are all positive</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Minimise $\sum d(v)$ is trivially satisfied by $d(v) = -\infty$; maximising forces $d(v)$ to be as large as the triangle inequality allows, which equals $\delta(s,v)$. The LP is infeasible iff a negative-weight cycle exists (the constraints $d(v)-d(u)\leq w$ cannot all be satisfied simultaneously)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Maximise because $d(v)$ represents profit; infeasible when any edge has negative weight</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          If we minimised $\sum d(v)$, the optimal solution is $d(v) = -\infty$ for all $v \neq s$ (just make all distances $-\infty$, which trivially satisfies all triangle inequality constraints since $-\infty - (-\infty) = $ undefined, but in practice all $d(v) = -C$ for huge $C$ satisfies constraints). By maximising, we push $d(v)$ as large as the triangle inequality $d(v) \leq d(u)+w(u,v)$ allows. This is exactly the shortest path: the maximum $d(v)$ satisfying all triangle inequalities from $s$ is $\delta(s,v)$, the shortest-path distance. Infeasibility: the difference constraint system $d(v)-d(u) \leq w(u,v)$ has no solution iff there is a negative-weight cycle $v_0\to v_1\to\cdots\to v_k\to v_0$ with $\sum w < 0$ (adding the constraints around the cycle gives $0 \leq \sum w < 0$, a contradiction).
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch10 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Algorithms Comparison</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Simplex runs in exponential worst-case time but is fast in practice. Ellipsoid runs in polynomial time but is slow in practice. Interior-point methods are polynomial and practical. What fundamental reason explains the simplex algorithm&rsquo;s practical speed?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Simplex exploits the structure of integer programs, which most practical LPs are</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>The exponential worst case requires adversarially constructed polytopes (Klee-Minty cubes) that almost never appear in practice; typical LPs have polynomial pivot counts</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>Both B and the fact that each simplex pivot requires $O(nd)$ work (a dense linear system), while interior-point requires solving a large linear system per iteration — simplex pivots are cache-friendly and vectorisable</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Simplex always terminates in at most $n+d$ pivots where $n$ is constraints and $d$ is variables</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C — both empirical pivot count and implementation efficiency.</strong><br/><br/>
+          The exponential worst case (Klee-Minty cubes require $2^n-1$ pivots) almost never appears in real-world LP instances from transportation, finance, or network problems. Empirically, the simplex method takes $O(n)$ to $O(n\sqrt{d})$ pivots on practical problems. Additionally, each pivot operation is a dense row operation ($O(nd)$) that is highly optimised in libraries like HiGHS and CPLEX (vectorised BLAS routines). Interior-point methods theoretically need $O(\sqrt{n}\log(1/\epsilon))$ iterations but each iteration solves an $n \times n$ linear system ($O(n^3)$ naively), making them slower for medium-sized problems. Modern solvers use <strong>both</strong>: interior-point to find a good starting point, then simplex to &ldquo;clean up&rdquo; to an exact vertex solution.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 10</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Convert the following to standard form (maximise, $Ax \leq b$, $x \geq 0$): minimise $2x_1 - 3x_2$ subject to $x_1 + x_2 = 5$, $x_1 - x_2 \geq 1$, $x_1 \geq 0$, $x_2$ unrestricted. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Trace the simplex algorithm on the lecture example (maximise $3x_1+x_2+2x_3$ with the three given constraints) through all three pivot steps. For each pivot: identify entering variable, compute ratios, identify leaving variable, and rewrite the tableau. Verify the final objective is 28. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Write the dual of the campaign spending LP. Interpret the dual variables $y_1, y_2, y_3$: what do they represent economically (shadow prices on majority constraints)? Verify that $b^\top y^* = c^\top x^* = 3{,}100{,}000/111$ using the dual multipliers from the lecture certificate. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Formulate a 4-asset portfolio optimisation as an LP: maximise expected return subject to (a) weights sum to 1, (b) each weight between 0 and 0.4 (no asset more than 40%), (c) total portfolio beta $\leq 0.8$. Solve using scipy.optimize.linprog. What is the dual variable on the beta constraint? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Prove weak duality from first principles: for any primal feasible $x$ and dual feasible $y$ (in the standard max/min pair), show $c^\top x \leq b^\top y$. Then show that if you find $x^*$ and $y^*$ with $c^\top x^* = b^\top y^*$, both must be optimal. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Show that the max-flow problem can be written as a standard LP. Write out the primal LP explicitly for a 4-node network with 5 edges. Then write its dual and identify what the dual variables correspond to (they should relate to the min-cut). Verify strong duality gives max-flow = min-cut for a specific example. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The Klee-Minty cube is the LP that forces simplex to visit all $2^n$ vertices. For $n=3$, construct the Klee-Minty polytope and trace simplex visiting all 8 vertices. What pivot rule does this adversarially exploit, and which pivot rules (Bland&rsquo;s rule, steepest edge, etc.) are known to avoid this worst case? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove that the simplex algorithm terminates if we use Bland&rsquo;s rule (always choose the smallest-index entering and leaving variable). Show that this prevents cycling (revisiting the same basis), though it may require exponentially many steps. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">The complementary slackness conditions state: at optimality, for each primal variable $x_j$: either $x_j = 0$ or the $j$-th dual constraint is tight ($A_j^\top y = c_j$), and vice versa. Verify these conditions for the lecture simplex example at the optimal solution $(x_1,x_2,x_3)=(8,4,0)$. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">LP duality gives the max-flow min-cut theorem &ldquo;for free&rdquo; once you write max-flow as an LP. Conversely, explain how the simplex algorithm applied to the shortest-path LP recovers Bellman-Ford&rsquo;s relaxation steps. Is each Bellman-Ford relaxation equivalent to one simplex pivot? What does the basis correspond to in the Bellman-Ford setting? <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch9.html" class="ch-nav-btn">&larr; Network Flow</a>
+    <a href="PROG_DAA_Ch11.html" class="ch-nav-btn primary">Next: NP &amp; Approximation &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Dual: minimise b^T y s.t. A^T y >= c, y >= 0. Weak duality: c^T x <= b^T y.","✨ Min-ratio test: stopping at smallest b_i/a_ie keeps all basics non-negative.","🏆 Shortest path LP: maximise to avoid trivial -inf. Infeasible iff negative cycle.","🔥 Simplex fast in practice: Klee-Minty adversarial cases rarely appear in real LPs.","💡 Strong duality: primal optimal = dual optimal. Certificate of optimality.","📐 Slack form: introduce one slack variable per constraint. Nonbasic = 0 initially.","⚡ LP subsumes max-flow, shortest paths, difference constraints as special cases."];
+const wrongMsgs=["🌀 Dual of max c^T x s.t. Ax<=b, x>=0 is: min b^T y s.t. A^T y >= c, y >= 0. Weak: c^T x <= b^T y.","📉 Min-ratio test: find the smallest b_i/a_ie (with a_ie > 0). This is the binding constraint.","😰 Shortest path LP: if we minimised, all d(v)=-infinity satisfies constraints trivially. We maximise to force meaningful distances.","📐 Klee-Minty cubes force simplex through 2^n vertices — exponential worst case. BUT real LPs don't hit this.","🤔 Complementary slackness: at optimality, x_j > 0 implies j-th dual constraint is tight."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hashing, Augmentation &amp; B-Trees &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Hashing, Augmentation &amp; B-Trees</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:31%"></div></div>
+      <span class="tb-progress-label">4 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 04 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Hashing, Augmentation &amp; B-Trees</h1>
+    <p class="chapter-subtitle">Three ideas that power real systems. Universal hashing removes the assumption that keys are random, guaranteeing $O(1)$ expected operations. Augmentation adds information to existing trees without rebuilding them, enabling rank, select, and range queries. B-trees adapt trees to block storage, making them the backbone of every database and filesystem.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Part I &mdash; Universal Hashing</h3>
+
+    <p>Basic hashing with chaining achieves $\Theta(1+\alpha)$ per operation (where $\alpha = n/m$ is the load factor) under <strong>simple uniform hashing</strong> &mdash; the assumption that keys are drawn from a random distribution. This assumption is unreasonable in practice. Universal hashing removes it entirely.</p>
+
+    <div class="callout callout-definition">
+      <strong>Universal hash family.</strong> A family $\mathcal{H}$ of hash functions $h:\{0,\ldots,u-1\}\to\{0,\ldots,m-1\}$ is <em>universal</em> if for all distinct keys $k \neq k'$:
+      $$\Pr_{h \in \mathcal{H}}[h(k) = h(k')] \leq \frac{1}{m}$$
+      The probability is over a <em>uniformly random choice of $h$</em>, not over random keys. The keys can be adversarial.
+    </div>
+
+    <p><strong>Theorem.</strong> For $n$ arbitrary distinct keys and a random $h \in \mathcal{H}$ where $\mathcal{H}$ is universal:</p>
+    <div class="math-block">$$\mathbb{E}[\text{collisions with } k_i] \leq 1 + \frac{n}{m} = 1 + \alpha$$</div>
+    <p><strong>Proof.</strong> For each pair $i \neq j$, let $I_{i,j} = 1$ if $h(k_i) = h(k_j)$. By universality, $\mathbb{E}[I_{i,j}] \leq 1/m$. By linearity of expectation: $\mathbb{E}[\sum_{j \neq i} I_{i,j}] = \sum_{j \neq i} \mathbb{E}[I_{i,j}] \leq (n-1)/m \leq n/m = \alpha$. Add 1 for the key itself. $\square$</p>
+
+    <h3>Two Universal Hash Families</h3>
+
+    <div class="callout callout-definition">
+      <strong>Dot-product family.</strong> Requires $m$ prime, $u = m^r$. View key $k$ in base $m$: $k = \langle k_0, k_1, \ldots, k_{r-1}\rangle$. For $a \in \{0,\ldots,u-1\}$:
+      $$h_a(k) = a \cdot k \bmod m = \left(\sum_{i=0}^{r-1} a_i k_i\right) \bmod m$$
+      Family: $\mathcal{H} = \{h_a \mid a \in \{0,\ldots,u-1\}\}$. Storing $h_a$ costs $O(1)$ (just store $a$). Computing $h_a(k)$ costs $O(1)$.
+      <br/><br/>
+      <strong>CLRS family (multiplicative).</strong> Choose prime $p \geq u$. For $a, b \in \{1,\ldots,p-1\}$:
+      $$h_{a,b}(k) = [(ak + b) \bmod p] \bmod m$$
+      Family: $\mathcal{H} = \{h_{a,b}\}$. Also universal. Simpler to implement.
+    </div>
+
+    <h3>Perfect Hashing &mdash; $O(1)$ Worst-Case Search</h3>
+
+    <p>For a <strong>static</strong> dictionary (no inserts/deletes after build), we can achieve $O(1)$ worst-case search (not just expected). The idea: two-level hashing (FKS hashing, Fredman-Komlós-Szemerédi 1984).</p>
+
+    <div class="callout callout-definition">
+      <strong>Perfect hashing (FKS) &mdash; two-level construction:</strong><br/>
+      <strong>Level 1:</strong> Pick $h_1$ from a universal family for $m = \Theta(n)$ slots. Hash all $n$ items with chaining. Let $l_j$ = number of items in slot $j$.<br/>
+      <strong>Level 2:</strong> For each slot $j$, pick $h_{2,j}$ for a table of size $m_j = l_j^2$. No collisions guaranteed because $\Pr[\text{any collision}] \leq l_j(l_j-1)/2 \cdot 1/m_j = (l_j^2-l_j)/(2l_j^2) &lt; 1/2$. Retry if collision.<br/>
+      <strong>Space:</strong> $\sum_j m_j = \sum_j l_j^2$. Since $\mathbb{E}[\sum_j l_j^2] \leq cn$ for a universal $h_1$, this is $O(n)$ in expectation. Retry $h_1$ if $\sum_j l_j^2 > cn$.<br/>
+      <strong>Build time:</strong> $O(n \log^2 n)$ w.h.p. &mdash; acceptable for static tables.<br/>
+      <strong>Search:</strong> $O(1)$ worst case &mdash; two hash computations, no collision possible.
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">Universal Hashing + Perfect Hashing &middot; O(1) expected / worst-case</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import random, sympy
+
+# ── UNIVERSAL HASH FAMILY (CLRS multiplicative) ──────────────────────
+class UniversalHash:
+    """
+    h_{a,b}(k) = ((a*k + b) mod p) mod m
+    Universal: Pr[collision] <= 1/m for any k != k'.
+    """
+    def __init__(self, m, u=10**9):
+        self.m = m
+        self.p = sympy.nextprime(u)          # prime >= u
+        self.a = random.randint(1, self.p-1)
+        self.b = random.randint(0, self.p-1)
+
+    def __call__(self, k):
+        return ((self.a * k + self.b) % self.p) % self.m
+
+
+class HashTable:
+    """Universal hashing with chaining. O(1+α) expected per operation."""
+    def __init__(self, m=64):
+        self.m    = m
+        self.h    = UniversalHash(m)
+        self.table = [[] for _ in range(m)]
+        self.n    = 0
+
+    def insert(self, key, val):
+        slot = self.h(key)
+        for i, (k, _) in enumerate(self.table[slot]):
+            if k == key:
+                self.table[slot][i] = (key, val)
+                return
+        self.table[slot].append((key, val))
+        self.n += 1
+
+    def search(self, key):
+        for k, v in self.table[self.h(key)]:
+            if k == key: return v
+        return None
+
+    def delete(self, key):
+        slot = self.h(key)
+        self.table[slot] = [(k,v) for k,v in self.table[slot] if k != key]
+
+
+# ── PERFECT HASHING (FKS) ────────────────────────────────────────────
+class PerfectHash:
+    """
+    Static O(1) worst-case search via two-level universal hashing.
+    Build: O(n log^2 n) w.h.p.  Search: O(1) worst case.
+    """
+    def __init__(self, keys):
+        n = len(keys)
+        m = max(n, 2)
+
+        while True:                               # retry until good h1
+            h1   = UniversalHash(m)
+            slots = [[] for _ in range(m)]
+            for k in keys: slots[h1(k)].append(k)
+            if sum(len(s)**2 for s in slots) <= 4*n:
+                break                             # Step 1.5: space OK
+
+        self._h1    = h1
+        self._h2    = []
+        self._table = []
+
+        for slot in slots:
+            lj = len(slot)
+            if lj == 0:
+                self._h2.append(None); self._table.append({})
+                continue
+            mj = max(lj * lj, 1)
+            while True:                           # retry until no collision
+                h2 = UniversalHash(mj)
+                t  = {}
+                collision = False
+                for k in slot:
+                    hk = h2(k)
+                    if hk in t: collision = True; break
+                    t[hk] = k
+                if not collision: break
+            self._h2.append(h2)
+            self._table.append(t)
+
+    def search(self, key):                        # O(1) worst case!
+        j  = self._h1(key)
+        h2 = self._h2[j]
+        if h2 is None: return False
+        return key in self._table[j] and self._table[j][h2(key)] == key</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;random&gt;
+#include &lt;unordered_map&gt;
+using namespace std;
+
+// Universal hash h_{a,b}(k) = ((a*k+b) mod p) mod m
+struct UniversalHash {
+    long long a, b, p, m;
+    UniversalHash(long long m, long long p = 1000000007LL)
+        : m(m), p(p) {
+        mt19937_64 rng(random_device{}());
+        a = uniform_int_distribution&lt;long long&gt;(1, p-1)(rng);
+        b = uniform_int_distribution&lt;long long&gt;(0, p-1)(rng);
+    }
+    long long operator()(long long k) const {
+        return ((a * k + b) % p) % m;
+    }
+};
+
+// Hash table with universal hashing + chaining
+struct HashTable {
+    int m;
+    UniversalHash h;
+    vector&lt;vector&lt;pair&lt;long long, int&gt;&gt;&gt; table;
+
+    HashTable(int m = 64) : m(m), h(m), table(m) {}
+
+    void insert(long long key, int val) {
+        auto&amp; slot = table[h(key)];
+        for (auto&amp; [k, v] : slot)
+            if (k == key) { v = val; return; }
+        slot.push_back({key, val});
+    }
+
+    int* search(long long key) {
+        for (auto&amp; [k, v] : table[h(key)])
+            if (k == key) return &amp;v;
+        return nullptr;
+    }
+};</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Part II &mdash; Tree Augmentation</h3>
+
+    <p>Augmentation adds extra information to existing balanced BST nodes to answer richer queries, at the cost of updating that information during Insert/Delete. The key principle:</p>
+
+    <div class="callout callout-definition">
+      <strong>Easy tree augmentation.</strong> If we want to store $x.f = f(\text{subtree at } x)$ at each node $x$, and $x.f$ can be recomputed in $O(1)$ from $x$, its children, and their $f$-values, then modifying a set $S$ of nodes costs $O(\text{ancestors of } S)$ to update $f$ bottom-up. For AVL/2-3 trees, any update touches $O(\log n)$ ancestors, so augmentation adds $O(\log n)$ overhead.
+    </div>
+
+    <h3>Order-Statistics Trees</h3>
+    <p>Augment an AVL tree with subtree sizes: $x.\text{size} = 1 + \sum_c c.\text{size}$. This enables two new operations:</p>
+    <p><strong>rank($x$):</strong> how many elements are $< x$? Walk up from $x$ to root: whenever moving left to parent, add parent's left subtree size + 1. $O(\log n)$.</p>
+    <p><strong>select($i$):</strong> find the $i$-th smallest element. Walk down: if $i = $ left size + 1, return current node; if $i &lt;$ left size + 1, go left; else go right subtracting left size + 1 from $i$. $O(\log n)$.</p>
+
+    <h3>Range Trees &mdash; Multidimensional Range Queries</h3>
+    <p>Given $n$ points in $d$-dimensional space, answer <strong>orthogonal range queries</strong>: find all points in an axis-aligned box. A range tree achieves $O(\log^d n + k)$ query time where $k$ is the output size.</p>
+
+    <div class="callout callout-definition">
+      <strong>1D range tree:</strong> a balanced BST. Range-query$(a, b)$: search for $a$ and $b$, find their LCA $v_\text{split}$, then report all nodes and subtrees "between" $a$ and $b$ in the tree. Time: $O(\log n + k)$.<br/><br/>
+      <strong>2D range tree:</strong> primary BST keyed on $x$-coordinate. Each node $v$ in the primary tree stores a <em>secondary</em> BST of all points in $v$'s subtree, keyed on $y$-coordinate. Range-query$(x_1 \leq x \leq x_2, y_1 \leq y \leq y_2)$: use primary tree to find $O(\log n)$ canonical nodes/subtrees with correct $x$-range, then use each secondary tree to filter by $y$-range. Time: $O(\log^2 n + k)$. Space: $O(n\log n)$ (each point duplicated $O(\log n)$ times).<br/><br/>
+      <strong>$d$-D range tree:</strong> recurse. Time: $O(\log^d n + k)$. Space: $O(n\log^{d-1} n)$.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Order-Statistics Tree + 2D Range Query &middot; O(log n) / O(log²n + k)</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">from sortedcontainers import SortedList
+
+# ── ORDER-STATISTICS TREE (using SortedList) ─────────────────────────
+class OrderStatTree:
+    """
+    Augmented BST supporting rank, select, insert, delete.
+    Uses Python's SortedList (backed by a balanced B-tree-like structure).
+    All operations O(log n).
+    """
+    def __init__(self):
+        self._sl = SortedList()
+
+    def insert(self, x):  self._sl.add(x)
+    def delete(self, x):  self._sl.remove(x)
+
+    def rank(self, x):
+        """Number of elements strictly less than x. O(log n)."""
+        return self._sl.bisect_left(x)
+
+    def select(self, i):
+        """Return the i-th smallest (0-indexed). O(log n)."""
+        return self._sl[i]
+
+    def successor(self, x):
+        """Smallest element > x."""
+        idx = self._sl.bisect_right(x)
+        return self._sl[idx] if idx < len(self._sl) else None
+
+
+# ── 2D RANGE TREE (simplified) ────────────────────────────────────────
+class RangeTree2D:
+    """
+    Static 2D range tree for orthogonal range queries.
+    Build: O(n log n).  Query: O(log^2 n + k).  Space: O(n log n).
+    """
+    def __init__(self, points):
+        """points: list of (x, y) tuples."""
+        self.points = sorted(points, key=lambda p: p[0])
+        # Build primary structure (sorted by x) with secondary (by y)
+        self._build(self.points)
+
+    def _build(self, pts):
+        # For each possible x-range, store y-sorted list
+        # Simplified: just use sorted structures at each node level
+        self._by_y = SortedList(pts, key=lambda p: p[1])
+
+    def query(self, x1, x2, y1, y2):
+        """
+        Return all points (x, y) with x1 <= x <= x2 and y1 <= y <= y2.
+        O(log^2 n + k) for proper implementation; O(n) for this demo.
+        """
+        # Demo: linear scan (production would use nested BSTs)
+        return [(x, y) for x, y in self.points
+                if x1 <= x <= x2 and y1 <= y <= y2]
+
+# Example: find NIFTY option strikes in price range [23000,24000]
+# with IV in range [0.18, 0.25]
+strikes_iv = [(23000, 0.20), (23500, 0.22), (24000, 0.19),
+              (24500, 0.17), (23200, 0.23), (23800, 0.21)]
+rt = RangeTree2D(strikes_iv)
+print(rt.query(23000, 24000, 0.18, 0.25))
+# [(23000,0.20),(23500,0.22),(23800,0.21),(23200,0.23)]</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Order-statistics tree using GNU policy-based tree
+#include &lt;ext/pb_ds/assoc_container.hpp&gt;
+#include &lt;ext/pb_ds/tree_policy.hpp&gt;
+using namespace __gnu_pbds;
+using namespace std;
+
+// order_statistics_tree: supports find_by_order (select) and
+// order_of_key (rank) in O(log n)
+typedef tree&lt;int, null_type, less&lt;int&gt;,
+             rb_tree_tag,
+             tree_order_statistics_node_update&gt; OST;
+
+// Usage:
+// OST t;
+// t.insert(5); t.insert(3); t.insert(7);
+// t.order_of_key(5)   = 1  (rank: 0-indexed, 1 element < 5)
+// *t.find_by_order(0) = 3  (select: 0-th smallest = 3)
+
+// 1D range query on sorted array: O(log n + k)
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+vector&lt;int&gt; range_query_1d(const vector&lt;int&gt;&amp; sorted_arr, int lo, int hi) {
+    auto it1 = lower_bound(sorted_arr.begin(), sorted_arr.end(), lo);
+    auto it2 = upper_bound(sorted_arr.begin(), sorted_arr.end(), hi);
+    return vector&lt;int&gt;(it1, it2);   // O(log n + k)
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Part III &mdash; 2-3 Trees and B-Trees</h3>
+
+    <p><strong>2-3 trees</strong> are balanced search trees where every internal node has either 2 or 3 children. All leaves are at the same depth, guaranteeing $O(\log n)$ height. Operations maintain this property via <em>splits</em> (on insert overflow) and <em>merges/redistributions</em> (on delete underflow).</p>
+
+    <div class="callout callout-definition">
+      <strong>2-3 tree invariants:</strong> every non-leaf is a 2-node (1 key, 2 children) or 3-node (2 keys, 3 children). All leaves at the same level. Data sorted across levels. Height $\leq \log_2 n$.
+      <br/><br/>
+      <strong>Insert($x$):</strong> search for $x$'s position, insert at leaf, fix overflow by splitting: a 4-element node splits into two nodes, promoting the median to the parent. If the root overflows, a new root is created. $O(\log n)$.
+      <br/><br/>
+      <strong>Delete($x$):</strong> replace $x$ with its inorder successor if not at a leaf. Fix underflow by redistributing from a sibling (if sibling is a 3-node) or merging (if sibling is a 2-node, merge with sibling and demote parent key). $O(\log n)$.
+    </div>
+
+    <p><strong>B-trees</strong> generalise 2-3 trees to branching factor $B$: each node has between $B-1$ and $2B-1$ keys, and $B$ to $2B$ children. The motivation is external memory: a disk block holds $B$ keys, so a single I/O reads an entire node.</p>
+
+    <div class="callout callout-definition">
+      <strong>B-tree parameters and costs:</strong><br/>
+      &mdash; Height: $O(\log_B n)$ &mdash; each level multiplies capacity by $B$.<br/>
+      &mdash; Search: $O(\log_B n)$ node reads. With block size $B$, this is $O(\log_B n)$ disk I/Os.<br/>
+      &mdash; Insert/Delete: $O(\log_B n)$ with at most one split/merge per level.<br/>
+      &mdash; Optimal $B$: set $B$ = disk block size / key size. Typical: $B = 100\text{–}1000$. Height $\leq 4$ for $n = 10^9$.
+      <br/><br/>
+      Used by: MySQL InnoDB, PostgreSQL, SQLite (B+ trees), macOS HFS+, NTFS, Linux ext3/ext4, InfluxDB (time-series data).
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">B-Tree search + insert sketch &middot; O(log_B n) disk I/Os</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">class BTreeNode:
+    def __init__(self, leaf=True):
+        self.keys     = []          # sorted keys in this node
+        self.children = []          # child node pointers (len = len(keys)+1)
+        self.leaf     = leaf
+
+class BTree:
+    """
+    B-Tree with minimum degree t (branching factor B = t).
+    Each non-root node: t-1 <= #keys <= 2t-1.
+    Each node: t <= #children <= 2t.
+    All operations: O(t * log_t(n)) time, O(log_t(n)) disk I/Os.
+    """
+    def __init__(self, t=2):       # t=2 gives a 2-3-4 tree
+        self.t    = t
+        self.root = BTreeNode()
+
+    def search(self, k, node=None):
+        """Search for key k. Returns (node, index) or None."""
+        if node is None: node = self.root
+        i = 0
+        while i < len(node.keys) and k > node.keys[i]:
+            i += 1
+        if i < len(node.keys) and k == node.keys[i]:
+            return (node, i)                      # found
+        if node.leaf:
+            return None                           # not found
+        return self.search(k, node.children[i])  # recurse into child
+
+    def insert(self, k):
+        """Insert key k. O(log_t n) time."""
+        root = self.root
+        if len(root.keys) == 2 * self.t - 1:     # root is full
+            # Split root: create new root, old root becomes child
+            new_root = BTreeNode(leaf=False)
+            new_root.children.append(self.root)
+            self._split_child(new_root, 0)
+            self.root = new_root
+        self._insert_non_full(self.root, k)
+
+    def _split_child(self, parent, i):
+        """Split parent.children[i] (which must be full). O(t)."""
+        t     = self.t
+        y     = parent.children[i]
+        z     = BTreeNode(leaf=y.leaf)
+        mid   = y.keys[t - 1]
+        # Right half of y goes into z
+        z.keys = y.keys[t:]
+        y.keys = y.keys[:t - 1]
+        if not y.leaf:
+            z.children = y.children[t:]
+            y.children = y.children[:t]
+        # Promote median to parent
+        parent.keys.insert(i, mid)
+        parent.children.insert(i + 1, z)
+
+    def _insert_non_full(self, node, k):
+        """Insert k into a non-full node. O(t * log_t n)."""
+        i = len(node.keys) - 1
+        if node.leaf:
+            node.keys.append(None)
+            while i >= 0 and k < node.keys[i]:
+                node.keys[i + 1] = node.keys[i]
+                i -= 1
+            node.keys[i + 1] = k
+        else:
+            while i >= 0 and k < node.keys[i]: i -= 1
+            i += 1
+            if len(node.children[i].keys) == 2 * self.t - 1:
+                self._split_child(node, i)
+                if k > node.keys[i]: i += 1
+            self._insert_non_full(node.children[i], k)</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// B-Tree node structure — O(log_t n) search
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+struct BNode {
+    vector&lt;int&gt; keys;
+    vector&lt;BNode*&gt; ch;
+    bool leaf;
+    BNode(bool lf=true) : leaf(lf) {}
+};
+
+class BTree {
+    int t;   // min degree
+    BNode* root;
+public:
+    BTree(int t=2) : t(t), root(new BNode()) {}
+
+    // Search: O(t * log_t n) time, O(log_t n) node accesses (disk I/Os)
+    pair&lt;BNode*, int&gt; search(BNode* node, int k) {
+        int i = lower_bound(node-&gt;keys.begin(),
+                            node-&gt;keys.end(), k) - node-&gt;keys.begin();
+        if (i &lt; (int)node-&gt;keys.size() &amp;&amp; node-&gt;keys[i] == k)
+            return {node, i};
+        if (node-&gt;leaf) return {nullptr, -1};
+        return search(node-&gt;ch[i], k);   // one disk I/O per level
+    }
+
+    // Height for n elements: floor(log_t((n+1)/2)) + 1
+    // With t=1000: height <= 3 for n = 10^9
+    int height(BNode* v=nullptr) {
+        if (!v) v = root;
+        if (v-&gt;leaf) return 0;
+        return 1 + height(v-&gt;ch[0]);
+    }
+};</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; NSE Instrument Master Lookup</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; Pashupati / TTT Systems</span>
+      </div>
+      <div class="we-body">
+        <p>The NSE instrument master has ~5 lakh (500,000) records. Each instrument has a token (integer key) and metadata (symbol, expiry, strike, lot size). Two query patterns: (1) token → metadata lookup (constant time), (2) range query: find all NIFTY options with strike between 23,000 and 24,000 expiring in the current week.</p>
+        <div class="we-step">Choosing the right data structure</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">from sortedcontainers import SortedList
+import collections
+
+# Pattern 1: token -> metadata (O(1) average via universal hashing)
+instrument_map = {}   # Python dict uses universal-style hashing internally
+instrument_map[35001] = {'symbol':'NIFTY','strike':23000,'expiry':'27MAR25'}
+
+# Pattern 2: strike range query (O(log n + k) via order-statistics)
+# Build sorted list of (strike, token) pairs for weekly expiry
+weekly = SortedList(key=lambda x: x[0])  # sorted by strike
+weekly.add((23000, 35001))
+weekly.add((23500, 35002))
+weekly.add((24000, 35003))
+weekly.add((24500, 35004))
+
+# O(log n + k): find all strikes in [23000, 24000]
+lo_idx = weekly.bisect_left((23000,))
+hi_idx = weekly.bisect_right((24000, float('inf')))
+result = list(weekly[lo_idx:hi_idx])
+print(result)  # [(23000,35001),(23500,35002),(24000,35003)]</code></pre>
+        <div class="we-answer">
+          <strong>Architecture:</strong> universal hash map for $O(1)$ token lookups (millions of times per second during market hours); augmented BST (SortedList) for strike range queries during order placement. The XTS API at Pashupati uses exactly this pattern — token-keyed hash map for instrument lookup, sorted structures for building option chains.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Python&rsquo;s built-in <code>dict</code> uses open addressing with a hash function that is effectively universal for string and integer keys (random seed per process, changed in Python 3.3 to prevent hash-flooding DoS attacks). The <code>sortedcontainers.SortedList</code> is built on a B-tree-like structure with block size ~1000, giving $O(\log n)$ operations. InfluxDB (used for time-series data in many algo trading platforms including TTT&rsquo;s XTS WebSocket → InfluxDB pipeline) stores time-series data in B+ trees on disk &mdash; exactly the B-tree external memory motivation: one disk block per node, minimising I/Os per query.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 04</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch04 / q01</span>
+        <span class="mcq-diff">&#9733; Universal Hashing</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Universal hashing guarantees $\Pr[h(k) = h(k')] \leq 1/m$. What does this mean for an adversary who chooses the keys <strong>before</strong> the hash function is chosen?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>The adversary can still force $\Omega(n)$ collisions by choosing keys cleverly</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>The adversary cannot force collisions: for any fixed pair of keys, the collision probability is at most $1/m$ over the random choice of $h$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>The adversary can force collisions if they know which hash family is being used</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Universal hashing only helps when keys are uniformly distributed</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          This is the point of universal hashing. The adversary picks keys $k_1, k_2, \ldots, k_n$ (possibly the worst possible set). Then we choose $h$ uniformly at random from $\mathcal{H}$. For any fixed pair $k_i \neq k_j$, $\Pr_h[h(k_i) = h(k_j)] \leq 1/m$. The adversary chose the keys before seeing $h$, so they cannot exploit any specific hash function's weaknesses. Expected collisions are $O(n/m) = O(\alpha)$ regardless of key distribution.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch04 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Perfect Hashing Space</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In FKS perfect hashing, the second-level table for slot $j$ has size $m_j = l_j^2$ (where $l_j$ items hash to slot $j$). Why is the total space $\sum_j l_j^2 = O(n)$ in expectation?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>Because the $l_j$ are equal: each slot gets exactly $n/m$ items</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>Because $\sum l_j = n$, and $\sum l_j^2 \leq (\sum l_j)^2 = n^2$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>Because $\mathbb{E}[\sum_j l_j^2] = \mathbb{E}[\sum_{i\neq i'} I_{i,i'}] + n \leq n + n(n-1)/m = O(n)$ when $m = \Theta(n)$, by universality</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Because $l_j \leq O(\log n)$ with high probability, so $l_j^2 \leq O(\log^2 n)$ and total is $O(n\log^2 n)$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          $\sum_j l_j^2 = \sum_j \sum_{i: h(k_i)=j} l_j = \sum_i l_{h(k_i)} = n + \sum_{i \neq i'} I_{i,i'}$ where $I_{i,i'} = 1$ iff $h(k_i) = h(k_{i'})$. By universality, $\mathbb{E}[I_{i,i'}] \leq 1/m$. By linearity: $\mathbb{E}[\sum_{i\neq i'} I_{i,i'}] \leq n(n-1)/m$. With $m = cn$ for constant $c$: this is $\leq n/c$. Total: $\mathbb{E}[\sum_j l_j^2] \leq n + n/c = O(n)$. Markov then bounds the probability of exceeding $2cn$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch04 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Augmentation</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why can we store subtree <strong>size</strong> at each BST node (enabling rank/select) but <strong>not</strong> subtree <strong>rank</strong>?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Because rank requires $O(n)$ space while size only requires $O(1)$ per node</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>Inserting a new minimum changes the rank of every node, requiring $O(n)$ updates — violating the $O(\log n)$ augmentation update bound</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Rank can only be computed for leaf nodes, not internal nodes</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Because rank requires knowing the entire tree, not just the subtree</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Easy augmentation works when $x.f$ depends only on $x$ and its children&rsquo;s $f$-values: $x.f = g(x, x.\text{left}.f, x.\text{right}.f)$. Subtree size satisfies this: $x.\text{size} = 1 + x.\text{left.size} + x.\text{right.size}$. After an insert, only $O(\log n)$ ancestors need their size recomputed.<br/><br/>
+          Rank does not satisfy this: $x.\text{rank} = x.\text{left.size} + 1 + \text{rank of all elements less than } x \text{ outside its subtree}$. The &ldquo;outside subtree&rdquo; part depends on the entire tree. Insert($-\infty$) changes every node&rsquo;s rank, requiring $O(n)$ updates.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch04 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; B-Tree I/Os</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A database stores $n = 10^9$ records. A B-tree with branching factor $B = 1000$ is used. How many disk I/Os does a search require, and why is this better than a binary BST?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$\log_2(10^9) \approx 30$ I/Os &mdash; same as binary BST since each comparison is one I/O</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>$\lceil\log_{1000}(10^9)\rceil = 3$ I/Os for B-tree vs $\approx 30$ for binary BST — $10\times$ fewer disk reads</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>$O(1)$ I/Os because large branching factor puts everything in one disk block</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$\log_{1000}(10^9) = 3$ I/Os for B-tree, but binary BST also only needs 3 since it uses the same disk blocks</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B &mdash; 3 I/Os for B-tree vs 30 for binary BST.</strong><br/><br/>
+          $\log_{1000}(10^9) = 3$ exactly (since $1000^3 = 10^9$). Each B-tree node fills one disk block (holding 1000 keys), so 3 node reads = 3 disk I/Os. A binary BST needs $\log_2(10^9) \approx 30$ node comparisons, each potentially a separate disk I/O (since each node is tiny). Disk I/O is $\sim 10^4$ times slower than memory access, so 3 vs 30 I/Os is a $10\times$ speedup in the bottleneck operation. This is why every database uses B-trees for their index structures.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 04</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Prove that the CLRS family $h_{a,b}(k) = [(ak+b) \bmod p] \bmod m$ is universal. You need to show that for any $k \neq k'$, $\Pr_{a,b}[h_{a,b}(k) = h_{a,b}(k')] \leq 1/m$. Hint: $p$ is prime, so $\mathbb{Z}_p$ is a field with multiplicative inverses. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Build a 2-3 tree by inserting keys $[10, 20, 5, 6, 12, 30, 7, 17]$ in that order. Show the tree state after each insertion, clearly indicating when splits occur and which median is promoted. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">On a 2-3 tree containing $\{3, 7, 10, 14, 17, 20, 24, 30, 32, 41, 48\}$, perform: delete(20), then delete(38). For each deletion show whether redistribution or merging is needed, and trace the tree updates. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement a hash table with FKS perfect hashing for the static set of NIFTY weekly option tokens $T = \{35001, 35002, \ldots, 35200\}$ (200 tokens). Build the two-level structure, verify search costs $O(1)$, and measure the actual build time in Python. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Augment an AVL tree with subtree minimum: each node stores the minimum key in its subtree. Write the update rule ($x.\text{min}$ in terms of $x$, $x.\text{left}$, $x.\text{right}$). Describe how this enables a $O(\log n)$ query: &ldquo;find the minimum element in the range $[a,b]$.&rdquo; <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Implement a 2D range tree to answer: given a list of (timestamp, price) pairs from NIFTY tick data, find all ticks with timestamp in $[t_1, t_2]$ and price in $[p_1, p_2]$. Use Python&rsquo;s SortedList for inner structure. Verify correctness on a 1000-tick dataset. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">A finger search tree lets you search for $x$ from a given node $y$ in $O(\log|rank(y) - rank(x)|)$ time. How would you use this to implement an efficient &ldquo;find the nearest strike above/below spot price&rdquo; query after each tick update? What is the amortised cost per tick? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove that a B-tree with $n$ keys and minimum degree $t$ has height at most $\lfloor\log_t((n+1)/2)\rfloor$. Use the fact that a full B-tree of height $h$ has at least $2t^{h-1} - 1$ keys. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Hash flooding attack: Python dicts before version 3.3 used a deterministic hash function. Show that for Python 2 string hashing $h(s) = \sum_i s[i] \cdot 31^i \bmod 2^{32}$, you can construct $O(\sqrt{n})$ strings that all hash to the same slot, causing $O(n^2)$ total work in a hash table. Why does random seeding (PYTHONHASHSEED) prevent this? <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">B+ trees (used by all databases) store data only in leaves, with internal nodes holding only routing keys. Compare B-trees and B+ trees on: (a) range queries from $a$ to $b$ — which is faster and why? (b) sequential scan of all elements — which is $O(n/B)$ disk I/Os? Explain why MySQL InnoDB uses B+ trees specifically. <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch3.html" class="ch-nav-btn">&larr; Advanced DS I</a>
+    <a href="PROG_DAA_Ch5.html" class="ch-nav-btn primary">Next: Amortization &amp; Union-Find &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Universal hashing: adversary can't force collisions.","✨ FKS space O(n): linearity + universality proved.","🏆 Rank can't be stored — insert(−∞) breaks O(n) nodes.","🔥 B-tree: 3 I/Os vs BST 30. O(log_B n) wins on disk.","💡 Augmentation rule: x.f from x and children.f only.","📐 Dot-product family is universal: prime modulus gives inverses.","⚡ 2-level hashing: O(1) worst-case search, O(n) space."];
+const wrongMsgs=["🌀 Universal hashing randomises over h, not over keys — the adversary's key choice is fixed before h is selected.","📉 FKS space: use E[Σl_j²] = n + Σ_{i≠i'} E[I_{i,i'}] ≤ n + n(n-1)/m = O(n) when m=Θ(n).","😰 Easy augmentation requires x.f computable from x and children only — rank depends on the whole tree.","📐 log_1000(10^9) = 3. Three disk I/Os vs 30 for binary BST.","🤔 Subtree size satisfies x.size = 1 + left.size + right.size — only children needed."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

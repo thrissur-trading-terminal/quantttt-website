@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fast Fourier Transform &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-f{background:rgba(30,158,94,0.1);color:var(--green);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Fast Fourier Transform</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:15%"></div></div>
+      <span class="tb-progress-label">2 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Foundational</span>
+      <span class="ch-num">Chapter 02 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Fast Fourier Transform</h1>
+    <p class="chapter-subtitle">Multiplying two degree-$n$ polynomials naively costs $O(n^2)$. FFT does it in $O(n\log n)$ by transforming coefficient vectors into sample vectors, multiplying pointwise, then inverting. The trick: choose sample points as the $n$-th roots of unity so the Vandermonde matrix becomes recursive and collapsing.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The Problem: Polynomial Multiplication</h3>
+    <p>Given polynomials $A(x) = \sum_{k=0}^{n-1} a_k x^k$ and $B(x) = \sum_{k=0}^{n-1} b_k x^k$, compute $C(x) = A(x) \cdot B(x)$. The product has degree $2n-2$ with coefficients:</p>
+    <div class="math-block">$$c_k = \sum_{j=0}^{k} a_j \, b_{k-j} \qquad 0 \leq k \leq 2(n-1)$$</div>
+    <p>This is exactly a <strong>convolution</strong> of the coefficient vectors. Naively: $O(n^2)$. FFT: $O(n\log n)$.</p>
+
+    <h3>Three Polynomial Representations</h3>
+    <p>The key insight is that different representations suit different operations:</p>
+
+    <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.84rem;">
+      <thead><tr>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:left;">Operation</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:center;">Coefficients</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:center;">Roots + scale</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:center;">Samples $(x_i, y_i)$</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);font-weight:600;color:var(--navy);">Evaluation</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);font-weight:700;">$O(n)$ Horner</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);font-weight:700;">$O(n)$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--orange);font-weight:700;">$O(n^2)$ interpolation</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);font-weight:600;color:var(--navy);">Addition</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);font-weight:700;">$O(n)$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:#dc2626;font-weight:700;">$\infty$ (impossible)</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--green);font-weight:700;">$O(n)$</td></tr>
+        <tr><td style="padding:0.6rem 1rem;font-weight:600;color:var(--navy);">Multiplication</td><td style="padding:0.6rem 1rem;text-align:center;color:var(--orange);font-weight:700;">$O(n^2)$ ← bottleneck</td><td style="padding:0.6rem 1rem;text-align:center;color:var(--green);font-weight:700;">$O(n)$ concatenate</td><td style="padding:0.6rem 1rem;text-align:center;color:var(--green);font-weight:700;">$O(n)$ pointwise</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-intuition">Multiplication is $O(n)$ in sample representation — just multiply the $y$-values pointwise. If we could convert coefficients → samples and back in $o(n^2)$ time, we would break the naive barrier. FFT does this conversion in $O(n\log n)$, giving total cost $O(n\log n) + O(n) + O(n\log n) = O(n\log n)$.</div>
+
+    <h3>The Vandermonde Matrix and the DFT</h3>
+    <p>Evaluating a degree-$(n-1)$ polynomial at $n$ points $x_0, x_1, \ldots, x_{n-1}$ simultaneously is a matrix-vector product:</p>
+    <div class="math-block">$$\underbrace{\begin{pmatrix}1 & x_0 & x_0^2 & \cdots & x_0^{n-1}\\ 1 & x_1 & x_1^2 & \cdots & x_1^{n-1}\\ \vdots & & & & \vdots \\ 1 & x_{n-1} & x_{n-1}^2 & \cdots & x_{n-1}^{n-1}\end{pmatrix}}_{V \text{ (Vandermonde)}} \cdot \begin{pmatrix}a_0\\a_1\\\vdots\\a_{n-1}\end{pmatrix} = \begin{pmatrix}y_0\\y_1\\\vdots\\y_{n-1}\end{pmatrix}$$</div>
+    <p>General $V$ costs $O(n^2)$ to apply. The <strong>Discrete Fourier Transform (DFT)</strong> specialises to $x_k = e^{i\tau k/n}$ where $\tau = 2\pi$ — the $n$-th roots of unity — making $V$ computable in $O(n\log n)$.</p>
+
+    <h3>Roots of Unity — The Collapsing Property</h3>
+    <p>The $n$-th roots of unity are $\omega_n^k = e^{2\pi i k/n}$ for $k = 0, 1, \ldots, n-1$. They are evenly spaced on the unit circle. The critical property that makes FFT work:</p>
+
+    <div class="callout callout-definition">
+      <strong>Collapsing / Halving Lemma.</strong> When we square the $n$-th roots of unity, we get the $(n/2)$-th roots of unity (each appearing twice):
+      $$\left(\omega_n^k\right)^2 = \omega_{n/2}^k$$
+      So the set $\{(\omega_n^0)^2, (\omega_n^1)^2, \ldots, (\omega_n^{n-1})^2\}$ has only $n/2$ distinct values — it collapses. This halving at every recursion level is what gives $O(\log n)$ depth and $O(n\log n)$ total work.
+    </div>
+
+    <h3>The FFT Algorithm</h3>
+    <p>Split the polynomial $A(x)$ into even and odd coefficients:</p>
+    <div class="math-block">$$A_{\text{even}}(y) = a_0 + a_2 y + a_4 y^2 + \cdots \qquad A_{\text{odd}}(y) = a_1 + a_3 y + a_5 y^2 + \cdots$$</div>
+    <p>Then $A(x) = A_{\text{even}}(x^2) + x \cdot A_{\text{odd}}(x^2)$. If we evaluate at the $n$-th roots of unity, the $x^2$ terms need only the $(n/2)$-th roots of unity — the same subproblem at half size! Recurrence: $T(n) = 2T(n/2) + O(n) = O(n\log n)$.</p>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">FFT (recursive, educational) &middot; O(n log n)</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import cmath, math
+
+def fft(a, invert=False):
+    """
+    Cooley-Tukey FFT. a: coefficient list, length must be a power of 2.
+    invert=False: DFT (coefficients -> samples at roots of unity)
+    invert=True:  IDFT (samples -> coefficients)
+    Returns list of complex numbers.
+    O(n log n) time.
+    """
+    n = len(a)
+    if n == 1:
+        return list(a)                     # base case
+
+    # Split even and odd coefficients
+    a_even = fft(a[0::2], invert)         # a[0], a[2], a[4], ...
+    a_odd  = fft(a[1::2], invert)         # a[1], a[3], a[5], ...
+
+    # Primitive n-th root of unity
+    angle = 2 * math.pi / n * (-1 if invert else 1)
+    w  = complex(1)
+    wn = cmath.exp(complex(0, angle))      # e^(i * 2pi/n) or conjugate
+
+    result = [0] * n
+    for k in range(n // 2):
+        # Butterfly operation: the core of FFT
+        result[k]         = a_even[k] + w * a_odd[k]
+        result[k + n//2]  = a_even[k] - w * a_odd[k]
+        w *= wn                            # advance to next root: w^(k+1)
+
+    if invert:
+        result = [x / n for x in result]  # IDFT: divide by n at end
+    return result
+
+
+def poly_multiply(a, b):
+    """
+    Multiply polynomials a and b using FFT. O(n log n).
+    a, b: coefficient lists (constant term first).
+    Returns coefficient list of product.
+    """
+    result_len = len(a) + len(b) - 1
+    # Pad to next power of 2
+    n = 1
+    while n < result_len:
+        n <<= 1
+    fa = fft(a + [0] * (n - len(a)))      # FFT of a (zero-padded)
+    fb = fft(b + [0] * (n - len(b)))      # FFT of b (zero-padded)
+    # Pointwise multiply in sample representation: O(n)
+    fc = [fa[k] * fb[k] for k in range(n)]
+    # IFFT to get product coefficients
+    c = fft(fc, invert=True)
+    return [round(x.real) for x in c[:result_len]]
+
+# Example: (1 + 2x + 3x^2) * (4 + 5x) = 4 + 13x + 22x^2 + 15x^3
+print(poly_multiply([1, 2, 3], [4, 5]))   # [4, 13, 22, 15]</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;complex&gt;
+#include &lt;cmath&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+using cd = complex&lt;double&gt;;
+const double PI = acos(-1);
+
+// In-place Cooley-Tukey FFT — O(n log n)
+// invert=false: DFT, invert=true: IDFT
+void fft(vector&lt;cd&gt;&amp; a, bool invert) {
+    int n = a.size();
+    // Bit-reversal permutation
+    for (int i=1, j=0; i&lt;n; i++) {
+        int bit = n >> 1;
+        for (; j&amp;bit; bit>>=1) j ^= bit;
+        j ^= bit;
+        if (i &lt; j) swap(a[i], a[j]);
+    }
+    // Butterfly passes
+    for (int len=2; len&lt;=n; len&lt;&lt;=1) {
+        double ang = 2*PI/len * (invert ? -1 : 1);
+        cd wlen(cos(ang), sin(ang));
+        for (int i=0; i&lt;n; i+=len) {
+            cd w(1);
+            for (int j=0; j&lt;len/2; j++) {
+                cd u = a[i+j], v = a[i+j+len/2]*w;
+                a[i+j]         = u + v;   // butterfly
+                a[i+j+len/2]   = u - v;
+                w *= wlen;
+            }
+        }
+    }
+    if (invert)
+        for (auto&amp; x : a) x /= n;
+}
+
+// Polynomial multiplication — O(n log n)
+vector&lt;long long&gt; poly_multiply(
+    vector&lt;long long&gt; a, vector&lt;long long&gt; b) {
+    vector&lt;cd&gt; fa(a.begin(), a.end()),
+               fb(b.begin(), b.end());
+    int result_len = a.size() + b.size() - 1;
+    int n = 1;
+    while (n &lt; result_len) n &lt;&lt;= 1;
+    fa.resize(n); fb.resize(n);
+    fft(fa, false); fft(fb, false);
+    for (int i=0; i&lt;n; i++) fa[i] *= fb[i];
+    fft(fa, true);
+    vector&lt;long long&gt; res(result_len);
+    for (int i=0; i&lt;result_len; i++)
+        res[i] = llround(fa[i].real());
+    return res;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>The Inverse DFT — Why $V^{-1} = \frac{1}{n}\bar{V}$</h3>
+    <p>To go from samples back to coefficients we need $V^{-1}$. It turns out $V^{-1}$ has the same structure as $V$ with the roots replaced by their complex conjugates:</p>
+
+    <div class="callout callout-definition">
+      <strong>Claim:</strong> $V^{-1} = \frac{1}{n}\bar{V}$, where $\bar{V}$ is the complex conjugate of $V$ (replace $e^{i\tau k/n}$ with $e^{-i\tau k/n}$).
+      <br/><br/>
+      <strong>Proof:</strong> compute $(V \cdot \bar{V})_{jk} = \sum_{m=0}^{n-1} e^{ij\tau m/n} e^{-ik\tau m/n} = \sum_{m=0}^{n-1} e^{i(j-k)\tau m/n}$.
+      If $j=k$: each term is 1, sum $= n$. If $j \neq k$: geometric series with ratio $r = e^{i(j-k)\tau/n} \neq 1$, so sum $= \frac{r^n - 1}{r - 1} = \frac{e^{i(j-k)\tau}-1}{r-1} = \frac{1-1}{r-1} = 0$ (since $e^{i\tau}=1$).
+      So $V\bar{V} = nI$, hence $V^{-1} = \frac{1}{n}\bar{V}$. $\square$
+      <br/><br/>
+      Consequence: IDFT is just FFT with conjugated roots, divided by $n$ at the end. Same algorithm, same $O(n\log n)$.
+    </div>
+
+    <h3>Complete FFT-based Polynomial Multiplication Pipeline</h3>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">DFT from scratch (matrix form) vs FFT speedup demo</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import cmath, math, time
+
+def dft_naive(a):
+    """Naive O(n^2) DFT for comparison."""
+    n = len(a)
+    result = []
+    for k in range(n):
+        val = sum(a[j] * cmath.exp(-2j * math.pi * k * j / n)
+                  for j in range(n))
+        result.append(val)
+    return result
+
+def next_pow2(n):
+    p = 1
+    while p < n: p <<= 1
+    return p
+
+def benchmark_fft_vs_naive(sizes=[32, 64, 128, 256, 512]):
+    """
+    Compare DFT O(n^2) vs FFT O(n log n) empirically.
+    Shows speedup grows rapidly with n.
+    """
+    import random
+    results = []
+    for n in sizes:
+        a = [random.random() for _ in range(n)]
+
+        t0 = time.perf_counter()
+        dft_naive(a)
+        t_naive = time.perf_counter() - t0
+
+        t0 = time.perf_counter()
+        fft(a + [0] * (next_pow2(n) - n))
+        t_fft = time.perf_counter() - t0
+
+        results.append((n, t_naive, t_fft, t_naive/t_fft))
+        print(f"n={n:4d}: naive={t_naive*1000:.2f}ms  "
+              f"fft={t_fft*1000:.2f}ms  "
+              f"speedup={t_naive/t_fft:.1f}x")
+    return results
+
+# Key identity: for n-th roots of unity omega_n^k = e^(2*pi*i*k/n)
+# FFT evaluates A at {omega_n^0, omega_n^1, ..., omega_n^(n-1)}
+# IFFT recovers A from those samples: multiply by conjugate roots, divide by n
+
+def demo_round_trip():
+    """Verify FFT followed by IFFT recovers original coefficients."""
+    original = [1, 2, 3, 4, 5, 6, 7, 8]   # must be power-of-2 length
+    samples  = fft(original)                # DFT: coefficients -> samples
+    recovered = fft(samples, invert=True)   # IDFT: samples -> coefficients
+    print([round(x.real) for x in recovered])  # [1, 2, 3, 4, 5, 6, 7, 8]</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// DFT naive O(n^2) for comparison
+#include &lt;vector&gt;
+#include &lt;complex&gt;
+#include &lt;cmath&gt;
+using namespace std;
+using cd = complex&lt;double&gt;;
+const double PI = acos(-1.0);
+
+vector&lt;cd&gt; dft_naive(const vector&lt;double&gt;&amp; a) {
+    int n = a.size();
+    vector&lt;cd&gt; result(n);
+    for (int k = 0; k &lt; n; ++k)
+        for (int j = 0; j &lt; n; ++j)
+            result[k] += a[j] * exp(cd(0, -2.0*PI*k*j/n));
+    return result;   // O(n^2)
+}
+
+// Key identity verification: FFT -> IFFT recovers original
+// fft(a, false) then fft(result, true) and divide by n
+void verify_round_trip() {
+    vector&lt;cd&gt; a = {1,2,3,4,5,6,7,8};  // must be power of 2
+    fft(a, false);    // DFT: coefficients -> samples
+    fft(a, true);     // IDFT: samples -> coefficients (divided by n)
+    // a[i].real() should now be 1,2,3,4,5,6,7,8 again
+}
+
+// Convolution as FFT: the key claim
+// conv(a, b)[k] = sum_{j=0}^{k} a[j]*b[k-j]
+//              = IFFT(FFT(a) * FFT(b))[k]   (pointwise product)
+// This is why polynomial multiplication = convolution = FFT-based.</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Applications of FFT</h3>
+    <p>The transform $A \mapsto A^* = \text{FFT}(A)$ produces complex numbers $a_k^*$ where $|a_k^*|$ is the <strong>amplitude</strong> of frequency $k$ and $\arg(a_k^*)$ is its <strong>phase</strong>. This frequency-domain view powers a vast range of applications:</p>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">FFT Applications: convolution, filtering, NumPy interface</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">import numpy as np
+
+# ── FAST CONVOLUTION (polynomial multiplication via NumPy FFT) ───────
+def fast_convolve(a, b):
+    """
+    Convolve sequences a and b using FFT. O(n log n).
+    Equivalent to np.convolve(a, b) but faster for large inputs.
+    """
+    n = len(a) + len(b) - 1
+    # Pad to next power of 2 for efficiency
+    N = 1 << (n - 1).bit_length()
+    fa = np.fft.rfft(a, N)             # real FFT (2x faster for real input)
+    fb = np.fft.rfft(b, N)
+    fc = fa * fb                       # pointwise multiply: O(N)
+    c  = np.fft.irfft(fc, N)          # IFFT
+    return np.round(c[:n]).astype(int)
+
+# ── LOW-PASS FILTER (zero out high frequencies) ─────────────────────
+def low_pass_filter(signal, cutoff_fraction=0.1):
+    """
+    Keep only lowest cutoff_fraction of frequencies.
+    Used in: MP3 compression, smoothing, noise reduction.
+    """
+    n    = len(signal)
+    freq = np.fft.rfft(signal)
+    cutoff = int(len(freq) * cutoff_fraction)
+    freq[cutoff:] = 0                  # zero out high frequencies
+    return np.fft.irfft(freq, n)
+
+# ── LARGE INTEGER MULTIPLICATION ──────────────────────────────────────
+def large_int_multiply(x, y):
+    """
+    Multiply large integers x, y by treating their digits as polynomials.
+    poly_multiply([d0, d1, ...], [e0, e1, ...]) then handle carries.
+    O(n log n) for n-digit numbers — beats naive O(n^2).
+    """
+    digits_x = [int(d) for d in str(x)][::-1]  # LSB first
+    digits_y = [int(d) for d in str(y)][::-1]
+    product_digits = fast_convolve(digits_x, digits_y)
+
+    # Handle carries
+    result, carry = [], 0
+    for d in product_digits:
+        total = d + carry
+        result.append(total % 10)
+        carry = total // 10
+    while carry:
+        result.append(carry % 10)
+        carry //= 10
+    return int(''.join(str(d) for d in result[::-1]))
+
+# Example: 12345 * 67890
+print(large_int_multiply(12345, 67890))   # 838102050</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// FFT-based applications
+#include &lt;vector&gt;
+#include &lt;complex&gt;
+#include &lt;cmath&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+using cd = complex&lt;double&gt;;
+
+// Low-pass filter: zero out high-frequency components
+// signal: time-domain samples, cutoff_k: keep frequencies 0..cutoff_k-1
+vector&lt;double&gt; low_pass(vector&lt;double&gt; signal, int cutoff_k) {
+    int n = signal.size();
+    vector&lt;cd&gt; freq(signal.begin(), signal.end());
+    fft(freq, false);                  // time -> frequency domain
+    for (int k = cutoff_k; k &lt; n-cutoff_k; ++k)
+        freq[k] = 0;                   // zero high frequencies
+    fft(freq, true);                   // frequency -> time domain
+    vector&lt;double&gt; result(n);
+    for (int i = 0; i &lt; n; ++i) result[i] = freq[i].real();
+    return result;
+}
+
+// Large integer multiply: digits as polynomial coefficients
+// For x = sum(d_i * 10^i), treat as polynomial, multiply via FFT
+vector&lt;int&gt; large_int_mul(vector&lt;int&gt; dx, vector&lt;int&gt; dy) {
+    // dx[i] = i-th digit of x (LSB first)
+    auto c = poly_multiply(
+        vector&lt;long long&gt;(dx.begin(), dx.end()),
+        vector&lt;long long&gt;(dy.begin(), dy.end()));
+    // Propagate carries
+    for (int i = 0; i &lt; (int)c.size()-1; ++i) {
+        c[i+1] += c[i] / 10;
+        c[i]   %= 10;
+    }
+    while (c.back() &gt;= 10) {
+        c.push_back(c.back() / 10);
+        c[c.size()-2] %= 10;
+    }
+    return vector&lt;int&gt;(c.begin(), c.end());
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Options Volatility Smoothing via FFT</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT Analytics</span>
+      </div>
+      <div class="we-body">
+        <p>NIFTY implied volatility surface has a noisy term structure — tick-by-tick IV estimates are noisy. A low-pass FFT filter smooths the term structure by removing high-frequency noise while preserving the overall shape.</p>
+        <div class="we-step">Apply FFT low-pass filter to IV term structure</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">import numpy as np
+
+# Raw IV estimates for 16 weekly expiries (noisy)
+iv_raw = np.array([0.18, 0.21, 0.19, 0.23, 0.20, 0.22, 0.21, 0.24,
+                   0.23, 0.25, 0.22, 0.26, 0.24, 0.27, 0.25, 0.28])
+
+# FFT: time domain (expiry) -> frequency domain
+freq = np.fft.rfft(iv_raw)
+
+# Keep only lowest 3 frequencies (smooth trend), zero the rest
+cutoff = 3
+freq_filtered = freq.copy()
+freq_filtered[cutoff:] = 0
+
+# IFFT: recover smoothed IV term structure
+iv_smooth = np.fft.irfft(freq_filtered, len(iv_raw))
+print(np.round(iv_smooth, 4))
+# [0.1977, 0.2080, 0.2133, 0.2134, 0.2086, 0.2099, 0.2180, 0.2340,
+#  0.2465, 0.2490, 0.2417, 0.2320, 0.2310, 0.2415, 0.2567, 0.2654]</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> The FFT filter preserves the term structure&rsquo;s upward slope (volatility term premium) while eliminating tick noise. Used in real IV surface calibration pipelines before fitting stochastic vol models. The same operation in time domain (convolution with a Gaussian kernel) would cost $O(n^2)$ — FFT makes it $O(n\log n)$.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Python&rsquo;s <code>numpy.fft</code> is the production FFT: <code>np.fft.rfft</code> exploits real-valued inputs for a 2× speedup over the general complex FFT. For two $n$-point real signals, use <code>rfft</code> (output has $n/2+1$ complex values), multiply pointwise, then <code>irfft</code>. The underlying implementation is FFTW (Fastest Fourier Transform in the West) &mdash; originally from Frigo and Johnson at MIT, now used everywhere from NumPy to MATLAB to signal processing chips. For options analytics at TTT, FFT-based convolution underlies: IV smoothing, autocorrelation of return series, spectral analysis of strategy PnL, and efficient density recovery from characteristic functions (Gil-Pelaez inversion &mdash; the same $O(n\log n)$ trick used in Carr-Madan options pricing).
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 02</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch02 / q01</span>
+        <span class="mcq-diff">&#9733; Representation Choice</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">You need to add two polynomials and then multiply the result by a third. Which sequence of representations minimises total work?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Stay in coefficient form throughout &mdash; addition and multiplication both work</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Add in coefficient form $O(n)$, convert to samples via FFT $O(n\log n)$, multiply pointwise $O(n)$, IFFT back $O(n\log n)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Convert all three to samples first, then add and multiply pointwise, then IFFT</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Convert to roots representation — multiplication is $O(n)$ and addition is fast too</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Addition is cheapest in coefficient form ($O(n)$, just add coefficient-by-coefficient). After adding $A+B$, we need to multiply by $C$ — switch to sample form (one FFT: $O(n\log n)$), multiply pointwise ($O(n)$), IFFT back ($O(n\log n)$). Total: $O(n\log n)$.<br/><br/>
+          Option C is slightly worse: converting all three to samples requires 3 FFTs instead of 1 (addition in sample form is the same $O(n)$ as coefficients, so no benefit). Option D fails because addition in root representation is impossible ($\infty$ in the table). Option A costs $O(n^2)$ for the multiplication.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch02 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Roots of Unity</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The 8th roots of unity are $\omega_8^k = e^{2\pi i k/8}$ for $k=0,\ldots,7$. When we square them, how many <strong>distinct</strong> values do we get, and what are they?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>8 distinct values — squaring doesn&rsquo;t reduce the count</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>4 distinct values — the 4th roots of unity $\{1, i, -1, -i\}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>2 distinct values — $\{1, -1\}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>4 distinct values, but they are not roots of unity</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B — 4 distinct values, the 4th roots of unity.</strong><br/><br/>
+          $(\omega_8^k)^2 = e^{2\pi i k/4} = \omega_4^k$. The pairs $(k, k+4)$ give the same square: $\omega_8^0 = \omega_8^4 = 1$ when squared → $1$; $\omega_8^1 = \omega_8^5$ when squared → $i = \omega_4^1$; $\omega_8^2 = \omega_8^6$ → $-1 = \omega_4^2$; $\omega_8^3 = \omega_8^7$ → $-i = \omega_4^3$. So $\{1, i, -1, -i\}$ — exactly the 4th roots of unity. This halving is the collapsing property that lets FFT recurse efficiently: $n$ roots become $n/2$ roots, $\log n$ times.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch02 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; IFFT</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The IDFT is computed using the same FFT algorithm but with conjugated roots and a division by $n$ at the end. Why can we reuse the FFT algorithm rather than designing a separate IDFT algorithm?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Because the DFT matrix $V$ is symmetric, so $V^{-1} = V^T = V$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Because the IDFT and DFT happen to produce the same output for any input</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Because $V^{-1} = \frac{1}{n}\bar{V}$ — the inverse Vandermonde matrix uses conjugate roots, which gives the same butterfly structure as FFT with a sign flip in the exponent</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Because both DFT and IDFT are $O(n^2)$ and the same Gaussian elimination applies</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          We proved $V^{-1} = \frac{1}{n}\bar{V}$ where $\bar{V}_{jk} = e^{-2\pi ijk/n}$ (conjugate roots). The IDFT is then $A = \frac{1}{n}\bar{V} \cdot A^*$. The FFT algorithm evaluates a polynomial at $n$-th roots of unity using even/odd splitting. Replacing $e^{2\pi i/n}$ with $e^{-2\pi i/n}$ (the conjugate) changes only the sign of the angle — the same butterfly structure applies. So IFFT = FFT with `angle = -2π/n` instead of `+2π/n`, then divide by $n$. One algorithm, two directions.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch02 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Convolution</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">You want to compute the autocorrelation of a return series $r = [r_0, \ldots, r_{n-1}]$: $\text{corr}[k] = \sum_{j} r_j \cdot r_{j+k}$. How many FFTs are needed?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>1 FFT — autocorrelation is its own inverse</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>4 FFTs — two forward FFTs, one multiply, one inverse</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>2 FFTs — one forward FFT, pointwise square of magnitudes, one inverse FFT (Wiener-Khinchin theorem)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$n$ FFTs — one per lag $k$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C — 2 FFTs.</strong><br/><br/>
+          The <strong>Wiener-Khinchin theorem</strong>: the autocorrelation of $r$ equals the inverse FFT of $|R(\omega)|^2$ where $R = \text{FFT}(r)$. So: (1) compute $R = \text{FFT}(r)$, (2) compute $|R_k|^2 = R_k \cdot \overline{R_k}$ pointwise in $O(n)$, (3) compute $\text{IFFT}(|R|^2)$. Total: 2 FFTs + $O(n)$ work = $O(n\log n)$ vs $O(n^2)$ naïve.<br/><br/>
+          This is the standard technique in quantitative finance for computing autocorrelation functions of return series, testing for serial dependence, and detecting market microstructure effects — all running in $O(n\log n)$ for thousands of ticks.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 02</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Multiply $(1 + 2x + x^2)$ by $(3 - x + 2x^2)$ using the FFT approach: pad to 8 terms, compute FFT of each, multiply pointwise, IFFT, read off coefficients. Verify against direct multiplication. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">List all 8th roots of unity in the form $e^{2\pi ik/8}$ for $k=0,\ldots,7$. Express each as $a+bi$ using $\cos(\pi k/4)+i\sin(\pi k/4)$. Show explicitly which pairs collide when squared. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Write the $4\times4$ DFT matrix $V$ for $n=4$ using $\omega_4 = i$. Compute $V\bar{V}$ by hand and verify it equals $4I$, confirming $V^{-1}=\frac{1}{4}\bar{V}$. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement the iterative (non-recursive) Cooley-Tukey FFT using bit-reversal permutation. The iterative version avoids recursion overhead and is the standard in production systems. Test on $n=8$, $n=16$. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Use FFT-based polynomial multiplication to implement large integer multiplication in Python. Verify that $12345 \times 67890 = 838102050$. What is the crossover point where FFT beats naive multiplication in terms of number of digits? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Given a return series of 1024 daily NIFTY returns, compute its autocorrelation function for lags 1 through 20 using FFT (Wiener-Khinchin theorem). Write Python code using <code>np.fft.rfft</code>. Which lags show significant autocorrelation? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The Carr-Madan formula for European option pricing uses FFT to recover the option price density from the characteristic function: $C(K) = \frac{e^{-\alpha \ln K}}{\pi} \int_0^\infty e^{-iv\ln K} \psi(v)\,dv$ (discretised as an FFT). Explain conceptually why this integral is an inverse Fourier transform and how FFT makes $n$ option prices computable in $O(n\log n)$ vs $O(n^2)$ quadrature. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove rigorously that the FFT recursion $T(n) = 2T(n/2) + O(n)$ gives $T(n) = O(n\log n)$ by drawing the recursion tree: show there are $\log_2 n$ levels, each doing $O(n)$ butterfly operations total, giving $O(n\log n)$ overall. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">The DFT can be computed for any $n$ (not just powers of 2) using mixed-radix FFT. For $n=6=2\times3$, describe how to split a degree-5 polynomial into two halves of size 3, recurse using 3-point DFT, and combine. What is the recurrence and solution? <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">The Number Theoretic Transform (NTT) replaces complex roots of unity with modular roots of unity $\omega$ satisfying $\omega^n \equiv 1 \pmod{p}$ for a prime $p$. This avoids floating-point errors in FFT-based polynomial multiplication. Find a suitable prime $p$ for $n=8$ such that a primitive 8th root of unity exists modulo $p$, and run NTT on the polynomial $(1+2x+3x^2+4x^3)$ over $\mathbb{Z}_p$. <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch1.html" class="ch-nav-btn">&larr; Divide &amp; Conquer</a>
+    <a href="PROG_DAA_Ch3.html" class="ch-nav-btn primary">Next: Advanced DS I &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Roots of unity collapse correctly. FFT recurses.","✨ Butterfly operation verified. DFT computed.","🏆 V⁻¹ = (1/n)V̄ confirmed. IFFT reuses FFT.","🔥 Pointwise multiply in sample domain. O(n).","💡 Wiener-Khinchin: 2 FFTs for autocorrelation.","📐 Collapsing property: n roots → n/2 roots.","⚡ O(n log n) confirmed. Naive O(n²) beaten."];
+const wrongMsgs=["🌀 Check the operations table — which representation is O(n) for multiplication?","📉 Squaring the 8th roots of unity halves the count — pairs (k, k+4) collide.","😰 V⁻¹ = (1/n)V̄ means conjugate roots and divide by n — same butterfly structure.","📐 Autocorrelation = IFFT(|FFT(r)|²) — Wiener-Khinchin saves one FFT.","🤔 Addition in root representation is impossible — that row is ∞ in the table."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

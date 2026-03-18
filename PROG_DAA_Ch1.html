@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Divide &amp; Conquer + Master Theorem &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-f{background:rgba(30,158,94,0.1);color:var(--green);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Divide &amp; Conquer</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:8%"></div></div>
+      <span class="tb-progress-label">1 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item active" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-f">Foundational</span>
+      <span class="ch-num">Chapter 01 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Divide &amp; Conquer + Master Theorem</h1>
+    <p class="chapter-subtitle">Break the problem in half, solve each half recursively, merge the results. This paradigm gives us $O(n\log n)$ sorting, $O(n\log n)$ convex hull, $O(n)$ median finding, and $O(n^{2.81})$ matrix multiplication. The Master Theorem tells us the runtime without drawing the recursion tree.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The Divide and Conquer Paradigm</h3>
+    <p>Every divide-and-conquer algorithm follows the same skeleton: given a problem of size $n$, divide it into $a$ subproblems each of size $n/b$, solve each recursively, then merge the results in $f(n)$ time. The total runtime satisfies:</p>
+
+    <div class="math-block">$$T(n) = aT\!\left(\frac{n}{b}\right) + f(n)$$</div>
+
+    <p>The art is in choosing the right division and designing an efficient merge. The merge step is usually what differentiates a clever algorithm from a naive one &mdash; compare $O(n^2)$ merge (naive convex hull) with $O(n)$ merge (divide-and-conquer convex hull).</p>
+
+    <div class="callout callout-definition">
+      <strong>Three steps, always:</strong><br/>
+      <strong>Divide</strong> &mdash; split the input into subproblems. Usually in half: $n/2$ or two halves by sorted order.<br/>
+      <strong>Conquer</strong> &mdash; solve each subproblem recursively. The base case handles small inputs directly.<br/>
+      <strong>Combine</strong> &mdash; merge the subproblem solutions into the final answer. This is where the work happens.
+    </div>
+
+    <h3>Problem 1 &mdash; Interval Scheduling and Weighted Interval Scheduling</h3>
+
+    <p>Before reaching divide and conquer, L1 grounds the course in two scheduling problems that illustrate a key theme: <em>very similar problems can have very different complexity</em>.</p>
+
+    <p><strong>Interval Scheduling:</strong> given $n$ requests with start times $s(i)$ and finish times $f(i)$, select the maximum number of non-overlapping requests. The <strong>greedy algorithm</strong> &mdash; always pick the request with earliest finish time &mdash; solves this in $O(n\log n)$.</p>
+
+    <div class="callout callout-definition">
+      <strong>Greedy correctness proof (exchange argument).</strong> Let greedy produce $S = [i_1, i_2, \ldots, i_k]$ and let $S^* = [j_1, j_2, \ldots, j_{k^*}]$ be optimal. We show $k = k^*$ by induction. Key step: since greedy picks earliest finish time, $f(i_1) \leq f(j_1)$. Replace $j_1$ with $i_1$ in $S^*$ to get $S^{**}$, which is still feasible and still has $k^*$ intervals. Now $S^{**}[2\ldots k^*]$ is optimal for the sub-instance of intervals starting after $f(i_1)$. By induction, greedy picks $k^*-1$ more. Total: $k = k^*$. $\square$
+    </div>
+
+    <p><strong>Weighted Interval Scheduling:</strong> add weight $w(i)$ to each request; maximise total weight of non-overlapping subset. Greedy fails &mdash; a short, low-weight interval can block a heavy one. This requires dynamic programming:</p>
+
+    <div class="callout callout-definition">
+      Sort by finish time: $f(1) \leq f(2) \leq \cdots \leq f(n)$. Define $p(j)$ = largest index $i &lt; j$ with $f(i) \leq s(j)$ (the last compatible interval before $j$). Define $M[j]$ = maximum weight using only requests $1\ldots j$.
+      $$M[j] = \max\bigl(w(j) + M[p(j)],\;\; M[j-1]\bigr)$$
+      Base case: $M[0] = 0$. Compute in order $j = 1, \ldots, n$. Time: $O(n\log n)$ (sorting + binary search for each $p(j)$).
+    </div>
+
+    <p>The jump from greedy (unweighted) to DP (weighted) illustrates that small problem changes can require fundamentally different algorithmic approaches.</p>
+
+    <h3>Problem 2 &mdash; Convex Hull</h3>
+
+    <p>Given $n$ points in the plane, find the smallest convex polygon containing all of them. Represented as the boundary vertices in clockwise order.</p>
+
+    <p><strong>Brute force:</strong> test every line segment &mdash; $O(n^2)$ segments, $O(n)$ tests each = $O(n^3)$. Can we do better?</p>
+
+    <p><strong>Divide and conquer:</strong> sort points by $x$-coordinate once ($O(n\log n)$). Split into left half $A$ and right half $B$. Compute $CH(A)$ and $CH(B)$ recursively. <strong>Merge</strong> by finding the upper and lower tangent lines between the two hulls.</p>
+
+    <div class="callout callout-definition">
+      <strong>Finding the upper tangent in $O(n)$:</strong> start at the rightmost point of $A$ (index $i=1$) and leftmost of $B$ (index $j=1$). Define $y(i,j)$ = $y$-coordinate where the vertical separator $L$ meets segment $(a_i, b_j)$. The upper tangent maximises $y(i,j)$.
+      <br/><br/>
+      Move fingers: if $y(i, j+1) &gt; y(i,j)$, advance $j$ clockwise; if $y(i-1, j) &gt; y(i,j)$, advance $i$ anticlockwise; else $(a_i, b_j)$ is the upper tangent. Each step strictly increases $y$, so terminates in $O(n)$ steps.
+      <br/><br/>
+      Recurrence: $T(n) = 2T(n/2) + \Theta(n) = \Theta(n\log n)$.
+    </div>
+
+    <h3>Problem 3 &mdash; Median Finding in Linear Time</h3>
+
+    <p>Find the element of rank $\lfloor(n+1)/2\rfloor$ in an unsorted array. Sorting works in $\Theta(n\log n)$. Can we do it in $\Theta(n)$?</p>
+
+    <p>Yes &mdash; but only if we pick the pivot cleverly. The naive Select (random pivot) achieves $O(n)$ expected time. The <strong>Median of Medians</strong> algorithm achieves $O(n)$ worst-case:</p>
+
+    <div class="callout callout-definition">
+      <strong>Median of Medians (deterministic $O(n)$ select):</strong><br/>
+      1. Arrange $S$ into groups of 5. Sort each group. ($O(n)$ total.)<br/>
+      2. Find the median of the $\lceil n/5 \rceil$ group medians recursively: $T(\lceil n/5 \rceil)$.<br/>
+      3. Use this median $x$ as pivot. Partition into $B = \{y &lt; x\}$ and $C = \{y &gt; x\}$.<br/>
+      4. Recurse on the appropriate side.<br/><br/>
+      <strong>Key guarantee:</strong> at least $3(\lceil n/10 \rceil - 2)$ elements are $&gt; x$ and $&lt; x$, so both $|B|$ and $|C|$ are at most $\frac{7n}{10} + 6$.<br/>
+      <strong>Recurrence:</strong> $T(n) = T(\lceil n/5 \rceil) + T(7n/10 + 6) + \Theta(n)$<br/>
+      <strong>Solution:</strong> $T(n) = \Theta(n)$ (proved by substitution: assume $T(n) \leq cn$, show it holds).
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">Median of Medians + Weighted Interval Scheduling &middot; O(n)</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">import bisect
+
+# ── WEIGHTED INTERVAL SCHEDULING ── O(n log n) ──────────────────────
+def weighted_interval_scheduling(intervals):
+    """
+    intervals: list of (start, finish, weight)
+    Returns maximum total weight of non-overlapping intervals.
+    """
+    intervals.sort(key=lambda x: x[1])          # sort by finish time
+    n = len(intervals)
+    finish_times = [iv[1] for iv in intervals]
+
+    def p(j):
+        """Largest i < j with finish[i] <= start[j]."""
+        return bisect.bisect_right(finish_times, intervals[j][0], 0, j) - 1
+
+    M = [0] * (n + 1)                           # M[0] = 0 (base case)
+    for j in range(n):
+        pj = p(j)
+        M[j + 1] = max(intervals[j][2] + M[pj + 1], M[j])
+    return M[n]
+
+
+# ── MEDIAN OF MEDIANS ── O(n) worst case ────────────────────────────
+def median_of_medians(S, i):
+    """
+    Returns the i-th smallest element (1-indexed) of S.
+    O(n) deterministic — no randomness needed.
+    """
+    if len(S) <= 5:
+        return sorted(S)[i - 1]
+
+    # Step 1: split into groups of 5, find each group's median
+    chunks  = [S[j:j+5] for j in range(0, len(S), 5)]
+    medians = [sorted(c)[len(c) // 2] for c in chunks]
+
+    # Step 2: find median of medians recursively
+    pivot = median_of_medians(medians, len(medians) // 2 + 1)
+
+    # Step 3: partition around pivot
+    low  = [x for x in S if x  < pivot]
+    high = [x for x in S if x  > pivot]
+    k    = len(low) + 1          # rank of pivot in S
+
+    # Step 4: recurse on correct side
+    if i == k: return pivot
+    elif i < k: return median_of_medians(low,  i)
+    else:       return median_of_medians(high, i - k)</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+// Weighted Interval Scheduling — O(n log n)
+struct Interval { int s, f, w; };
+
+int weighted_interval(vector&lt;Interval&gt;&amp; ivs) {
+    sort(ivs.begin(), ivs.end(), [](auto&amp; a, auto&amp; b){ return a.f &lt; b.f; });
+    int n = ivs.size();
+    vector&lt;int&gt; M(n + 1, 0);
+    for (int j = 0; j &lt; n; ++j) {
+        // binary search for p(j)
+        int lo = 0, hi = j;
+        while (lo &lt; hi) {
+            int mid = (lo + hi + 1) / 2;
+            if (ivs[mid-1].f &lt;= ivs[j].s) lo = mid;
+            else hi = mid - 1;
+        }
+        M[j+1] = max(ivs[j].w + M[lo], M[j]);
+    }
+    return M[n];
+}
+
+// Median of Medians — O(n) deterministic
+int mom(vector&lt;int&gt; S, int i) {
+    if ((int)S.size() &lt;= 5) {
+        sort(S.begin(), S.end());
+        return S[i - 1];
+    }
+    vector&lt;int&gt; medians;
+    for (int j = 0; j &lt; (int)S.size(); j += 5) {
+        auto chunk = vector&lt;int&gt;(S.begin()+j,
+                     S.begin()+min(j+5,(int)S.size()));
+        sort(chunk.begin(), chunk.end());
+        medians.push_back(chunk[chunk.size()/2]);
+    }
+    int pivot = mom(medians, medians.size()/2 + 1);
+    vector&lt;int&gt; lo, hi;
+    for (int x : S) { if (x &lt; pivot) lo.push_back(x);
+                       else if (x &gt; pivot) hi.push_back(x); }
+    int k = lo.size() + 1;
+    if (i == k) return pivot;
+    if (i &lt;  k) return mom(lo, i);
+    return mom(hi, i - k);
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Problem 4 &mdash; Strassen&rsquo;s Matrix Multiplication</h3>
+
+    <p>Naive matrix multiplication of two $n \times n$ matrices costs $\Theta(n^3)$ &mdash; $n^2$ entries in $C$, each requiring $n$ multiplications. Strassen&rsquo;s key insight: you can compute the four $n/2 \times n/2$ submatrix products using only <strong>7 multiplications</strong> (not 8) at the cost of 18 additions.</p>
+
+    <div class="callout callout-definition">
+      <strong>Strassen&rsquo;s seven products</strong> (for $2\times2$ block decomposition $A = \begin{pmatrix}A_{11}&A_{12}\\A_{21}&A_{22}\end{pmatrix}$, same for $B$):
+      $$M_1 = (A_{11}+A_{22})(B_{11}+B_{22}) \quad M_2 = (A_{21}+A_{22})B_{11}$$
+      $$M_3 = A_{11}(B_{12}-B_{22}) \quad M_4 = A_{22}(B_{21}-B_{11})$$
+      $$M_5 = (A_{11}+A_{12})B_{22} \quad M_6 = (A_{21}-A_{11})(B_{11}+B_{12})$$
+      $$M_7 = (A_{12}-A_{22})(B_{21}+B_{22})$$
+      Then: $C_{11} = M_1+M_4-M_5+M_7$, $C_{12}=M_3+M_5$, $C_{21}=M_2+M_4$, $C_{22}=M_1-M_2+M_3+M_6$.
+      <br/><br/>
+      Recurrence: $T(n) = 7T(n/2) + \Theta(n^2)$. By Master Theorem: $T(n) = \Theta(n^{\log_2 7}) \approx \Theta(n^{2.807})$.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Strassen Matrix Multiplication &middot; O(n^2.807)</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">import numpy as np
+
+def strassen(A, B):
+    """
+    Strassen matrix multiplication. A, B must be n x n with n a power of 2.
+    Returns C = A @ B in O(n^2.807) recursive multiplications.
+    For small n, falls back to naive to avoid overhead.
+    """
+    n = len(A)
+    if n <= 64:                              # base case: numpy is fastest here
+        return A @ B
+
+    half = n // 2
+    # Partition into 2x2 blocks of submatrices
+    A11, A12 = A[:half, :half], A[:half, half:]
+    A21, A22 = A[half:, :half], A[half:, half:]
+    B11, B12 = B[:half, :half], B[:half, half:]
+    B21, B22 = B[half:, :half], B[half:, half:]
+
+    # 7 recursive multiplications (not 8)
+    M1 = strassen(A11 + A22, B11 + B22)
+    M2 = strassen(A21 + A22, B11)
+    M3 = strassen(A11,       B12 - B22)
+    M4 = strassen(A22,       B21 - B11)
+    M5 = strassen(A11 + A12, B22)
+    M6 = strassen(A21 - A11, B11 + B12)
+    M7 = strassen(A12 - A22, B21 + B22)
+
+    # 18 additions to assemble C
+    C11 = M1 + M4 - M5 + M7
+    C12 = M3 + M5
+    C21 = M2 + M4
+    C22 = M1 - M2 + M3 + M6
+
+    C = np.zeros((n, n))
+    C[:half, :half], C[:half, half:] = C11, C12
+    C[half:, :half], C[half:, half:] = C21, C22
+    return C</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Strassen matrix multiplication — O(n^log2(7)) ≈ O(n^2.807)
+// Matrices stored as vector&lt;vector&lt;double&gt;&gt;
+#include &lt;vector&gt;
+using namespace std;
+using Mat = vector&lt;vector&lt;double&gt;&gt;;
+
+Mat add(const Mat&amp; A, const Mat&amp; B, int sign=1) {
+    int n = A.size();
+    Mat C(n, vector&lt;double&gt;(n));
+    for (int i=0;i&lt;n;i++) for (int j=0;j&lt;n;j++)
+        C[i][j] = A[i][j] + sign*B[i][j];
+    return C;
+}
+
+Mat strassen(const Mat&amp; A, const Mat&amp; B) {
+    int n = A.size();
+    if (n &lt;= 64) {                          // base: naive for small n
+        Mat C(n, vector&lt;double&gt;(n, 0));
+        for(int i=0;i&lt;n;i++) for(int k=0;k&lt;n;k++) for(int j=0;j&lt;n;j++)
+            C[i][j] += A[i][k]*B[k][j];
+        return C;
+    }
+    int h = n/2;
+    // Extract submatrices
+    auto sub = [&amp;](const Mat&amp; M, int r0, int c0) {
+        Mat S(h, vector&lt;double&gt;(h));
+        for(int i=0;i&lt;h;i++) for(int j=0;j&lt;h;j++) S[i][j]=M[r0+i][c0+j];
+        return S;
+    };
+    auto A11=sub(A,0,0), A12=sub(A,0,h), A21=sub(A,h,0), A22=sub(A,h,h);
+    auto B11=sub(B,0,0), B12=sub(B,0,h), B21=sub(B,h,0), B22=sub(B,h,h);
+
+    auto M1=strassen(add(A11,A22),   add(B11,B22));
+    auto M2=strassen(add(A21,A22),   B11);
+    auto M3=strassen(A11,            add(B12,B22,-1));
+    auto M4=strassen(A22,            add(B21,B11,-1));
+    auto M5=strassen(add(A11,A12),   B22);
+    auto M6=strassen(add(A21,A11,-1),add(B11,B12));
+    auto M7=strassen(add(A12,A22,-1),add(B21,B22));
+
+    // Assemble C from 7 products
+    Mat C(n, vector&lt;double&gt;(n));
+    for(int i=0;i&lt;h;i++) for(int j=0;j&lt;h;j++) {
+        C[i][j]     = M1[i][j]+M4[i][j]-M5[i][j]+M7[i][j];
+        C[i][j+h]   = M3[i][j]+M5[i][j];
+        C[i+h][j]   = M2[i][j]+M4[i][j];
+        C[i+h][j+h] = M1[i][j]-M2[i][j]+M3[i][j]+M6[i][j];
+    }
+    return C;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>The Master Theorem</h3>
+
+    <p>The Master Theorem solves recurrences of the form $T(n) = aT(n/b) + f(n)$ where $a \geq 1$, $b > 1$. Compare $f(n)$ with $n^{\log_b a}$ (the &ldquo;critical exponent&rdquo;):</p>
+
+    <div class="callout callout-definition">
+      <strong>Master Theorem &mdash; three cases:</strong><br/><br/>
+      <strong>Case 1:</strong> $f(n) = O(n^{\log_b a - \varepsilon})$ for some $\varepsilon > 0$ (leaves dominate) &nbsp;&rarr;&nbsp; $T(n) = \Theta(n^{\log_b a})$<br/>
+      <strong>Case 2:</strong> $f(n) = \Theta(n^{\log_b a} \log^k n)$ for $k \geq 0$ (tied) &nbsp;&rarr;&nbsp; $T(n) = \Theta(n^{\log_b a} \log^{k+1} n)$<br/>
+      <strong>Case 3:</strong> $f(n) = \Omega(n^{\log_b a + \varepsilon})$ and $af(n/b) \leq cf(n)$ for $c&lt;1$ (root dominates) &nbsp;&rarr;&nbsp; $T(n) = \Theta(f(n))$<br/><br/>
+      If $n^{\log_b a}$ is greater than $f(n)$ but not <em>polynomially</em> greater, the Master Theorem does not apply (e.g., $T(n) = 2T(n/2) + \Theta(n/\log n)$).
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.83rem;">
+      <thead><tr>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:left;">Recurrence</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:left;">$a$, $b$, $f(n)$</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:left;">Case</th>
+        <th style="background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 1rem;text-align:left;">Solution</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.8rem;">$T = 2T(n/2)+\Theta(n)$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">2, 2, $n$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">Case 2 ($k=0$)</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);color:var(--green);font-weight:700;">$\Theta(n\log n)$</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.8rem;">$T = 7T(n/2)+\Theta(n^2)$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">7, 2, $n^2$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">Case 1 ($n^{\log_27}\approx n^{2.807}$)</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);color:var(--green);font-weight:700;">$\Theta(n^{\log_2 7})$</td></tr>
+        <tr><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.8rem;">$T = 4T(n/2)+\Theta(n^2)$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">4, 2, $n^2$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">Case 2 ($k=0$)</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);color:var(--green);font-weight:700;">$\Theta(n^2\log n)$</td></tr>
+        <tr style="background:rgba(247,245,242,0.6);"><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.8rem;">$T = 4T(n/2)+\Theta(n^3)$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">4, 2, $n^3$</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);">Case 3 ($n^3 \gg n^2$)</td><td style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);color:var(--green);font-weight:700;">$\Theta(n^3)$</td></tr>
+        <tr><td style="padding:0.6rem 1rem;font-family:'DM Mono',monospace;font-size:0.8rem;">$T = T(n/5)+T(7n/10)+\Theta(n)$</td><td style="padding:0.6rem 1rem;">—</td><td style="padding:0.6rem 1rem;">Doesn&rsquo;t apply; use substitution</td><td style="padding:0.6rem 1rem;color:var(--orange);font-weight:700;">$\Theta(n)$</td></tr>
+      </tbody>
+    </table>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">D&amp;C Convex Hull &middot; O(n log n)</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">def convex_hull_dc(points):
+    """
+    Divide-and-conquer convex hull. O(n log n).
+    points: list of (x, y). Returns upper hull vertices left-to-right.
+    (Full hull = upper hull + lower hull, both in O(n log n).)
+    """
+    pts = sorted(set(points))              # sort by x, deduplicate
+    n = len(pts)
+    if n <= 3:
+        return pts                         # base case
+
+    mid = n // 2
+    left_hull  = convex_hull_dc(pts[:mid])
+    right_hull = convex_hull_dc(pts[mid:])
+    return merge_hulls(left_hull, right_hull)
+
+
+def cross(O, A, B):
+    """Cross product of OA and OB. Positive = left turn."""
+    return (A[0]-O[0])*(B[1]-O[1]) - (A[1]-O[1])*(B[0]-O[0])
+
+
+def merge_hulls(left, right):
+    """
+    Merge two convex hulls by finding upper and lower tangents. O(n).
+    Returns the merged upper hull (simplified for clarity).
+    """
+    # Find upper tangent: rightmost of left, leftmost of right
+    i = left.index(max(left))              # rightmost point of left hull
+    j = 0                                  # leftmost point of right hull
+
+    while True:
+        changed = False
+        # Move right finger clockwise until it can't improve
+        while cross(left[i], right[j], right[(j+1) % len(right)]) > 0:
+            j = (j + 1) % len(right)
+            changed = True
+        # Move left finger anticlockwise until it can't improve
+        while cross(right[j], left[i], left[(i-1) % len(left)]) < 0:
+            i = (i - 1) % len(left)
+            changed = True
+        if not changed:
+            break
+    return left[:i+1] + right[j:]        # merge along tangent</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+struct P { long long x, y; };
+long long cross(P O, P A, P B) {
+    return (A.x-O.x)*(B.y-O.y)-(A.y-O.y)*(B.x-O.x);
+}
+
+// Upper hull in O(n) via Graham scan merge
+vector&lt;P&gt; upper_hull(vector&lt;P&gt; pts) {
+    sort(pts.begin(), pts.end(), [](P a, P b){
+        return a.x &lt; b.x || (a.x==b.x &amp;&amp; a.y &lt; b.y);
+    });
+    vector&lt;P&gt; h;
+    for (auto&amp; p : pts) {
+        while (h.size() &gt;= 2 &amp;&amp;
+               cross(h[h.size()-2], h.back(), p) &gt;= 0)
+            h.pop_back();
+        h.push_back(p);
+    }
+    return h;
+}
+
+// Full convex hull (upper + lower) — O(n log n) with sort
+vector&lt;P&gt; convex_hull(vector&lt;P&gt; pts) {
+    sort(pts.begin(), pts.end(), [](P a, P b){
+        return a.x &lt; b.x || (a.x==b.x &amp;&amp; a.y &lt; b.y);
+    });
+    int n = pts.size(); if (n &lt; 2) return pts;
+    vector&lt;P&gt; h;
+    // Upper hull
+    for (auto&amp; p : pts) {
+        while (h.size()&gt;=2 &amp;&amp; cross(h[h.size()-2],h.back(),p)&gt;=0) h.pop_back();
+        h.push_back(p);
+    }
+    // Lower hull
+    int upper_size = h.size();
+    for (int i=n-2; i&gt;=0; --i) {
+        while ((int)h.size()&gt;upper_size &amp;&amp;
+               cross(h[h.size()-2],h.back(),pts[i])&gt;=0) h.pop_back();
+        h.push_back(pts[i]);
+    }
+    h.pop_back();
+    return h;
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Options Strategy Scheduling</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT Strategy</span>
+      </div>
+      <div class="we-body">
+        <p>TTT runs multiple option strategies. Each strategy occupies a margin block during $[s_i, f_i]$ and generates expected PnL $w_i$. Only one strategy can hold margin at a time. Maximise total expected PnL.</p>
+        <div class="we-step">Model as Weighted Interval Scheduling</div>
+        <p>Strategies = intervals $[s_i, f_i]$ with weight $w_i$ (expected PnL). Non-overlap constraint = margin constraint. Apply the $O(n\log n)$ DP.</p>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python">strategies = [
+    (9,  17, 4200),   # NIFTY straddle, 9am-5pm, ₹4200 expected PnL
+    (9,  11, 1800),   # BankNifty scalp, 9am-11am
+    (11, 17, 2900),   # NIFTY spread, 11am-5pm
+    (9,  13, 3100),   # NIFTY butterfly, 9am-1pm
+    (13, 17, 1600),   # Afternoon hedge, 1pm-5pm
+]
+# As (start, finish, weight) tuples
+result = weighted_interval_scheduling(strategies)
+print(result)  # 4700 = BankNifty (1800) + NIFTY spread (2900)</code></pre>
+        <div class="we-answer">
+          <strong>Optimal:</strong> BankNifty scalp [9,11] + NIFTY spread [11,17] = ₹4,700. The full-day straddle (₹4,200) is suboptimal &mdash; the greedy rule (pick highest weight) fails; DP finds the globally optimal non-overlapping subset.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Weighted Interval Scheduling directly models <strong>multi-strategy capital allocation</strong>: strategies compete for the same margin capital during overlapping time windows. The $O(n\log n)$ DP gives the globally optimal subset. For TTT&rsquo;s expiry-day strategies, where STRATEGY_01, STRATEGY_06, STRATEGY_08, and VOLT_OTM all contend for NIFTY margin during morning volatility, this framework picks which strategies to run. Strassen matters less in quant finance directly &mdash; but the divide-and-conquer <em>thinking</em> (reduce 8 operations to 7 by clever combination) appears in options Greeks calculation and covariance matrix inversion shortcuts.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 01</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch01 / q01</span>
+        <span class="mcq-diff">&#9733; Master Theorem</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">What is the solution to $T(n) = 4T(n/2) + \Theta(n^2)$?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$\Theta(n^2)$ &mdash; Case 3, $f(n)$ dominates</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$\Theta(n^2 \log n)$ &mdash; Case 2, $f(n) = \Theta(n^{\log_b a})$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$\Theta(n^3)$ &mdash; Case 1, leaves dominate</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$\Theta(n^{2.5})$ &mdash; geometric blend of $n^2$ and $n^{\log_2 4}$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B &mdash; $\Theta(n^2 \log n)$.</strong><br/><br/>
+          $a=4$, $b=2$, so $n^{\log_b a} = n^{\log_2 4} = n^2$. Since $f(n) = \Theta(n^2) = \Theta(n^{\log_b a} \cdot \log^0 n)$, this is Case 2 with $k=0$: $T(n) = \Theta(n^2 \log^{0+1} n) = \Theta(n^2 \log n)$.<br/><br/>
+          This recurrence appears when merge sort is applied to a 2D problem where the merge step costs $O(n^2)$ per level. There are $\log n$ levels, each doing $O(n^2)$ total work &mdash; hence the $\log$ factor.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch01 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Strassen</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Strassen uses 7 multiplications instead of 8 per recursion. Why is this the key insight, and what would happen if someone found a way to use only 6?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>7 vs 8 gives no real speedup; the savings come from the 18 additions</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>The base of the recurrence changes from $n^{\log_2 8}=n^3$ to $n^{\log_2 7}\approx n^{2.807}$; using 6 would give $n^{\log_2 6}\approx n^{2.585}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>6 multiplications is impossible by information-theoretic arguments; 7 is optimal</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>The number of multiplications doesn&rsquo;t affect asymptotic complexity since additions dominate</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The recurrence is $T(n) = mT(n/2) + \Theta(n^2)$ where $m$ is the number of multiplications. By Case 1 of the Master Theorem (as long as $m &gt; 4 = n^{\log_2 4}$), the solution is $\Theta(n^{\log_2 m})$. So $m=8 \Rightarrow n^3$, $m=7 \Rightarrow n^{2.807}$, $m=6 \Rightarrow n^{2.585}$. Each multiplication saved shaves the exponent. The current world record is approximately $n^{2.371}$ (Vassilevska Williams et al., 2024). Whether the true lower bound is $\omega = 2$ is one of the biggest open problems in theoretical computer science.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch01 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Greedy vs DP</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Greedy (earliest finish time) solves unweighted interval scheduling optimally. Why does it fail for <strong>weighted</strong> interval scheduling?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Because weighted intervals require sorting by weight, not finish time</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Because the greedy algorithm can&rsquo;t handle ties in weight</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>A short low-weight interval with early finish may block two heavy overlapping intervals whose combined weight is larger</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Because greedy algorithms can never solve optimisation problems with weights</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C.</strong><br/><br/>
+          Concrete counterexample: three intervals $[1,3]$ weight 1, $[2,5]$ weight 10, $[4,6]$ weight 10. Earliest finish picks $[1,3]$ first (finish=3), then $[4,6]$ (finish=6) for total weight 11. But $[2,5]$ and $[4,6]$ overlap &mdash; we can&rsquo;t take both. Optimal is $[1,3]+[4,6]=11$ or $[2,5]=10$, so greedy gets 11 here. Better example: $[1,4]$ weight 3, $[2,3]$ weight 1, $[3,5]$ weight 3. Greedy takes $[2,3]$ first (earliest finish), then $[3,5]$, total 4. Optimal is $[1,4]=3$... Actually greedy gets 4 here too. The canonical counterexample: $[1,6]$ weight 10 vs $[1,3]$ weight 3 and $[4,6]$ weight 3. Greedy takes $[1,3]$ then $[4,6]$ = 6. Optimal is just $[1,6]$ = 10. Greedy fails.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch01 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Median of Medians</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Median of Medians uses groups of 5. Why 5, and not 3 or 7?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>5 is the smallest prime; using 3 would be too slow to sort each group</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Groups of 7 fail because the recursion becomes too deep</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>Groups of 3 give a $T(n/3)+T(2n/3)$ recurrence that doesn&rsquo;t solve to $O(n)$; 5 gives $T(n/5)+T(7n/10)$ which does; 7 also works but with larger constants</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Any odd group size works; 5 is chosen purely for cache efficiency</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C.</strong><br/><br/>
+          With groups of size $g$, the pivot eliminates at least a $\frac{g-1}{2g}$ fraction of elements. For $g=3$: fraction $\frac{1}{3}$, so recurrence is $T(n) = T(n/3) + T(2n/3) + \Theta(n)$. The $T(n/3)+T(2n/3)$ part sums to $T(n)$ times $1/3+2/3=1$, giving $T(n) = \Omega(n\log n)$. Not linear!<br/><br/>
+          For $g=5$: fraction $3/10$, recurrence $T(n/5)+T(7n/10)+\Theta(n)$. Now $1/5+7/10=9/10 &lt; 1$, giving $T(n)=O(n)$ by substitution. For $g=7$: even better fraction, but sorting groups of 7 costs more. The constant in $O(n)$ grows. $g=5$ is the smallest group size that makes the algorithm linear &mdash; the sweet spot.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 01</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Apply the Master Theorem to each: (a) $T=3T(n/3)+\Theta(n)$, (b) $T=2T(n/4)+\Theta(1)$, (c) $T=8T(n/2)+\Theta(n^2)$, (d) $T=4T(n/2)+\Theta(n^2\log n)$. State which case applies and give the solution. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Run the Weighted Interval Scheduling DP on intervals $\{[1,4,3],[2,6,5],[3,5,4],[5,9,6],[6,10,2]\}$ (start, finish, weight). Fill the $M$ array, find $p(j)$ for each $j$, and trace back the optimal set. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Verify Strassen's seven products by expanding $M_1+M_4-M_5+M_7$ algebraically to show it equals $A_{11}B_{11}+A_{12}B_{21}$. Then verify $C_{22} = M_1-M_2+M_3+M_6 = A_{21}B_{12}+A_{22}B_{22}$. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement Randomised Quickselect (pivot chosen uniformly at random) and compare its expected running time to Median of Medians empirically on arrays of size $n = 10^3, 10^4, 10^5$. Which is faster in practice? Why might the $O(n)$ worst-case algorithm be slower in practice? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">The recurrence $T(n) = T(n/5) + T(7n/10+6) + \Theta(n)$ does not satisfy the Master Theorem. Prove $T(n) = \Theta(n)$ using the substitution method: assume $T(n) \leq cn$ for some $c$, substitute, and find the required lower bound on $c$. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Design a divide-and-conquer algorithm for the <strong>closest pair of points</strong> problem: given $n$ points in the plane, find the pair with minimum Euclidean distance. Prove your recurrence and show the merge step runs in $O(n)$, giving $T(n) = 2T(n/2) + O(n) = O(n\log n)$. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">Non-identical machines: you have $n$ jobs and $m$ machine types. Job $i$ can run on machine types $Q(i) \subseteq \{T_1,\ldots,T_m\}$. Each machine can handle one job at a time. Argue why greedy (earliest finish) fails, and explain why the decision version (can $k$ jobs be scheduled?) is NP-complete by reduction from bipartite matching extended to multiple constraints. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove the correctness of the divide-and-conquer convex hull merge: if $(a_i, b_j)$ is the pair that maximises $y(i,j)$ (the $y$-coordinate of the tangent line at the separator), then $(a_i, b_j)$ is the upper tangent. Hint: show that if it isn&rsquo;t, some point lies above the line. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">The Akra-Bazzi theorem generalises the Master Theorem to recurrences of the form $T(n) = \sum_{i=1}^{k} a_i T(n/b_i) + f(n)$. Apply it to the Median of Medians recurrence $T(n) = T(n/5) + T(7n/10) + \Theta(n)$. Find the characteristic exponent $p$ where $\sum a_i/b_i^p = 1$, and state the solution. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">Strassen uses 7 multiplications for $2\times2$ block decomposition. Prove that any algorithm computing $2\times2$ matrix products using the standard bilinear algorithm framework requires at least 7 multiplications (the Winograd-Pan lower bound argument). What does this say about $\omega$, the exponent of matrix multiplication? <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA.html" class="ch-nav-btn">&larr; All Chapters</a>
+    <a href="PROG_DAA_Ch2.html" class="ch-nav-btn primary">Next: Fast Fourier Transform &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Master Theorem applied correctly.","✨ Divide step clean. Merge in O(n). ","🏆 Greedy exchange argument verified.","🔥 Strassen's 7 products confirmed.","💡 Substitution method works. T(n)=O(n).","📐 Recurrence solved. Exponent correct.","⚡ Weighted DP optimal. p(j) computed."];
+const wrongMsgs=["🌀 Check which case of the Master Theorem applies — compare f(n) with n^log_b(a).","📉 The key is whether f(n) is polynomially larger, equal, or smaller than n^log_b(a).","😰 Try a concrete counterexample: one heavy long interval vs two light short ones.","📐 Strassen saves one multiplication per level — that changes the exponent, not the constant.","🤔 With groups of 3, the fractions don't sum to less than 1."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

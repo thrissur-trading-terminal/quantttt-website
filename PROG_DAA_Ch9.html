@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Network Flow &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-adv{background:rgba(45,37,96,0.08);color:var(--navy2);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Network Flow</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:69%"></div></div>
+      <span class="tb-progress-label">9 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-adv">Advanced</span>
+      <span class="ch-num">Chapter 09 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Network Flow</h1>
+    <p class="chapter-subtitle">Push water through a directed pipe network from source to sink: how much can you push? The max-flow min-cut theorem gives a startling answer &mdash; the maximum flow equals the minimum bottleneck cut. Edmonds-Karp guarantees polynomial time by always augmenting along the shortest available path. The same framework solves bipartite matching, vertex cover, and any problem that can be expressed as a flow.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Flow Networks</h3>
+    <p>A flow network $G = (V, E)$ is a directed graph with a <strong>source</strong> $s$ and a <strong>sink</strong> $t$. Each edge $(u,v) \in E$ has a non-negative <strong>capacity</strong> $c(u,v)$; if $(u,v) \notin E$ then $c(u,v) = 0$. We assume no anti-parallel edges (no both $(u,v)$ and $(v,u)$) and no self-loops.</p>
+
+    <div class="callout callout-definition">
+      <strong>Net flow $f: V \times V \to \mathbb{R}$</strong> satisfying three properties:<br/>
+      &mdash; <strong>Capacity constraint:</strong> $f(u,v) \leq c(u,v)$ for all $u,v$<br/>
+      &mdash; <strong>Flow conservation:</strong> $\sum_v f(u,v) = 0$ for all $u \neq s, t$ (flow in = flow out at every internal vertex, like Kirchhoff&rsquo;s current law)<br/>
+      &mdash; <strong>Skew symmetry:</strong> $f(u,v) = -f(v,u)$ for all $u,v$<br/><br/>
+      <strong>Value of flow:</strong> $|f| = f(s,V) = \sum_v f(s,v)$ = total flow out of source.<br/><br/>
+      <strong>Key identity:</strong> $|f| = f(V,t)$ — flow out of source = flow into sink. Proof by flow conservation and skew symmetry.
+    </div>
+
+    <h3>Cuts and the Upper Bound</h3>
+    <div class="callout callout-definition">
+      A <strong>cut $(S,T)$</strong> is a partition of $V$ with $s \in S$, $t \in T$. Flow across the cut: $f(S,T) = \sum_{u\in S}\sum_{v\in T} f(u,v)$. Capacity of cut: $c(S,T) = \sum_{u\in S}\sum_{v\in T} c(u,v)$.<br/><br/>
+      <strong>Lemma:</strong> $|f| = f(S,T)$ for any cut — the entire flow must cross every cut.<br/>
+      <strong>Corollary:</strong> $|f| \leq c(S,T)$ for any cut — flow is bounded by any bottleneck cut.
+    </div>
+
+    <h3>Residual Network and Augmenting Paths</h3>
+    <p>To find a larger flow, look for paths in the <strong>residual network</strong> $G_f$: for each edge $(u,v)$, the residual capacity is $c_f(u,v) = c(u,v) - f(u,v)$. Include edge $(u,v)$ in $G_f$ iff $c_f(u,v) > 0$. Backward edges allow us to &ldquo;undo&rdquo; flow.</p>
+
+    <p>An <strong>augmenting path</strong> is any path $s \to t$ in $G_f$. We can push $c_f(p) = \min_{(u,v)\in p} c_f(u,v)$ more units of flow along $p$. After augmentation, $|f|$ increases by $c_f(p)$.</p>
+
+    <h3>Max-Flow Min-Cut Theorem</h3>
+    <div class="callout callout-definition">
+      <strong>Theorem.</strong> The following three conditions are equivalent:
+      <ol style="margin:0.8rem 0 0 1.2rem;line-height:2;">
+        <li>$|f| = c(S,T)$ for some cut $(S,T)$</li>
+        <li>$f$ is a maximum flow</li>
+        <li>$G_f$ contains no augmenting path</li>
+      </ol>
+      <br/>
+      <strong>Proof sketch.</strong><br/>
+      $(1) \Rightarrow (2)$: Since $|f| \leq c(S,T)$ for all cuts, equality with some cut implies no larger flow exists.<br/>
+      $(2) \Rightarrow (3)$: If an augmenting path existed, we could push more flow — contradicting maximality.<br/>
+      $(3) \Rightarrow (1)$: If no augmenting path exists, define $S = \{v : \exists \text{ path } s\to v \text{ in } G_f\}$, $T = V \setminus S$. Then $s \in S$, $t \in T$ (since $t$ is not reachable). For any $u \in S$, $v \in T$: $c_f(u,v) = 0$ (otherwise $v$ would be in $S$), so $f(u,v) = c(u,v)$. Thus $f(S,T) = c(S,T) = |f|$. $\square$
+    </div>
+
+    <h3>Ford-Fulkerson Algorithm</h3>
+    <p>Repeatedly find an augmenting path in $G_f$ and augment along it until no augmenting path exists. With integer capacities, terminates with the maximum flow (each augmentation increases $|f|$ by at least 1). With irrational capacities, may not terminate.</p>
+
+    <div class="callout callout-warning">
+      <strong>Ford-Fulkerson can be slow.</strong> With 4 vertices and capacities $10^9$, choosing the middle edge as part of every augmenting path takes $2 \times 10^9$ iterations, each augmenting by 1. The algorithm runs in $O(E \cdot |f^*|)$ where $|f^*|$ is the max flow value — pseudo-polynomial, not polynomial in the input size.
+    </div>
+
+    <h3>Edmonds-Karp: $O(VE^2)$</h3>
+    <p>Fix Ford-Fulkerson by always choosing the <strong>shortest</strong> augmenting path (BFS in $G_f$, each edge weight 1). This guarantees polynomial time.</p>
+
+    <div class="callout callout-definition">
+      <strong>Key lemma (Monotonicity):</strong> Let $\delta(v) = \delta_f(s,v)$ be the BFS distance from $s$ to $v$ in $G_f$. After any augmentation, $\delta(v)$ can only increase (never decrease) for all $v$.<br/><br/>
+      <strong>Critical edge argument:</strong> Edge $(u,v)$ is <em>critical</em> on augmenting path $p$ if $c_f(u,v) = c_f(p)$ (it becomes the bottleneck, disappearing from $G_f$ after augmentation). For $(u,v)$ to be critical again, the reverse edge $(v,u)$ must appear on a later augmenting path, which requires $\delta(v)$ to have increased by at least 2 since the last time $(u,v)$ was critical. Since $\delta(v) \leq V-1$, each edge is critical at most $O(V)$ times. Total critical events: $O(VE)$. Each augmentation has at least one critical edge, so at most $O(VE)$ augmentations. Each BFS: $O(E)$. Total: $O(VE^2)$.
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">Edmonds-Karp Maximum Flow &middot; O(VE²)</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">from collections import deque
+
+def edmonds_karp(n, source, sink, capacity):
+    """
+    Edmonds-Karp max flow (Ford-Fulkerson + BFS shortest augmenting path).
+    n: number of vertices (0-indexed).
+    capacity: 2D list, capacity[u][v] = c(u,v).
+    Returns (max_flow_value, flow_matrix).
+    Time: O(V * E^2).
+    """
+    flow = [[0]*n for _ in range(n)]   # current flow on each edge
+
+    def bfs_find_path():
+        """Find shortest augmenting path s->t in residual graph via BFS."""
+        parent = [-1] * n
+        parent[source] = source
+        queue  = deque([source])
+        while queue and parent[sink] == -1:
+            u = queue.popleft()
+            for v in range(n):
+                # Residual capacity: c_f(u,v) = capacity[u][v] - flow[u][v]
+                if parent[v] == -1 and capacity[u][v] - flow[u][v] > 0:
+                    parent[v] = u
+                    queue.append(v)
+        return parent if parent[sink] != -1 else None
+
+    max_flow = 0
+    while True:
+        parent = bfs_find_path()
+        if parent is None:
+            break                          # no augmenting path: done
+
+        # Find bottleneck capacity along the path
+        path_flow = float('inf')
+        v = sink
+        while v != source:
+            u = parent[v]
+            path_flow = min(path_flow, capacity[u][v] - flow[u][v])
+            v = u
+
+        # Augment flow along the path
+        v = sink
+        while v != source:
+            u = parent[v]
+            flow[u][v] += path_flow
+            flow[v][u] -= path_flow        # update reverse edge (skew symmetry)
+            v = u
+
+        max_flow += path_flow
+
+    return max_flow, flow
+
+
+def min_cut_edges(n, source, capacity, flow):
+    """
+    Find the minimum cut edges from a max flow solution.
+    BFS on residual graph: S = vertices reachable from source.
+    Min-cut edges: (u,v) with u in S, v not in S, capacity[u][v] > 0.
+    """
+    visited = [False] * n
+    queue   = deque([source])
+    visited[source] = True
+    while queue:
+        u = queue.popleft()
+        for v in range(n):
+            if not visited[v] and capacity[u][v] - flow[u][v] > 0:
+                visited[v] = True
+                queue.append(v)
+    # Min-cut edges cross from S (visited) to T (not visited)
+    return [(u,v) for u in range(n) for v in range(n)
+            if visited[u] and not visited[v] and capacity[u][v] > 0]</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// Edmonds-Karp max flow — O(V * E^2)
+#include &lt;vector&gt;
+#include &lt;queue&gt;
+#include &lt;algorithm&gt;
+#include &lt;climits&gt;
+using namespace std;
+
+struct MaxFlow {
+    int n;
+    vector&lt;vector&lt;int&gt;&gt; cap, flow;
+
+    MaxFlow(int n) : n(n), cap(n, vector&lt;int&gt;(n,0)),
+                             flow(n, vector&lt;int&gt;(n,0)) {}
+
+    void add_edge(int u, int v, int c) { cap[u][v] += c; }
+
+    // BFS: find shortest augmenting path, return parent array
+    vector&lt;int&gt; bfs(int s, int t) {
+        vector&lt;int&gt; par(n, -1); par[s] = s;
+        queue&lt;int&gt; q; q.push(s);
+        while (!q.empty() &amp;&amp; par[t]==-1) {
+            int u = q.front(); q.pop();
+            for (int v=0;v&lt;n;v++)
+                if (par[v]==-1 &amp;&amp; cap[u][v]-flow[u][v]&gt;0)
+                    { par[v]=u; q.push(v); }
+        }
+        return par;
+    }
+
+    int max_flow(int s, int t) {
+        int total = 0;
+        while (true) {
+            auto par = bfs(s, t);
+            if (par[t] == -1) break;       // no augmenting path
+
+            // Bottleneck
+            int pf = INT_MAX;
+            for (int v=t; v!=s; v=par[v])
+                pf = min(pf, cap[par[v]][v] - flow[par[v]][v]);
+
+            // Augment
+            for (int v=t; v!=s; v=par[v]) {
+                flow[par[v]][v] += pf;
+                flow[v][par[v]] -= pf;
+            }
+            total += pf;
+        }
+        return total;
+    }
+};</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Flow Integrality</h3>
+    <div class="callout callout-definition">
+      <strong>Integrality theorem.</strong> If all capacities are integers, then Ford-Fulkerson (including Edmonds-Karp) produces an integer-valued maximum flow. Each augmentation increases the flow by an integer amount; since we start from 0, the flow is always integral.<br/><br/>
+      This is crucial for applications: it means we can reduce integer optimisation problems to max flow and get integer solutions automatically.
+    </div>
+
+    <h3>Applications &mdash; Bipartite Matching</h3>
+    <p>Given bipartite graph $G = (L \cup R, E)$, find the maximum matching (maximum set of edges with no shared endpoint).</p>
+
+    <div class="callout callout-definition">
+      <strong>Reduction to max flow:</strong><br/>
+      1. Add source $s$ with edges $(s, l, 1)$ for all $l \in L$.<br/>
+      2. Add sink $t$ with edges $(r, t, 1)$ for all $r \in R$.<br/>
+      3. Direct each original edge $(l,r)$ with capacity $\infty$.<br/>
+      4. Max flow = size of maximum matching (by integrality: each $s\to t$ path is one matched edge).<br/><br/>
+      Time: $O(VE)$ — $O(E)$ per augmentation, $O(V)$ augmentations (matching size $\leq \min(|L|,|R|)$).
+    </div>
+
+    <h3>Applications &mdash; Bipartite Vertex Cover (König&rsquo;s Theorem)</h3>
+    <p>In a bipartite graph, the size of the minimum vertex cover equals the size of the maximum matching (König&rsquo;s theorem). Both equal the max flow in the constructed network.</p>
+
+    <div class="callout callout-definition">
+      <strong>Minimum vertex cover via max flow.</strong> Build the same flow network. For any vertex cover $Q = Q_L \cup Q_R$:
+      define cut $S = \{s\} \cup Q_R \cup (L \setminus Q_L)$, $T = \{t\} \cup Q_L \cup (R \setminus Q_R)$. Cut capacity $= |Q_L| + |Q_R| = |Q|$.
+      Conversely, any finite-capacity cut $(S,T)$ yields vertex cover $Q = (S\cap R) \cup (T\cap L)$ of size $c(S,T)$.
+      Therefore: min vertex cover $=$ min cut $=$ max flow. $\square$
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Bipartite matching + vertex cover via max flow &middot; O(VE)</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python">def bipartite_max_matching(left_n, right_n, edges):
+    """
+    Maximum bipartite matching via max flow (Edmonds-Karp).
+    left_n, right_n: sizes of left and right sets.
+    edges: list of (l, r) pairs (0-indexed within each side).
+    Returns (matching_size, matched_pairs).
+
+    Network: s -> L_i (cap 1), L_i -> R_j (cap inf), R_j -> t (cap 1).
+    Max flow = maximum matching size (by flow integrality).
+    O(V*E) time: O(V) augmentations (one per matched pair), O(E) per BFS.
+    """
+    # Node numbering: 0=source, 1..left_n = left, left_n+1..left_n+right_n = right, last=sink
+    n = left_n + right_n + 2
+    s = 0
+    t = n - 1
+    INF = float('inf')
+    cap = [[0]*n for _ in range(n)]
+
+    # s -> each left vertex (cap 1)
+    for i in range(left_n):
+        cap[s][1 + i] = 1
+
+    # left -> right edges (cap inf — won't be bottleneck)
+    for l, r in edges:
+        cap[1 + l][left_n + 1 + r] = INF
+
+    # each right vertex -> t (cap 1)
+    for j in range(right_n):
+        cap[left_n + 1 + j][t] = 1
+
+    match_size, flow = edmonds_karp(n, s, t, cap)
+
+    # Extract matching from flow
+    matched = []
+    for l in range(left_n):
+        for r in range(right_n):
+            if flow[1+l][left_n+1+r] > 0:
+                matched.append((l, r))
+
+    return match_size, matched
+
+
+def min_vertex_cover(left_n, right_n, edges):
+    """
+    Minimum vertex cover in bipartite graph = max matching (König's theorem).
+    Returns (cover_size, left_in_cover, right_in_cover).
+    Uses the König construction: from max flow, find min cut,
+    then identify cover as (T ∩ L) ∪ (S ∩ R).
+    """
+    n = left_n + right_n + 2
+    s, t = 0, n - 1
+    INF = float('inf')
+    cap = [[0]*n for _ in range(n)]
+    for i in range(left_n):     cap[s][1+i] = 1
+    for l, r in edges:          cap[1+l][left_n+1+r] = INF
+    for j in range(right_n):    cap[left_n+1+j][t] = 1
+
+    _, flow = edmonds_karp(n, s, t, cap)
+    cut_edges = min_cut_edges(n, s, cap, flow)
+
+    # König's theorem: cover = vertices incident to min-cut edges
+    # S = reachable from s in residual, T = rest
+    from collections import deque
+    visited = [False]*n
+    q = deque([s]); visited[s] = True
+    while q:
+        u = q.popleft()
+        for v in range(n):
+            if not visited[v] and cap[u][v]-flow[u][v] > 0:
+                visited[v]=True; q.append(v)
+    # Left in cover: left vertices in T (not reachable)
+    left_cover  = [i for i in range(left_n) if not visited[1+i]]
+    # Right in cover: right vertices in S (reachable)
+    right_cover = [j for j in range(right_n) if visited[left_n+1+j]]
+    return len(left_cover)+len(right_cover), left_cover, right_cover</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Bipartite matching via max flow
+// Returns size of maximum matching
+int bipartite_matching(int L, int R,
+    const vector&lt;pair&lt;int,int&gt;&gt;&amp; edges) {
+    // nodes: 0=source, 1..L=left, L+1..L+R=right, L+R+1=sink
+    int n = L + R + 2, s = 0, t = n-1;
+    MaxFlow mf(n);
+    for (int i=0;i&lt;L;i++) mf.add_edge(s, 1+i, 1);
+    for (auto [l,r]:edges) mf.add_edge(1+l, L+1+r, 1e9);
+    for (int j=0;j&lt;R;j++) mf.add_edge(L+1+j, t, 1);
+    return mf.max_flow(s, t);
+}
+// By König's theorem: min_vertex_cover = max_matching in bipartite graphs</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Ford-Fulkerson vs Edmonds-Karp: the slow-path demonstration</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python">def ford_fulkerson_dfs(n, source, sink, capacity):
+    """
+    Ford-Fulkerson with DFS augmentation (can be very slow!).
+    Demonstrates why DFS path choice is dangerous.
+    Same network as Edmonds-Karp but uses DFS to find augmenting paths.
+    On the adversarial 4-node graph with capacities 10^9, this
+    takes 2*10^9 iterations where Edmonds-Karp takes 2.
+    """
+    flow = [[0]*n for _ in range(n)]
+
+    def dfs_find_path():
+        visited = [False]*n
+        parent  = [-1]*n
+        stack   = [source]
+        visited[source] = True
+        parent[source]  = source
+        while stack:
+            u = stack.pop()
+            if u == sink: return parent
+            for v in range(n):
+                if not visited[v] and capacity[u][v]-flow[u][v] > 0:
+                    visited[v] = True
+                    parent[v]  = u
+                    stack.append(v)
+        return None
+
+    total, iterations = 0, 0
+    while True:
+        parent = dfs_find_path()
+        if parent is None: break
+        # Bottleneck
+        pf, v = float('inf'), sink
+        while v != source:
+            u = parent[v]
+            pf = min(pf, capacity[u][v] - flow[u][v])
+            v = u
+        # Augment
+        v = sink
+        while v != source:
+            u = parent[v]
+            flow[u][v] += pf; flow[v][u] -= pf
+            v = u
+        total += pf; iterations += 1
+    return total, iterations
+
+# Adversarial graph: 4 nodes, capacities that cause 2*10^9 iterations
+# with DFS but only 2 with BFS (Edmonds-Karp)
+cap_adversarial = [
+    [0, 10**9, 10**9, 0],
+    [0, 0,     1,     10**9],
+    [0, 1,     0,     10**9],
+    [0, 0,     0,     0],
+]
+# Edmonds-Karp handles this in 2 augmentations
+ek_flow, _ = edmonds_karp(4, 0, 3, cap_adversarial)
+print(f"Edmonds-Karp max flow: {ek_flow}")  # 2*10^9, 2 iterations</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Demonstrate the adversarial case for Ford-Fulkerson with DFS
+// The 4-node graph with capacity 10^9 in the middle edge
+// DFS: up to 2*10^9 iterations
+// Edmonds-Karp (BFS): exactly 2 iterations
+
+// With BFS, first augmentation: s->top->t (bottleneck 10^9)
+// Second augmentation: s->bottom->t (bottleneck 10^9)
+// Two augmentations total, flow = 2*10^9
+
+// With DFS, alternating path through middle edge:
+// Iteration 1: s->top->middle->t, cf=1
+// Iteration 2: s->bottom->middle_rev->top->t... alternates
+// Total: 2*10^9 iterations!
+
+// Lesson: always use BFS (Edmonds-Karp) for shortest augmenting paths
+// to guarantee O(VE^2) polynomial runtime.</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Order Matching as Bipartite Flow</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT Trading</span>
+      </div>
+      <div class="we-body">
+        <p>At expiry, TTT has multiple buy orders (strategies wanting to go long) and sell orders (strategies wanting to go short). Each buy order can be matched against certain sell orders based on price compatibility. Maximise the number of matched pairs.</p>
+        <div class="we-step">Model as bipartite matching via max flow</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python"># Buy orders: (order_id, max_price)
+buys  = [(0, 23500), (1, 24000), (2, 23000), (3, 24500)]
+# Sell orders: (order_id, min_price)
+sells = [(0, 23000), (1, 23500), (2, 24000)]
+
+# Compatible pairs: buy_price >= sell_price
+compatible = [
+    (b_id, s_id)
+    for b_id, b_px in buys
+    for s_id, s_px in sells
+    if b_px >= s_px
+]
+# compatible: (0,0),(0,1),(1,0),(1,1),(1,2),(2,0),(3,0),(3,1),(3,2)
+
+matching_size, matched = bipartite_max_matching(
+    len(buys), len(sells), compatible
+)
+print(f"Maximum matched pairs: {matching_size}")  # 3
+for b, s in matched:
+    print(f"  Buy {buys[b]} matched with Sell {sells[s]}")</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> 3 pairs matched (maximum possible — limited by 3 sell orders). The max-flow min-cut theorem tells us the bottleneck: it&rsquo;s the sell side. Maximum matching = minimum vertex cover by König&rsquo;s theorem: the minimum set of orders that &ldquo;covers&rdquo; all compatible pairs is the entire sell side (3 orders).
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      Network flow as a modelling language is extremely powerful. In quant finance: <strong>baseball elimination</strong> (can a team still win the league?) reduces to max flow. <strong>Job shop scheduling</strong> with resource constraints is a flow problem. At TTT, position limits across strategies can be modelled as a flow problem: source = capital, intermediate nodes = strategies, sink = market positions, capacities = position limits. Max flow tells you the maximum deployed capital respecting all constraints simultaneously. The integrality theorem ensures that if position sizes are integer lots, the optimal solution is automatically integer-valued.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 09</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch09 / q01</span>
+        <span class="mcq-diff">&#9733; Max-Flow Min-Cut</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the max-flow min-cut theorem, if $f$ is a maximum flow and $(S^*, T^*)$ is the minimum cut, what is the exact relationship between $|f|$, $c(S^*, T^*)$, and $f(S^*, T^*)$?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$|f| \leq c(S^*,T^*)$ and $|f| = f(S^*,T^*)$ but they may differ</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$|f| = f(S^*,T^*) = c(S^*,T^*)$ — the flow value equals the flow across the min-cut equals the capacity of the min-cut</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$|f| = c(S^*,T^*)$ but $f(S^*,T^*)$ could be less (some edges may carry less than capacity)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$f(S^*,T^*) = c(S^*,T^*)$ only if all edges crossing the cut are saturated, which may not happen</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B &mdash; all three are equal.</strong><br/><br/>
+          We proved: (1) $|f| = f(S,T)$ for <em>any</em> cut (the flow across any cut equals the total flow value). (2) At the max flow, no augmenting paths exist in $G_f$. (3) Define $S^*$ = vertices reachable from $s$ in $G_f$. For any $u \in S^*$, $v \in T^* = V \setminus S^*$: $c_f(u,v) = 0$ (else $v$ would be in $S^*$), so $f(u,v) = c(u,v)$. Summing: $f(S^*,T^*) = c(S^*,T^*)$. Combined with (1): $|f| = f(S^*,T^*) = c(S^*,T^*)$.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch09 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Edmonds-Karp Bound</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Why does choosing BFS (shortest) augmenting paths guarantee $O(VE)$ augmentations, while DFS can require $O(|f^*|)$ augmentations?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>BFS finds longer paths so each augmentation pushes more flow</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>DFS is slower per augmentation, so the total time is worse</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>With BFS, distances $\delta(v)$ can only increase; a critical edge $(u,v)$ requires $\delta(u)$ to increase by at least 2 before it can be critical again, bounding each edge to $O(V)$ critical events and total augmentations to $O(VE)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>BFS always saturates at least $E/V$ edges per augmentation, giving a better bound</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C.</strong><br/><br/>
+          The key is the <strong>monotonicity lemma</strong>: with BFS shortest paths, $\delta(v)$ never decreases after augmentations. When edge $(u,v)$ is critical (saturated), it disappears from $G_f$. For it to reappear and be critical again, the reverse edge $(v,u)$ must appear on some BFS path, which requires $\delta(u)$ to increase by $\geq 2$ (since $(v,u)$ on BFS path means $\delta(v) = \delta(u) - 1$, but after our augmentation $\delta(v) \geq$ previous $\delta(v)$, so new $\delta(u) \geq$ previous $\delta(v)+1 \geq$ previous $\delta(u)+2$). Since $\delta(u) \leq V-1$, each edge is critical $O(V)$ times: total $O(VE)$ augmentations. Each augmentation takes $O(E)$ for BFS: total $O(VE^2)$.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch09 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Integrality</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A flow network has all integer capacities. Ford-Fulkerson finds the max flow. Which statement is guaranteed by the integrality theorem?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>The max flow value is an integer, but individual edge flows may be fractional</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>All edge flows are integers only if all capacities are the same value</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>There exists a maximum flow where every edge carries an integer amount of flow — enabling integer reductions like bipartite matching</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The max flow value and all edge flows are always integers, regardless of the algorithm used</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C — there exists an integer max flow.</strong><br/><br/>
+          The proof: Ford-Fulkerson starts from all-zero flow (integer). Each augmenting path has integer residual capacity (since all capacities and current flows are integers), so each augmentation pushes an integer amount. By induction, flows on all edges remain integers throughout. Therefore Ford-Fulkerson produces an integer-valued max flow. This is existence, not uniqueness: there could also be non-integer max flows (though they&rsquo;d have the same value). Note: option D is wrong because LP solvers might find non-integer max flows for the same network; option C correctly says Ford-Fulkerson specifically finds an integer one.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch09 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; König&rsquo;s Theorem</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the bipartite vertex cover reduction to max flow, why must the min-cut have infinite-capacity edges removed — and what does this force about which vertices are in the cover?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">A</div><span>Any edge from $S\cap L$ to $T\cap R$ would cross the cut with infinite capacity, making the cut value infinite; so there are no such edges, meaning every $L$-$R$ edge is covered by either its left endpoint being in $T\cap L$ or its right endpoint being in $S\cap R$ — which is exactly the vertex cover</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Infinite capacity edges are always removed before running max flow, simplifying the network</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>The min-cut must avoid $L$-$R$ edges because they represent matched pairs</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Finite cuts only exist when the bipartite graph is a perfect matching</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: A.</strong><br/><br/>
+          The flow network has: $s \to L$ edges (capacity 1), $L \to R$ edges (capacity $\infty$), $R \to t$ edges (capacity 1). A finite-capacity cut $(S,T)$ can only include the unit-capacity edges. If any edge from $l \in S\cap L$ to $r \in T\cap R$ existed, it would cross the cut with infinite capacity — making $c(S,T) = \infty$. So for the cut to be finite, there must be no edges from $S\cap L$ to $T\cap R$ in the original bipartite graph. This means: every edge $(l,r) \in E$ has either $l \in T\cap L$ (left endpoint in $T$) or $r \in S\cap R$ (right endpoint in $S$). Setting the cover $Q = (T\cap L) \cup (S\cap R)$ covers all edges by this argument. And $|Q| = |T\cap L| + |S\cap R| = c(S,T)$. By max-flow min-cut, minimum such $c(S,T)$ equals the max flow = maximum matching.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','A')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 09</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Run Edmonds-Karp by hand on the network with 6 nodes $\{s,a,b,c,d,t\}$ and edges: $s\to a(10)$, $s\to c(10)$, $a\to b(4)$, $a\to c(8)$, $b\to t(10)$, $c\to d(9)$, $d\to b(6)$, $d\to t(10)$. Show each BFS path and augmentation step. What is the max flow and which cut achieves the min cut? <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">A bipartite graph has left vertices $\{1,2,3\}$ and right vertices $\{a,b,c,d\}$ with edges $\{1a,1b,2b,2c,3c,3d\}$. Find the maximum matching and minimum vertex cover using the max-flow reduction. Verify that König&rsquo;s theorem holds. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Demonstrate the adversarial case for Ford-Fulkerson with DFS: construct the 4-node graph with capacities $10^9$ and the middle edge of capacity 1. Trace the first 4 iterations of DFS-based augmentation to see the alternating path issue. Show that Edmonds-Karp (BFS) finds the max flow in exactly 2 augmentations. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Implement Dinic&rsquo;s algorithm (blocking flows on level graphs) which runs in $O(V^2 E)$ — faster than Edmonds-Karp&rsquo;s $O(VE^2)$ for dense graphs. Test on the adversarial Ford-Fulkerson example and on a random bipartite matching. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Model the following as a max-flow problem and solve: you have 4 NSE instruments (NIFTY, BANKNIFTY, RELIANCE, HDFC) and 3 strategies (straddle, strangle, spread). Each strategy can use any instrument, but each instrument can be in at most 2 strategies simultaneously. Maximise the number of active (instrument, strategy) assignments. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">Baseball elimination: team $i$ has $w_i$ wins, $r_i$ remaining games, and plays $g_{ij}$ games against team $j$. Team $i$ is eliminated if no matter how remaining games are played, team $i$ cannot finish first. Show how to reduce this to max flow: the max flow determines whether team $i$ is eliminatable. Implement and test on the example from CLRS. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The circulation problem: given a directed graph with lower bounds $l(u,v) \leq f(u,v) \leq c(u,v)$ (each edge must carry at least $l$ flow), determine if a feasible flow exists. Reduce to standard max flow by transforming the lower bounds. What happens when some $l(u,v) > 0$? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove the Monotonicity Lemma for Edmonds-Karp: after each augmentation, $\delta_f(s,v)$ can only increase. Use induction on $\delta_{f'}(s,v)$ (the new distance) and consider both cases: the edge $(u,v)$ was in $G_f$ before augmentation, or it was newly created as a reverse edge. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Prove that in any bipartite graph, max matching size = min vertex cover size (König&rsquo;s theorem) using the max-flow min-cut approach from R7. You need to show both directions: (a) any vertex cover defines a finite-capacity cut $\Rightarrow$ min cut $\leq$ min vertex cover; (b) any finite cut defines a vertex cover $\Rightarrow$ min vertex cover $\leq$ min cut. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">The max-flow problem has been a subject of decades of research. Summarise the history: Ford-Fulkerson (1956, $O(E|f^*|)$), Edmonds-Karp (1972, $O(VE^2)$), Dinic (1970, $O(V^2 E)$), King-Rao-Tarjan (1994, $O(VE\log_{E/V\log V} V)$), Orlin (2013, $O(VE)$). Why is the $O(VE)$ bound optimal for general graphs, and what special graph structures enable faster algorithms? <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch8.html" class="ch-nav-btn">&larr; APSP, Greedy &amp; MST</a>
+    <a href="PROG_DAA_Ch10.html" class="ch-nav-btn primary">Next: Linear Programming &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 Max-flow = min-cut: |f| = f(S*,T*) = c(S*,T*). All three equal.","✨ Edmonds-Karp: BFS monotonicity forces O(V) critical events per edge.","🏆 Integrality: integer capacities → Ford-Fulkerson produces integer flow.","🔥 König's theorem: no S∩L → T∩R edges (infinite cut) forces vertex cover.","💡 Residual graph: backward edges let us 'undo' flow and find better paths.","📐 Flow conservation: flow in = flow out at every internal vertex.","⚡ Augmenting path: any s→t path in G_f. Max flow when no such path exists."];
+const wrongMsgs=["🌀 Both |f| = f(S,T) (for any cut) AND f(S*,T*) = c(S*,T*) at max flow — all three are equal.","📉 BFS ensures distances only increase (monotonicity). Each edge critical O(V) times → O(VE) augmentations.","😰 Integrality: Ford-Fulkerson specifically produces integer flow when capacities are integers. The max flow VALUE is always an integer.","📐 Infinite edges cross the cut only if S∩L has edges to T∩R — the vertex cover prevents this.","🤔 Max-flow = min-cut: the cut (S*,T*) is defined from reachability in the residual graph at max flow."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>

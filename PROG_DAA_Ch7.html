@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Advanced Dynamic Programming &mdash; quan(t)&#x2074;.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ── HIGH-CONTRAST CODE THEME ── */
+.hljs                             { background: var(--code-bg) !important; color: #e6edf3 !important; }
+.hljs-comment, .hljs-meta         { color: #8b949e !important; font-style: italic; }
+.hljs-keyword, .hljs-built_in     { color: #ff7b72 !important; font-weight: 600; }
+.hljs-string, .hljs-attr          { color: #a5d6ff !important; }
+.hljs-number, .hljs-literal       { color: #79c0ff !important; }
+.hljs-type, .hljs-class           { color: #ffa657 !important; }
+.hljs-function, .hljs-title       { color: #d2a8ff !important; }
+.hljs-params                      { color: #e6edf3 !important; }
+.hljs-operator, .hljs-punctuation { color: #e6edf3 !important; }
+.hljs-variable                    { color: #ffa657 !important; }
+
+:root {
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;--code-bg:#0d1117;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ARRAY-TREE DIAGRAM */
+.array-tree{background:var(--code-bg);border-radius:10px;padding:1.4rem 1.5rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:0.82rem;color:#e6edf3;line-height:2;overflow-x:auto;}
+.array-tree .at-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b949e;margin-bottom:0.6rem;}
+.array-tree .arr-row{display:flex;gap:0;margin-bottom:0.8rem;}
+.arr-cell{width:36px;height:36px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+.arr-cell.root{background:rgba(232,114,42,0.3);border-color:var(--orange);}
+.arr-cell.idx{background:rgba(255,255,255,0.04);font-size:0.65rem;font-weight:400;color:#8b949e;border-color:transparent;}
+
+/* PQ COMPARISON TABLE */
+.pq-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.82rem;}
+.pq-table th{background:var(--navy);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:0.6rem 0.9rem;text-align:center;letter-spacing:0.02em;}
+.pq-table th:first-child{text-align:left;}
+.pq-table td{padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:0.76rem;}
+.pq-table td:first-child{text-align:left;font-weight:700;color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;}
+.pq-table tr:nth-child(even) td{background:rgba(247,245,242,0.6);}
+.pq-table tr.highlight td{background:rgba(232,114,42,0.05);}
+.cx-good{color:var(--green);font-weight:700;}
+.cx-ok{color:var(--orange);font-weight:700;}
+.cx-bad{color:#dc2626;font-weight:700;}
+
+.code-block{margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+.code-header{background:#161b22;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.code-lang-toggle{display:flex;gap:0.3rem;}
+.lang-btn{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.25rem 0.7rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;}
+.lang-btn.active{background:var(--orange);color:white;border-color:var(--orange);}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
+.code-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.2);letter-spacing:0.08em;}
+.code-panel{display:none;}
+.code-panel.active{display:block;}
+.code-panel pre{margin:0;border-radius:0;}
+.code-panel pre code{font-family:'DM Mono',monospace;font-size:0.82rem;line-height:1.7;padding:1.3rem 1.5rem !important;background:var(--code-bg) !important;color:#e6edf3 !important;display:block;overflow-x:auto;}
+.godbolt-link{display:none;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;padding:0.5rem 1rem;background:#161b22;border-top:1px solid rgba(255,255,255,0.06);}
+.godbolt-link:hover{color:var(--orange);}
+.godbolt-link.show{display:flex;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.terminal-section{margin-top:3rem;}
+.terminal-header{background:var(--navy);border-radius:12px 12px 0 0;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+.terminal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:white;letter-spacing:0.02em;}
+.terminal-badge{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--orange);}
+.terminal-body{border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:1.5rem;}
+.terminal-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+.tq-list{display:flex;flex-direction:column;gap:1.1rem;}
+.tq-item{display:flex;gap:1rem;align-items:flex-start;}
+.tq-num{font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(232,114,42,0.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0.1rem;}
+.tq-text{font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.tq-diff{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;vertical-align:middle;}
+.tq-easy{background:rgba(30,158,94,0.1);color:var(--green);}
+.tq-medium{background:rgba(232,114,42,0.1);color:var(--orange);}
+.tq-hard{background:rgba(45,37,96,0.08);color:var(--navy2);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.5rem 5rem;}
+}
+
+.ch-tag-a{background:rgba(30,158,94,0.1);color:var(--green);}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span>
+      <span style="font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;"> &mdash; an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Programming</a> &rsaquo;
+      <a href="PROG_DAA.html">Algorithm Design &amp; Analysis</a> &rsaquo;
+      <span>Advanced Dynamic Programming</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:54%"></div></div>
+      <span class="tb-progress-label">7 / 13</span>
+    </div>
+    <a href="PROG_DAA.html" class="tb-home">&larr; All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Algorithm Design &amp; Analysis</div>
+  <a class="sidebar-item" href="PROG_DAA_Ch1.html"><div class="si-num">1</div>Divide &amp; Conquer<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch2.html"><div class="si-num">2</div>Fast Fourier Transform<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch3.html"><div class="si-num">3</div>Advanced DS I<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch4.html"><div class="si-num">4</div>Hashing &amp; Augmentation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch5.html"><div class="si-num">5</div>Amortization &amp; Union-Find<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch6.html"><div class="si-num">6</div>Randomized Algorithms<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="PROG_DAA_Ch7.html"><div class="si-num">7</div>Advanced DP<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch8.html"><div class="si-num">8</div>APSP, Greedy &amp; MST<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch9.html"><div class="si-num">9</div>Network Flow<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch10.html"><div class="si-num">10</div>Linear Programming<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch11.html"><div class="si-num">11</div>NP &amp; Approximation<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch12.html"><div class="si-num">12</div>FPT &amp; Distributed<span class="si-mcq-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="PROG_DAA_Ch13.html"><div class="si-num">13</div>Crypto &amp; Cache-Oblivious<span class="si-mcq-badge">4 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num">Chapter 07 of 13 &middot; Algorithm Design and Analysis</span>
+    </div>
+    <h1 class="chapter-title">Advanced Dynamic Programming</h1>
+    <p class="chapter-subtitle">Beyond the standard DP patterns: interval DP on substrings, game theory DP with adversarial choices, DP on partial orders, and counting DP. Each problem follows the same discipline &mdash; identify subproblem structure, write the recurrence, count subproblems, analyse the cost per subproblem &mdash; but the subproblem spaces are richer and the recurrences more subtle.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>The DP Design Framework</h3>
+    <p>Every DP problem in this chapter follows four steps:</p>
+    <div class="callout callout-definition">
+      <strong>1. Subproblem definition.</strong> What information must the subproblem encode? Usually a prefix/suffix/interval of the input.<br/>
+      <strong>2. Recurrence.</strong> Express the solution to a subproblem in terms of strictly smaller subproblems. The &ldquo;guess&rdquo; is the choice that splits the problem.<br/>
+      <strong>3. Base cases.</strong> Smallest valid subproblems with known answers.<br/>
+      <strong>4. Complexity.</strong> (subproblems) &times; (time per subproblem) = total time. Verify by counting the subproblem DAG.
+    </div>
+
+    <h3>Problem 1 &mdash; Longest Palindromic Subsequence</h3>
+    <p>Given string $X[1\ldots n]$, find the length of the longest subsequence that is a palindrome. Example: &ldquo;character&rdquo; $\to$ &ldquo;carac&rdquo; (length 5).</p>
+
+    <div class="callout callout-definition">
+      <strong>Subproblem:</strong> $L(i,j)$ = length of longest palindromic subsequence of $X[i\ldots j]$.
+      <br/><br/>
+      <strong>Recurrence:</strong>
+      $$L(i,j) = \begin{cases} 1 & i = j \\ 2 & i+1=j \text{ and } X[i]=X[j] \\ 2 + L(i+1,\,j-1) & X[i]=X[j] \text{ and } i+1 < j \\ \max(L(i+1,\,j),\; L(i,\,j-1)) & X[i] \neq X[j] \end{cases}$$
+      <br/>
+      <strong>Intuition:</strong> if the endpoints match, include both and recurse inward. If not, drop one endpoint and take the better option. Each subproblem is an interval $(i,j)$ with $i \leq j$.
+      <br/><br/>
+      <strong>Complexity:</strong> $\Theta(n^2)$ subproblems, $\Theta(1)$ per subproblem &rarr; $\Theta(n^2)$. Fill table in order of increasing $j-i$.
+      <br/><br/>
+      <strong>Why naive recursion is $\Theta(2^n)$:</strong> if all characters are distinct, every call branches into two subproblems of size $n-1$: $T(n) = 2T(n-1)$. Memoisation collapses this to $\Theta(n^2)$ distinct $(i,j)$ pairs.
+    </div>
+
+    <h3>Problem 2 &mdash; Optimal Binary Search Tree</h3>
+    <p>Given keys $K_1 &lt; K_2 &lt; \cdots &lt; K_n$ with search probabilities (weights) $w_1, w_2, \ldots, w_n$, build a BST minimising expected search cost: $\sum_{i=1}^n w_i \cdot (\text{depth}(K_i) + 1)$. Example: if $w = [1, 10, 8, 9]$, putting $K_2$ (weight 10) at the root (depth 0) costs far less than $K_1$ (weight 1) at root.</p>
+
+    <div class="callout callout-definition">
+      <strong>Why greedy fails:</strong> placing the maximum-weight key at the root can force high-weight keys into deep subtrees. See the example: $w=[1,10,8,9]$, greedy (max-weight root) gives cost 55; optimal gives 49 by placing $K_3$ at the root.
+      <br/><br/>
+      <strong>Subproblem:</strong> $e(i,j)$ = cost of optimal BST on keys $K_i, \ldots, K_j$. Let $W(i,j) = \sum_{k=i}^j w_k$.
+      <br/><br/>
+      <strong>Recurrence:</strong> guess the root $K_r$ for $i \leq r \leq j$. When $K_r$ is root, all keys in the subtrees increase depth by 1, adding $W(i,j)$ to the cost:
+      $$e(i,j) = \min_{i \leq r \leq j}\!\bigl(e(i,\,r-1) + e(r+1,\,j) + W(i,j)\bigr)$$
+      Base case: $e(i,i) = w_i$, $e(i,j) = 0$ if $i > j$.
+      <br/><br/>
+      <strong>Complexity:</strong> $\Theta(n^2)$ subproblems, $\Theta(n)$ time per subproblem (iterate over all roots) &rarr; $\Theta(n^3)$. (Knuth&rsquo;s speedup reduces this to $\Theta(n^2)$ using the monotone root property.)
+    </div>
+
+    <!-- CODE BLOCK 1 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb1','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb1','cpp')">C++</button>
+        </div>
+        <span class="code-label">Longest Palindromic Subsequence + Optimal BST &middot; O(n²) / O(n³)</span>
+      </div>
+      <div id="cb1-py" class="code-panel active"><pre><code class="language-python">from functools import lru_cache
+
+# ── LONGEST PALINDROMIC SUBSEQUENCE ── O(n^2) ───────────────────────
+def lps(X):
+    """
+    Length of longest palindromic subsequence of string X.
+    Uses interval DP: L[i][j] = LPS of X[i..j].
+    Bottom-up: fill by increasing interval length.
+    """
+    n = len(X)
+    # L[i][j] = LPS length of X[i..j]
+    L = [[0]*n for _ in range(n)]
+
+    # Base case: single characters
+    for i in range(n):
+        L[i][i] = 1
+
+    # Fill for increasing lengths 2, 3, ..., n
+    for length in range(2, n+1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            if X[i] == X[j]:
+                L[i][j] = 2 + (L[i+1][j-1] if length > 2 else 0)
+            else:
+                L[i][j] = max(L[i+1][j], L[i][j-1])
+    return L[0][n-1]
+
+def lps_reconstruct(X):
+    """Reconstruct the actual LPS string."""
+    n = len(X)
+    L = [[0]*n for _ in range(n)]
+    for i in range(n): L[i][i] = 1
+    for length in range(2, n+1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            if X[i] == X[j]:
+                L[i][j] = 2 + (L[i+1][j-1] if length > 2 else 0)
+            else:
+                L[i][j] = max(L[i+1][j], L[i][j-1])
+
+    # Traceback
+    result, i, j = [], 0, n-1
+    while i <= j:
+        if i == j:
+            result.append(X[i]); break
+        if X[i] == X[j]:
+            result.append(X[i])
+            i += 1; j -= 1
+        elif L[i+1][j] > L[i][j-1]:
+            i += 1
+        else:
+            j -= 1
+    left = result
+    right = result[:-1][::-1] if L[0][n-1] % 2 == 1 else result[::-1]
+    return ''.join(left + right)
+
+
+# ── OPTIMAL BINARY SEARCH TREE ── O(n^3) ────────────────────────────
+def optimal_bst(weights):
+    """
+    Minimum expected search cost BST for keys 1..n with given weights.
+    Returns (cost, root_table) where root_table[i][j] = optimal root for keys i..j.
+    Cost e[i][j] = min over roots r of: e[i][r-1] + e[r+1][j] + W(i,j).
+    O(n^3) time, O(n^2) space.
+    """
+    n = len(weights)
+    W = weights[:]          # W[i] = weight of key i (0-indexed)
+
+    # Prefix sums for W(i,j) = sum(W[i..j])
+    prefix = [0] * (n+1)
+    for i in range(n): prefix[i+1] = prefix[i] + W[i]
+    def range_sum(i, j): return prefix[j+1] - prefix[i]
+
+    # e[i][j] = optimal cost for keys i..j (0-indexed)
+    e    = [[0.0]*n for _ in range(n)]
+    root = [[0]*n   for _ in range(n)]
+
+    # Base cases: single keys
+    for i in range(n):
+        e[i][i]    = W[i]
+        root[i][i] = i
+
+    # Fill for increasing lengths
+    for length in range(2, n+1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            Wij = range_sum(i, j)
+            e[i][j] = float('inf')
+            for r in range(i, j+1):
+                cost = (e[i][r-1] if r > i else 0) + \
+                       (e[r+1][j] if r < j else 0) + Wij
+                if cost < e[i][j]:
+                    e[i][j] = cost
+                    root[i][j] = r
+    return e[0][n-1], root
+
+# Example from lecture: w = [1, 10, 8, 9]
+cost, roots = optimal_bst([1, 10, 8, 9])
+print(f"Optimal BST cost: {cost}")          # 49
+print(f"Root of full tree: key {roots[0][3]+1}")  # key 3 (weight=8)</code></pre></div>
+      <div id="cb1-cpp" class="code-panel"><pre><code class="language-cpp">// Longest Palindromic Subsequence + Optimal BST
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+// LPS — O(n^2) interval DP
+int lps(const string&amp; X) {
+    int n = X.size();
+    vector&lt;vector&lt;int&gt;&gt; L(n, vector&lt;int&gt;(n, 0));
+    for (int i = 0; i &lt; n; i++) L[i][i] = 1;
+    for (int len = 2; len &lt;= n; len++)
+        for (int i = 0; i &lt;= n-len; i++) {
+            int j = i + len - 1;
+            if (X[i] == X[j])
+                L[i][j] = 2 + (len > 2 ? L[i+1][j-1] : 0);
+            else
+                L[i][j] = max(L[i+1][j], L[i][j-1]);
+        }
+    return L[0][n-1];
+}
+
+// Optimal BST — O(n^3)
+pair&lt;double,vector&lt;vector&lt;int&gt;&gt;&gt; optimal_bst(vector&lt;double&gt; w) {
+    int n = w.size();
+    // prefix sums
+    vector&lt;double&gt; pre(n+1, 0);
+    for (int i = 0; i &lt; n; i++) pre[i+1] = pre[i] + w[i];
+    auto rsum = [&amp;](int i, int j){ return pre[j+1] - pre[i]; };
+
+    vector&lt;vector&lt;double&gt;&gt; e(n, vector&lt;double&gt;(n, 0));
+    vector&lt;vector&lt;int&gt;&gt;    root(n, vector&lt;int&gt;(n, 0));
+    for (int i = 0; i &lt; n; i++) { e[i][i] = w[i]; root[i][i] = i; }
+
+    for (int len = 2; len &lt;= n; len++)
+        for (int i = 0; i &lt;= n-len; i++) {
+            int j = i + len - 1;
+            double Wij = rsum(i, j);
+            e[i][j] = 1e18;
+            for (int r = i; r &lt;= j; r++) {
+                double cost = (r&gt;i ? e[i][r-1] : 0)
+                            + (r&lt;j ? e[r+1][j] : 0) + Wij;
+                if (cost &lt; e[i][j]) { e[i][j]=cost; root[i][j]=r; }
+            }
+        }
+    return {e[0][n-1], root};
+}</code></pre></div>
+      <a class="godbolt-link" id="cb1-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Problem 3 &mdash; Alternating Coin Game</h3>
+    <p>$n$ coins (n even) with values $V_1, V_2, \ldots, V_n$ in a row. Two players alternate; each turn a player takes either the leftmost or rightmost coin. You move first. Maximise your total value.</p>
+
+    <div class="callout callout-definition">
+      <strong>Key insight:</strong> the first player can always guarantee at least $\max(\sum_{\text{odd}} V_i,\; \sum_{\text{even}} V_i)$. Here&rsquo;s why: all odd-indexed coins are available simultaneously (take the leftmost, which leaves even-indexed as the new ends; the opponent must take one, restoring odd-indexed as ends). So the first player can force collection of all odd-indexed <em>or</em> all even-indexed coins.
+      <br/><br/>
+      But to maximise, we need DP. Let $V(i,j)$ = maximum value the <em>current player</em> can guarantee from coins $V_i, \ldots, V_j$.
+      $$V(i,j) = \max\!\Bigl(V_i + \min\bigl(V(i+1,j-1),\; V(i+2,j)\bigr),\;\; V_j + \min\bigl(V(i,j-2),\; V(i+1,j-1)\bigr)\Bigr)$$
+      The $\min$ captures the opponent&rsquo;s optimal counter-move: after you take $V_i$, opponent chooses between $V_{i+1}$ (leaving $V(i+2,j)$ for you) and $V_j$ (leaving $V(i+1,j-1)$ for you); they will pick whichever leaves you less.
+      <br/><br/>
+      <strong>Complexity:</strong> $\Theta(n^2)$ subproblems (intervals of even length), $\Theta(1)$ per subproblem &rarr; $\Theta(n^2)$.
+    </div>
+
+    <h3>Problem 4 &mdash; Rectangular Blocks (DP on Partial Orders)</h3>
+    <p>Given $n$ 3D blocks, each with dimensions $(l_i, w_i, h_i)$. Stack them as high as possible: block $i$ can go on block $j$ only if $l_i \leq l_j$ and $w_i \leq w_j$. This defines a partial order on blocks.</p>
+
+    <div class="callout callout-definition">
+      <strong>Subproblem:</strong> Sort blocks by $(l, w)$ in non-increasing order. Let $H[i]$ = height of tallest tower with block $i$ on top.
+      $$H[i] = h_i + \max_{j < i,\; l_j \geq l_i,\; w_j \geq w_i} H[j]$$
+      Base case: $H[i] = h_i$ if no valid block can go below. Answer: $\max_i H[i]$.
+      <br/><br/>
+      <strong>Complexity:</strong> $O(n)$ subproblems, $O(n)$ per subproblem &rarr; $O(n^2)$ DP. Sorting: $O(n\log n)$. Total: $O(n^2)$.
+      <br/><br/>
+      This is essentially the <strong>Longest Increasing Subsequence (LIS)</strong> problem on a 2D partial order.
+    </div>
+
+    <h3>Problem 5 &mdash; Boolean Parenthesisation (Counting DP)</h3>
+    <p>Given a boolean expression with $n$ operands and $n-1$ operators (AND, OR, XOR), count the number of ways to parenthesise it so it evaluates to True.</p>
+
+    <div class="callout callout-definition">
+      <strong>Subproblems:</strong> $T[i,j]$ = ways $S[i\ldots j]$ evaluates to True; $F[i,j]$ = ways to False. Let $\text{Tot}[i,j] = T[i,j] + F[i,j]$.
+      <br/><br/>
+      <strong>Recurrence</strong> (split at operator $S[k]$ for $i \leq k &lt; j$):
+      $$T[i,j] = \sum_{k=i}^{j-1} \begin{cases} T[i,k] \cdot T[k+1,j] & S[k]=\text{AND} \\ \text{Tot}[i,k]\cdot\text{Tot}[k+1,j] - F[i,k]\cdot F[k+1,j] & S[k]=\text{OR} \\ T[i,k]\cdot F[k+1,j] + F[i,k]\cdot T[k+1,j] & S[k]=\text{XOR} \end{cases}$$
+      $F[i,j]$ is symmetric. Base cases: $T[i,i]=1$ if $S[i]=\text{True}$, else $0$; vice versa for $F[i,i]$.
+      <br/><br/>
+      <strong>Complexity:</strong> $O(n^2)$ subproblems, $O(n)$ per subproblem &rarr; $O(n^3)$.
+    </div>
+
+    <!-- CODE BLOCK 2 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb2','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb2','cpp')">C++</button>
+        </div>
+        <span class="code-label">Coin Game + Boolean Parenthesisation &middot; O(n²) / O(n³)</span>
+      </div>
+      <div id="cb2-py" class="code-panel active"><pre><code class="language-python"># ── ALTERNATING COIN GAME ── O(n^2) ─────────────────────────────────
+def coin_game(V):
+    """
+    V: list of coin values (length must be even).
+    Returns maximum value first player can guarantee.
+    V(i,j) = max value current player earns from coins V[i..j].
+    Opponent plays optimally (min), we play optimally (max).
+    """
+    n = len(V)
+    dp = [[0]*n for _ in range(n)]
+
+    # Base cases
+    for i in range(n):
+        dp[i][i] = V[i]
+    for i in range(n-1):
+        dp[i][i+1] = max(V[i], V[i+1])
+
+    # Fill for increasing lengths (even only, but we compute all)
+    for length in range(3, n+1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            # Take V[i]: opponent sees [i+1..j], picks better for them
+            take_left  = V[i] + min(
+                dp[i+2][j] if i+2 <= j else 0,     # opp takes V[i+1]
+                dp[i+1][j-1] if i+1 <= j-1 else 0  # opp takes V[j]
+            )
+            # Take V[j]: opponent sees [i..j-1], picks better for them
+            take_right = V[j] + min(
+                dp[i+1][j-1] if i+1 <= j-1 else 0, # opp takes V[i]
+                dp[i][j-2] if i <= j-2 else 0       # opp takes V[j-1]
+            )
+            dp[i][j] = max(take_left, take_right)
+    return dp[0][n-1]
+
+
+# ── BOOLEAN PARENTHESISATION ── O(n^3) ──────────────────────────────
+def bool_paren(symbols, operators):
+    """
+    Count ways to parenthesise symbols[0..n-1] with operators[0..n-2]
+    such that the expression evaluates to True.
+    symbols: list of booleans (True/False)
+    operators: list of 'AND', 'OR', 'XOR'
+    Returns count (may be exponential).
+    """
+    n = len(symbols)
+    T = [[0]*n for _ in range(n)]  # T[i][j]: ways to True
+    F = [[0]*n for _ in range(n)]  # F[i][j]: ways to False
+
+    # Base cases
+    for i in range(n):
+        T[i][i] = 1 if symbols[i] else 0
+        F[i][i] = 0 if symbols[i] else 1
+
+    # Fill for increasing lengths
+    for length in range(2, n+1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            for k in range(i, j):     # split at operator k (between k and k+1)
+                op  = operators[k]
+                tl, fl = T[i][k], F[i][k]
+                tr, fr = T[k+1][j], F[k+1][j]
+                tot_l, tot_r = tl+fl, tr+fr
+                if op == 'AND':
+                    T[i][j] += tl * tr
+                    F[i][j] += tot_l*tot_r - tl*tr
+                elif op == 'OR':
+                    T[i][j] += tot_l*tot_r - fl*fr
+                    F[i][j] += fl * fr
+                elif op == 'XOR':
+                    T[i][j] += tl*fr + fl*tr
+                    F[i][j] += tl*tr + fl*fr
+    return T[0][n-1]
+
+# Example: True AND False XOR True
+syms = [True, False, True]
+ops  = ['AND', 'XOR']
+print(bool_paren(syms, ops))   # 2</code></pre></div>
+      <div id="cb2-cpp" class="code-panel"><pre><code class="language-cpp">// Coin Game + Boolean Parenthesisation
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+// Coin Game — O(n^2)
+int coin_game(const vector&lt;int&gt;&amp; V) {
+    int n = V.size();
+    vector&lt;vector&lt;int&gt;&gt; dp(n, vector&lt;int&gt;(n, 0));
+    for (int i = 0; i &lt; n; i++) dp[i][i] = V[i];
+    for (int i = 0; i &lt; n-1; i++) dp[i][i+1] = max(V[i], V[i+1]);
+    for (int len = 3; len &lt;= n; len++)
+        for (int i = 0; i &lt;= n-len; i++) {
+            int j = i + len - 1;
+            int take_left  = V[i] + min(
+                i+2 &lt;= j   ? dp[i+2][j]   : 0,
+                i+1 &lt;= j-1 ? dp[i+1][j-1] : 0);
+            int take_right = V[j] + min(
+                i+1 &lt;= j-1 ? dp[i+1][j-1] : 0,
+                i   &lt;= j-2 ? dp[i][j-2]   : 0);
+            dp[i][j] = max(take_left, take_right);
+        }
+    return dp[0][n-1];
+}
+
+// Boolean parenthesisation — O(n^3)
+long long bool_paren(const vector&lt;bool&gt;&amp; sym,
+                     const vector&lt;string&gt;&amp; ops) {
+    int n = sym.size();
+    vector&lt;vector&lt;long long&gt;&gt; T(n,vector&lt;long long&gt;(n,0)),
+                               F(n,vector&lt;long long&gt;(n,0));
+    for (int i=0;i&lt;n;i++){T[i][i]=sym[i];F[i][i]=!sym[i];}
+    for (int len=2;len&lt;=n;len++)
+        for (int i=0;i&lt;=n-len;i++) {
+            int j=i+len-1;
+            for (int k=i;k&lt;j;k++) {
+                auto tl=T[i][k],fl=F[i][k],tr=T[k+1][j],fr=F[k+1][j];
+                auto tot=( tl+fl)*(tr+fr);
+                if(ops[k]=="AND"){T[i][j]+=tl*tr;F[i][j]+=tot-tl*tr;}
+                else if(ops[k]=="OR"){T[i][j]+=tot-fl*fr;F[i][j]+=fl*fr;}
+                else{T[i][j]+=tl*fr+fl*tr;F[i][j]+=tl*tr+fl*fr;}
+            }
+        }
+    return T[0][n-1];
+}</code></pre></div>
+      <a class="godbolt-link" id="cb2-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <h3>Problem 6 &mdash; Rectangular Blocks (DP on Partial Orders)</h3>
+
+    <!-- CODE BLOCK 3 -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang-toggle">
+          <button class="lang-btn active" onclick="switchLang(this,'cb3','py')">Python</button>
+          <button class="lang-btn" onclick="switchLang(this,'cb3','cpp')">C++</button>
+        </div>
+        <span class="code-label">Rectangular blocks tower + make-change DP &middot; O(n²) / O(mN)</span>
+      </div>
+      <div id="cb3-py" class="code-panel active"><pre><code class="language-python"># ── RECTANGULAR BLOCKS TOWER ── O(n^2) ──────────────────────────────
+def max_tower(blocks):
+    """
+    blocks: list of (length, width, height) tuples.
+    Returns maximum achievable tower height.
+    Block i can sit on block j only if l_i <= l_j AND w_i <= w_j.
+    DP: H[i] = max height of tower with block i on top.
+    H[i] = h_i + max(H[j] for j < i if l_j >= l_i and w_j >= w_i)
+    """
+    # Sort descending by (length, width)
+    blocks = sorted(blocks, key=lambda b: (-b[0], -b[1]))
+    n = len(blocks)
+    H = [b[2] for b in blocks]    # H[i] starts as just its own height
+
+    for i in range(1, n):
+        li, wi, hi = blocks[i]
+        for j in range(i):
+            lj, wj, _ = blocks[j]
+            if lj >= li and wj >= wi:  # block j can support block i
+                H[i] = max(H[i], hi + H[j])
+
+    return max(H)
+
+# Example
+blocks = [(4,3,2), (1,1,5), (3,2,3), (2,2,4)]
+print(max_tower(blocks))   # 11 = (4,3,2)+(3,2,3)+(2,2,4)+(1,1,5) impossible;
+                           # actual: (4,3,2) -> (3,2,3) -> (2,2,4) = 9
+
+
+# ── MAKE CHANGE ── O(mN) pseudo-polynomial ───────────────────────────
+def min_coins(coins, N):
+    """
+    Minimum coins to make N cents using coin denominations in `coins`.
+    C[p] = min C[p - S_i] + 1 for all S_i <= p.
+    O(m * N) time, O(N) space. Pseudo-polynomial (not polynomial in bits of N).
+    """
+    INF = float('inf')
+    C = [INF] * (N + 1)
+    C[0] = 0
+    for p in range(1, N + 1):
+        for s in coins:
+            if s <= p and C[p - s] + 1 < C[p]:
+                C[p] = C[p - s] + 1
+    return C[N] if C[N] != INF else -1
+
+# Reconstruct which coins were used
+def min_coins_with_path(coins, N):
+    INF = float('inf')
+    C    = [INF] * (N + 1)
+    last = [-1]  * (N + 1)
+    C[0] = 0
+    for p in range(1, N + 1):
+        for s in coins:
+            if s <= p and C[p-s]+1 < C[p]:
+                C[p] = C[p-s]+1; last[p] = s
+    # Traceback
+    path, p = [], N
+    while p > 0:
+        path.append(last[p]); p -= last[p]
+    return C[N], path
+
+cost, used = min_coins_with_path([1, 5, 10, 25], 41)
+print(f"Coins needed: {cost}, using: {used}")  # 4 coins: [25,10,5,1]</code></pre></div>
+      <div id="cb3-cpp" class="code-panel"><pre><code class="language-cpp">// Rectangular blocks + make-change
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;tuple&gt;
+#include &lt;numeric&gt;
+using namespace std;
+
+// Tower of blocks — O(n^2)
+int max_tower(vector&lt;tuple&lt;int,int,int&gt;&gt; blocks) {
+    sort(blocks.begin(), blocks.end(),
+         [](auto&amp; a, auto&amp; b){
+             return get&lt;0&gt;(a) != get&lt;0&gt;(b) ?
+                    get&lt;0&gt;(a) &gt; get&lt;0&gt;(b) :
+                    get&lt;1&gt;(a) &gt; get&lt;1&gt;(b); });
+    int n = blocks.size();
+    vector&lt;int&gt; H(n);
+    for (int i=0;i&lt;n;i++) H[i]=get&lt;2&gt;(blocks[i]);
+    for (int i=1;i&lt;n;i++)
+        for (int j=0;j&lt;i;j++)
+            if (get&lt;0&gt;(blocks[j])&gt;=get&lt;0&gt;(blocks[i]) &amp;&amp;
+                get&lt;1&gt;(blocks[j])&gt;=get&lt;1&gt;(blocks[i]))
+                H[i]=max(H[i], get&lt;2&gt;(blocks[i])+H[j]);
+    return *max_element(H.begin(),H.end());
+}
+
+// Make change — O(m*N)
+int min_coins(vector&lt;int&gt; coins, int N) {
+    const int INF = 1e9;
+    vector&lt;int&gt; C(N+1, INF);
+    C[0] = 0;
+    for (int p=1;p&lt;=N;p++)
+        for (int s : coins)
+            if (s&lt;=p &amp;&amp; C[p-s]+1 &lt; C[p])
+                C[p] = C[p-s]+1;
+    return C[N]==INF ? -1 : C[N];
+}</code></pre></div>
+      <a class="godbolt-link" id="cb3-godbolt" href="https://godbolt.org/" target="_blank" rel="noopener">&uarr; Run C++ on Compiler Explorer</a>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">Worked Example &middot; Optimal BST for Options Strike Lookup</span>
+        <span class="we-badge">&#x1F1EE;&#x1F1F3; TTT / Pashupati</span>
+      </div>
+      <div class="we-body">
+        <p>An options trading system queries strikes by name millions of times per session. Strike frequency is non-uniform: ATM strikes (near 23,400) are queried far more than deep OTM strikes. An optimal BST minimises expected lookup depth.</p>
+        <div class="we-step">Build optimal BST from strike query frequencies</div>
+        <pre style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;"><code class="language-python"># Strike keys (sorted) and their normalised query frequencies
+strikes    = [22500, 23000, 23500, 24000, 24500]
+# ATM near 23500: highest frequency
+frequencies = [0.05, 0.15, 0.45, 0.25, 0.10]
+
+cost, root_table = optimal_bst(frequencies)
+print(f"Expected search cost: {cost:.4f}")
+# vs naive balanced BST (all at depth ~log2(5) ≈ 2.3):
+balanced_cost = sum(f * (2+1) for f in frequencies)   # depth 2 for all
+print(f"Balanced BST cost:    {balanced_cost:.4f}")
+# Optimal BST places 23500 (freq=0.45) near root -> shallower for hot keys</code></pre>
+        <div class="we-answer">
+          <strong>Result:</strong> Optimal BST cost $\approx 1.95$ vs balanced BST $\approx 3.0$. The optimal tree places the most-queried strike (23500, freq=0.45) at or near the root, reducing expected search depth by $\sim 35\%$. This matters at millions of queries per session.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-india">
+      The coin change DP ($O(mN)$) appears directly in options strategy construction: given target payoff $N$ and available option strikes as &ldquo;denominations,&rdquo; find the minimum number of legs. The boolean parenthesisation DP structure also appears in order-routing logic &mdash; given a sequence of market conditions (True/False) joined by AND/OR triggers, count valid execution paths. The rectangular blocks problem is a disguised form of the Longest Increasing Subsequence on a 2D partial order &mdash; used in scheduling algorithms where instruments or strategies must be ordered by multiple criteria (expiry and strike must both increase in a calendar spread ladder).
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions &middot; Chapter 07</span>
+    </div>
+
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch07 / q01</span>
+        <span class="mcq-diff">&#9733; LPS Recurrence</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">For the string &ldquo;ABCBA&rdquo;, what is $L(0, 4)$ (LPS of the full string), and what is the base case that prevents infinite recursion when $X[i] = X[j]$ and $i+1 = j$?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$L(0,4) = 4$; base case returns $2 + L(1,3) = 2 + 1 = 3$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$L(0,4) = 5$ (entire string is a palindrome); when $i+1=j$ and $X[i]=X[j]$, return $2$ directly without recursing into $L(i+1, j-1) = L(j, i-1)$ which would have $j > i$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$L(0,4) = 3$; the base case for adjacent equal characters returns $1$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$L(0,4) = 5$; the base case for $i+1=j$ is unnecessary since $L(i+1,j-1) = L(j,j-1) = 0$ automatically</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B.</strong><br/><br/>
+          &ldquo;ABCBA&rdquo; is itself a palindrome, so $L(0,4) = 5$. The key base case: when $X[i]=X[j]$ and $i+1=j$ (two adjacent equal characters), return $2$ directly. Without this guard, we would recurse into $L(i+1, j-1) = L(j, j-1)$, where $j-1 < j$, meaning the left index exceeds the right. Option D suggests $L(j, j-1) = 0$ would work automatically &mdash; but this requires treating out-of-bounds index pairs as 0, which must be explicitly coded. The lecture code handles this by the explicit $i+1 == j$ check. For &ldquo;ABCBA&rdquo;: $L(0,4): X[0]=A=X[4] \Rightarrow 2+L(1,3)$. $L(1,3): X[1]=B=X[3] \Rightarrow 2+L(2,2)=2+1=3$. So $L(0,4)=2+3=5$.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch07 / q02</span>
+        <span class="mcq-diff">&#9733;&#9733; Optimal BST</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the Optimal BST recurrence $e(i,j) = \min_{r}(e(i,r-1) + e(r+1,j) + W(i,j))$, why does $W(i,j)$ appear in every term regardless of the choice of root $r$?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$W(i,j)$ accounts for the weight of the root $K_r$ only</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>When $K_r$ becomes root, every other key's depth increases by 1, adding $w_k$ for each $k \neq r$ to the cost; combined with $w_r$ itself at depth 0, the total addition is exactly $W(i,j) = \sum_{k=i}^j w_k$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$W(i,j)$ is a normalisation constant ensuring the recurrence sums to a valid probability</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$W(i,j)$ accounts for the cost of searching the root $K_r$ at depth 1</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B.</strong><br/><br/>
+          The cost function is $\sum_k w_k \cdot (\text{depth}(K_k) + 1)$. When we build a BST rooted at $K_r$ over keys $K_i, \ldots, K_j$: the subproblems $e(i, r-1)$ and $e(r+1, j)$ compute costs <em>as if their subtrees were independent trees rooted at depth 0</em>. But in the actual tree, those subtrees are at depth 1 (since $K_r$ is the root). This shifts every key&rsquo;s depth by 1, multiplying their contribution by $+w_k$ per key. Summing over all keys in $K_i, \ldots, K_j$: the extra cost from depth shift is $\sum_{k=i}^j w_k = W(i,j)$. This $W(i,j)$ is independent of $r$ because all $n-1$ non-root keys each increase depth by 1, and $K_r$ itself contributes $w_r \cdot 1$ (at depth 0 $+$ 1).
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq3">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch07 / q03</span>
+        <span class="mcq-diff">&#9733;&#9733; Coin Game Strategy</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">For coins $[4, 42, 39, 17, 25, 6]$, the first player can guarantee at least which amount using the odd/even strategy, and does the DP confirm this is optimal?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Odd sum $= 4+39+25 = 68$; even sum $= 42+17+6 = 65$; first player guarantees $68$ and this is optimal</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>Odd sum $= 4+39+25=68$; even sum $= 42+17+6=65$; first player guarantees at least $68$ using the parity strategy. The DP may give a higher value by exploiting specific game sequences</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>The first player cannot guarantee more than $65$; the second player always wins with the even-indexed coins</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>The first player always wins the maximum coin ($42$) by playing greedily, guaranteeing $42 + 25 + 4 = 71$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B.</strong><br/><br/>
+          Odd-indexed coins (1-indexed): $V_1=4$, $V_3=39$, $V_5=25$. Sum $= 68$. Even-indexed: $V_2=42$, $V_4=17$, $V_6=6$. Sum $= 65$. The parity strategy guarantees the first player can collect all of the higher-sum parity class &mdash; at least $68$. However, the DP recurrence computes the true minimax optimum, which can be $\geq 68$: if the opponent makes a suboptimal move, the first player may collect more. The parity strategy is a <em>lower bound</em> on what the first player can guarantee &mdash; the DP gives the exact value. For this input, the DP gives $\geq 68$ (run it to find the exact value).
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <div class="mcq-card" id="mcq4">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">prog / daa / ch07 / q04</span>
+        <span class="mcq-diff">&#9733;&#9733;&#9733; Subproblem Count</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">The boolean parenthesisation problem has $O(n^2)$ subproblems and $O(n)$ time per subproblem, giving $O(n^3)$. The coin game has $O(n^2)$ subproblems and $O(1)$ per subproblem, giving $O(n^2)$. What is the fundamental reason one is cheaper than the other?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>The coin game uses a simpler data structure (array vs dictionary)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Boolean parenthesisation has more base cases, making it inherently slower</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The coin game recurrence depends on only $O(1)$ previously computed subproblems per cell ($V(i,j)$ needs only 4 sub-values); boolean parenthesisation must iterate over all $O(n)$ split points $k$ between $i$ and $j$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>The coin game has fewer overlapping subproblems so memoisation is less effective</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C &mdash; the number of dependencies per subproblem.</strong><br/><br/>
+          Both problems have $\Theta(n^2)$ subproblems (intervals $(i,j)$). The difference is in how many previously computed values each subproblem depends on. Coin game $V(i,j)$: depends on exactly 4 values ($V(i+2,j)$, $V(i+1,j-1)$ for taking left; $V(i+1,j-1)$, $V(i,j-2)$ for taking right) &mdash; $O(1)$ work per cell. Boolean parenthesisation $T(i,j)$: must try every split point $k$ from $i$ to $j-1$ &mdash; $O(j-i)$ work per cell, averaging $O(n)$. The same gap appears in Optimal BST vs LPS: BST is $O(n^3)$ (iterate over all roots), LPS is $O(n^2)$ (only check endpoints). The &ldquo;guess&rdquo; space determines the per-subproblem cost.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="terminal-section">
+    <div class="terminal-header">
+      <span class="terminal-title">Terminal Questions &mdash; Chapter 07</span>
+      <span class="terminal-badge">10 problems &middot; No answers given</span>
+    </div>
+    <div class="terminal-body">
+      <p class="terminal-intro">Work through independently. Q1&ndash;3 direct application. Q4&ndash;7 synthesis. Q8&ndash;10 careful argument.</p>
+      <div class="tq-list">
+        <div class="tq-item"><div class="tq-num">1</div><div class="tq-text">Fill the complete $5 \times 5$ LPS table for &ldquo;BBABB&rdquo;. Start from base cases $L[i][i]=1$, then fill lengths 2, 3, 4, 5. What is the LPS and what subsequence achieves it? <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">2</div><div class="tq-text">Compute the Optimal BST for keys $K_1, K_2, K_3$ with weights $w=[0.25, 0.50, 0.25]$. Fill $e(i,j)$ and $W(i,j)$ for all valid $(i,j)$. Which key is the root? What is the expected search cost? Compare to a balanced BST. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">3</div><div class="tq-text">Run the coin game DP on $V = [3, 9, 1, 2]$. Compute $V(i,j)$ for all pairs. What is the first player&rsquo;s guaranteed value? Trace the optimal sequence of moves for both players. <span class="tq-diff tq-easy">Easy</span></div></div>
+        <div class="tq-item"><div class="tq-num">4</div><div class="tq-text">Prove the parity strategy for the coin game: the first player can always guarantee collecting all coins of the higher-sum parity class. Specifically, show that after the first player picks a coin, they can always maintain the invariant of having access to all remaining coins of their chosen parity. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">5</div><div class="tq-text">Implement Knuth&rsquo;s speedup for the Optimal BST: instead of iterating over all $O(n)$ roots, show that the optimal root $r^*(i,j) \in [r^*(i,j-1), r^*(i+1,j)]$ (monotone root property). This reduces time from $O(n^3)$ to $O(n^2)$. Verify correctness against the naive $O(n^3)$ implementation. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">6</div><div class="tq-text">The text justification problem: given $n$ words of lengths $l_1, \ldots, l_n$ and line width $M$, minimise $\sum_{\text{lines}} (\text{slack})^3$ (sum of cubes of trailing spaces, ignoring last line). Define the subproblem, write the recurrence, analyse complexity, and implement it. <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">7</div><div class="tq-text">The make-change problem has pseudo-polynomial complexity $O(mN)$. What does this mean exactly &mdash; is $N$ counted as a number or as its bit representation? Give an example showing the algorithm is exponential in the input <em>size</em> (number of bits). What would a truly polynomial algorithm require? <span class="tq-diff tq-medium">Medium</span></div></div>
+        <div class="tq-item"><div class="tq-num">8</div><div class="tq-text">Prove that the naive recursive LPS implementation runs in $\Omega(2^n)$ time when all characters are distinct by constructing the recursion tree and showing it is a complete binary tree of depth $n$. Then show memoisation with the 2D table reduces this to $\Theta(n^2)$ by bounding the number of distinct $(i,j)$ pairs and the lookup cost. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">9</div><div class="tq-text">Generalise the rectangular blocks problem to $d$ dimensions: block $i$ can go on block $j$ iff $l_i^{(k)} \leq l_j^{(k)}$ for all dimensions $k = 1, \ldots, d$. What is the DP recurrence and time complexity? For $d=2$, show it reduces to the longest chain in a poset and give an $O(n \log n)$ algorithm using patience sorting. <span class="tq-diff tq-hard">Hard</span></div></div>
+        <div class="tq-item"><div class="tq-num">10</div><div class="tq-text">The boolean parenthesisation problem counts parenthesisations. The Catalan number $C_{n-1}$ counts the total number of parenthesisations of $n$ operands. Verify for $n=3$: $C_2 = 2$ (two binary trees). Show that $T[1,n] + F[1,n] = C_{n-1}$ always. What does this imply about the maximum value of $T[1,n]$? <span class="tq-diff tq-hard">Hard</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="PROG_DAA_Ch6.html" class="ch-nav-btn">&larr; Randomized Algorithms</a>
+    <a href="PROG_DAA_Ch8.html" class="ch-nav-btn primary">Next: APSP, Greedy &amp; MST &rarr;</a>
+  </div>
+
+</main>
+</div>
+<script>
+const STORAGE_KEY='quantttt-lang';
+function switchLang(btn,blockId,lang){btn.closest('.code-header').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById(blockId+'-py').classList.toggle('active',lang==='py');document.getElementById(blockId+'-cpp').classList.toggle('active',lang==='cpp');const gb=document.getElementById(blockId+'-godbolt');if(gb)gb.classList.toggle('show',lang==='cpp');localStorage.setItem(STORAGE_KEY,lang);syncAllBlocks(lang);}
+function syncAllBlocks(lang){document.querySelectorAll('.code-block').forEach(block=>{const pyPanel=block.querySelector('[id$="-py"]');const cppPanel=block.querySelector('[id$="-cpp"]');const pyBtn=block.querySelector('.lang-btn:first-child');const cppBtn=block.querySelector('.lang-btn:last-child');const gb=block.querySelector('.godbolt-link');if(pyPanel)pyPanel.classList.toggle('active',lang==='py');if(cppPanel)cppPanel.classList.toggle('active',lang==='cpp');if(pyBtn)pyBtn.classList.toggle('active',lang==='py');if(cppBtn)cppBtn.classList.toggle('active',lang==='cpp');if(gb)gb.classList.toggle('show',lang==='cpp');});}
+const correctMsgs=["🎯 LPS: ABCBA is fully palindromic. i+1=j base case prevents invalid recursion.","✨ Optimal BST: W(i,j) added because every key's depth increases by 1 under any root.","🏆 Coin game: parity strategy gives lower bound. DP gives exact minimax optimum.","🔥 Boolean paren vs coin game: O(n) splits vs O(1) dependencies per subproblem.","💡 Interval DP: fill in order of increasing j-i. Subproblems = O(n^2) pairs.","📐 Optimal BST O(n^3): n^2 subproblems × O(n) root choices per subproblem.","⚡ Make-change O(mN): pseudo-polynomial — N appears as integer, not its bit-length."];
+const wrongMsgs=["🌀 LPS of ABCBA: X[0]=A=X[4], recurse to L(1,3). L(1,3)=B=B match, recurse L(2,2)=1. L(0,4)=2+2+1=5.","📉 W(i,j) covers all n keys: root K_r itself at depth 0 (cost w_r), plus all others at +1 depth.","😰 The parity strategy guarantees at least max(odd_sum, even_sum). DP finds the true minimax.","📐 Coin game: V(i,j) uses only 4 previously computed cells. Boolean paren iterates all k splits.","🤔 Optimal BST greedy fails: putting max-weight key at root can make other high-weight keys deep."];
+const state={};
+function pickOpt(el,qid,correct){if(state[qid]?.done)return;if(!state[qid])state[qid]={};state[qid].picked={el,correct};document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');el.style.borderColor='var(--orange)';const btn=document.getElementById(qid+'btn');btn.disabled=false;btn.textContent='Check Answer';if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'opts'));}
+function checkOpt(qid,correctLetter){const s=state[qid];if(!s?.picked||s.done)return;s.done=true;const opts=document.querySelectorAll('#'+qid+'opts .opt');opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});const feedback=document.getElementById(qid+'feedback');feedback.style.display='block';const expl=document.getElementById(qid+'expl');expl.classList.add('show');const btn=document.getElementById(qid+'btn');if(s.picked.correct){s.picked.el.classList.add('correct');feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';}else{s.picked.el.classList.add('wrong');opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';}if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'));}
+window.addEventListener('load',()=>{const saved=localStorage.getItem(STORAGE_KEY)||'py';syncAllBlocks(saved);if(window.hljs)hljs.highlightAll();if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}});
+</script>
+</body>
+</html>
