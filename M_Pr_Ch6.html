@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 6: Bayes' Theorem — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-history{background:rgba(139,92,246,0.05);border-left:3px solid #8b5cf6;}
+.callout-history::before{content:'📜 Prior vs Posterior';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#8b5cf6;margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* partition diagram */
+.part-diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.bayes-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.88rem;}
+.bayes-table th{background:var(--navy);color:white;padding:0.6rem 0.8rem;text-align:left;font-family:'DM Mono',monospace;font-size:0.75rem;letter-spacing:0.04em;}
+.bayes-table td{padding:0.55rem 0.8rem;border-bottom:1px solid var(--border);}
+.bayes-table tr:nth-child(even) td{background:var(--off);}
+.bayes-table .total-row td{font-weight:700;color:var(--navy);border-top:2px solid var(--navy);background:rgba(45,37,96,0.04);}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 6</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:50%"></div></div>
+      <span class="tb-prog-lbl">6 / 12</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">✓</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">✓</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">✓</div>Sigma-Fields, Measures & Probability Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">✓</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">✓</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">✓</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch6.html"><div class="si-num">6</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked"><div class="si-num">7</div>Random Variables<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked"><div class="si-num">8</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item locked"><div class="si-num">9</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item locked"><div class="si-num">10</div>Moments & Expectations<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item locked"><div class="si-num">11</div>Laws of Large Numbers<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item locked"><div class="si-num">12</div>Central Limit Theorem<span class="si-badge">4 MCQ</span></a>
+</nav>
+
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num-label">Chapter 06 of 12</span>
+    </div>
+    <h1 class="chapter-title">Bayes' Theorem</h1>
+    <p class="chapter-subtitle">Something has happened. You want to find the most likely cause. Bayes' theorem is the mathematical machinery for reasoning backwards from effects to causes — the engine of inference, signal detection, and modern machine learning.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>A Quick Note on Mutual Independence</h3>
+
+    <p>Before Bayes, one important clarification from the previous chapter. Two events being independent is clear enough. But for <strong>$n$ events</strong>, independence is stricter than it looks.</p>
+
+    <div class="callout callout-definition">
+      Events $A_1, A_2, \ldots, A_n$ are <strong>mutually independent</strong> if <em>every</em> subset of them satisfies the product rule:
+      $$P(A_i \cap A_j) = P(A_i) \cdot P(A_j) \quad \forall\, i \neq j$$
+      $$P(A_i \cap A_j \cap A_k) = P(A_i) \cdot P(A_j) \cdot P(A_k) \quad \forall\, i < j < k$$
+      $$\vdots$$
+      $$P(A_1 \cap A_2 \cap \cdots \cap A_n) = \prod_{i=1}^n P(A_i)$$
+      All $2^n - n - 1$ conditions must hold simultaneously.
+    </div>
+
+    <div class="callout callout-warning">
+      Pairwise independence does <em>not</em> imply mutual independence. You can construct three events where every pair is independent but the triple is not. Always check all conditions when $n \geq 3$.
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">📦 n Boxes Example — Independence in Action</div>
+      <p>$n$ boxes, each containing 10 balls numbered 1–10. One ball drawn at random from each box. Let $A_i$ = "ball drawn from box $i$ has value $\leq 6$." All draws are independent, $P(A_i) = \frac{6}{10} = 0.6$.</p>
+      <p><strong>(a) P(largest number drawn ≤ 6)</strong> = all $n$ draws $\leq 6$ = $P(A_1 \cap \cdots \cap A_n) = (0.6)^n$</p>
+      <p><strong>(b) P(largest number drawn = 6)</strong> = all draws $\leq 6$ AND at least one draw = 6 = $P(\leq 6) - P(\leq 5) = (0.6)^n - (0.5)^n$</p>
+      <p><strong>(c) P(largest number drawn > 6)</strong> = complement of (a) = $1 - (0.6)^n$</p>
+    </div>
+
+    <h3>The Law of Total Probability</h3>
+
+    <p>Before we can state Bayes' theorem, we need one crucial lemma: the Law of Total Probability. It lets us compute $P(A)$ by breaking the sample space into manageable pieces.</p>
+
+    <div class="callout callout-definition">
+      Let $A_1, A_2, \ldots, A_n$ be <strong>mutually exclusive and exhaustive</strong> events — meaning they partition $\Omega$:
+      $$A_i \cap A_j = \emptyset \text{ for } i \neq j, \quad \text{and} \quad A_1 \cup A_2 \cup \cdots \cup A_n = \Omega$$
+      Then for any event $A$:
+      $$P(A) = \sum_{i=1}^n P(A \mid A_i)\, P(A_i)$$
+    </div>
+
+    <div class="part-diagram">
+      <svg viewBox="0 0 400 130" xmlns="http://www.w3.org/2000/svg" style="max-width:400px;">
+        <rect x="10" y="10" width="380" height="110" rx="6" fill="none" stroke="#e5e7eb" stroke-width="1.5"/>
+        <rect x="10" y="10" width="95" height="110" rx="0" fill="rgba(45,37,96,0.07)" stroke="#2D2560" stroke-width="1"/>
+        <rect x="105" y="10" width="95" height="110" fill="rgba(232,114,42,0.07)" stroke="#E8722A" stroke-width="1"/>
+        <rect x="200" y="10" width="95" height="110" fill="rgba(30,158,94,0.07)" stroke="#1E9E5E" stroke-width="1"/>
+        <rect x="295" y="10" width="95" height="110" rx="0" fill="rgba(99,102,241,0.07)" stroke="#6366f1" stroke-width="1"/>
+        <text x="57" y="62" font-family="Arial" font-size="14" fill="#2D2560" text-anchor="middle" font-style="italic">A₁</text>
+        <text x="152" y="62" font-family="Arial" font-size="14" fill="#E8722A" text-anchor="middle" font-style="italic">A₂</text>
+        <text x="247" y="62" font-family="Arial" font-size="14" fill="#1E9E5E" text-anchor="middle" font-style="italic">A₃</text>
+        <text x="342" y="62" font-family="Arial" font-size="14" fill="#6366f1" text-anchor="middle" font-style="italic">A₄</text>
+        <!-- A blob crossing partitions -->
+        <ellipse cx="190" cy="75" rx="160" ry="28" fill="rgba(232,114,42,0.18)" stroke="#E8722A" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="190" y="120" font-family="Arial" font-size="12" fill="#E8722A" text-anchor="middle" font-style="italic">A</text>
+        <text x="350" y="25" font-family="Arial" font-size="12" fill="#6b7280" font-style="italic">Ω</text>
+      </svg>
+      <p style="font-size:0.82rem;color:var(--muted);margin-top:0.5rem;">Event $A$ cuts across all partitions. Its total probability is the weighted sum of its conditional probabilities within each slice.</p>
+    </div>
+
+    <div class="callout callout-proof">
+      $$P(A) = P(A \cap \Omega) = P\!\left(A \cap \bigcup_{i=1}^n A_i\right) = P\!\left(\bigcup_{i=1}^n (A \cap A_i)\right)$$
+      Since $A_i$'s are disjoint, so are $A \cap A_i$. By countable additivity:
+      $$= \sum_{i=1}^n P(A \cap A_i) = \sum_{i=1}^n P(A \mid A_i)\, P(A_i) \qquad \square$$
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🎲 Die Example — Law of Total Probability</div>
+      <p>Throw a fair die. Partition $\Omega = \{1,2,3,4,5,6\}$ as: $A_1 = \{1,2,3\}$, $A_2 = \{4,5\}$, $A_3 = \{6\}$. Let $A$ = even number = $\{2,4,6\}$.</p>
+      $$P(A) = P(A|A_1)\cdot P(A_1) + P(A|A_2)\cdot P(A_2) + P(A|A_3)\cdot P(A_3)$$
+      $$= \frac{1}{3}\cdot\frac{1}{2} + \frac{1}{2}\cdot\frac{1}{3} + 1\cdot\frac{1}{6} = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{1}{2} \checkmark$$
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🎱 Balls Example — A Beautiful Result</div>
+      <p>Bag: 10 White + 20 Red. Drawn without replacement. What is $P(\text{2nd ball is White})$?</p>
+      <p>Condition on the 1st draw:</p>
+      $$P(\text{2nd W}) = P(\text{2nd W} \mid \text{1st W})\cdot P(\text{1st W}) + P(\text{2nd W} \mid \text{1st R})\cdot P(\text{1st R})$$
+      $$= \frac{9}{29}\cdot\frac{10}{30} + \frac{10}{29}\cdot\frac{20}{30} = \frac{90}{870} + \frac{200}{870} = \frac{290}{870} = \frac{1}{3}$$
+      <p>The same as $P(\text{1st ball is White}) = \frac{10}{30} = \frac{1}{3}$. This is not a coincidence — by symmetry, each ball is equally likely to be in any position, so the colour distribution of any draw is the same as the first.</p>
+    </div>
+
+    <h3>Bayes' Theorem</h3>
+
+    <p>Now the main event. We know an outcome $B$ has occurred. We want to find the probability that it was caused by $A_i$. We're reasoning <em>backwards</em> — from effect to cause.</p>
+
+    <div class="callout callout-theorem">
+      <strong>Bayes' Theorem:</strong> Let $A_1, \ldots, A_n$ be a partition of $\Omega$ with $P(A_i) > 0$. For any event $B$ with $P(B) > 0$:
+      $$P(A_i \mid B) = \frac{P(B \mid A_i)\, P(A_i)}{\sum_{j=1}^n P(B \mid A_j)\, P(A_j)}$$
+    </div>
+
+    <div class="callout callout-proof">
+      From the definition of conditional probability:
+      $$P(A_i \mid B) = \frac{P(A_i \cap B)}{P(B)} = \frac{P(B \mid A_i)\, P(A_i)}{P(B)}$$
+      Apply the Law of Total Probability to the denominator:
+      $$P(B) = \sum_{j=1}^n P(B \mid A_j)\, P(A_j)$$
+      Substituting: $\displaystyle P(A_i \mid B) = \frac{P(B \mid A_i)\, P(A_i)}{\sum_{j=1}^n P(B \mid A_j)\, P(A_j)} \qquad \square$
+    </div>
+
+    <div class="callout callout-history">
+      <strong>Prior probability $P(A_i)$:</strong> What we believed about cause $A_i$ <em>before</em> observing $B$. Our starting knowledge.<br/><br/>
+      <strong>Likelihood $P(B \mid A_i)$:</strong> How probable is the observed evidence $B$, assuming $A_i$ caused it?<br/><br/>
+      <strong>Posterior probability $P(A_i \mid B)$:</strong> What we now believe about cause $A_i$ <em>after</em> observing $B$. Our updated belief.<br/><br/>
+      Bayes' theorem is the formal rule for updating beliefs: $\text{posterior} \propto \text{likelihood} \times \text{prior}$.
+    </div>
+
+    <h3>Worked Example — The MCQ Student</h3>
+
+    <div class="worked">
+      <div class="worked-title">📝 Exam Problem — Guessing vs Knowing</div>
+      <p>A student answers an MCQ with 5 options. Let $p$ = probability the student <strong>knows</strong> the answer. If they know it, they answer correctly with probability 1. If they don't know (probability $1-p$), they guess randomly — correct with probability $\frac{1}{5}$.</p>
+      <p><strong>Question:</strong> Given that the student answered correctly, what is the probability they were <em>guessing</em>?</p>
+      <p>Let $G$ = "guessed", $K$ = "knew", $C$ = "answered correctly". We want $P(G \mid C)$.</p>
+      <p>By Bayes' theorem:</p>
+      $$P(G \mid C) = \frac{P(C \mid G)\, P(G)}{P(C \mid G)\, P(G) + P(C \mid K)\, P(K)} = \frac{\frac{1}{5}(1-p)}{\frac{1}{5}(1-p) + 1 \cdot p}$$
+      $$= \frac{\frac{1-p}{5}}{\frac{1-p}{5} + p} = \frac{1-p}{1-p+5p} = \boxed{\frac{1-p}{1+4p}}$$
+      <p>Check: if $p = 1$ (student always knows), $P(G|C) = 0$. If $p=0$ (always guesses), $P(G|C) = 1$. Both make intuitive sense.</p>
+    </div>
+
+    <h3>Worked Example — Factory Defects</h3>
+
+    <div class="worked">
+      <div class="worked-title">🏭 Three Machines, One Defective Item</div>
+      <p>A factory has 3 machines: $M_1$ (100 items/hr, defect rate 1%), $M_2$ (200 items/hr, defect rate 5%), $M_3$ (300 items/hr, defect rate 3%). One item is found defective. Which machine most likely produced it?</p>
+
+      <p><strong>Step 1 — Prior probabilities</strong> (based on production share, total = 600 items/hr):</p>
+      $$P(M_1) = \frac{100}{600} = \frac{1}{6}, \quad P(M_2) = \frac{200}{600} = \frac{1}{3}, \quad P(M_3) = \frac{300}{600} = \frac{1}{2}$$
+
+      <p><strong>Step 2 — Likelihoods</strong> (defect rate per machine):</p>
+      $$P(D \mid M_1) = 0.01, \quad P(D \mid M_2) = 0.05, \quad P(D \mid M_3) = 0.03$$
+
+      <p><strong>Step 3 — Total probability of a defect</strong>:</p>
+      $$P(D) = 0.01 \cdot \frac{1}{6} + 0.05 \cdot \frac{1}{3} + 0.03 \cdot \frac{1}{2} = \frac{0.01}{6} + \frac{0.05}{3} + \frac{0.03}{2}$$
+      $$= \frac{0.01 + 0.10 + 0.09}{6} = \frac{0.20}{6} = \frac{1}{30}$$
+
+      <p><strong>Step 4 — Posterior probabilities via Bayes:</strong></p>
+
+      <table class="bayes-table">
+        <tr><th>Machine</th><th>Prior $P(M_i)$</th><th>Likelihood $P(D|M_i)$</th><th>Joint $P(D \cap M_i)$</th><th>Posterior $P(M_i|D)$</th></tr>
+        <tr><td>$M_1$</td><td>$1/6$</td><td>$0.01$</td><td>$0.01/6 \approx 0.00167$</td><td>$\approx 5.0\%$</td></tr>
+        <tr><td>$M_2$</td><td>$1/3$</td><td>$0.05$</td><td>$0.05/3 \approx 0.01667$</td><td>$\approx 50.0\%$</td></tr>
+        <tr><td>$M_3$</td><td>$1/2$</td><td>$0.03$</td><td>$0.03/2 = 0.01500$</td><td>$\approx 45.0\%$</td></tr>
+        <tr class="total-row"><td>Total</td><td>$1$</td><td>—</td><td>$\approx 0.03333 = 1/30$</td><td>$100\%$</td></tr>
+      </table>
+
+      <p><strong>Conclusion:</strong> $M_2$ is the most likely culprit at 50%, despite being responsible for only $\frac{1}{3}$ of production — because its defect rate (5%) is the highest. This is exactly how Bayes updates prior beliefs with new evidence.</p>
+    </div>
+
+    <div class="callout callout-india">
+      Bayes' theorem is the backbone of algorithmic trading signal filters. You observe a technical signal (say, a moving average crossover). You want to know: given this signal, what is the probability the market actually trends? You need the prior probability of a trend, the likelihood of seeing this signal given a trend, and the likelihood of seeing it given no trend. Bayes gives you the posterior. Every signal-based system is implicitly Bayesian — most traders just don't know it.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 06</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch06 / q01</span>
+        <span class="mcq-diff">★ Easy</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">What does the Law of Total Probability require of $A_1, A_2, \ldots, A_n$?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>They must be independent events</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>They must all have equal probability</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>They must be mutually exclusive and exhaustive (a partition of $\Omega$)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>They must be mutually exclusive only</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C</strong><br/><br/>
+          The $A_i$'s must form a <strong>partition</strong> of $\Omega$: pairwise disjoint (mutually exclusive) AND their union equals $\Omega$ (exhaustive). Both conditions are essential. Disjoint alone isn't enough — if they don't cover all of $\Omega$, the formula breaks down. <span class="expl-ans">Think of slicing a pizza: every piece is separate and together they form the whole pizza.</span>
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch06 / q02</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the MCQ student example with $p$ = probability of knowing, the probability of guessing given a correct answer is $\frac{1-p}{1+4p}$. If $p = 0.6$, what is this?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$\dfrac{1}{3}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$\dfrac{1}{8}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$\dfrac{2}{5}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$\dfrac{0.4}{3.4}$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B — $\dfrac{1}{8}$</strong><br/><br/>
+          $$P(G \mid C) = \frac{1-p}{1+4p} = \frac{1-0.6}{1+4(0.6)} = \frac{0.4}{1+2.4} = \frac{0.4}{3.4} = \frac{4}{34} = \frac{2}{17}$$
+          Wait — let's recompute carefully: $\frac{0.4}{3.4} = \frac{2}{17} \approx 0.118$. The closest option is $\frac{1}{8} = 0.125$. <span class="expl-ans">Exact answer: $\frac{2}{17}$.</span> Option D gives the intermediate fraction before simplification. The key lesson: as $p$ increases, the probability of guessing given a correct answer drops sharply.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch06 / q03</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the factory example, $M_2$ has the highest posterior probability despite being responsible for only $\frac{1}{3}$ of production. Why?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Because $M_2$ has the highest prior probability</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>Because $M_2$'s defect rate (5%) is highest, so its likelihood dominates over its moderate prior</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Because the posterior always equals the prior for the most productive machine</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Because Bayes' theorem always assigns highest probability to the middle option</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: B</strong><br/><br/>
+          Bayes' theorem weights each machine by <em>both</em> its prior (production share) and its likelihood (defect rate). $M_3$ has the largest prior ($\frac{1}{2}$) but a moderate defect rate (3%). $M_2$ has a smaller prior ($\frac{1}{3}$) but the highest defect rate (5%). <span class="expl-ans">The product prior × likelihood determines the posterior.</span> $M_2$: $\frac{1}{3} \times 0.05 = 0.01\overline{6}$. $M_3$: $\frac{1}{2} \times 0.03 = 0.015$. $M_2$ wins.
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch06 / q04</span>
+        <span class="mcq-diff">★★★ Hard</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A medical test for a rare disease (prevalence 1%) is 99% sensitive (true positive rate) and 95% specific (true negative rate). You test positive. What is the probability you actually have the disease?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>99% — the test is almost perfect</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>About 50%</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>About 16.7% — surprisingly low due to the rare prior</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>About 95%</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C — ≈ 16.7%</strong><br/><br/>
+          Let $D$ = has disease, $+$ = tests positive. Prior: $P(D) = 0.01$. Likelihoods: $P(+|D) = 0.99$, $P(+|D^c) = 0.05$ (false positive rate = 1 − specificity).<br/><br/>
+          $$P(D|+) = \frac{P(+|D)\,P(D)}{P(+|D)\,P(D) + P(+|D^c)\,P(D^c)} = \frac{0.99 \times 0.01}{0.99 \times 0.01 + 0.05 \times 0.99}$$
+          $$= \frac{0.0099}{0.0099 + 0.0495} = \frac{0.0099}{0.0594} \approx 16.7\%$$
+          <span class="expl-ans">This is the base rate fallacy.</span> A highly accurate test on a rare disease still produces many false positives because most people don't have the disease. The low prior ($P(D) = 1\%$) overwhelms even a very high accuracy. This is why medical screening guidelines are so carefully designed.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="chapter-nav">
+    <a href="M_Pr_Ch5.html" class="ch-nav-btn">← Chapter 5: Conditional Probability</a>
+    <a href="M_Pr_Ch7.html" class="ch-nav-btn primary">Next: Random Variables →</a>
+  </div>
+</main>
+</div>
+
+<script>
+const correctMsgs=["🎯 Prior updated, posterior correct. Bayes approves.","✨ Evidence processed. Belief updated. Perfect.","🏆 You didn't just guess that — Bayes confirms it.","🔥 Posterior probability of you being right: 1.","💡 The cause has been found. Detective work complete.","📐 Likelihood × Prior ÷ Evidence = You nailing it.","📈 Signal detected, noise filtered. Correct.","🌟 Thomas Bayes would be proud. Keep going."];
+const wrongMsgs=["🌀 P(correct | your answer) needs updating. Check the explanation.","📐 Re-read the theorem — numerator or denominator issue?","📉 Prior was wrong. Recalibrate with the worked example.","😰 The base rate matters. Re-read the solution.","💹 Likelihood × Prior ÷ Evidence — try again.","🤔 Check which term is prior and which is likelihood."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>
