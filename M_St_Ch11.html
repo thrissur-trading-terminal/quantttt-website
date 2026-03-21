@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 11: Martingales & Brownian Motion — M_St — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;display:flex;align-items:center;justify-content:center;min-height:calc(100vh - var(--topbar-h));padding:3rem;}
+.soon-wrap{text-align:center;max-width:480px;}
+.soon-icon{font-size:3.5rem;margin-bottom:1.2rem;}
+.soon-tag{font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--orange);margin-bottom:0.8rem;}
+.soon-title{font-family:'Playfair Display',serif;font-size:2rem;color:var(--navy);line-height:1.2;margin-bottom:0.8rem;}
+.soon-sub{font-size:0.95rem;color:var(--muted);line-height:1.7;margin-bottom:1.8rem;}
+.soon-back{display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;background:var(--navy);color:white;transition:background 0.2s;}
+.soon-back:hover{background:var(--navy2);}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;}}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;font-family:'Barlow',sans-serif;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:#F28C42;color:white;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo"><span class="lo">quant</span><span class="la">ttt</span><span class="ls"> — an initiative by Thrissur Trading Terminal</span></a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb"><a href="M_St.html">Stochastic Processes</a> › <span class="bc-cur">Chapter 11</span></div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:91%"></div></div>
+      <span class="tb-prog-lbl">11 / 12</span>
+    </div>
+    <a href="M_St.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Stochastic Processes</div>
+  <a class="sidebar-item done" href="M_St_Ch1.html"><div class="si-num">&#x2713;</div>Probability Foundations<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch2.html"><div class="si-num">&#x2713;</div>Distributions, Expectation &amp; Limits<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch3.html"><div class="si-num">&#x2713;</div>Markov Chains<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch4.html"><div class="si-num">&#x2713;</div>DTMC II — Limiting Behaviour<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch5.html"><div class="si-num">&#x2713;</div>Bernoulli Random Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch6.html"><div class="si-num">&#x2713;</div>Poisson Processes<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch7.html"><div class="si-num">&#x2713;</div>CTMC I — Birth &amp; Death<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch8.html"><div class="si-num">&#x2713;</div>CTMC II — Kolmogorov Equations<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch9.html"><div class="si-num">&#x2713;</div>Renewal Theory<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item " href="M_St_Ch10.html"><div class="si-num">10</div>Queueing Theory<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item active" href="M_St_Ch11.html"><div class="si-num">11</div>Martingales &amp; Brownian Motion<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item " href="M_St_Ch12.html"><div class="si-num">12</div>Applications of Stochastic Processes<span class="si-badge">5 MCQ</span></a>
+</nav>
+<main class="content">
+  <div class="soon-wrap">
+    <div class="soon-icon">⏳</div>
+    <div class="soon-tag">Chapter 11 of 12</div>
+    <h1 class="soon-title">Martingales &amp; Brownian Motion</h1>
+    <p class="soon-sub">From fair games to continuous paths — the mathematics underlying option pricing.<br/><br/>This chapter is coming soon.</p>
+    <a href="M_St.html" class="soon-back">← Back to all chapters</a>
+  </div>
+
+<div class="chapter-nav">
+  <a href="M_St_Ch10.html" class="ch-nav-btn">← Chapter 10: Queueing Theory</a>
+  <a href="M_St_Ch12.html" class="ch-nav-btn primary">Next: From Probability to Stochastics →</a>
+</div>
+</main>
+</div>
+</body>
+</html>

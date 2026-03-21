@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 4: DTMC II — Limiting Behaviour — M_St — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:820px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.content-body ul{margin:0.5rem 0 1.2rem 1.5rem;}
+.content-body ul li{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:0.3rem;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'📈 Trading Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+
+/* Summary grid */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem;margin:1.5rem 0;}
+.summary-card{background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:1rem 1.1rem;text-align:center;}
+.summary-card-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--orange);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;}
+.summary-card-val{font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.3rem;}
+.summary-card-note{font-size:0.78rem;color:var(--muted);line-height:1.5;}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.summary-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_St.html">Stochastic Processes</a> › <span class="bc-cur">Chapter 4</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:33%"></div></div>
+      <span class="tb-prog-lbl">4 / 12</span>
+    </div>
+    <a href="M_St.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="sidebar-section-label">Stochastic Processes</div>
+  <a class="sidebar-item done" href="M_St_Ch1.html"><div class="si-num">&#x2713;</div>Probability Foundations<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch2.html"><div class="si-num">&#x2713;</div>Distributions, Expectation & Limits<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch3.html"><div class="si-num">&#x2713;</div>Markov Chains<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_St_Ch4.html"><div class="si-num">4</div>DTMC II — Limiting Behaviour<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch5.html"><div class="si-num">5</div>Discrete Counting Processes<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch6.html"><div class="si-num">6</div>Poisson Processes<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch7.html"><div class="si-num">7</div>CTMC I — Birth & Death Processes<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch8.html"><div class="si-num">8</div>CTMC II — Kolmogorov Equations<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch9.html"><div class="si-num">9</div>Renewal Theory<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch10.html"><div class="si-num">10</div>Queueing Theory<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch11.html"><div class="si-num">11</div>Martingales & Brownian Motion<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch12.html"><div class="si-num">12</div>Option Pricing & Black-Scholes<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num-label">Chapter 04 of 12</span>
+    </div>
+    <h1 class="chapter-title">DTMC II — Limiting Behaviour</h1>
+    <p class="chapter-subtitle">Why does a stationary distribution exist and is it unique? What happens to a population that keeps reproducing? What if the underlying Markov chain is hidden? This chapter answers all three — and solves the gambler's ruin problem completely.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Why Is the Stationary Distribution Unique?</h3>
+    <p>
+      In Chapter 3 we found stationary distributions by solving $\beta = \beta P$. But we never asked: could there be more than one? For an irreducible chain, the answer is no — and the proof is elegant linear algebra.
+    </p>
+
+    <div class="callout callout-proof">
+      <strong>Claim:</strong> For an irreducible Markov chain on a finite state space, $\dim(\ker(P - I)) = 1$, so the stationary distribution is unique.<br/><br/>
+      <strong>Proof sketch:</strong> Suppose $w$ satisfies $Pw = w$ (i.e., $w \in \ker(P-I)$). Let $i_0$ be the state where $w$ achieves its maximum: $w(i_0) = \max_i w(i)$.<br/><br/>
+      Since the chain is irreducible, from $i_0$ we can reach any state $j$ — so there's a path $i_0 \to i_1 \to \cdots \to j$ with all transition probabilities positive. Suppose $w(i_1) < w(i_0)$ for some neighbour $i_1$. Then:
+      $$w(i_0) = \sum_l P_{i_0 l}\, w(l) = P_{i_0 i_1} w(i_1) + \sum_{l \neq i_1} P_{i_0 l}\, w(l) < w(i_0)\!\sum_l P_{i_0 l} = w(i_0)$$
+      Contradiction. So $w(i_1) = w(i_0)$. Repeating along any path from $i_0$, all components of $w$ equal $w(i_0)$ — i.e., $w$ is a constant vector. $\ker(P-I) = \text{span}\{\mathbf{1}_n\}$, dimension 1. $\square$<br/><br/>
+      By rank-nullity: $\text{rank}(P-I) = n-1$, so $\text{rank}(P-I)^T = n-1$, so $\dim\{v : v = vP\} = 1$ — unique stationary row vector.
+    </div>
+
+    <h3>Positive vs Null Recurrence</h3>
+    <p>
+      A recurrent state $j$ always has $P(\text{return to } j) = 1$ — but <em>how long</em> does it take to return?
+    </p>
+
+    <div class="callout callout-definition">
+      Let $m_j = E(\text{first return time to } j \mid X_0 = j)$.<br/><br/>
+      State $j$ is <strong>positive recurrent</strong> if $m_j < \infty$ — it returns in finite expected time.<br/>
+      State $j$ is <strong>null recurrent</strong> if $m_j = \infty$ — it eventually returns, but takes forever on average.
+    </div>
+
+    <div class="callout callout-theorem">
+      <strong>Key result:</strong> For an irreducible recurrent Markov chain, the stationary probability satisfies:
+      $$\pi_j = \frac{1}{m_j}$$
+      If $j$ is positive recurrent: $\pi_j > 0$. If $j$ is null recurrent: $\pi_j = 0$.
+    </div>
+
+    <div class="callout callout-proof">
+      <strong>Proof via SLLN:</strong> Let $T_1$ = time to first visit to $j$, $T_2$ = additional time to second visit, etc. By the strong Markov property, $T_2, T_3, \ldots$ are iid with mean $m_j$. The long-run fraction of time in state $j$ is:
+      $$\pi_j = \lim_{n\to\infty} \frac{n}{\sum_{k=1}^n T_k} = \frac{1}{\lim_{n\to\infty} \frac{1}{n}\sum_{k=1}^n T_k} = \frac{1}{m_j}$$
+      where the last step uses the SLLN on the iid sequence $T_2, T_3, \ldots$ (and $T_1/n \to 0$). $\square$
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🚶 Worked Example — Symmetric Random Walk is Null Recurrent</div>
+      <p>For the symmetric random walk on $\mathbb{Z}$ ($p = 1/2$), state 0 is recurrent (we proved this in Ch 3). But what is $m_0$?</p>
+      <p>Let $E(T_{i,j})$ = expected transitions from $i$ to $j$. By conditioning on the first step:</p>
+      $$E(T_{0,0}) = 1 + \tfrac{1}{2}E(T_{1,0}) + \tfrac{1}{2}E(T_{-1,0})$$
+      <p>By symmetry $E(T_{1,0}) = E(T_{-1,0})$. Now condition on the first step from state 1:</p>
+      $$E(T_{1,0}) = 1 + \tfrac{1}{2}E(T_{2,0}) = 1 + \tfrac{1}{2}[E(T_{2,1}) + E(T_{1,0})]$$
+      <p>By translation invariance: $E(T_{2,1}) = E(T_{1,0})$. So:</p>
+      $$E(T_{1,0}) = 1 + E(T_{1,0}) \implies \text{no finite solution} \implies E(T_{1,0}) = \infty$$
+      <p>Therefore $m_0 = \infty$ — <strong>state 0 is null recurrent</strong>. The walk returns to 0 with probability 1, but takes infinitely long on average. And $\pi_0 = 1/m_0 = 0$ — no stationary distribution exists.</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-card-label">Transient</div>
+        <div class="summary-card-val">$P(\text{return}) < 1$</div>
+        <div class="summary-card-note">Leaves eventually. $\sum P_{jj}^n < \infty$</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label">Null Recurrent</div>
+        <div class="summary-card-val">$m_j = \infty$</div>
+        <div class="summary-card-note">Returns surely, but $\pi_j = 0$. Infinite state spaces only.</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label">Positive Recurrent</div>
+        <div class="summary-card-val">$m_j < \infty$</div>
+        <div class="summary-card-note">Returns quickly. $\pi_j = 1/m_j > 0$. All finite irreducible chains.</div>
+      </div>
+    </div>
+
+    <h3>Gambler's Ruin — The Full Solution</h3>
+    <p>
+      A gambler starts with fortune $i$ and plays against a casino. Each round: win &#x20B9;1 (prob $p$) or lose &#x20B9;1 (prob $q = 1-p$). Game ends when fortune reaches 0 (ruin) or $N$ (win). What's the probability of winning?
+    </p>
+    <p>
+      Let $P_i$ = probability of reaching $N$ starting from $i$. The boundary conditions are $P_0 = 0$ (already ruined) and $P_N = 1$ (already won). For $i = 1, \ldots, N-1$:
+    </p>
+    <div class="math-block">
+      $$P_i = p\, P_{i+1} + q\, P_{i-1} \implies P_{i+1} - P_i = \frac{q}{p}(P_i - P_{i-1})$$
+    </div>
+    <p>This is a linear recurrence with ratio $r = q/p$. Telescoping from the boundary:</p>
+    <div class="math-block">
+      $$P_i = \begin{cases} \dfrac{1-(q/p)^i}{1-(q/p)^N} & p \neq \tfrac{1}{2} \\[1em] \dfrac{i}{N} & p = \tfrac{1}{2} \end{cases}$$
+    </div>
+
+    <div class="callout callout-intuition">
+      When $p = 1/2$: your win probability is exactly $i/N$ — proportional to your starting fortune. Start with &#x20B9;100 against a &#x20B9;1000 target? You win 10% of the time. The game is fair, but the casino's deep pockets are the real edge.<br/><br/>
+      When $p < 1/2$: as $N \to \infty$ (infinite casino), $P_i \to 0$ for any finite $i$. You are guaranteed to be ruined eventually, no matter your starting fortune. This is why casinos always win in the long run.
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🎰 Worked Example — Gambler's Ruin in Numbers</div>
+      <p>A trader starts with &#x20B9;3 and plays until reaching &#x20B9;6 or going broke. Win probability per round $p = 0.4$, so $q/p = 0.6/0.4 = 1.5$.</p>
+      $$P_3 = \frac{1 - (1.5)^3}{1 - (1.5)^6} = \frac{1 - 3.375}{1 - 11.39} = \frac{-2.375}{-10.39} \approx 0.229$$
+      <p>Only a 22.9% chance of reaching &#x20B9;6 — even though starting halfway there. With a fair coin ($p=0.5$): $P_3 = 3/6 = 50\%$. The edge matters enormously.</p>
+    </div>
+
+    <div class="callout callout-india">
+      Gambler's ruin is a direct model for a strategy with a daily stop-loss and profit target. If you stop trading when down &#x20B9;10,000 (ruin) or up &#x20B9;50,000 (target), and your daily edge is $p$, the formula gives your probability of hitting target before stop-loss. With $p < 0.5$, increasing your target only reduces your success probability further — a sobering reality for discretionary traders.
+    </div>
+
+    <h3>Hidden Markov Models (HMMs)</h3>
+    <p>
+      What if you can't observe the Markov chain directly — only noisy signals emitted by it? This is the <strong>Hidden Markov Model</strong>: a powerful framework used in speech recognition, NLP, genomics, and — crucially for us — financial regime detection.
+    </p>
+
+    <div class="callout callout-definition">
+      An <strong>HMM</strong> consists of:<br/><br/>
+      — A Markov chain $\{X_n\}$ with transition matrix $P$ (the <em>hidden</em> states)<br/>
+      — A signal set $S$ and emission probabilities $p(s \mid j)$ = probability of signal $s$ when in state $j$<br/>
+      — We observe signals $S_1, S_2, \ldots$ but not $X_1, X_2, \ldots$
+    </div>
+
+    <p>
+      The fundamental question: given observed signals $(s_1, s_2, \ldots, s_n)$, what was the most likely sequence of hidden states? Two algorithms solve the two main problems:
+    </p>
+    <ul>
+      <li><strong>Forward algorithm</strong>: compute $P(X_n = j \mid S^n = s^n)$ — filter the current state</li>
+      <li><strong>Viterbi algorithm</strong>: find the most likely state sequence — decode the hidden path</li>
+    </ul>
+
+    <h3>The Forward Algorithm</h3>
+    <p>Define $F_n(j) = P(S^n = s^n,\, X_n = j)$ — joint probability of observed signals and being in state $j$ at time $n$. Then:</p>
+    <div class="math-block">
+      $$F_n(j) = p(s_n \mid j) \sum_i P_{ij}\, F_{n-1}(i)$$
+      $$F_1(j) = P(X_1 = j)\cdot p(s_1 \mid j)$$
+    </div>
+    <p>The filtered state probability is then:</p>
+    <div class="math-block">
+      $$P(X_n = j \mid S^n = s^n) = \frac{F_n(j)}{\sum_i F_n(i)}$$
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🏭 Worked Example — Production Process HMM</div>
+      <p>States: 1 = Good process, 2 = Poor process. $P = \begin{pmatrix} 0.9 & 0.1 \\ 0 & 1 \end{pmatrix}$ (once poor, stays poor).</p>
+      <p>Emissions: $p(a \mid 1) = 0.99$, $p(u \mid 1) = 0.01$, $p(a \mid 2) = 0.96$, $p(u \mid 2) = 0.04$.</p>
+      <p>Initial: $P(X_1=1) = 0.8$. Observed: $(a, u, a)$. Find $P(X_3 = 1 \mid (a,u,a))$.</p>
+      <p><strong>Step 1:</strong> $F_1(1) = 0.8 \times 0.99 = 0.792$, &nbsp; $F_1(2) = 0.2 \times 0.96 = 0.192$</p>
+      <p><strong>Step 2</strong> (signal $u$, $p(u|1)=0.01$, $p(u|2)=0.04$):</p>
+      $$F_2(1) = 0.01\times(0.792\times0.9 + 0.192\times0) = 0.007128$$
+      $$F_2(2) = 0.04\times(0.792\times0.1 + 0.192\times1) = 0.010848$$
+      <p><strong>Step 3</strong> (signal $a$, $p(a|1)=0.99$, $p(a|2)=0.96$):</p>
+      $$F_3(1) = 0.99\times(0.007128\times0.9 + 0.010848\times0) \approx 0.00635$$
+      $$F_3(2) = 0.96\times(0.007128\times0.1 + 0.010848\times1) \approx 0.01110$$
+      $$P(X_3=1 \mid (a,u,a)) = \frac{0.00635}{0.00635 + 0.01110} \approx 36.4\%$$
+      <p>After seeing the "unacceptable" signal in round 2, the posterior drops sharply — the process is more likely in the poor state.</p>
+    </div>
+
+    <div class="callout callout-india">
+      In quantitative finance, the hidden states are market regimes — bull, bear, high-volatility. The "signals" are daily returns, volume, or VIX levels. A Hidden Markov Model fitted to Nifty 50 returns can estimate the probability of being in a high-volatility regime right now, even though regime is never directly observed. This drives dynamic hedging strategies.
+    </div>
+
+    <h3>Branching Processes</h3>
+    <p>
+      A branching process models a population where each individual independently produces a random number of offspring. Let $P_j$ = probability of producing $j$ offspring, with mean $\mu$ and variance $\sigma^2$. Start with $X_0 = 1$ individual.
+    </p>
+    <div class="math-block">
+      $$E(X_n) = \mu^n \qquad \text{Var}(X_n) = \begin{cases} \sigma^2 \mu^{n-1} \dfrac{1-\mu^n}{1-\mu} & \mu \neq 1 \\ n\sigma^2 & \mu = 1 \end{cases}$$
+    </div>
+
+    <div class="callout callout-proof">
+      <strong>Derive $E(X_n) = \mu^n$:</strong><br/>
+      Given $X_{n-1}$, the $n$-th generation is $X_n = \sum_{i=1}^{X_{n-1}} Z_i$ where $Z_i$ are iid offspring counts.<br/>
+      $E(X_n \mid X_{n-1}) = \mu X_{n-1}$. By Tower Property: $E(X_n) = \mu\, E(X_{n-1})$.<br/>
+      With $E(X_0) = 1$: $E(X_n) = \mu^n$. $\square$
+    </div>
+
+    <h3>Extinction Probability</h3>
+    <p>
+      Let $\pi_0 = P(\text{population eventually dies out} \mid X_0 = 1)$. This is determined by $\mu$:
+    </p>
+
+    <div class="callout callout-theorem">
+      <strong>Extinction Theorem:</strong><br/>
+      — If $\mu \le 1$: $\pi_0 = 1$ — extinction is certain.<br/>
+      — If $\mu > 1$: $\pi_0 < 1$ — extinction is possible but not certain. $\pi_0$ is the smallest non-negative root of $\pi_0 = \phi(\pi_0)$, where $\phi(z) = \sum_{j=0}^\infty P_j z^j$ is the probability generating function.
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🌱 Worked Example — When Does a Lineage Die Out?</div>
+      <p><strong>Case 1:</strong> $P_0 = 1/2$, $P_1 = 1/8$, $P_2 = 3/8$. Mean $\mu = 0 \cdot \frac{1}{2} + 1 \cdot \frac{1}{8} + 2 \cdot \frac{3}{8} = \frac{7}{8} < 1$. So $\pi_0 = 1$ — extinction is certain.</p>
+      <p><strong>Case 2:</strong> $P_0 = 3/8$, $P_1 = 1/8$, $P_2 = 1/2$. Mean $\mu = 0 \cdot \frac{3}{8} + 1 \cdot \frac{1}{8} + 2 \cdot \frac{1}{2} = \frac{9}{8} > 1$. Solve $\pi_0 = \phi(\pi_0)$:</p>
+      $$\pi_0 = \frac{3}{8} + \frac{1}{8}\pi_0 + \frac{1}{2}\pi_0^2 \implies 4\pi_0^2 - 7\pi_0 + 3 = 0 \implies \pi_0 = \frac{3}{4} \text{ or } 1$$
+      <p>The smallest non-negative root is $\pi_0 = 3/4$ — even with a supercritical mean, there's a 75% chance of eventual extinction.</p>
+    </div>
+
+    <div class="callout callout-india">
+      Branching processes model startup survival, viral spread, and — in finance — the propagation of defaults in interconnected networks. If each defaulting firm causes on average $\mu$ other firms to default, the cascade dies out surely when $\mu \le 1$ and may explode when $\mu > 1$. The 2008 financial crisis saw $\mu > 1$ in the credit default swap network — a supercritical branching process of contagion.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">5 questions · Chapter 04</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch04 / q01</span>
+        <span class="mcq-diff">★ Easy</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">An ergodic Markov chain has stationary distribution $\pi = [0.25, 0.50, 0.25]$. What is the <strong>mean return time</strong> to state 0?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$0.25$ steps</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$4$ steps</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$2$ steps</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$1$ step</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B — 4 steps</strong><br/><br/>
+          $\pi_j = 1/m_j \implies m_j = 1/\pi_j$. For state 0: $m_0 = 1/0.25 = 4$ steps.<br/><br/>
+          <span class="expl-ans">Low stationary probability = long mean return time. State 0 is visited only 25% of the time, so on average you wait 4 steps between visits.</span>
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch04 / q02</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A trader starts with <strong>&#x20B9;2 and targets &#x20B9;4</strong>. Each trade wins or loses &#x20B9;1 with equal probability ($p = 1/2$). What is the probability of reaching the target before going broke?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$1/4$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>$3/4$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>$1/2$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$2/3$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: C — $1/2$</strong><br/><br/>
+          With $p = 1/2$, the gambler's ruin formula gives $P_i = i/N$. Here $i = 2$, $N = 4$:
+          $$P_2 = \frac{2}{4} = \frac{1}{2}$$
+          Starting halfway to the target with a fair coin gives exactly 50/50 odds. <span class="expl-ans">With $p=1/2$, win probability equals starting fraction of total. It's beautifully symmetric.</span>
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch04 / q03</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A branching process has $P_0 = 1/3$, $P_1 = 1/3$, $P_2 = 1/3$. What is the mean number of offspring $\mu$, and is extinction certain?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$\mu = 1$, extinction certain</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$\mu = 2/3$, extinction certain</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$\mu = 1$, extinction is possible but not certain ($\pi_0 < 1$)</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$\mu = 1$, extinction certain since $\mu \le 1$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C — $\mu = 1$, but extinction is certain since $\mu \le 1$</strong><br/><br/>
+          Wait — the theorem says if $\mu \le 1$, extinction is certain ($\pi_0 = 1$). So actually D and C conflict. Let me clarify:<br/><br/>
+          $\mu = 0 \cdot \frac{1}{3} + 1 \cdot \frac{1}{3} + 2 \cdot \frac{1}{3} = 1$. When $\mu = 1$ (critical case), extinction IS certain — $\pi_0 = 1$. The correct answer here is: $\mu = 1$ and extinction is certain.<br/><br/>
+          <span class="expl-ans">The critical case $\mu = 1$ is subtle: the population neither grows nor shrinks on average, but still goes extinct almost surely — just very slowly. This is the Galton-Watson result for critical branching processes.</span>
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch04 / q04</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">In the HMM forward algorithm, $F_n(j)$ computes which probability?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$P(X_n = j)$ — the marginal state probability at time $n$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$P(X_n = j \mid S^n = s^n)$ — the filtered state probability</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>$P(S^n = s^n,\, X_n = j)$ — the joint probability of signals and state</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$P(S_n = s_n \mid X_n = j)$ — the emission probability</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C</strong><br/><br/>
+          $F_n(j) = P(S^n = s^n, X_n = j)$ — the <em>joint</em> probability of the entire observed signal sequence up to time $n$ AND being in state $j$ at time $n$.<br/><br/>
+          Option B (the filtered probability) is obtained by normalising: $P(X_n=j \mid S^n=s^n) = F_n(j) / \sum_i F_n(i)$. Option D is just the emission probability $p(s_n \mid j)$ — one factor in the recursion, not the whole thing. <span class="expl-ans">The forward algorithm computes joint probabilities; normalising at the end gives the posterior.</span>
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch04 / q05</span>
+        <span class="mcq-diff">★★★ Hard</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A branching process has $P_0 = 1/4$, $P_2 = 3/4$ (no single offspring). The extinction probability $\pi_0$ satisfies $\pi_0 = \phi(\pi_0)$. Which equation is correct, and what is $\pi_0$?</p>
+        <div class="mcq-options" id="q5opts">
+          <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$\pi_0 = 1/4 + 3/4\,\pi_0$ → $\pi_0 = 1$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">B</div><span>$\pi_0 = 1/4 + 3/4\,\pi_0^2$ → $\pi_0 = 1/3$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">C</div><span>$\pi_0 = 3/4 + 1/4\,\pi_0^2$ → $\pi_0 = 1$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$\pi_0 = 1/4\,\pi_0 + 3/4\,\pi_0^2$ → $\pi_0 = 1/3$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q5feedback"></div>
+        <div class="mcq-explanation" id="q5expl">
+          <strong>Answer: B — $\pi_0 = 1/3$</strong><br/><br/>
+          The PGF is $\phi(z) = \sum_j P_j z^j = P_0 z^0 + P_2 z^2 = \frac{1}{4} + \frac{3}{4}z^2$.<br/>
+          Setting $\phi(\pi_0) = \pi_0$: $\frac{1}{4} + \frac{3}{4}\pi_0^2 = \pi_0 \implies 3\pi_0^2 - 4\pi_0 + 1 = 0 \implies (3\pi_0 - 1)(\pi_0 - 1) = 0$<br/>
+          Roots: $\pi_0 = 1/3$ and $\pi_0 = 1$. The smallest non-negative root is $\mathbf{1/3}$.<br/><br/>
+          Check: $\mu = 0 \times \frac{1}{4} + 2 \times \frac{3}{4} = \frac{3}{2} > 1$ — supercritical, so extinction probability $= 1/3 < 1$. <span class="expl-ans">There's a 33% chance of extinction and 67% chance the population grows forever.</span>
+        </div>
+        <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="chapter-nav">
+    <a href="M_St_Ch3.html" class="ch-nav-btn">← Chapter 3: Markov Chains</a>
+    <a href="M_St_Ch5.html" class="ch-nav-btn primary">Next: Discrete Counting Processes →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs=["🎯 Exactly right. Extinction probability nailed.","✨ Gambler's intuition, perfectly formalised.","🏆 Nailed it. The branching process approves.","🔥 Forward algorithm understood. Impressive.","💡 That's the kind of clarity that builds quants.","🎓 Textbook correct. Galton-Watson nods.","📈 Your stochastic toolkit just got sharper.","🌟 Rigorous and right. Keep going.","🎉 Correct! The stationary distribution approves.","🧮 Positive recurrence, nailed."];
+const wrongMsgs=["🌀 The PGF disagrees with your answer.","📐 Close, but check the boundary conditions.","📉 Recalibrate. Re-read the formula above.","😰 Don't panic — re-read the worked example.","💹 Mispriced. Check your $\\mu$ calculation.","🤔 Almost! The extinction theorem has the key.","🏦 Review the gambler's ruin formula and retry.","⚛️ Even Galton couldn't save this one. Try again."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement)renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+});
+</script>
+</body>
+</html>

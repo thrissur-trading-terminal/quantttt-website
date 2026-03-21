@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 6: Poisson Processes — M_St — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;
+  --navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;
+  --sidebar-w:280px;--topbar-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:820px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.content-body ul{margin:0.5rem 0 1.2rem 1.5rem;}
+.content-body ul li{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:0.3rem;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Key Result';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'📈 Trading Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-proof::before{content:'∎ Derivation';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+
+/* BRP vs PCP comparison table */
+.compare-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.86rem;}
+.compare-table th{background:var(--navy);color:white;padding:0.65rem 1rem;text-align:left;font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.04em;}
+.compare-table th:first-child{background:var(--navy2);}
+.compare-table td{padding:0.65rem 1rem;border-bottom:1px solid var(--border);color:#2a2a3e;line-height:1.6;vertical-align:top;}
+.compare-table td:first-child{font-weight:600;color:var(--navy);background:rgba(45,37,96,0.03);font-size:0.82rem;}
+.compare-table tr:last-child td{border-bottom:none;}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.compare-table{font-size:0.78rem;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_St.html">Stochastic Processes</a> › <span class="bc-cur">Chapter 6</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:50%"></div></div>
+      <span class="tb-prog-lbl">6 / 12</span>
+    </div>
+    <a href="M_St.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-section-label">Stochastic Processes</div>
+  <a class="sidebar-item done" href="M_St_Ch1.html"><div class="si-num">&#x2713;</div>Probability Foundations<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch2.html"><div class="si-num">&#x2713;</div>Distributions, Expectation & Limits<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch3.html"><div class="si-num">&#x2713;</div>Markov Chains<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch4.html"><div class="si-num">&#x2713;</div>DTMC II — Limiting Behaviour<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_St_Ch5.html"><div class="si-num">&#x2713;</div>Bernoulli Random Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_St_Ch6.html"><div class="si-num">6</div>Poisson Processes<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch7.html"><div class="si-num">7</div>CTMC I — Birth & Death Processes<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch8.html"><div class="si-num">8</div>CTMC II — Kolmogorov Equations<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch9.html"><div class="si-num">9</div>Renewal Theory<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch10.html"><div class="si-num">10</div>Queueing Theory<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch11.html"><div class="si-num">11</div>Martingales & Brownian Motion<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_St_Ch12.html"><div class="si-num">12</div>Option Pricing & Black-Scholes<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num-label">Chapter 06 of 12</span>
+    </div>
+    <h1 class="chapter-title">Poisson Processes</h1>
+    <p class="chapter-subtitle">The Bernoulli process discretised time. The Poisson process lets time flow continuously — and everything clicks into place. Inter-arrivals become exponential, cumulative times become Erlang, counts become Poisson. This is the most important arrival model in all of applied probability.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>From BRP to PCP: The Key Idea</h3>
+    <p>
+      Take a BRP$(p)$ and shrink the slot size to $\Delta t$. To keep the arrival rate constant at $\lambda$ events per unit time, set $p = \lambda \Delta t$. Now let $\Delta t \to 0$. The resulting continuous-time process is the <strong>Poisson Counting Process</strong> PCP$(\lambda)$.
+    </p>
+
+    <div class="callout callout-intuition">
+      The Poisson process is what you get when you take infinitely many infinitesimally small Bernoulli slots, each with vanishingly small probability $\lambda \Delta t$ of an arrival. The magic is that this limit is well-defined and has beautiful properties — and it's the natural model whenever arrivals are rare, random, and independent.
+    </div>
+
+    <h3>Deriving the Poisson PMF from ODEs</h3>
+    <p>Let $P_n(t) = P(N(t) = n)$. In a small interval $[t, t+\Delta t]$, at most one arrival occurs, with probability $\lambda \Delta t$. This gives the recurrence:</p>
+
+    <div class="math-block">
+      $$P_n(t+\Delta t) = P_n(t)(1-\lambda\Delta t) + P_{n-1}(t)(\lambda\Delta t), \quad n \ge 1$$
+    </div>
+
+    <p>Rearranging and taking $\Delta t \to 0$:</p>
+
+    <div class="callout callout-proof">
+      <strong>Coupled ODEs:</strong>
+      $$\frac{dP_n(t)}{dt} = -\lambda P_n(t) + \lambda P_{n-1}(t), \quad n \ge 1$$
+      $$\frac{dP_0(t)}{dt} = -\lambda P_0(t), \quad n = 0$$
+
+      <strong>Solve:</strong> From the $n=0$ equation with $P_0(0) = 1$: $P_0(t) = e^{-\lambda t}$.<br/><br/>
+      For $n=1$: $\frac{dP_1}{dt} = -\lambda P_1 + \lambda e^{-\lambda t}$. Multiply by integrating factor $e^{\lambda t}$:
+      $$\frac{d}{dt}(e^{\lambda t} P_1) = \lambda \implies e^{\lambda t} P_1(t) = \lambda t \implies P_1(t) = \lambda t\, e^{-\lambda t}$$
+      Continuing by induction:
+      $$\boxed{P_n(t) = \frac{e^{-\lambda t}(\lambda t)^n}{n!}} \qquad \Rightarrow \qquad N(t) \sim \text{Poisson}(\lambda t) \quad \square$$
+    </div>
+
+    <h3>Three Defining Properties</h3>
+
+    <div class="callout callout-definition">
+      A process $\{N(t), t \ge 0\}$ is a <strong>Poisson Counting Process</strong> PCP$(\lambda)$ if:<br/><br/>
+      <strong>(1) Initialization:</strong> $N(0) = 0$ almost surely.<br/><br/>
+      <strong>(2) Independent Increments:</strong> For $0 \le t_0 < t_1 < \cdots < t_k$, the increments $N(t_1)-N(t_0),\; N(t_2)-N(t_1),\; \ldots$ are mutually independent.<br/><br/>
+      <strong>(3) Stationary Increments:</strong> $N(t+s) - N(t) \sim \text{Poisson}(\lambda s)$ for all $t \ge 0, s > 0$ — the distribution depends only on the length $s$, not the starting time $t$.
+    </div>
+
+    <div class="callout callout-india">
+      Every option trader's best friend: on a liquid index like Nifty 50, trades arrive as approximately a PCP. The rate $\lambda$ spikes around FOMC announcements, RBI policy days, or expiry. The independent increments property means past trade counts don't predict future counts — each window is a fresh start. This is why order flow is modelled as Poisson before adding autocorrelation (Hawkes processes).
+    </div>
+
+    <h3>Inter-Arrival Times are Exponential</h3>
+    <p>Let $T_1$ = time of first arrival. Then:</p>
+    <div class="math-block">
+      $$P(T_1 > t) = P(N(t) = 0) = e^{-\lambda t} \qquad \Rightarrow \qquad T_1 \sim \text{Exponential}(\lambda)$$
+    </div>
+
+    <div class="callout callout-theorem">
+      <strong>Inter-arrivals are iid Exponential$(\lambda)$:</strong><br/>
+      $$P(T_1 > t,\; T_2 > s) = P(N(t)=0) \cdot P(N(t+s)-N(t)=0) = e^{-\lambda t} \cdot e^{-\lambda s} = P(T_1>t) \cdot P(T_2>s)$$
+      So $T_1 \perp\!\!\!\perp T_2$, and by the same argument $T_1, T_2, T_3, \ldots$ are iid Exp$(\lambda)$.
+    </div>
+
+    <h3>$k$-th Arrival Time: Erlang (Gamma) Distribution</h3>
+    <p>
+      $S_k = T_1 + T_2 + \cdots + T_k$ — the time of the $k$-th arrival. Since $T_i$ are iid Exp$(\lambda)$:
+    </p>
+    <div class="math-block">
+      $$f_{S_k}(s) = \frac{\lambda e^{-\lambda s}(\lambda s)^{k-1}}{(k-1)!}, \quad s \ge 0 \qquad S_k \sim \text{Gamma}(k, \lambda) = k\text{-Erlang}(\lambda)$$
+    </div>
+    <p>The duality from BRP carries over:</p>
+    <div class="math-block">
+      $$\{N(t) \ge k\} = \{S_k \le t\} \qquad \{N(t) = k\} = \{S_k \le t < S_{k+1}\}$$
+    </div>
+
+    <h3>Conditional Distribution of Arrival Times</h3>
+    <p>Given that exactly one arrival occurred in $[0, s]$, when did it arrive?</p>
+
+    <div class="callout callout-proof">
+      $$P(T_1 \le t \mid N(s) = 1) = \frac{P(N(t)=1,\; N(s)-N(t)=0)}{P(N(s)=1)}$$
+      $$= \frac{e^{-\lambda t}(\lambda t) \cdot e^{-\lambda(s-t)}}{\lambda s\, e^{-\lambda s}} = \frac{t}{s}$$
+      So $T_1 \mid N(s)=1 \sim \text{Uniform}(0, s)$. The arrival is uniformly distributed over the interval — no position is more likely than another.
+    </div>
+
+    <div class="callout callout-intuition">
+      Given $N(s) = 2$ (two arrivals in $[0,s]$), the two arrival times are distributed as the order statistics of two independent Uniform$(0,s)$ random variables. This elegant result — Poisson arrivals are "uniformly scattered" given the count — is one of the deepest properties of the Poisson process.
+    </div>
+
+    <h3>Splitting and Merging</h3>
+
+    <div class="callout callout-theorem">
+      <strong>Splitting:</strong> Take PCP$(\lambda)$ and independently retain each arrival with probability $p$. Then:
+      $$\text{Retained} \sim \text{PCP}(p\lambda) \qquad \text{Discarded} \sim \text{PCP}((1-p)\lambda) \qquad \text{(independent)}$$
+
+      <strong>Merging:</strong> Two independent PCP$(\lambda_1)$ and PCP$(\lambda_2)$:
+      $$\text{Merged process} \sim \text{PCP}(\lambda_1 + \lambda_2)$$
+      Rates simply add — no inclusion-exclusion needed (unlike BRP), because simultaneous arrivals have probability zero in continuous time.
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">💡 Worked Example — Three Light Bulbs</div>
+      <p>Three bulbs fail independently: $T_i \sim \text{Exp}(\lambda)$. Find the expected time until all three have failed.</p>
+      <p>Model as three independent PCP$(\lambda)$ processes merged. The <strong>first</strong> failure comes from PCP$(3\lambda)$, so $T_A \sim \text{Exp}(3\lambda)$, $E[T_A] = \frac{1}{3\lambda}$.</p>
+      <p>After the first failure, two bulbs remain — a PCP$(2\lambda)$. By the memoryless property, $T_B \sim \text{Exp}(2\lambda)$, $E[T_B] = \frac{1}{2\lambda}$.</p>
+      <p>After the second failure, one bulb remains. $T_C \sim \text{Exp}(\lambda)$, $E[T_C] = \frac{1}{\lambda}$.</p>
+      <p>Total expected time: $W = T_A + T_B + T_C$, so:</p>
+      $$E[W] = \frac{1}{3\lambda} + \frac{1}{2\lambda} + \frac{1}{\lambda} = \frac{11}{6\lambda}$$
+      <p>The memoryless property of exponential is the key — after each failure, the remaining system starts fresh.</p>
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🚗 Worked Example — Crossing a Busy Road</div>
+      <p>Cars arrive as PCP$(\lambda)$. You cross when you find a gap of length $\tau$ with no car. $N$ = number of cars seen before crossing.</p>
+      <p>$\{N = n\}$ means the first $n$ inter-arrival times are less than $\tau$ (you can't cross) and the $(n+1)$-th is at least $\tau$ (you cross). Each $T_i \sim \text{Exp}(\lambda)$, so:</p>
+      $$P(T_i < \tau) = 1 - e^{-\lambda\tau} \quad P(T_i \ge \tau) = e^{-\lambda\tau}$$
+      <p>So $N \sim \text{Geometric}(e^{-\lambda\tau})$ and by Wald's Lemma:</p>
+      $$E[N] = \frac{1 - e^{-\lambda\tau}}{e^{-\lambda\tau}} = e^{\lambda\tau} - 1$$
+      <p>If $\lambda = 1$ car/min and you need $\tau = 2$ min gap: $E[N] = e^2 - 1 \approx 6.4$ cars to watch before crossing.</p>
+    </div>
+
+    <h3>Wald's Lemma</h3>
+    <p>When you sum a random number of iid random variables, how do you find the expected total?</p>
+
+    <div class="callout callout-theorem">
+      <strong>Wald's Lemma:</strong> Let $X_1, X_2, \ldots$ be iid with $E[X] < \infty$. Let $N \ge 1$ be an independent random variable with $E[N] < \infty$. Then:
+      $$E\!\left[\sum_{i=1}^N X_i\right] = E[N] \cdot E[X]$$
+    </div>
+
+    <div class="callout callout-proof">
+      Condition on $N$: $E[S_N \mid N=n] = E[X_1 + \cdots + X_n] = nE[X]$. So $E[S_N \mid N] = N \cdot E[X]$. By the Tower Property: $E[S_N] = E[N \cdot E[X]] = E[N] \cdot E[X]$. $\square$
+    </div>
+
+    <div class="callout callout-india">
+      Wald's Lemma is the foundation of risk-neutral pricing under random stopping times. A strategy that trades $N$ times, where $N$ is random and each trade has expected PnL $\mu$, has total expected PnL $E[N] \cdot \mu$ — provided $N$ is independent of trade outcomes. When $N$ depends on outcomes (e.g., "keep trading until up &#x20B9;X"), the lemma no longer applies and optional stopping theorems (Chapter 11) are needed.
+    </div>
+
+    <h3>BRP vs PCP: The Complete Comparison</h3>
+
+    <table class="compare-table">
+      <tr><th>Property</th><th>BRP$(p)$ — Discrete Time</th><th>PCP$(\lambda)$ — Continuous Time</th></tr>
+      <tr><td>Coin toss</td><td>Bernoulli$(p)$ at each slot</td><td>Bernoulli$(\lambda\Delta t)$ as $\Delta t \to 0$</td></tr>
+      <tr><td>Inter-arrival $T_k$</td><td>Geometric$(p)$, iid</td><td>Exponential$(\lambda)$, iid</td></tr>
+      <tr><td>$k$-th arrival $S_k$</td><td>$k$-Pascal (Negative Binomial)</td><td>$k$-Erlang = Gamma$(k,\lambda)$</td></tr>
+      <tr><td>Counting $N(t)$</td><td>Binomial$(t, p)$</td><td>Poisson$(\lambda t)$</td></tr>
+      <tr><td>Dynamics</td><td>$P_n(t+1) = p\,P_{n-1}(t) + (1-p)\,P_n(t)$</td><td>$\dot{P}_n = -\lambda P_n + \lambda P_{n-1}$</td></tr>
+      <tr><td>Splitting</td><td>BRP$(pq)$ + BRP$(p(1-q))$</td><td>PCP$(p\lambda)$ + PCP$((1-p)\lambda)$</td></tr>
+      <tr><td>Merging</td><td>BRP$(p+q-pq)$</td><td>PCP$(\lambda_1+\lambda_2)$</td></tr>
+    </table>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">5 questions · Chapter 06</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch06 / q01</span>
+        <span class="mcq-diff">★ Easy</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Trades on Nifty 50 arrive as PCP$(\lambda = 5)$ per second. What is the probability of <strong>zero trades</strong> in a 2-second window?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$e^{-5}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$e^{-10}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$5e^{-5}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$1 - e^{-10}$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: B — $e^{-10}$</strong><br/><br/>
+          $N(2) \sim \text{Poisson}(\lambda \cdot t) = \text{Poisson}(5 \times 2) = \text{Poisson}(10)$. So:
+          $$P(N(2) = 0) = \frac{e^{-10}(10)^0}{0!} = e^{-10} \approx 0.0000454$$
+          Option A uses $\lambda t = 5$ instead of $\lambda t = 10$ — confusing $\lambda$ with $\lambda t$. Option D is the CDF complement — probability of at least one trade. <span class="expl-ans">Always compute $\lambda t$ first: the Poisson parameter scales with the window length.</span>
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch06 / q02</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Orders arrive as PCP$(4)$ per minute. Each order is independently a market order with probability $0.3$, limit order otherwise. What is the arrival rate of <strong>market orders</strong>?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>PCP$(0.3)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>PCP$(1.2)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>PCP$(4)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>PCP$(2.8)$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B — PCP$(1.2)$</strong><br/><br/>
+          By the splitting theorem: market orders $\sim$ PCP$(p\lambda) = $ PCP$(0.3 \times 4) = $ PCP$(1.2)$. Limit orders $\sim$ PCP$(0.7 \times 4) = $ PCP$(2.8)$. The two streams are independent. <span class="expl-ans">Splitting a Poisson process always produces Poisson subprocesses — this is why the Poisson process is so tractable.</span>
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch06 / q03</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Two independent PCP processes — retail orders at rate $\lambda_1 = 3$ and algorithmic orders at rate $\lambda_2 = 7$ — are merged. What is the expected time to the <strong>first merged arrival</strong>?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$1/3$ minutes</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$1/7$ minutes</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$1/10$ minutes</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$1/4$ minutes</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C — $1/10$ minutes</strong><br/><br/>
+          Merged process $\sim$ PCP$(\lambda_1 + \lambda_2) = $ PCP$(10)$. First arrival $\sim$ Exp$(10)$, so $E[T_1] = 1/10$ minutes = 6 seconds.<br/><br/>
+          This is the minimum of two independent exponentials: $\min(\text{Exp}(3), \text{Exp}(7)) \sim \text{Exp}(10)$. <span class="expl-ans">When merging, rates add. The combined system processes arrivals faster — the first event from either source comes much sooner than from either alone.</span>
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch06 / q04</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">Given that exactly <strong>one trade</strong> occurred in a 10-second window in a PCP$(\lambda)$ process, the conditional distribution of the trade time is:</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Exponential$(\lambda)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>Exponential$(1/10)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>Uniform$(0, 10)$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Poisson$(\lambda \cdot 10)$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: C — Uniform$(0, 10)$</strong><br/><br/>
+          We showed: $P(T_1 \le t \mid N(s) = 1) = t/s$. This is the CDF of Uniform$(0, s)$. With $s = 10$, the trade time is Uniform$(0, 10)$.<br/><br/>
+          <span class="expl-ans">Given a fixed count, Poisson arrivals scatter uniformly — no part of the window is more likely than another. This "uniformly scattered" property is unique to the Poisson process.</span>
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">stochastic / ch06 / q05</span>
+        <span class="mcq-diff">★★★ Hard</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A strategy executes a <strong>random number $N$ of trades</strong>, where $N \sim \text{Geometric}(0.1)$ (i.e., $E[N] = 10$). Each trade has an independent PnL with mean $\mu = 500$ and standard deviation $\sigma = 2000$. By Wald's Lemma, the expected <strong>total PnL</strong> is:</p>
+        <div class="mcq-options" id="q5opts">
+          <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>500</span></div>
+          <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>5000 only if trades are normal</span></div>
+          <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>5000, regardless of the PnL distribution</span></div>
+          <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>Cannot be determined without the full distribution of $N$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q5feedback"></div>
+        <div class="mcq-explanation" id="q5expl">
+          <strong>Answer: C — 5000, regardless of distribution</strong><br/><br/>
+          By Wald's Lemma: $E[S_N] = E[N] \cdot E[X] = 10 \times 500 = 5000$.<br/><br/>
+          The key conditions: (i) $X_i$ are iid, (ii) $N$ is independent of the $X_i$'s, (iii) both $E[N]$ and $E[X]$ are finite. No normality assumption needed — Wald's Lemma works for any distribution satisfying these conditions.<br/><br/>
+          <span class="expl-ans">Wald's Lemma is powerful precisely because it only needs means — not the full distributions. The total expected PnL is always (expected trades) × (expected PnL per trade), as long as $N$ doesn't depend on individual trade outcomes.</span>
+        </div>
+        <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="chapter-nav">
+    <a href="M_St_Ch5.html" class="ch-nav-btn">← Chapter 5: Bernoulli Random Process</a>
+    <a href="M_St_Ch7.html" class="ch-nav-btn primary">Next: CTMC I — Birth &amp; Death Processes →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs=["🎯 Exactly right. Poisson approves.","✨ Exponential inter-arrivals, perfectly applied.","🏆 Nailed it. The rate parameter bows.","🔥 Splitting theorem understood. Clean.","💡 That's the kind of clarity that builds quants.","🎓 Textbook correct. Wald's Lemma nods.","📈 Your stochastic toolkit just got sharper.","🌟 Rigorous and right. Keep going.","🎉 Correct! The counting function approves.","🧮 Merging rates, nailed."];
+const wrongMsgs=["🌀 The Poisson process disagrees.","📐 Close — check your $\\lambda t$ computation.","📉 Recalibrate. Re-read the ODE derivation.","😰 Don't panic — re-read the splitting theorem.","💹 Mispriced. Check your merging formula.","🤔 Almost! The uniform distribution is the key insight.","🏦 Review Wald's Lemma and retry.","⚛️ Even the memoryless property couldn't save that answer."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+window.addEventListener('load',()=>{
+  if(window.renderMathInElement)renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+});
+</script>
+</body>
+</html>
