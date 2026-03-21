@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 11: Named Continuous Distributions — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 11</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:37%"></div></div>
+      <span class="tb-prog-lbl">11 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch11.html"><div class="si-num">11</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12.html"><div class="si-num">12</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12b.html"><div class="si-num">12B</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch13.html"><div class="si-num">13</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch14.html"><div class="si-num">14</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch15.html"><div class="si-num">15</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 11 of 30</span>
+      </div>
+      <h1 class="chapter-title">Named Continuous Distributions</h1>
+      <p class="chapter-subtitle">Gamma, Beta, Laplace, Pareto, Cauchy, Weibull, Normal &#8212; the full zoo of continuous distributions that appear throughout probability, statistics, and quantitative finance. Each has a distinct shape, a distinct domain, and a reason to exist.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>The Gamma Distribution</h3>
+
+      <div class="callout callout-definition">
+        <strong>Gamma integral (essential background):</strong>
+        $$\Gamma(\alpha) = \int_0^\infty e^{-y}\, y^{\alpha-1}\, dy, \quad \alpha > 0$$
+        Key facts: $\Gamma(n) = (n-1)!$ when $n$ is a positive integer. $\Gamma\!\left(\tfrac{1}{2}\right) = \sqrt{\pi}$.
+      </div>
+
+      <div class="callout callout-definition">
+        $X \sim \Gamma(\lambda, \alpha)$ has PDF:
+        $$f(x) = \frac{\lambda^\alpha}{\Gamma(\alpha)}\, e^{-\lambda x}\, x^{\alpha-1}, \quad x > 0,\quad \lambda > 0,\quad \alpha > 0$$
+        <strong>Validity:</strong> Substitute $y = \lambda x$: the integral becomes $\frac{1}{\Gamma(\alpha)}\int_0^\infty e^{-y} y^{\alpha-1} dy = 1$. $\checkmark$
+        <br/><br/>
+        <strong>Special case:</strong> Exp$(\lambda)$ is $\Gamma(\lambda, 1)$ &#8212; set $\alpha=1$ and $\Gamma(1)=1$.
+      </div>
+
+      <div class="callout callout-theorem">
+        <strong>Reproductive Property:</strong> If $X_1 \sim \Gamma(\lambda,\alpha)$ and $X_2 \sim \Gamma(\lambda,\beta)$ are independent (same $\lambda$!):
+        $$X_1 + X_2 \sim \Gamma(\lambda,\, \alpha+\beta)$$
+      </div>
+
+      <div class="callout callout-proof">
+        Let $Z = X_1 + X_2$. The convolution integral:
+        $$f_Z(z) = \int_0^z \frac{\lambda^\alpha}{\Gamma(\alpha)}e^{-\lambda x}x^{\alpha-1} \cdot \frac{\lambda^\beta}{\Gamma(\beta)}e^{-\lambda(z-x)}(z-x)^{\beta-1}\,dx = \frac{\lambda^{\alpha+\beta}}{\Gamma(\alpha)\Gamma(\beta)}\,e^{-\lambda z}\int_0^z x^{\alpha-1}(z-x)^{\beta-1}\,dx$$
+        Substitute $y = x/z$, so $x = zy$, $dx = z\,dy$, limits $0 \to 1$:
+        $$= \frac{\lambda^{\alpha+\beta}}{\Gamma(\alpha)\Gamma(\beta)}\,e^{-\lambda z}\cdot z^{\alpha+\beta-1}\int_0^1 y^{\alpha-1}(1-y)^{\beta-1}\,dy = \frac{\lambda^{\alpha+\beta}}{\Gamma(\alpha)\Gamma(\beta)}\,e^{-\lambda z}\cdot z^{\alpha+\beta-1}\cdot B(\alpha,\beta)$$
+        Since $B(\alpha,\beta) = \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}$:
+        $$f_Z(z) = \frac{\lambda^{\alpha+\beta}}{\Gamma(\alpha+\beta)}\,e^{-\lambda z}\,z^{\alpha+\beta-1} \qquad \square$$
+        This is the $\Gamma(\lambda,\alpha+\beta)$ PDF. The $\alpha$-parameters add; $\lambda$ stays fixed.
+      </div>
+
+      <div class="callout callout-india">
+        In risk modelling: if claim sizes on an insurance portfolio follow independent Exp$(\lambda)$ distributions, the total of $n$ claims follows $\Gamma(\lambda, n)$. This is used directly in reinsurance pricing and VaR computation for loss aggregation.
+      </div>
+
+      <h3>The Beta Distribution</h3>
+
+      <p>The <strong>Beta function</strong> is the glue between Gamma distributions:</p>
+      $$B(\alpha,\beta) = \int_0^1 x^{\alpha-1}(1-x)^{\beta-1}\,dx = \frac{\Gamma(\alpha)\,\Gamma(\beta)}{\Gamma(\alpha+\beta)}$$
+
+      <div class="callout callout-definition">
+        <strong>Beta Type 1</strong> &#8212; $X \sim \beta_1(\alpha,\beta)$, support $[0,1]$:
+        $$f(x) = \frac{1}{B(\alpha,\beta)}\,x^{\alpha-1}(1-x)^{\beta-1}, \quad 0 \leq x \leq 1$$
+        <strong>Special case:</strong> $\beta_1(1,1)$ gives $f(x)=1$ on $[0,1]$ &#8212; the Uniform distribution. Proof: $B(1,1) = \frac{\Gamma(1)\Gamma(1)}{\Gamma(2)} = \frac{1\cdot 1}{1!} = 1$.
+      </div>
+
+      <div class="callout callout-definition">
+        <strong>Beta Type 2</strong> &#8212; $X \sim \beta_2(m,n)$, support $(0,\infty)$:
+        $$f(x) = \frac{1}{B(m,n)}\,\frac{x^{m-1}}{(1+x)^{m+n}}, \quad x > 0$$
+        Validity: substitute $y = \frac{1}{1+x}$; the integral transforms to $B(m,n)$. $\checkmark$
+      </div>
+
+      <div class="callout callout-intuition">
+        $\beta_1$ lives on $[0,1]$ &#8212; natural for modelling probabilities, proportions, and option deltas. $\beta_2$ lives on $(0,\infty)$ with a heavy tail &#8212; natural for ratios and odds. Together they cover the two most common support structures after the real line itself.
+      </div>
+
+      <h3>Laplace Distribution (Double Exponential)</h3>
+
+      <div class="callout callout-definition">
+        $$f(x) = \frac{1}{2}e^{-|x|}, \quad -\infty < x < \infty$$
+        <strong>Validity:</strong> $\int_{-\infty}^\infty \frac{1}{2}e^{-|x|}dx = 2 \cdot \frac{1}{2}\int_0^\infty e^{-x}dx = 1$. $\checkmark$
+        <br/><br/>
+        Note: $F(0) = \frac{1}{2}$ by symmetry. The generalised form with location $\theta$ and scale $\lambda$: $f(x) = \frac{\lambda}{2}e^{-\lambda|x-\theta|}$.
+      </div>
+
+      <div class="callout callout-intuition">
+        The Laplace is what you get when you stitch two exponential tails together at the origin. It has heavier tails than the Normal but lighter than the Cauchy. In finance it appears in models for daily returns &#8212; it captures the excess kurtosis (fat tails) that the Normal misses, without the pathological infinite-variance problem of the Cauchy.
+      </div>
+
+      <h3>Pareto Distribution</h3>
+
+      <div class="callout callout-definition">
+        Parameters $\alpha > 0$, $\sigma > 0$. Support $x > \sigma$:
+        $$f(x) = \alpha\,\frac{\sigma^\alpha}{x^{\alpha+1}}, \quad x > \sigma$$
+        $$F(x) = 1 - \left(\frac{\sigma}{x}\right)^\alpha, \quad x > \sigma$$
+        <strong>Validity:</strong> $\int_\sigma^\infty \alpha\sigma^\alpha x^{-(\alpha+1)}dx = \alpha\sigma^\alpha\left[\frac{x^{-\alpha}}{-\alpha}\right]_\sigma^\infty = \sigma^\alpha \cdot \sigma^{-\alpha} = 1$. $\checkmark$
+      </div>
+
+      <div class="callout callout-india">
+        The Pareto distribution is the mathematical expression of the 80/20 rule. In Indian equity markets: 20% of stocks account for 80% of total market cap movement. In options: the Pareto tail describes extreme loss events better than the Normal. The parameter $\alpha$ controls tail heaviness &#8212; smaller $\alpha$ means fatter tails and more extreme events.
+      </div>
+
+      <h3>Cauchy Distribution</h3>
+
+      <div class="callout callout-definition">
+        $X \sim C(\mu, \theta)$, support $\mathbb{R}$:
+        $$f(x) = \frac{\mu}{\pi}\,\frac{1}{\mu^2 + (x-\theta)^2}, \quad -\infty < x < \infty$$
+        Standard form $C(1,0)$: $f(x) = \frac{1}{\pi}\frac{1}{1+x^2}$.
+        <br/><br/>
+        <strong>Validity:</strong> $\int_{-\infty}^\infty \frac{1}{\pi}\frac{1}{1+x^2}dx = \frac{1}{\pi}[\arctan x]_{-\infty}^\infty = \frac{1}{\pi}\left(\frac{\pi}{2}-\left(-\frac{\pi}{2}\right)\right) = 1$. $\checkmark$
+      </div>
+
+      <div class="callout callout-theorem">
+        <strong>Reproductive Property:</strong> If $X, Y \sim C(1,0)$ are independent, then $X+Y \sim C(2,0)$ with $f(z) = \frac{2}{\pi}\frac{1}{4+z^2}$.
+      </div>
+
+      <div class="callout callout-warning">
+        The Cauchy has <strong>no finite mean and no finite variance</strong>. The usual law of large numbers fails &#8212; the sample mean of Cauchy variables does not converge. This makes the Cauchy the canonical "pathological" distribution in probability theory. It appears in physics as the Lorentz distribution describing spectral line shapes.
+      </div>
+
+      <h3>Weibull Distribution</h3>
+
+      <div class="callout callout-definition">
+        Parameter $c > 0$, support $x > 0$:
+        $$f(x) = c\,x^{c-1}\,e^{-x^c}$$
+        <strong>Validity:</strong> Substitute $y = x^c$, $dy = cx^{c-1}dx$: $\int_0^\infty cx^{c-1}e^{-x^c}dx = \int_0^\infty e^{-y}dy = 1$. $\checkmark$
+        <br/>
+        When $c=1$: reduces to Exp(1). Belongs to the exponential family.
+      </div>
+
+      <h3>The Normal Distribution</h3>
+
+      <div class="callout callout-definition">
+        $X \sim N(\mu, \sigma^2)$, parameters $\mu \in \mathbb{R}$, $\sigma^2 > 0$:
+        $$f(x) = \frac{1}{\sqrt{2\pi}\,\sigma}\,\exp\!\left(-\frac{(x-\mu)^2}{2\sigma^2}\right), \quad -\infty < x < \infty$$
+        <strong>Standard Normal:</strong> $N(0,1)$ with $\varphi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$.
+      </div>
+
+      <div class="callout callout-proof">
+        <strong>Validity of $N(0,1)$:</strong> Need $\int_{-\infty}^\infty e^{-x^2/2}dx = \sqrt{2\pi}$.
+        <br/><br/>
+        Since $e^{-x^2/2}$ is even: $= 2\int_0^\infty e^{-x^2/2}dx$.
+        Substitute $y = x^2$, $dy = 2x\,dx$, $dx = \frac{dy}{2\sqrt{y}}$:
+        $$= 2\int_0^\infty e^{-y/2}\,\frac{dy}{2\sqrt{y}} = \int_0^\infty e^{-y/2}\,y^{-1/2}\,dy$$
+        This is a Gamma integral with $\lambda = \frac{1}{2}$, $\alpha = \frac{1}{2}$:
+        $$= \frac{\Gamma(1/2)}{(1/2)^{1/2}} = \frac{\sqrt{\pi}}{1/\sqrt{2}} = \sqrt{2\pi} \qquad \square$$
+        For general $N(\mu,\sigma^2)$: substitute $z = \frac{x-\mu}{\sigma}$, $dx = \sigma\,dz$, integral reduces to the standard normal case $= 1$. $\square$
+      </div>
+
+      <h3>A Beautiful Connection: Normal $\to$ Chi-Squared $\to$ Gamma</h3>
+
+      <div class="callout callout-theorem">
+        If $X \sim N(0,1)$, then $X^2 \sim \Gamma\!\left(\tfrac{1}{2}, \tfrac{1}{2}\right) = \chi^2_{(1)}$.
+        <br/><br/>
+        If $X_1, X_2, \ldots, X_n$ are independent $N(0,1)$, then:
+        $$X_1^2 + X_2^2 + \cdots + X_n^2 \sim \Gamma\!\left(\tfrac{1}{2},\,\tfrac{n}{2}\right) = \chi^2_{(n)}$$
+      </div>
+
+      <div class="callout callout-proof">
+        Let $Y = X^2$. The CDF: $F_Y(y) = P(X^2 \leq y) = P(-\sqrt{y} \leq X \leq \sqrt{y}) = \frac{1}{\sqrt{2\pi}}\int_{-\sqrt{y}}^{\sqrt{y}} e^{-x^2/2}dx$.
+        <br/><br/>
+        Differentiate via Leibniz rule:
+        $$f_Y(y) = \frac{1}{\sqrt{2\pi}}\left[e^{-y/2}\cdot\frac{1}{2\sqrt{y}} - e^{-y/2}\cdot\left(-\frac{1}{2\sqrt{y}}\right)\right] = \frac{1}{\sqrt{2\pi}}\,e^{-y/2}\,y^{-1/2}$$
+        Since $\sqrt{\pi} = \Gamma\!\left(\tfrac{1}{2}\right)$:
+        $$f_Y(y) = \frac{(1/2)^{1/2}}{\Gamma(1/2)}\,e^{-y/2}\,y^{1/2-1} \qquad (0 < y < \infty)$$
+        This is exactly $\Gamma\!\left(\tfrac{1}{2}, \tfrac{1}{2}\right)$. By the Gamma reproductive property applied $n$ times, the sum of $n$ such terms is $\Gamma\!\left(\tfrac{1}{2}, \tfrac{n}{2}\right) = \chi^2_{(n)}$. $\square$
+      </div>
+
+      <div class="callout callout-india">
+        The chi-squared distribution is the workhorse of statistical testing in quantitative finance. The Jarque-Bera test for normality of returns follows $\chi^2_{(2)}$. The Ljung-Box test for autocorrelation in residuals follows $\chi^2_{(m)}$. Every time a quant runs a model diagnostic on NSE data, they are implicitly using the fact that $X \sim N(0,1) \Rightarrow X^2 \sim \chi^2_{(1)}$.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 11</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch11 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim \beta_1(1,1)$. What is the distribution of $X$?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Exponential(1)</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Uniform$[0,1]$ &#8212; $B(1,1)=1$ so $f(x)=1$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Normal$(0,1)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Gamma$(1,1)$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B</strong><br/><br/>$f(x) = \frac{1}{B(1,1)}x^0(1-x)^0 = \frac{1}{B(1,1)}$. Now $B(1,1) = \frac{\Gamma(1)\Gamma(1)}{\Gamma(2)} = \frac{1 \cdot 1}{1!} = 1$. So $f(x) = 1$ for $0 \leq x \leq 1$ &#8212; <span class="expl-ans">exactly the Uniform$[0,1]$ distribution.</span> The Beta family contains the Uniform as its simplest special case.</div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch11 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_1 \sim \Gamma(\lambda, 3)$ and $X_2 \sim \Gamma(\lambda, 5)$ are independent. What is the distribution of $X_1 + X_2$?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$\Gamma(\lambda, 15)$ &#8212; multiply the shape parameters</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$\Gamma(\lambda, 8)$ &#8212; add the shape parameters</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$\Gamma(2\lambda, 8)$ &#8212; both parameters add</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Not Gamma &#8212; different shape parameters prevent combination</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; $\Gamma(\lambda, 8)$</strong><br/><br/>The Gamma reproductive property: same $\lambda$, shape parameters add: $3 + 5 = 8$. <span class="expl-ans">$\lambda$ stays fixed; only $\alpha$ accumulates.</span> This is the continuous analogue of the Binomial reproductive property requiring the same $p$. Option D is wrong &#8212; the shape parameters can differ; what must match is $\lambda$.</div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch11 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Which distribution has <strong>no finite mean and no finite variance</strong>?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Laplace &#8212; its heavy tails make moments infinite</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Pareto with small $\alpha$ &#8212; the tail exponent determines moment existence</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Cauchy &#8212; even the first moment (mean) does not exist</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Weibull &#8212; the exponential tail kills all moments</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: C &#8212; Cauchy</strong><br/><br/>The Cauchy PDF $\frac{1}{\pi(1+x^2)}$ decays so slowly that $\int_{-\infty}^\infty |x| \cdot \frac{1}{\pi(1+x^2)}dx = \infty$. The mean literally does not exist as a finite number. <span class="expl-ans">Averaging Cauchy samples never converges &#8212; the Law of Large Numbers fails.</span> Laplace and Weibull have all moments finite. Pareto with $\alpha > 1$ has a finite mean.</div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch11 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim N(0,1)$. The distribution of $X^2$ is:</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$N(0,1)$ &#8212; squaring a standard normal gives another standard normal</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$\Gamma(1, \frac{1}{2})$ &#8212; squaring doubles the rate</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>$\Gamma\!\left(\tfrac{1}{2}, \tfrac{1}{2}\right) = \chi^2_{(1)}$ &#8212; derived via CDF differentiation</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Uniform$(0,1)$ &#8212; since $X$ is symmetric around 0</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: C &#8212; $\chi^2_{(1)}$</strong><br/><br/>From the proof: $F_{X^2}(y) = P(-\sqrt{y} \leq X \leq \sqrt{y})$. Differentiating gives $f_{X^2}(y) = \frac{1}{\sqrt{2\pi}}e^{-y/2}y^{-1/2} = \frac{(1/2)^{1/2}}{\Gamma(1/2)}e^{-y/2}y^{1/2-1}$, which is <span class="expl-ans">$\Gamma(\frac{1}{2}, \frac{1}{2})$, called $\chi^2_{(1)}$.</span> This connection is the foundation of classical hypothesis testing.</div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch11 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">A quant runs 5 independent factor regressions and collects standardised residuals $Z_1, \ldots, Z_5$, each $\sim N(0,1)$. The Jarque-Bera test statistic $T = Z_1^2 + \cdots + Z_5^2$ follows which distribution?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$N(0,5)$ &#8212; sum of normals is normal</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>$\Gamma(1, 5)$ &#8212; Gamma with rate 1 and shape 5</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>$\chi^2_{(5)} = \Gamma\!\left(\tfrac{1}{2}, \tfrac{5}{2}\right)$ &#8212; sum of 5 independent $\chi^2_{(1)}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$\Gamma\!\left(\tfrac{1}{2}, \tfrac{1}{2}\right)$ &#8212; same as a single squared normal</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: C &#8212; $\chi^2_{(5)}$</strong><br/><br/>Each $Z_i^2 \sim \chi^2_{(1)} = \Gamma(\frac{1}{2}, \frac{1}{2})$. By the Gamma reproductive property (same $\lambda = \frac{1}{2}$, shape parameters add): $\sum_{i=1}^5 Z_i^2 \sim \Gamma\!\left(\frac{1}{2}, \frac{5}{2}\right) = \chi^2_{(5)}$. <span class="expl-ans">This is why chi-squared tests have degrees of freedom equal to the number of squared standard normals summed.</span> Option A: sum of $N(0,1)$ is $N(0,n)$, not $\chi^2$ &#8212; you're summing the <em>squares</em>, not the variables themselves.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch10.html" class="ch-nav-btn">&#8592; Chapter 10: Continuous Distributions</a>
+      <a href="M_Pr_Ch12.html" class="ch-nav-btn primary">Next: Moments &amp; Expectations &#8594;</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Gamma, Beta, Normal, Chi-squared &#8212; all in your arsenal.","That derivation clicked. Well done.","Distribution identified, parameters correct.","The zoo is tamed. You named every animal.","CDF differentiated, PDF extracted. Perfect.","$\\Gamma(1/2) = \\sqrt{\\pi}$ and you = correct.","From Normal to Chi-squared in one step. Nailed it.","Rigorous and right."];
+const wrongMsgs=["Check which parameter is fixed and which adds.","Cauchy has no mean. Re-read the watch-out box.","CDF to PDF via differentiation &#8212; review the proof.","Check whether you are squaring the variable or summing squares.","Review the special cases section above.","Re-read the reproductive property carefully."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

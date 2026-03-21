@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 28: LLN — Converse, SLLN &amp; Catalogue — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 24</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:97%"></div></div>
+      <span class="tb-prog-lbl">28 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch13.html"><div class="si-num">&#x2713;</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch14.html"><div class="si-num">&#x2713;</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch15.html"><div class="si-num">&#x2713;</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch16.html"><div class="si-num">&#x2713;</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch17.html"><div class="si-num">&#x2713;</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch18.html"><div class="si-num">&#x2713;</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch19.html"><div class="si-num">&#x2713;</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch20.html"><div class="si-num">&#x2713;</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch21.html"><div class="si-num">&#x2713;</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch22.html"><div class="si-num">&#x2713;</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch23.html"><div class="si-num">&#x2713;</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch24.html"><div class="si-num">&#x2713;</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch25.html"><div class="si-num">&#x2713;</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch26.html"><div class="si-num">&#x2713;</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch27.html"><div class="si-num">&#x2713;</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 28</span>
+      </div>
+      <h1 class="chapter-title">LLN — Converse, Strong LLN &amp; the Theorem Catalogue</h1>
+      <p class="chapter-subtitle">This chapter completes the N&amp;S condition proof, establishes the Continuous Mapping Theorem (with an elegant geometric mean application), defines the Strong LLN, and presents the complete catalogue of seven LLN variants from Bernoulli to Kolmogorov.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Continuous Mapping Theorem</h3>
+
+      <div class="callout callout-theorem">
+        If $X_n\xrightarrow{P}C$ (constant) and $h$ is continuous at $C$, then $h(X_n)\xrightarrow{P}h(C)$.
+      </div>
+
+      <div class="callout callout-proof">
+        Given $\varepsilon,\eta>0$. Since $h$ is continuous at $C$: $\exists\delta>0$ s.t. $|x-C|<\delta\Rightarrow|h(x)-h(C)|<\varepsilon$.
+        Therefore $\{|X_n-C|<\delta\}\subseteq\{|h(X_n)-h(C)|<\varepsilon\}$, so:
+        $$P(|h(X_n)-h(C)|<\varepsilon)\geq P(|X_n-C|<\delta)$$
+        Since $X_n\xrightarrow{P}C$: $\exists N$ s.t. $\forall n\geq N$: $P(|X_n-C|<\delta)>1-\eta$. Therefore $P(|h(X_n)-h(C)|<\varepsilon)>1-\eta$. $\square$
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Application: Geometric Mean of $U(0,1)$ Variables</div>
+        <p>$X_1,\ldots,X_n$ iid $U(0,1)$. Show that the geometric mean $G_n = (X_1\cdots X_n)^{1/n}\xrightarrow{P}1/e$.</p>
+        <p><strong>Step 1:</strong> Let $Y_i = -\log X_i$. For $y>0$: $P(Y_i\leq y) = P(X_i\geq e^{-y}) = 1-e^{-y}$. So $Y_i\sim\text{Exp}(1)$ with $E(Y_i)=1$.</p>
+        <p><strong>Step 2:</strong> By WLLN (iid, finite mean): $\bar{Y}_n = \frac{1}{n}\sum_{i=1}^n Y_i\xrightarrow{P}1$.</p>
+        <p><strong>Step 3:</strong> Note $\bar{Y}_n = -\frac{1}{n}\sum\log X_i = -\log G_n$.</p>
+        <p><strong>Step 4:</strong> Apply $h(t)=e^{-t}$ (continuous): $G_n = e^{-\bar{Y}_n}\xrightarrow{P}e^{-1} = 1/e$.</p>
+        <p>So $G_n\xrightarrow{P}C$ where $C=1/e$.</p>
+      </div>
+
+      <h3>Completing the N&amp;S Condition: The Converse</h3>
+
+      <div class="callout callout-proof">
+        <strong>Prove:</strong> WLLN for $\{X_n\}$ $\Rightarrow$ $E\!\left(\frac{Y_n^2}{1+Y_n^2}\right)\to 0$ where $Y_n=(S_n-E(S_n))/n$.
+        <br/><br/>
+        Split the expectation over $A=\{|Y_n|>\varepsilon\}$ and $A^c=\{|Y_n|\leq\varepsilon\}$:
+        $$E\!\left(\frac{Y_n^2}{1+Y_n^2}\right) = \int_A\frac{y^2}{1+y^2}f_n(y)\,dy + \int_{A^c}\frac{y^2}{1+y^2}f_n(y)\,dy$$
+        On $A$: $\frac{y^2}{1+y^2}\leq 1$, so the first integral $\leq P(A) = P(|Y_n|>\varepsilon)$.
+        On $A^c$: $\frac{y^2}{1+y^2}\leq y^2\leq\varepsilon^2$, so the second integral $\leq\varepsilon^2 P(A^c)\leq\varepsilon^2$.
+        Therefore:
+        $$E\!\left(\frac{Y_n^2}{1+Y_n^2}\right)\leq P(|Y_n|>\varepsilon) + \varepsilon^2$$
+        Since WLLN holds: $Y_n\xrightarrow{P}0$, so $P(|Y_n|>\varepsilon)\to 0$ as $n\to\infty$. For any $\delta>0$: choose $\varepsilon^2<\delta/2$, then $N$ large enough that $P(|Y_n|>\varepsilon)<\delta/2$. For all $n\geq N$:
+        $$E\!\left(\frac{Y_n^2}{1+Y_n^2}\right)\leq\frac{\delta}{2}+\frac{\delta}{2}=\delta \qquad\square$$
+      </div>
+
+      <h3>Strong Law of Large Numbers (SLLN)</h3>
+
+      <div class="callout callout-definition">
+        $\{X_n\}$ obeys the <strong>Strong Law of Large Numbers</strong> with norming constants $B_n\to\infty$ if there exist centering constants $A_n$ such that:
+        $$\frac{S_n - A_n}{B_n}\xrightarrow{a.s.}0$$
+        i.e. $P\!\left(\left\{\omega: \frac{S_n(\omega)-A_n}{B_n}\to 0\right\}\right) = 1$.
+        <br/><br/>
+        Standard form: $A_n = \sum_{i=1}^n\mu_i$, $B_n = n$, giving $\bar{X}_n - \bar{\mu}_n\xrightarrow{a.s.}0$.
+      </div>
+
+      <div class="callout callout-intuition">
+        WLLN: the probability of being far from the mean goes to zero. SLLN: almost every sample path of $\bar{X}_n$ actually converges to $\mu$. The SLLN is much stronger — it rules out the possibility of infinitely many future deviations beyond $\varepsilon$.
+      </div>
+
+      <h3>The Seven LLN Theorems</h3>
+
+      <div class="callout callout-definition">
+        <strong>1. Bounded iid SLLN:</strong> $X_i$ iid with $P(|X_i|\leq k)=1$ for some $k>0$: $\bar{X}_n\xrightarrow{a.s.}\mu$.
+        <br/><br/>
+        <strong>2. Independent Convergence Criterion:</strong> $X_n\xrightarrow{a.s.}0\iff\sum_{n=1}^\infty P(|X_n|>\varepsilon)<\infty$ for every $\varepsilon>0$.
+        <br/><br/>
+        <strong>3. Kolmogorov's Maximal Inequality:</strong> If $X_1,\ldots,X_n$ independent with $E(X_i)=0$ and $\text{Var}(X_i)=\sigma_i^2$:
+        $$P\!\left(\max_{1\leq k\leq n}|S_k|>\varepsilon\right)\leq\frac{1}{\varepsilon^2}\sum_{i=1}^n\sigma_i^2$$
+        This is the SLLN analogue of Chebyshev — controls the maximum partial sum.
+        <br/><br/>
+        <strong>4. Variance-Sum Criterion:</strong> If $\{X_n\}$ independent and $\sum_{k=1}^\infty\frac{\text{Var}(X_k)}{B_k^2}<\infty$ with $B_n\to\infty$: SLLN holds.
+        <br/><br/>
+        <strong>5. Borel's SLLN:</strong> $X_i$ iid Bernoulli$(p)$: $S_n/n\xrightarrow{a.s.}p$.
+        <br/><br/>
+        <strong>6. Poisson's WLLN:</strong> Non-iid Bernoulli trials with $P(X_i=1)=p_i$: $S_n/n\xrightarrow{P}\frac{1}{n}\sum p_i$.
+        <br/><br/>
+        <strong>7. Kolmogorov's SLLN:</strong> $X_i$ iid: $\bar{X}_n\xrightarrow{a.s.}\mu\iff E|X_i|<\infty$.
+        <br/><br/>
+        Result 7 is the definitive theorem. It says the SLLN holds for iid sequences <em>if and only if</em> the mean is finite — no stronger moment condition is needed.
+      </div>
+
+      <div class="callout callout-warning">
+        Kolmogorov's SLLN (Result 7) is the theorem that makes the Cauchy case precise: since $E|X_i|=\infty$ for the Cauchy distribution, $\bar{X}_n\not\xrightarrow{a.s.}$ anything. It also shows that the WLLN variance condition from Ch27 is sufficient but not necessary for iid sequences — finite mean alone is enough for the stronger almost sure convergence.
+      </div>
+
+      <div class="callout callout-india">
+        Borel's SLLN (Result 5) is the mathematical justification for frequentist probability: toss a fair coin forever and the proportion of heads converges to $1/2$ with probability 1 — not just in probability, but along almost every sample path. In NSE: run an edge strategy long enough and your average trade PnL almost surely converges to the true edge per trade. Kolmogorov's SLLN tells you exactly when this fails: if your PnL distribution has infinite mean (e.g. a power-law distributed return), the average will never settle.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 28</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch28 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_n\xrightarrow{P}4$ and $h(x)=\sqrt{x}$. What does $\sqrt{X_n}$ converge to in probability?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$4$ &#8212; convergence is preserved without change</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$2$ &#8212; by the Continuous Mapping Theorem</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$\sqrt{n}$ &#8212; depends on $n$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Doesn't converge &#8212; square root is not linear</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $2$</strong><br/><br/>By the Continuous Mapping Theorem: $X_n\xrightarrow{P}C$ and $h$ continuous $\Rightarrow$ $h(X_n)\xrightarrow{P}h(C)$. Here $h(C)=\sqrt{4}=2$. <span class="expl-ans">$\sqrt{x}$ is continuous at $x=4$. The theorem doesn't require linearity.</span></div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch28 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_i$ iid $U(0,1)$. The geometric mean $G_n = (X_1\cdots X_n)^{1/n}$ converges in probability to:</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$0.5$ &#8212; the mean of $U(0,1)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$1/e\approx 0.368$ &#8212; via $-\log X_i\sim\text{Exp}(1)$ and WLLN</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$0$ &#8212; product of many uniforms goes to zero</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$e\approx 2.718$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; $1/e$</strong><br/><br/>$Y_i=-\log X_i\sim\text{Exp}(1)$. WLLN: $\bar{Y}_n\xrightarrow{P}1$. Since $G_n=e^{-\bar{Y}_n}$ and $e^{-t}$ is continuous: $G_n\xrightarrow{P}e^{-1}=1/e$. <span class="expl-ans">This is a beautiful application: the geometric mean is harder to handle than the arithmetic mean, but a log transformation reduces it to the WLLN.</span></div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch28 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">What is the key difference between WLLN and SLLN?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>WLLN requires iid; SLLN does not</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>WLLN requires finite variance; SLLN only requires finite mean</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>WLLN is convergence in probability; SLLN is almost sure convergence</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>SLLN applies only to Bernoulli trials</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: C</strong><br/><br/>WLLN: $\bar{X}_n\xrightarrow{P}\mu$ (convergence in probability). SLLN: $\bar{X}_n\xrightarrow{a.s.}\mu$ (almost sure convergence, stronger). <span class="expl-ans">The SLLN is not just that occasional deviations become unlikely — it says that almost every sample path of $\bar{X}_n$ actually settles down to $\mu$.</span></div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch28 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Kolmogorov's SLLN states: $X_i$ iid, $\bar{X}_n\xrightarrow{a.s.}\mu\iff E|X_i|<\infty$. What does this say about iid Cauchy variables?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$\bar{X}_n\xrightarrow{a.s.}0$ since $E(X_i)=0$ for Cauchy</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>The SLLN holds but with a different limit</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>The SLLN fails: $E|X_i|=\infty$ for Cauchy, so $\bar{X}_n$ has no a.s. limit</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>SLLN requires only finite variance, not finite mean</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: C</strong><br/><br/>Cauchy has no finite mean: $E|X_i|=\infty$. By Kolmogorov's iff: $\bar{X}_n$ does not converge almost surely to any limit. <span class="expl-ans">In fact $\bar{X}_n\sim\text{Cauchy}(1,0)$ for every $n$ — the average of $n$ iid Cauchy variables has the same distribution as each individual one. Averaging never concentrates the distribution.</span></div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch28 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">In the converse proof ($\text{WLLN}\Rightarrow E(Y_n^2/(1+Y_n^2))\to 0$), why is the bound $E(Y_n^2/(1+Y_n^2))\leq P(|Y_n|>\varepsilon)+\varepsilon^2$ valid?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>Because $Y_n^2/(1+Y_n^2)$ is always $\leq Y_n^2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">B</div><span>On $A$: use $y^2/(1+y^2)\leq 1$; on $A^c$: use $y^2/(1+y^2)\leq y^2\leq\varepsilon^2$; the two integrals bound the total expectation</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">C</div><span>By Markov's inequality applied to $Y_n^2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>Because $E(Y_n^2)\leq 1$ for all $n$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: B</strong><br/><br/>Integral over $A=\{|Y_n|>\varepsilon\}$: $y^2/(1+y^2)\leq 1$, so this part $\leq\int_A f_n\,dy = P(A)$. Integral over $A^c=\{|Y_n|\leq\varepsilon\}$: $y^2/(1+y^2)\leq y^2\leq\varepsilon^2$, so this part $\leq\varepsilon^2\int_{A^c}f_n\,dy\leq\varepsilon^2$. <span class="expl-ans">Adding the two bounds gives $E(Y_n^2/(1+Y_n^2))\leq P(|Y_n|>\varepsilon)+\varepsilon^2$. The WLLN sends $P(|Y_n|>\varepsilon)\to 0$, and $\varepsilon^2$ can be made arbitrarily small.</span></div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','B')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch27.html" class="ch-nav-btn">&#8592; Chapter 27: Laws of Large Numbers</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Continuous Mapping: $h$ continuous, $X_n\\to C\\Rightarrow h(X_n)\\to h(C)$.","Geometric mean via log-transform and WLLN. Elegant.","WLLN vs SLLN: probability vs almost sure. Clear.","Kolmogorov iff: no finite mean, no SLLN. Cauchy case.","Integral split: bound 1 on $A$, bound $\\varepsilon^2$ on $A^c$. Proved.","The full LLN catalogue: Bernoulli through Kolmogorov.","N&S condition complete: both directions proved.","SLLN: almost every path converges. WLLN: probabilities converge."];
+const wrongMsgs=["Continuous mapping: $h(X_n)\\to h(C)$ when $h$ is continuous at $C$.","$G_n=(X_1\\cdots X_n)^{1/n}=e^{-\\bar{Y}_n}$ where $\\bar{Y}_n\\to 1$, so $G_n\\to e^{-1}$.","WLLN: convergence in probability. SLLN: almost sure convergence.","Kolmogorov iff: $\\bar{X}_n\\xrightarrow{a.s.}\\mu\\iff E|X_i|<\\infty$. Cauchy fails.","On $A$: bound by 1; on $A^c$: bound by $\\varepsilon^2$. Their sum is the bound.","Re-read the converse proof above."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

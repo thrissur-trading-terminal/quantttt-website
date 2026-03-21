@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 4: Properties of Probability Measures — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Property';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+
+/* properties summary table */
+.prop-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin:1.5rem 0;}
+.prop-card{background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
+.prop-card-num{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--orange);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;}
+.prop-card-name{font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.4rem;}
+.prop-card-formula{font-size:0.88rem;color:var(--muted);line-height:1.6;}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-question strong{color:var(--orange);font-style:normal;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.prop-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 4</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:13%"></div></div>
+      <span class="tb-prog-lbl">4 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch4.html"><div class="si-num">4</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch4b.html"><div class="si-num">4B</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch5.html"><div class="si-num">5</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch6.html"><div class="si-num">6</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch7.html"><div class="si-num">7</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch8.html"><div class="si-num">8</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch9.html"><div class="si-num">9</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch10.html"><div class="si-num">10</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch11.html"><div class="si-num">11</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12.html"><div class="si-num">12</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12b.html"><div class="si-num">12B</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch13.html"><div class="si-num">13</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch14.html"><div class="si-num">14</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch15.html"><div class="si-num">15</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num-label">Chapter 04 of 30</span>
+    </div>
+    <h1 class="chapter-title">Properties of Probability Measures</h1>
+    <p class="chapter-subtitle">We have defined the probability space $(\Omega, \mathcal{S}, P)$. Now we squeeze it. Every useful formula in probability theory — inclusion-exclusion, union bounds, Bonferroni inequalities — flows from three axioms. This chapter shows you how.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>What We Know Going In</h3>
+
+    <p>
+      A probability measure $P$ on $(\Omega, \mathcal{S})$ satisfies exactly three axioms:
+    </p>
+
+    <div class="callout callout-definition">
+      (i) $P(\Omega) = 1$ &nbsp;&nbsp; (ii) $P(A) \geq 0$ for all $A \in \mathcal{S}$ &nbsp;&nbsp; (iii) $P\!\left(\bigcup_i A_i\right) = \sum_i P(A_i)$ when $A_i$'s are mutually disjoint
+    </div>
+
+    <p>
+      Everything else — every theorem, every formula, every inequality in this chapter — is a logical consequence of these three lines. No new assumptions. Just careful reasoning.
+    </p>
+
+    <h3>Property 1 — Monotonicity</h3>
+
+    <div class="callout callout-definition">
+      <strong>Monotonicity:</strong> If $A \subseteq B$, then $P(A) \leq P(B)$.
+      <br/>Bigger set, bigger (or equal) probability. Probability respects containment.
+    </div>
+
+    <div class="callout callout-proof">
+      Since $A \subseteq B$, we can write $B$ as a disjoint union:
+      $$B = A \cup (B \setminus A)$$
+      where $B \setminus A = A^c \cap B$ — the part of $B$ that lies outside $A$. These two sets are disjoint, so by axiom (iii):
+      $$P(B) = P(A) + P(B \setminus A)$$
+      Since $P(B \setminus A) \geq 0$ by axiom (ii):
+      $$P(B) \geq P(A) \qquad \square$$
+    </div>
+
+    <div class="callout callout-intuition">
+      Think of it this way. "The Nifty 50 closes above 22,000" is a subset of "the Nifty 50 closes above 20,000." The first event is harder to achieve — it imposes a stricter condition. So its probability should be smaller. Monotonicity formalises this obvious intuition.
+    </div>
+
+    <h3>Property 2 — The Complement Rule</h3>
+
+    <div class="callout callout-definition">
+      <strong>Complement Rule:</strong> For any event $A \subseteq \Omega$:
+      $$P(A^c) = 1 - P(A)$$
+    </div>
+
+    <div class="callout callout-proof">
+      Since $A$ and $A^c$ are disjoint and $A \cup A^c = \Omega$:
+      $$P(\Omega) = P(A) + P(A^c)$$
+      $$1 = P(A) + P(A^c)$$
+      $$P(A^c) = 1 - P(A) \qquad \square$$
+      As a bonus: $P(\emptyset) = P(\Omega^c) = 1 - P(\Omega) = 1 - 1 = 0$.
+    </div>
+
+    <p>
+      This is one of the most useful tools in probability. Sometimes the complement is far easier to compute than the event itself.
+    </p>
+
+    <div class="callout callout-warning">
+      <strong>Does $P(A) = 0$ imply $A = \emptyset$?</strong> No. This is a trap that catches people every time.<br/><br/>
+      Consider a class where all possible grades are A, B, C, D, F. Suppose every student in the class passed — so getting an F is possible in principle, but no one got one. If we pick a random student, $P(\text{F grade}) = 0$. Yet the event $\{\text{F grade}\}$ is not the empty set — it's a perfectly valid outcome, it just didn't happen to occur in this cohort.<br/><br/>
+      Zero probability $\neq$ impossible. In continuous probability especially, individual outcomes always have zero probability — but they can still occur.
+    </div>
+
+    <h3>Property 3 — Inclusion-Exclusion for Two Events</h3>
+
+    <p>
+      When two events overlap, we can't just add their probabilities — we'd count the overlap twice. The fix is to subtract it once.
+    </p>
+
+    <div class="callout callout-theorem">
+      For any two events $A, B \in \mathcal{S}$:
+      $$P(A \cup B) = P(A) + P(B) - P(A \cap B)$$
+    </div>
+
+    <div class="callout callout-proof">
+      Partition $A \cup B$ into three disjoint pieces using elements $x \in A \setminus B$, $y \in B \setminus A$, and $z \in A \cap B$:
+      $$A \cup B = (A \setminus B) \cup (B \setminus A) \cup (A \cap B)$$
+      Also note that $A = (A \setminus B) \cup (A \cap B)$, so $P(A) = P(A \setminus B) + P(A \cap B)$, giving $P(A \setminus B) = P(A) - P(A \cap B)$. Similarly $P(B \setminus A) = P(B) - P(A \cap B)$. Therefore:
+      $$P(A \cup B) = P(A \setminus B) + P(B \setminus A) + P(A \cap B)$$
+      $$= [P(A) - P(A \cap B)] + [P(B) - P(A \cap B)] + P(A \cap B)$$
+      $$= P(A) + P(B) - P(A \cap B) \qquad \square$$
+    </div>
+
+    <div class="worked">
+      <div class="worked-title">🎲 Worked Example — Die Roll</div>
+      <p>Throw a fair die. $\Omega = \{1,2,3,4,5,6\}$.</p>
+      <p>Let $A = \{\text{outcome} \leq 3\} = \{1,2,3\}$, so $P(A) = \frac{3}{6} = \frac{1}{2}$.</p>
+      <p>Let $B = \{\text{outcome is even}\} = \{2,4,6\}$, so $P(B) = \frac{3}{6} = \frac{1}{2}$.</p>
+      <p>What is $P(A \cup B)$ — the probability of getting $\leq 3$ or an even number?</p>
+      <p>$A \cup B = \{1,2,3,4,6\}$ — five favourable outcomes.</p>
+      <p>$A \cap B = \{2\}$ — the outcome that is both $\leq 3$ and even. So $P(A \cap B) = \frac{1}{6}$.</p>
+      $$P(A \cup B) = \frac{1}{2} + \frac{1}{2} - \frac{1}{6} = \frac{5}{6}$$
+      <p>Verify directly: $\frac{5}{6}$. ✓</p>
+    </div>
+
+    <h3>Property 4 — Sub-additivity (Union Bound)</h3>
+
+    <div class="callout callout-theorem">
+      <strong>Boole's Inequality / Union Bound:</strong> For any events $A_1, A_2, \ldots, A_n$:
+      $$P\!\left(\bigcup_{i=1}^n A_i\right) \leq \sum_{i=1}^n P(A_i)$$
+    </div>
+
+    <p>
+      This follows immediately from inclusion-exclusion — we subtract $P(A \cap B)$ which is non-negative, so adding probabilities only overestimates the union. The union bound is crude but fast — and in many financial applications, a quick overestimate is exactly what you need.
+    </p>
+
+    <div class="callout callout-india">
+      The union bound is everywhere in risk management. If there's a 2% chance of a credit default on bond A and a 3% chance on bond B, the probability of <em>at least one default</em> is at most $2\% + 3\% = 5\%$. This overestimates (since defaults can be correlated), but it's a safe upper bound — and safe is what risk managers want when sizing reserves.
+    </div>
+
+    <h3>Property 5 — Inclusion-Exclusion for Three Events</h3>
+
+    <div class="callout callout-theorem">
+      $$P(A \cup B \cup C) = P(A) + P(B) + P(C) - P(A \cap B) - P(A \cap C) - P(B \cap C) + P(A \cap B \cap C)$$
+    </div>
+
+    <div class="callout callout-proof">
+      Treat $A \cup B \cup C = A \cup (B \cup C)$ and apply the two-event formula twice:
+      $$P(A \cup B \cup C) = P(A) + P(B \cup C) - P(A \cap (B \cup C))$$
+      Expand $P(B \cup C) = P(B) + P(C) - P(B \cap C)$. For the last term, use distributivity: $A \cap (B \cup C) = (A \cap B) \cup (A \cap C)$, so:
+      $$P(A \cap (B \cup C)) = P(A \cap B) + P(A \cap C) - P(A \cap B \cap C)$$
+      Substitute everything in and simplify — the formula above drops out. $\square$
+    </div>
+
+    <p>
+      The pattern: add individual probabilities, subtract pairwise intersections, add triple intersections, subtract quadruple intersections, and so on. This is the <strong>Inclusion-Exclusion Principle</strong> — it generalises to $n$ events.
+    </p>
+
+    <div class="callout callout-theorem">
+      <strong>General Inclusion-Exclusion:</strong>
+      $$P\!\left(\bigcup_{i=1}^n A_i\right) = \sum_{i=1}^n P(A_i) - \sum_{i < j} P(A_i \cap A_j) + \sum_{i < j < k} P(A_i \cap A_j \cap A_k) - \cdots + (-1)^{n+1} P(A_1 \cap \cdots \cap A_n)$$
+      Proved by induction on $n$.
+    </div>
+
+    <h3>Property 6 — Bonferroni's Inequality</h3>
+
+    <p>
+      Inclusion-exclusion gives the exact probability of a union. Bonferroni gives a lower bound on the probability of an <em>intersection</em> — extremely useful when you know individual probabilities but not the joint structure.
+    </p>
+
+    <div class="callout callout-theorem">
+      <strong>Bonferroni's Inequality:</strong> For any events $A_1, A_2, \ldots, A_n$:
+      $$P\!\left(\bigcap_{i=1}^n A_i\right) \geq 1 - \sum_{i=1}^n P(A_i^c)$$
+    </div>
+
+    <div class="callout callout-proof">
+      <strong>Base case ($n=2$):</strong> We know $P(A \cup B) \leq P(A) + P(B)$. Replace $A$ with $A^c$ and $B$ with $B^c$:
+      $$P(A^c \cup B^c) \leq P(A^c) + P(B^c)$$
+      So $1 - P(A^c \cup B^c) \geq 1 - P(A^c) - P(B^c)$. By De Morgan, $(A^c \cup B^c)^c = A \cap B$, giving:
+      $$P(A \cap B) \geq 1 - P(A^c) - P(B^c) \checkmark$$
+      <strong>Inductive step:</strong> Assume it holds for $m$ events. For $m+1$ events, treat $(A_1 \cap \cdots \cap A_m)$ as one event and $A_{m+1}$ as another. Apply the base case, then substitute the inductive hypothesis for $P(A_1 \cap \cdots \cap A_m)$. The result follows. $\square$
+    </div>
+
+    <div class="callout callout-intuition">
+      Bonferroni says: if you want all $n$ events to happen simultaneously, and each individual event is very likely, then their joint occurrence is also likely — as long as the individual failure probabilities $P(A_i^c)$ are small in aggregate. If each of 100 events has a 99.9% chance of occurring, Bonferroni guarantees their simultaneous occurrence has probability at least $1 - 100 \times 0.001 = 90\%$. This is the logic behind stress-testing portfolios under multiple simultaneous conditions.
+    </div>
+
+    <h3>All Properties at a Glance</h3>
+
+    <div class="prop-grid">
+      <div class="prop-card">
+        <div class="prop-card-num">① Monotonicity</div>
+        <div class="prop-card-name">Bigger set, bigger probability</div>
+        <div class="prop-card-formula">$A \subseteq B \Rightarrow P(A) \leq P(B)$</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-card-num">② Complement</div>
+        <div class="prop-card-name">What doesn't happen</div>
+        <div class="prop-card-formula">$P(A^c) = 1 - P(A)$, &nbsp; $P(\emptyset) = 0$</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-card-num">③ Inclusion-Exclusion</div>
+        <div class="prop-card-name">Exact union probability</div>
+        <div class="prop-card-formula">$P(A \cup B) = P(A) + P(B) - P(A \cap B)$</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-card-num">④ Union Bound</div>
+        <div class="prop-card-name">Fast upper bound on union</div>
+        <div class="prop-card-formula">$P\!\left(\bigcup A_i\right) \leq \sum P(A_i)$</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-card-num">⑤ Inclusion-Exclusion ($n$)</div>
+        <div class="prop-card-name">General union formula</div>
+        <div class="prop-card-formula">Alternating sum of all intersection probabilities</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-card-num">⑥ Bonferroni</div>
+        <div class="prop-card-name">Lower bound on intersection</div>
+        <div class="prop-card-formula">$P\!\left(\bigcap A_i\right) \geq 1 - \sum P(A_i^c)$</div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">4 questions · Chapter 04</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch04 / q01</span>
+        <span class="mcq-diff">★ Easy</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">If $P(A) = 0$, which of the following must be true?</p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$A = \emptyset$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>$A$ cannot occur in any trial</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>$P(A^c) = 1$, but $A$ may still be a non-empty set</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$A$ is not a valid event in $\mathcal{S}$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C</strong><br/><br/>
+          $P(A) = 0$ and $A = \emptyset$ are not the same thing. By the complement rule, $P(A^c) = 1 - 0 = 1$ — this part is always true. But $A$ can be a non-empty set with probability zero. Example: in a class where all students passed, the event "student gets an F" is non-empty (F is a valid grade) but has probability zero because no one got it. <span class="expl-ans">Zero probability ≠ impossible.</span> This distinction becomes especially important in continuous probability, where every individual outcome has zero probability.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch04 / q02</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">A fair die is rolled. Let $A$ = {outcome is prime} = {2,3,5} and $B$ = {outcome is odd} = {1,3,5}. What is $P(A \cup B)$?</p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$\dfrac{5}{6}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$\dfrac{2}{3}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$1$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$\dfrac{1}{3}$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B — $\dfrac{2}{3}$</strong><br/><br/>
+          $P(A) = \frac{3}{6} = \frac{1}{2}$ (primes: 2,3,5). $P(B) = \frac{3}{6} = \frac{1}{2}$ (odds: 1,3,5).<br/><br/>
+          $A \cap B = \{3, 5\}$ — numbers that are both prime and odd. $P(A \cap B) = \frac{2}{6} = \frac{1}{3}$.<br/><br/>
+          $$P(A \cup B) = \frac{1}{2} + \frac{1}{2} - \frac{1}{3} = 1 - \frac{1}{3} = \frac{2}{3}$$
+          Verify: $A \cup B = \{1,2,3,5\}$ — four outcomes. $\frac{4}{6} = \frac{2}{3}$. ✓
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch04 / q03</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">$P(A) = 0.6$ and $P(B) = 0.5$. Using the union bound, what can you say about $P(A \cup B)$?</p>
+        <div class="mcq-options" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$P(A \cup B) = 1.1$ — this is impossible, so the events must be dependent</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$P(A \cup B) = 1.1$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$P(A \cup B) \leq 1$ — the union bound gives an upper bound of $\min(1.1, 1) = 1$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$P(A \cup B) = 0.55$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q3feedback"></div>
+        <div class="mcq-explanation" id="q3expl">
+          <strong>Answer: C</strong><br/><br/>
+          The union bound says $P(A \cup B) \leq P(A) + P(B) = 0.6 + 0.5 = 1.1$. But probability is bounded above by 1, so the effective upper bound is $\min(1.1, 1) = 1$. The union bound simply tells us $P(A \cup B) \leq 1$ here — uninformative but not wrong.<br/><br/>
+          The union bound is most useful when $P(A) + P(B)$ is well below 1. When it exceeds 1, the bound is trivially saturated. <span class="expl-ans">The union bound is a tool — know when it's tight and when it isn't.</span>
+        </div>
+        <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch04 / q04</span>
+        <span class="mcq-diff">★★★ Hard</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">An options desk runs 3 independent strategies. Each strategy has a <strong>95% probability of not losing money</strong> on a given day. Using Bonferroni's inequality, what is the lower bound on the probability that <strong>all three strategies are profitable simultaneously</strong>?</p>
+        <div class="mcq-options" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$0.95^3 \approx 85.7\%$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>$1 - 3 \times 0.05 = 85\%$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>$3 \times 0.95 = 285\%$ — not valid</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$0.95 / 3 \approx 31.7\%$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q4feedback"></div>
+        <div class="mcq-explanation" id="q4expl">
+          <strong>Answer: B — $85\%$</strong><br/><br/>
+          Let $A_i$ = "strategy $i$ is profitable." Then $P(A_i) = 0.95$, so $P(A_i^c) = 0.05$ for each $i$.<br/><br/>
+          Bonferroni's inequality states:
+          $$P(A_1 \cap A_2 \cap A_3) \geq 1 - P(A_1^c) - P(A_2^c) - P(A_3^c) = 1 - 0.05 - 0.05 - 0.05 = 0.85$$
+          So all three strategies are simultaneously profitable with probability <span class="expl-ans">at least 85%.</span><br/><br/>
+          Note: the exact answer (since they're independent) is $0.95^3 \approx 85.7\%$. Bonferroni gives 85% — slightly conservative, but it works without needing to know whether the strategies are independent. That's its power.
+        </div>
+        <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="chapter-nav">
+    <a href="M_Pr_Ch3.html" class="ch-nav-btn">← Chapter 3: Sigma-Fields & Measures</a>
+    <a href="M_Pr_Ch5.html" class="ch-nav-btn primary">Next: Conditional Probability →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs=["🎯 Exactly right. Kolmogorov approves.","✨ Clean reasoning — that's the quantttt standard.","🏆 Nailed it. The axioms bow before you.","🔥 First principles, perfectly applied.","💡 That's the kind of clarity that builds quants.","🎓 Textbook correct. Bonferroni is pleased.","📈 Your probability toolkit just got sharper.","🌟 Rigorous and right. Keep going.","🎉 Correct! Union bound, inclusion-exclusion, all yours.","🧮 The maths doesn't lie — neither do you."];
+const wrongMsgs=["🌀 The intersection of 'correct' and 'your answer' is empty.","📐 Close, but the property disagrees. Re-read the definition.","📉 Recalibrate. The correct answer is highlighted above.","😰 Don't panic — re-read the proof box and try again.","💹 Mispriced answer detected. Check your axioms.","🤔 The union bound doesn't apply here in the way you think.","🏦 Review the worked example above and retry.","⚛️ Almost! The watch-out box above has the key insight."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='✓ Correct! Keep going ↓';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above ↑';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

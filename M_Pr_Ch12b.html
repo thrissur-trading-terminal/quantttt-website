@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 12B: Variance — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 12B</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:43%"></div></div>
+      <span class="tb-prog-lbl">12B / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch12b.html"><div class="si-num">12B</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch13.html"><div class="si-num">13</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch14.html"><div class="si-num">14</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch15.html"><div class="si-num">15</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 12B</span>
+      </div>
+      <h1 class="chapter-title">Variance</h1>
+      <p class="chapter-subtitle">Two distributions can share the same mean and be completely different. Variance measures how spread out a distribution is around its centre. Together, mean and variance are the two numbers that most concisely summarise a distribution &#8212; and they are the parameters $\mu$ and $\sigma^2$ you've seen throughout this course.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Expectation of a Function &#8212; No Need to Re-derive the Distribution</h3>
+
+      <p>If $Y = g(X)$, you don't need to find the full distribution of $Y$ to compute $E(Y)$. You can compute directly:</p>
+
+      <div class="callout callout-theorem">
+        <strong>Law of the Unconscious Statistician (LOTUS):</strong>
+        $$E[g(X)] = \sum_x g(x)\,p_x \quad \text{(discrete)} \qquad E[g(X)] = \int_{-\infty}^\infty g(x)\,f(x)\,dx \quad \text{(continuous)}$$
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Example &#8212; $E(X^2)$ for $N(0,1)$</div>
+        <p>$E(X^2) = \int_{-\infty}^\infty x^2 \frac{1}{\sqrt{2\pi}}e^{-x^2/2}dx$. Since $x^2 e^{-x^2/2}$ is even:</p>
+        $$= \frac{2}{\sqrt{2\pi}}\int_0^\infty x^2 e^{-x^2/2}dx$$
+        <p>Substitute $z = x^2$, $dx = \frac{dz}{2\sqrt{z}}$:</p>
+        $$= \frac{1}{\sqrt{2\pi}}\int_0^\infty z^{3/2-1}e^{-z/2}dz = \frac{1}{\sqrt{2\pi}}\cdot\frac{\Gamma(3/2)}{(1/2)^{3/2}} = \frac{1}{\sqrt{2\pi}}\cdot\frac{\frac{1}{2}\sqrt{\pi}}{\frac{1}{2\sqrt{2}}} = 1$$
+        <p><strong>Shortcut:</strong> $X \sim N(0,1) \Rightarrow X^2 \sim \chi^2_{(1)} = \Gamma(\frac{1}{2},\frac{1}{2})$, so $E(X^2) = \frac{\alpha}{\lambda} = \frac{1/2}{1/2} = 1$. Same answer, less work.</p>
+      </div>
+
+      <h3>Why Expectation Alone Isn't Enough</h3>
+
+      <p>$\text{Bin}(100, \tfrac{1}{4})$ has $E(X) = 25$ and takes values in $\{0,1,\ldots,100\}$.</p>
+      <p>$\text{Bin}(150, \tfrac{1}{6})$ has $E(X) = 25$ and takes values in $\{0,1,\ldots,150\}$.</p>
+      <p>Same mean. Completely different distributions. We need a second descriptor.</p>
+
+      <h3>Definition of Variance</h3>
+
+      <div class="callout callout-definition">
+        The <strong>variance</strong> of a random variable $X$ with $E(X) = \mu$ is:
+        $$\text{Var}(X) = E[(X - \mu)^2] = \begin{cases}\displaystyle\sum_x (x-\mu)^2\,p_x & \text{discrete} \\ \displaystyle\int_{-\infty}^\infty (x-\mu)^2 f(x)\,dx & \text{continuous}\end{cases}$$
+        It measures the expected squared deviation from the mean. The <strong>standard deviation</strong> is $\sigma = +\sqrt{\text{Var}(X)}$.
+      </div>
+
+      <h3>Computational Formula</h3>
+
+      <div class="callout callout-theorem">
+        $$\text{Var}(X) = E(X^2) - (E(X))^2$$
+        Almost always easier to use than the definition directly.
+      </div>
+
+      <div class="callout callout-proof">
+        $$\text{Var}(X) = \sum_x (x - \mu)^2 p_x = \sum_x (x^2 - 2x\mu + \mu^2)\,p_x$$
+        $$= \sum_x x^2 p_x - 2\mu\sum_x x\,p_x + \mu^2\sum_x p_x = E(X^2) - 2\mu\cdot\mu + \mu^2\cdot 1 = E(X^2) - \mu^2 \qquad \square$$
+        Note: $\mu = E(X)$ is a <em>constant</em> (a fixed number), so it comes outside the sum.
+      </div>
+
+      <h3>Variances of Named Distributions</h3>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Bernoulli($p$)</div>
+          <div class="prop-card-name">$\text{Var}(X) = pq$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>$E(X^2) = 1^2 \cdot p + 0^2 \cdot q = p$. So $\text{Var}(X) = p - p^2 = p(1-p) = pq$.</p>
+          <p>Maximum variance at $p = \frac{1}{2}$ (fair coin): $\text{Var} = \frac{1}{4}$. Zero variance at $p=0$ or $p=1$ (deterministic outcomes).</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Binomial($n,p$)</div>
+          <div class="prop-card-name">$\text{Var}(X) = npq$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>Write $x^2 = x(x-1) + x$. Then $E(X^2) = S + E(X)$ where $S = \sum x(x-1)\binom{n}{x}p^x q^{n-x}$.</p>
+          <p>For $x(x-1)\binom{n}{x} = n(n-1)\binom{n-2}{x-2}$, substitute $j=x-2$:</p>
+          $$S = n(n-1)p^2\sum_{j=0}^{n-2}\binom{n-2}{j}p^j q^{n-2-j} = n(n-1)p^2$$
+          $$E(X^2) = n(n-1)p^2 + np \implies \text{Var}(X) = n(n-1)p^2 + np - (np)^2 = np(1-p) = npq$$
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Poisson($\lambda$)</div>
+          <div class="prop-card-name">$\text{Var}(X) = \lambda$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>Same $x(x-1)+x$ trick: $E(X^2) = \lambda^2 + \lambda$. Therefore $\text{Var}(X) = \lambda^2 + \lambda - \lambda^2 = \lambda$.</p>
+          <p>For Poisson: mean = variance = $\lambda$. This equality is diagnostic &#8212; if observed variance $\gg$ mean in count data, it suggests <em>overdispersion</em> and a Poisson model is inappropriate.</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Exp($\lambda$)</div>
+          <div class="prop-card-name">$\text{Var}(X) = \dfrac{1}{\lambda^2}$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>$E(X^2) = \int_0^\infty x^2 \lambda e^{-\lambda x}dx$. Substitute $z = \lambda x$:</p>
+          $$= \frac{1}{\lambda^2}\int_0^\infty z^2 e^{-z}dz = \frac{\Gamma(3)}{\lambda^2} = \frac{2}{\lambda^2}$$
+          $$\text{Var}(X) = \frac{2}{\lambda^2} - \frac{1}{\lambda^2} = \frac{1}{\lambda^2}$$
+          <p>Standard deviation = $1/\lambda = E(X)$. The Exponential's std dev equals its mean &#8212; a distinctive feature.</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Normal($\mu, \sigma^2$)</div>
+          <div class="prop-card-name">$\text{Var}(X) = \sigma^2$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>Substitute $z = (x-\mu)/\sigma$, so $x = \mu + \sigma z$:</p>
+          $$E(X^2) = \int_{-\infty}^\infty (\mu+\sigma z)^2 \frac{1}{\sqrt{2\pi}}e^{-z^2/2}dz = \mu^2\underbrace{\int\frac{1}{\sqrt{2\pi}}e^{-z^2/2}dz}_{=1} + 2\mu\sigma\underbrace{\int z\frac{1}{\sqrt{2\pi}}e^{-z^2/2}dz}_{=0} + \sigma^2\underbrace{\int z^2\frac{1}{\sqrt{2\pi}}e^{-z^2/2}dz}_{=1}$$
+          $$= \mu^2 + \sigma^2 \implies \text{Var}(X) = \mu^2 + \sigma^2 - \mu^2 = \sigma^2$$
+          <p>The two parameters of $N(\mu,\sigma^2)$ are exactly the mean and variance. $\mu$ controls location; $\sigma^2$ controls spread.</p>
+        </div>
+      </div>
+
+      <h3>Properties of Variance</h3>
+
+      <div class="callout callout-theorem">
+        <strong>Property 1:</strong> For any constant $C \neq E(X)$:
+        $$\text{Var}(X) < E[(X-C)^2]$$
+        The mean is the uniquely optimal "representative value" &#8212; it minimises the expected squared deviation.
+      </div>
+
+      <div class="callout callout-proof">
+        Write $X - C = (X - \mu) + (\mu - C)$. Squaring and taking expectation:
+        $$E[(X-C)^2] = E[(X-\mu)^2] + (\mu-C)^2 + 2(\mu-C)\underbrace{E[X-\mu]}_{=0} = \text{Var}(X) + (\mu-C)^2$$
+        Since $C \neq \mu$, $(\mu-C)^2 > 0$, so $E[(X-C)^2] > \text{Var}(X)$. $\square$
+      </div>
+
+      <div class="callout callout-theorem">
+        <strong>Property 2:</strong> $\text{Var}(aX + b) = a^2\,\text{Var}(X)$
+        <br/><br/>
+        Adding a constant ($b$) shifts the distribution but does not change its spread. Scaling by $a$ stretches/shrinks the spread by $a^2$.
+      </div>
+
+      <div class="callout callout-proof">
+        $E(aX+b) = aE(X)+b$. Then:
+        $$\text{Var}(aX+b) = E[(aX+b - (aE(X)+b))^2] = E[a^2(X-E(X))^2] = a^2\,\text{Var}(X) \qquad \square$$
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">&#x1F321;&#xFE0F; Temperature Example &#8212; Centigrade vs Fahrenheit</div>
+        <p>If $C$ is a random temperature (in &#176;C) and $F = \frac{9}{5}C + 32$ is the same temperature in Fahrenheit:</p>
+        $$\text{Var}(F) = \left(\frac{9}{5}\right)^2\text{Var}(C) = \frac{81}{25}\,\text{Var}(C)$$
+        <p>The constant shift (+32) doesn't change variance at all. The scaling ($\frac{9}{5}$) multiplies variance by $\left(\frac{9}{5}\right)^2$. Standard deviation scales by $\frac{9}{5}$.</p>
+      </div>
+
+      <div class="callout callout-india">
+        In options pricing, variance is the square of volatility. When structurers move between different currency-denominated returns &#8212; say converting Nifty returns from INR to USD &#8212; the scaling property means you can't just multiply the volatility by the exchange rate factor. You multiply the <em>variance</em> by the square of that factor. This is a common error in cross-currency volatility translation.
+      </div>
+
+      <h3>Summary Table</h3>
+
+      <table style="width:100%;border-collapse:collapse;font-size:0.88rem;margin:1rem 0;">
+        <thead>
+          <tr style="background:var(--navy);color:white;">
+            <th style="padding:0.6rem 0.8rem;text-align:left;font-family:'DM Mono',monospace;font-size:0.72rem;">Distribution</th>
+            <th style="padding:0.6rem 0.8rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.72rem;">Mean $E(X)$</th>
+            <th style="padding:0.6rem 0.8rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.72rem;">Variance $\text{Var}(X)$</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.5rem 0.8rem;">Bernoulli($p$)</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$p$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$pq$</td>
+          </tr>
+          <tr style="background:var(--off);border-bottom:1px solid var(--border);">
+            <td style="padding:0.5rem 0.8rem;">Binomial($n,p$)</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$np$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$npq$</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.5rem 0.8rem;">Poisson($\lambda$)</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$\lambda$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$\lambda$</td>
+          </tr>
+          <tr style="background:var(--off);border-bottom:1px solid var(--border);">
+            <td style="padding:0.5rem 0.8rem;">Geometric($p$)</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$1/p$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$q/p^2$</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.5rem 0.8rem;">Uniform$[a,b]$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$(a+b)/2$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$(b-a)^2/12$</td>
+          </tr>
+          <tr style="background:var(--off);border-bottom:1px solid var(--border);">
+            <td style="padding:0.5rem 0.8rem;">Exp($\lambda$)</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$1/\lambda$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$1/\lambda^2$</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.5rem 0.8rem;">Gamma($\lambda,\alpha$)</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$\alpha/\lambda$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$\alpha/\lambda^2$</td>
+          </tr>
+          <tr style="background:var(--off);">
+            <td style="padding:0.5rem 0.8rem;">Normal($\mu,\sigma^2$)</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$\mu$</td>
+            <td style="padding:0.5rem 0.8rem;text-align:center;">$\sigma^2$</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 12B</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch12b / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim \text{Poi}(5)$. What is $\text{Var}(X)$?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$25$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$5$ &#8212; for Poisson, mean = variance = $\lambda$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$\sqrt{5}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$10$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $5$</strong><br/><br/>For Poisson$(\lambda)$: $E(X) = \lambda$ and $\text{Var}(X) = \lambda$. So both equal 5. <span class="expl-ans">This equality of mean and variance is the defining characteristic of the Poisson distribution.</span> In practice, if you observe count data where the variance is much larger than the mean, the Poisson model is inappropriate &#8212; you'd need a negative binomial instead.</div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch12b / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim \text{Bin}(20, 0.4)$. What is the standard deviation of $X$?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$4.8$ &#8212; since $\text{Var}(X) = npq = 4.8$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$\sqrt{4.8} \approx 2.19$ &#8212; standard deviation is the square root of variance</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$8$ &#8212; since $E(X) = np = 8$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$\sqrt{8} \approx 2.83$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; $\sqrt{4.8} \approx 2.19$</strong><br/><br/>$\text{Var}(X) = npq = 20 \times 0.4 \times 0.6 = 4.8$. Standard deviation $= +\sqrt{4.8} \approx 2.19$. <span class="expl-ans">Don't confuse variance (4.8) with standard deviation ($\sqrt{4.8}$).</span> Option A gives the variance, not the standard deviation.</div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch12b / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X$ has mean 10 and variance 4. $Y = 3X - 7$. What is $\text{Var}(Y)$?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$4$ &#8212; shifting and scaling don't change variance</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$12$ &#8212; $3 \times \text{Var}(X)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$36$ &#8212; $3^2 \times \text{Var}(X)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$29$ &#8212; $3^2 \times 4 - 7$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: C &#8212; $36$</strong><br/><br/>Property 2: $\text{Var}(aX+b) = a^2\text{Var}(X)$. Here $a=3$, $b=-7$: $\text{Var}(3X-7) = 9 \times 4 = 36$. <span class="expl-ans">The constant $-7$ has zero effect on variance. Only the scale factor $a=3$ matters, and it enters as $a^2=9$.</span></div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch12b / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">For the Exponential distribution, the standard deviation equals the mean. Which value of $\lambda$ gives a standard deviation of 2?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$\lambda = 2$ &#8212; since std dev $= \lambda$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$\lambda = 4$ &#8212; since $\text{Var} = 1/\lambda^2$ and $1/4 = 1/\lambda^2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>$\lambda = 0.5$ &#8212; since $\sigma = 1/\lambda = 2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$\lambda = \sqrt{2}$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: C &#8212; $\lambda = 0.5$</strong><br/><br/>For Exp$(\lambda)$: $\text{Var}(X) = 1/\lambda^2$, so $\sigma = 1/\lambda$. Setting $\sigma = 2$: $1/\lambda = 2 \Rightarrow \lambda = 0.5$. <span class="expl-ans">The mean is also $1/\lambda = 2$ &#8212; confirming that std dev = mean for the Exponential.</span> Option A incorrectly treats std dev as $\lambda$ rather than $1/\lambda$.</div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch12b / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Daily Nifty log-returns $X \sim N(0.0005, 0.0004)$. Annual returns are roughly $252X$ (252 trading days). What is the annual variance?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$0.0004 \times 252 = 0.1008$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">B</div><span>$0.0004 \times 252^2 = 25.4016$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">C</div><span>$0.0004$ &#8212; variance doesn't change under scaling</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$\sqrt{0.0004} \times 252 = 5.04$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: B &#8212; $0.0004 \times 252^2$</strong><br/><br/>$\text{Var}(252X) = 252^2 \times \text{Var}(X) = 63504 \times 0.0004 = 25.4016$. <span class="expl-ans">Variance scales by $a^2$, not $a$.</span> Option A multiplies variance by 252 (linear scaling &#8212; wrong). Option D uses $\sqrt{\text{Var}} \times 252$, which would give annual standard deviation if you were scaling std dev linearly &#8212; but the correct annual std dev is $\sqrt{252^2 \times 0.0004} = 252\sqrt{0.0004} = 252 \times 0.02 = 5.04$. So Option D accidentally gives the correct standard deviation &#8212; but the question asks for variance.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','B')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch12.html" class="ch-nav-btn">&#8592; Chapter 12: Expectation</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Variance computed. Spread quantified.","Mean and variance &#8212; you have them both now.","Var(aX+b) = a&#xB2;Var(X). You applied it cold.","Standard deviation is the square root. You knew.","Annual vol calculation: correct. Quant mode activated.","E(X&#xB2;) - (E(X))&#xB2; delivers again.","The computational formula worked. As always.","Probability Theory complete. You earned it."];
+const wrongMsgs=["Variance scales by a&#xB2;, not a. Re-read Property 2.","Std dev = &#x221A;Var, not Var itself.","For Poisson: mean = variance = &#x03BB;.","Re-check: Var(aX+b) = a&#xB2;Var(X), the constant b vanishes.","For Exp: Var = 1/&#x03BB;&#xB2;, so &#x03C3; = 1/&#x03BB;.","Re-read the computational formula proof."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Module Complete!';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

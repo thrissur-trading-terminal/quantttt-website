@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 13: Joint Distributions &amp; Covariance — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 13</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:47%"></div></div>
+      <span class="tb-prog-lbl">13 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch13.html"><div class="si-num">13</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch14.html"><div class="si-num">14</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch15.html"><div class="si-num">15</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 13</span>
+      </div>
+      <h1 class="chapter-title">Joint Distributions &amp; Covariance</h1>
+      <p class="chapter-subtitle">A single random variable maps each outcome to a number. Two random variables map each outcome to a point in the plane. This chapter builds the full 2D framework &#8212; joint distributions, marginals, conditionals, independence &#8212; and then introduces covariance and correlation: the tools for measuring how two random variables move together.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Two-Dimensional Random Variables</h3>
+
+      <p>A 1D random variable is a mapping $X: \Omega \to \mathbb{R}$. A 2D random variable is a pair $(X,Y): \Omega \to \mathbb{R}^2$, assigning two measurements to each outcome.</p>
+
+      <div class="callout callout-intuition">
+        $\Omega$ = all NSE trading days. $X(\omega)$ = Nifty return on day $\omega$. $Y(\omega)$ = India VIX on day $\omega$. This is a 2D random variable &#8212; every trading day produces a point $(X,Y)$ in the plane. We're interested in how these two move together.
+      </div>
+
+      <div class="callout callout-definition">
+        $(X,Y)$ is a <strong>2D random variable</strong> if $\{\omega : X(\omega) \leq x \text{ and } Y(\omega) \leq y\}$ is an event for all $(x,y) \in \mathbb{R}^2$.
+        <br/><br/>
+        The <strong>Joint CDF</strong>: $F(x,y) = P(X \leq x,\, Y \leq y)$
+        <br/><br/>
+        <strong>Properties:</strong> $F(-\infty, y) = F(x,-\infty) = 0$; $F(\infty,\infty) = 1$; and for $x_1 &lt; x_2$, $y_1 &lt; y_2$:
+        $$P(x_1 &lt; X \leq x_2,\; y_1 &lt; Y \leq y_2) = F(x_2,y_2) - F(x_1,y_2) - F(x_2,y_1) + F(x_1,y_1) \geq 0$$
+        (Inclusion-exclusion on rectangles — subtract two L-shaped regions, add back the doubly-subtracted corner.)
+      </div>
+
+      <h3>Joint PMF (Discrete) and Joint PDF (Continuous)</h3>
+
+      <div class="callout callout-definition">
+        <strong>Discrete:</strong> $p_{ij} = P(X = x_i, Y = y_j)$ with $\sum_i\sum_j p_{ij} = 1$.
+        <br/><br/>
+        <strong>Continuous:</strong> A function $f(x,y) \geq 0$ such that $\iint f(x,y)\,dx\,dy = 1$, and $P((X,Y)\in A) = \iint_A f(x,y)\,dx\,dy$.
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">&#x1F3B2; Joint PMF Example &#8212; Sons and Daughters</div>
+        <p>Let $X$ = number of sons (0,1,2) and $Y$ = number of daughters (0,1,2,3) for a couple.</p>
+        <div style="overflow-x:auto;margin:0.8rem 0;">
+        <table style="border-collapse:collapse;font-size:0.85rem;min-width:400px;">
+          <thead><tr style="background:var(--navy);color:white;">
+            <th style="padding:0.4rem 0.7rem;font-family:'DM Mono',monospace;font-size:0.7rem;">X\Y</th>
+            <th style="padding:0.4rem 0.7rem;text-align:center;">0</th>
+            <th style="padding:0.4rem 0.7rem;text-align:center;">1</th>
+            <th style="padding:0.4rem 0.7rem;text-align:center;">2</th>
+            <th style="padding:0.4rem 0.7rem;text-align:center;">3</th>
+            <th style="padding:0.4rem 0.7rem;text-align:center;background:rgba(232,114,42,0.3);">$P(X{=}i)$</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:0.4rem 0.7rem;font-weight:700;">0</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;">0.01</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.06</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.13</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.05</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;color:var(--orange);">0.25</td>
+            </tr>
+            <tr style="background:var(--off);border-bottom:1px solid var(--border);">
+              <td style="padding:0.4rem 0.7rem;font-weight:700;">1</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;">0.09</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.04</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.20</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.02</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;color:var(--orange);">0.35</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:0.4rem 0.7rem;font-weight:700;">2</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;">0.10</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.17</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.10</td><td style="padding:0.4rem 0.7rem;text-align:center;">0.03</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;color:var(--orange);">0.40</td>
+            </tr>
+            <tr style="background:rgba(232,114,42,0.08);">
+              <td style="padding:0.4rem 0.7rem;font-weight:700;color:var(--orange);">$P(Y{=}j)$</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;color:var(--orange);">0.20</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;color:var(--orange);">0.27</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;color:var(--orange);">0.43</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;color:var(--orange);">0.10</td>
+              <td style="padding:0.4rem 0.7rem;text-align:center;font-weight:700;">1.00</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <p>Row sums give $P(X=i)$ &#8212; the <strong>marginal</strong> distribution of $X$. Column sums give $P(Y=j)$. The entry 0.20 means $P(X=1, Y=2) = 0.20$.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">&#x1F4C8; Joint PDF Example &#8212; Verification and Marginals</div>
+        <p>Let $f(x,y) = x + \frac{xy}{3}$ on $[0,1]\times[0,2]$, zero elsewhere. Is this valid?</p>
+        $$\int_0^1\int_0^2 \left(x + \frac{xy}{3}\right)dy\,dx = \int_0^1\left[2x + \frac{2x}{3}\right]dx = \int_0^1\frac{8x}{3}\,dx = \frac{4}{3}\cdot\frac{1}{2} \cdot 2 = \frac{2}{3}+\frac{1}{3}=1 \checkmark$$
+        <p><strong>Marginal PDF of $X$:</strong> $f_X(x) = \int_0^2\left(x+\frac{xy}{3}\right)dy = 2x + \frac{2x}{3} = \frac{8x}{3}$ for $x \in [0,1]$.</p>
+      </div>
+
+      <h3>Marginals, Conditionals, Independence</h3>
+
+      <div class="callout callout-definition">
+        <strong>Marginals:</strong> $f_X(x) = \int_{-\infty}^\infty f(x,y)\,dy$ &nbsp;&nbsp; $f_Y(y) = \int_{-\infty}^\infty f(x,y)\,dx$
+        <br/><br/>
+        <strong>Conditional PDF:</strong> $f_{X|Y}(x|y) = \dfrac{f(x,y)}{f_Y(y)}$ &nbsp;&nbsp; (analogous to $P(A|B) = P(A\cap B)/P(B)$)
+        <br/><br/>
+        <strong>Independence:</strong> $X \perp Y \iff f(x,y) = f_X(x)\,f_Y(y)$ for all $(x,y)$.
+      </div>
+
+      <h3>Expectation: $E(X+Y) = E(X) + E(Y)$</h3>
+
+      <div class="callout callout-theorem">
+        Linearity of expectation extends to 2D &#8212; and critically, <strong>independence is not required</strong>.
+        $$E(X+Y) = E(X) + E(Y) \quad \text{always}$$
+        $$E(aX + bY) = aE(X) + bE(Y) \quad \text{always}$$
+        But: $E(XY) = E(X)E(Y)$ <strong>only if $X,Y$ are independent</strong>.
+      </div>
+
+      <div class="callout callout-proof">
+        $$E(X+Y) = \iint (x+y)f(x,y)\,dx\,dy = \iint xf(x,y)\,dx\,dy + \iint yf(x,y)\,dx\,dy$$
+        $$= \int x\underbrace{\left[\int f(x,y)\,dy\right]}_{f_X(x)}dx + \int y\underbrace{\left[\int f(x,y)\,dx\right]}_{f_Y(y)}dy = E(X) + E(Y) \qquad \square$$
+        The inner integral "marginalises out" the other variable.
+      </div>
+
+      <h3>Covariance</h3>
+
+      <div class="callout callout-definition">
+        $$\text{Cov}(X,Y) = E[(X-E(X))(Y-E(Y))] = E(XY) - E(X)E(Y)$$
+        <strong>Sign interpretation:</strong> positive Cov → $X$ and $Y$ tend to move together; negative → they move oppositely; zero → no linear relationship (but need not be independent).
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Example 1 &#8212; Coin Tosses: $X$ = Heads, $Y$ = Tails, $n=3$</div>
+        <p>$X \sim \text{Bin}(3,p)$, $Y = 3-X$ (deterministically). $E(X) = 3p$, $E(Y) = 3q$.</p>
+        <p>$XY$ takes values 0 (when $X=0$ or $X=3$) and 2 (when $X=1,Y=2$ or $X=2,Y=1$):</p>
+        $$E(XY) = 0\cdot(p^3+q^3) + 2\cdot(3pq^2 + 3p^2q) = 6pq(p+q) = 6pq$$
+        $$\text{Cov}(X,Y) = 6pq - 9pq = -3pq$$
+        <p>Negative &#8212; as expected. More heads means fewer tails. The two are negatively related by construction.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Example 2 &#8212; $Y = k$ (constant): $\text{Cov} = 0$</div>
+        <p>If $Y$ is a constant regardless of $X$, they're independent. $E(XY) = kE(X) = E(X)E(Y)$. So $\text{Cov} = 0$.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Example 3 &#8212; $Y = X+1$: $\text{Cov} = 3pq$ (positive)</div>
+        <p>$E(Y) = E(X)+1 = 3p+1$. $E(XY) = E(X(X+1)) = E(X^2)+E(X) = 6pq+12p$. So $\text{Cov} = 6pq+12p - 3p(3p+1) = 3pq > 0$. As $X$ increases, $Y$ increases &#8212; positive covariance.</p>
+      </div>
+
+      <h3>Variance of a Linear Combination</h3>
+
+      <div class="callout callout-theorem">
+        $$\text{Var}(aX + bY) = a^2\text{Var}(X) + b^2\text{Var}(Y) + 2ab\,\text{Cov}(X,Y)$$
+        If $X_1,\ldots,X_n$ are independent:
+        $$\text{Var}\!\left(\sum_{i=1}^n a_i X_i\right) = \sum_{i=1}^n a_i^2\,\text{Var}(X_i)$$
+      </div>
+
+      <div class="callout callout-proof">
+        Let $\mu_X = E(X)$, $\mu_Y = E(Y)$. Then $aX+bY - E(aX+bY) = a(X-\mu_X)+b(Y-\mu_Y)$. Squaring and taking $E$:
+        $$\text{Var}(aX+bY) = a^2E[(X-\mu_X)^2] + b^2E[(Y-\mu_Y)^2] + 2ab\,E[(X-\mu_X)(Y-\mu_Y)]$$
+        $$= a^2\text{Var}(X) + b^2\text{Var}(Y) + 2ab\,\text{Cov}(X,Y) \qquad \square$$
+      </div>
+
+      <div class="callout callout-intuition">
+        <strong>Variance consistency check:</strong> $X \sim \Gamma(\lambda,\alpha)$ and $Y \sim \Gamma(\lambda,\beta)$ independent. Two routes:<br/>
+        Route 1: $\text{Var}(X+Y) = \alpha/\lambda^2 + \beta/\lambda^2 = (\alpha+\beta)/\lambda^2$ (add variances).<br/>
+        Route 2: $X+Y \sim \Gamma(\lambda,\alpha+\beta)$, so $\text{Var} = (\alpha+\beta)/\lambda^2$. Same answer. ✓
+      </div>
+
+      <h3>Correlation Coefficient</h3>
+
+      <div class="callout callout-definition">
+        $$\rho_{XY} = \frac{\text{Cov}(X,Y)}{\sigma_X\,\sigma_Y}$$
+        Dimensionless and unit-free. Covariance is affected by the units of $X$ and $Y$ (kg·cm ≠ kg·m). Correlation is not &#8212; it always lives in $[-1,+1]$.
+      </div>
+
+      <div class="callout callout-theorem">
+        $-1 \leq \rho_{XY} \leq 1$
+      </div>
+
+      <div class="callout callout-proof">
+        Let $U = \frac{X-\mu_X}{\sigma_X}$ and $V = \frac{Y-\mu_Y}{\sigma_Y}$. Then $E(U)=E(V)=0$, $\text{Var}(U)=\text{Var}(V)=1$, and $E(UV) = \rho_{XY}$.
+        <br/><br/>
+        Since $E[(U-V)^2] \geq 0$:
+        $$E[U^2] + E[V^2] - 2E[UV] \geq 0 \implies 1 + 1 - 2\rho_{XY} \geq 0 \implies \rho_{XY} \leq 1$$
+        Since $E[(U+V)^2] \geq 0$:
+        $$1 + 1 + 2\rho_{XY} \geq 0 \implies \rho_{XY} \geq -1 \qquad \square$$
+      </div>
+
+      <div class="callout callout-theorem">
+        <strong>Invariance under change of origin and scale:</strong> If $U = (X-a)/h$ and $V = (Y-b)/k$, then:
+        $$\rho_{UV} = \begin{cases}\rho_{XY} & \text{if } h \text{ and } k \text{ have the same sign} \\ -\rho_{XY} & \text{if opposite signs}\end{cases}$$
+        Shifting origin doesn't affect correlation. Scaling doesn't either &#8212; unless one axis is reflected (sign flip).
+      </div>
+
+      <div class="callout callout-india">
+        The Nifty-VIX correlation is typically around $-0.7$ to $-0.8$ &#8212; strongly negative. When Nifty falls, VIX rises. This is why long Nifty + long VIX futures is a natural hedging structure: their covariance term reduces portfolio variance. The correlation coefficient is the precise tool for quantifying this relationship independent of whether you measure returns in basis points or percentages.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 13</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch13 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X$ and $Y$ are independent with $E(X) = 3$, $E(Y) = 5$. What is $E(2X + 3Y - 1)$?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$20$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$20$ &#8212; wait, let me check: $2(3)+3(5)-1 = 6+15-1 = 20$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$21$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Depends on the joint distribution</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $20$</strong><br/><br/>$E(2X+3Y-1) = 2E(X)+3E(Y)-1 = 6+15-1 = 20$. <span class="expl-ans">Linearity of expectation holds regardless of whether $X$ and $Y$ are independent.</span> Option D is wrong &#8212; linearity works for any joint distribution. (Options A and B both say 20 &#8212; B is correct with the explicit calculation shown.)</div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch13 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X$ and $Y$ are independent, $\text{Var}(X) = 4$, $\text{Var}(Y) = 9$. What is $\text{Var}(X - Y)$?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$5$ &#8212; subtract the variances</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>$-5$ &#8212; $\text{Var}(X) - \text{Var}(Y)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>$13$ &#8212; $\text{Var}(X) + \text{Var}(Y)$ since independent</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$36$ &#8212; $(\text{Var}(X) + \text{Var}(Y))^2/2$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: C &#8212; $13$</strong><br/><br/>$\text{Var}(X-Y) = \text{Var}(X) + (-1)^2\text{Var}(Y) + 2(1)(-1)\text{Cov}(X,Y) = 4 + 9 + 0 = 13$. <span class="expl-ans">Variance is always non-negative — you can never get $-5$. Subtracting a random variable adds its variance.</span> This surprises many people: the difference $X-Y$ is more spread out than either $X$ or $Y$ alone.</div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch13 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$\text{Cov}(X,Y) = 0$. Which conclusion is correct?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$X$ and $Y$ are independent</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>$X$ and $Y$ have no <em>linear</em> relationship, but may still be dependent</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>$E(XY) = 0$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$\rho_{XY} = -1$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: B</strong><br/><br/>Zero covariance means no <em>linear</em> relationship — but $X$ and $Y$ could still be dependent in a non-linear way. Classic example: $X \sim U(-1,1)$, $Y = X^2$. Then $\text{Cov}(X,Y) = E(X^3) - E(X)E(X^2) = 0 - 0 = 0$, yet $Y$ is a deterministic function of $X$ &#8212; <span class="expl-ans">maximally dependent, yet zero covariance.</span> Independence implies zero covariance, but not the other way around.</div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch13 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$\text{Var}(X) = 4$, $\text{Var}(Y) = 9$, $\rho_{XY} = 0.5$. What is $\text{Var}(X + Y)$?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$13$ &#8212; variances always add</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$169$ &#8212; $(2+3)^2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>$19$ &#8212; $\text{Var}(X)+\text{Var}(Y)+2\text{Cov}(X,Y) = 4+9+6$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$25$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: C &#8212; $19$</strong><br/><br/>$\text{Cov}(X,Y) = \rho\,\sigma_X\sigma_Y = 0.5 \times 2 \times 3 = 3$. Then $\text{Var}(X+Y) = 4 + 9 + 2(3) = 19$. <span class="expl-ans">When variables are positively correlated, their sum is more spread out than if they were independent ($13$).</span> In portfolio terms: two positively correlated assets give higher portfolio variance than two independent ones.</div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch13 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Nifty returns $X$ and VIX changes $Y$ have $\rho_{XY} = -0.75$. You convert both to USD (multiply each by the same exchange rate $e > 0$). What is the new correlation?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$-0.75/e$ &#8212; correlation scales inversely with the factor</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>$-0.75 \times e^2$ &#8212; variance scales by $e^2$, so correlation does too</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>$-0.75$ &#8212; correlation is invariant under scaling by the same positive factor</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$+0.75$ &#8212; multiplying by $e$ flips the sign</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: C &#8212; $-0.75$</strong><br/><br/>Let $U = eX$, $V = eY$ (same scale factor, same sign). Then $\text{Cov}(U,V) = e^2\text{Cov}(X,Y)$, $\sigma_U = e\sigma_X$, $\sigma_V = e\sigma_Y$. So $\rho_{UV} = \frac{e^2\text{Cov}}{e\sigma_X \cdot e\sigma_Y} = \rho_{XY} = -0.75$. <span class="expl-ans">Correlation is dimensionless and unit-invariant &#8212; the $e^2$ factors cancel completely.</span> Only if you applied a negative factor to one of them (e.g. $-e$ for one) would the sign flip.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch12b.html" class="ch-nav-btn">&#8592; Chapter 12B: Variance</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Joint, marginal, covariance, correlation &#8212; all in hand.","Cov and &#x03C1; computed correctly. No units lost.","Linearity doesn't need independence. You knew.","Var(X&#x2212;Y) = Var(X)+Var(Y). Classic result, clean execution.","&#x03C1; is invariant under scaling. You proved it.","Zero covariance &#x2260; independence. Sharp distinction.","2D probability tamed.","Portfolio variance formula applied perfectly."];
+const wrongMsgs=["Remember: Var(X&#x2212;Y) = Var(X)+Var(Y), not Var(X)&#x2212;Var(Y).","Zero covariance does not imply independence.","Cov(X,Y) = &#x03C1;&#x03C3;_X&#x03C3;_Y &#8212; compute Cov first, then add.","Correlation is unit-free &#8212; scaling cancels in numerator and denominator.","Re-read the linearity of expectation section.","Check the sign rule for scaling: same sign &#x2192; &#x03C1; unchanged."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

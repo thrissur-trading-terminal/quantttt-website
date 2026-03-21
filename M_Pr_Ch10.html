@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 10: Continuous Distributions — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 10</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:33%"></div></div>
+      <span class="tb-prog-lbl">10 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch10.html"><div class="si-num">10</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch11.html"><div class="si-num">11</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12.html"><div class="si-num">12</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12b.html"><div class="si-num">12B</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch13.html"><div class="si-num">13</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch14.html"><div class="si-num">14</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch15.html"><div class="si-num">15</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Intermediate</span>
+        <span class="ch-num-label">Chapter 10 of 30</span>
+      </div>
+      <h1 class="chapter-title">Continuous Distributions</h1>
+      <p class="chapter-subtitle">When a random variable can take any value on an interval, probability mass becomes probability density. This chapter builds the continuous framework from scratch, works through five concrete examples, then develops the Exponential distribution in full &#8212; memoryless property, minimum of exponentials, and convolution leading to the Gamma.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Why Continuous Needs a Different Framework</h3>
+
+      <p>For a discrete RV, we assigned a positive probability $p_i > 0$ to each outcome $x_i$. This works because the set of outcomes is at most countable &#8212; we can list them, and the sum $\sum p_i = 1$ is well-defined.</p>
+
+      <p>But if $X$ can take any value on an interval, the outcomes are <strong>uncountably many</strong>. There is no positive number $\varepsilon > 0$ small enough that $\varepsilon$ summed over uncountably many points stays $\leq 1$. So we cannot assign positive probability to individual points.</p>
+
+      <div class="callout callout-intuition">
+        Instead of assigning mass to points, we assign <strong>density</strong> to regions. Probability becomes area under a curve, not a sum of spikes. The tool that connects density to probability is integration.
+      </div>
+
+      <h3>The PDF and CDF for Continuous RVs</h3>
+
+      <div class="callout callout-definition">
+        A random variable $X$ is <strong>continuous</strong> if there exists a function $f(x) \geq 0$ for all $x \in \mathbb{R}$ such that:
+        $$F(x) = P(X \leq x) = \int_{-\infty}^{x} f(t)\, dt$$
+        The function $f(x)$ is called the <strong>Probability Density Function (PDF)</strong>.
+      </div>
+
+      <p>From this definition, several facts follow immediately:</p>
+
+      <div class="callout callout-theorem">
+        <strong>(i)</strong> $\displaystyle\int_{-\infty}^{\infty} f(x)\,dx = 1$ &nbsp;&nbsp; (total probability is 1)<br/><br/>
+        <strong>(ii)</strong> $P(a &lt; X \leq b) = F(b) - F(a) = \displaystyle\int_a^b f(x)\,dx$<br/><br/>
+        <strong>(iii)</strong> $f(x) = F'(x)$ &nbsp;&nbsp; (PDF is the derivative of CDF, wherever it exists)<br/><br/>
+        <strong>(iv)</strong> $P(X = x) = 0$ for every individual point $x$ &nbsp;&nbsp; (single points have zero width, hence zero area)
+      </div>
+
+      <div class="callout callout-warning">
+        <strong>PDF $\neq$ PMF.</strong> The PMF $p_i$ is a probability and must satisfy $0 \leq p_i \leq 1$. The PDF $f(x)$ is a <em>density</em> &#8212; it can exceed 1. For example, Uniform$[0, \frac{1}{2}]$ has $f(x) = 2$ on $[0, \frac{1}{2}]$. The density is 2, but the total area is still $2 \times \frac{1}{2} = 1$. It is not a probability at a point &#8212; it is probability per unit length.
+      </div>
+
+      <div class="callout callout-intuition">
+        <strong>What does $f(x)$ actually mean?</strong> By Taylor's theorem, for small $\Delta x$:
+        $$F(x + \Delta x) \approx F(x) + \Delta x \cdot F'(x) = F(x) + \Delta x \cdot f(x)$$
+        $$\therefore\; P(x \leq X \leq x + \Delta x) \approx f(x)\,\Delta x$$
+        The PDF at $x$ tells you: the probability of landing in a tiny interval of length $\Delta x$ around $x$ is approximately $f(x) \cdot \Delta x$. Density $\times$ length $=$ probability.
+      </div>
+
+      <h3>Convolution &#8212; PDF of a Sum</h3>
+
+      <p>If $X$ and $Y$ are independent continuous RVs, the PDF of $Z = X + Y$ is their <strong>convolution</strong>:</p>
+      $$f_Z(z) = \int_{-\infty}^{\infty} f_X(x)\cdot f_Y(z-x)\,dx$$
+      <p>For positive RVs, the limits become $\int_0^z$. This is the continuous analogue of the sum-over-cases we used for Binomial and Poisson.</p>
+
+      <h3>Worked Examples &#8212; Verifying PDFs and Finding Constants</h3>
+
+      <div class="worked">
+        <div class="worked-title">Q1 &#8212; $f(x) = 6x(1-x)$ on $(0,1)$</div>
+        <p>First verify: $\int_0^1 x(1-x)\,dx = \frac{1}{2} - \frac{1}{3} = \frac{1}{6}$. So the normalising constant is $6$, giving $f(x) = 6x(1-x)$.</p>
+        <p>Find $P(X \leq \frac{1}{2})$:</p>
+        $$F\!\left(\tfrac{1}{2}\right) = 6\int_0^{1/2} x(1-x)\,dx = 6\left[\frac{x^2}{2} - \frac{x^3}{3}\right]_0^{1/2} = 6\left(\frac{1}{8} - \frac{1}{24}\right) = 6 \cdot \frac{1}{12} = \frac{1}{2}$$
+        <p>This is expected: $f(x) = 6x(1-x)$ is symmetric around $x = \frac{1}{2}$ on $(0,1)$, so exactly half the probability lies below $\frac{1}{2}$.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Q2 &#8212; $f(x) = C\sin\!\left(\frac{\pi}{6}x\right)$ on $[0,6]$</div>
+        <p>Substitute $y = \frac{\pi}{6}x$, so $dx = \frac{6}{\pi}dy$ and the limits become $[0, \pi]$:</p>
+        $$\int_0^6 C\sin\!\left(\tfrac{\pi}{6}x\right)dx = C \cdot \frac{6}{\pi}\int_0^\pi \sin y\,dy = C \cdot \frac{6}{\pi}\cdot 2 = \frac{12C}{\pi}$$
+        <p>Setting equal to 1: $C = \dfrac{\pi}{12}$.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Q3 &#8212; Piecewise linear PDF, find $C$</div>
+        <p>$f(x) = C(x+1)$ on $[-1,0]$, $C$ on $[0,1]$, $C(2-x)$ on $[1,2]$, zero elsewhere.</p>
+        $$C\int_{-1}^0(x+1)\,dx + C\int_0^1 dx + C\int_1^2(2-x)\,dx = C\cdot\frac{1}{2} + C\cdot 1 + C\cdot\frac{1}{2} = 2C$$
+        <p>Set $2C = 1$: $C = \dfrac{1}{2}$.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Q4 &#8212; Mixed Distribution</div>
+        <p>$P(X=1) = \frac{1}{6}$, $P(X=2) = \frac{1}{4}$, $P(X=3) = \frac{1}{3}$, and $X$ is uniform on $(3,5]$ with constant density $C$.</p>
+        <p>Total probability = 1:</p>
+        $$\frac{1}{6} + \frac{1}{4} + \frac{1}{3} + \int_3^5 C\,dx = \frac{9}{12} + 2C = 1 \implies C = \frac{1}{8}$$
+        <p>This is a <em>mixed distribution</em>: probability mass at discrete points plus a continuous density on an interval. The CDF has jumps at $x=1,2,3$ and a linear ramp on $(3,5]$.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Q5 &#8212; $f(x) = e^{-x}$ on $(0,\infty)$</div>
+        $$\int_0^\infty e^{-x}\,dx = \left[-e^{-x}\right]_0^\infty = 0 - (-1) = 1 \checkmark$$
+        <p>This is a valid PDF on an infinite interval &#8212; our first example where $X$ is unbounded above.</p>
+      </div>
+
+      <h3>The Exponential Distribution</h3>
+
+      <div class="callout callout-definition">
+        $X \sim \text{Exp}(\lambda)$, $\lambda > 0$. PDF and CDF:
+        $$f(x) = \begin{cases}\lambda e^{-\lambda x} & x > 0 \\ 0 & x \leq 0\end{cases} \qquad F(x) = \begin{cases}1 - e^{-\lambda x} & x > 0 \\ 0 & x \leq 0\end{cases}$$
+        $X$ models waiting times: time until the first event in a Poisson process with rate $\lambda$.
+      </div>
+
+      <div class="callout callout-india">
+        In options trading: time until the next large move ($> 2\sigma$) on the Nifty is approximately exponential. In order flow: inter-arrival times between large institutional orders follow an exponential distribution. The memoryless property means the time you've already waited gives zero information about when the next event will occur.
+      </div>
+
+      <h3>Property 1 &#8212; Memoryless</h3>
+
+      <div class="callout callout-theorem">
+        $$P(X \leq a+t \mid X > a) = P(X \leq t)$$
+        Given that $X$ has already exceeded $a$, the distribution of the remaining excess is identical to starting fresh.
+      </div>
+
+      <div class="callout callout-proof">
+        $$P(X \leq a+t \mid X > a) = \frac{P(a < X \leq a+t)}{P(X > a)} = \frac{F(a+t) - F(a)}{1 - F(a)}$$
+        Substitute $F(x) = 1 - e^{-\lambda x}$:
+        $$= \frac{(1-e^{-\lambda(a+t)}) - (1-e^{-\lambda a})}{e^{-\lambda a}} = \frac{e^{-\lambda a} - e^{-\lambda(a+t)}}{e^{-\lambda a}} = \frac{e^{-\lambda a}(1 - e^{-\lambda t})}{e^{-\lambda a}} = 1 - e^{-\lambda t} = P(X \leq t) \quad\square$$
+      </div>
+
+      <div class="callout callout-intuition">
+        The Exponential is the continuous analogue of the Geometric distribution. Both are memoryless &#8212; the only distributions with this property in their respective domains (continuous and discrete). A Geometric RV counts discrete trials until the first success; an Exponential RV measures continuous time until the first event.
+      </div>
+
+      <h3>Property 2 &#8212; Minimum of Independent Exponentials</h3>
+
+      <div class="callout callout-theorem">
+        If $X_1, X_2, \ldots, X_n$ are independent with $X_i \sim \text{Exp}(\lambda_i)$, then:
+        $$\min(X_1, X_2, \ldots, X_n) \sim \text{Exp}(\lambda_1 + \lambda_2 + \cdots + \lambda_n)$$
+      </div>
+
+      <div class="callout callout-proof">
+        Let $Z = \min(X_1, \ldots, X_n)$. The event $\{Z > z\}$ = "all $X_i > z$":
+        $$P(Z > z) = P(X_1 > z, \ldots, X_n > z) = \prod_{i=1}^n P(X_i > z) = \prod_{i=1}^n e^{-\lambda_i z} = e^{-(\lambda_1+\cdots+\lambda_n)z}$$
+        So $F_Z(z) = 1 - e^{-(\sum \lambda_i)z}$, and differentiating: $f_Z(z) = \left(\sum_{i=1}^n \lambda_i\right)e^{-(\sum \lambda_i)z}$, which is the Exp$(\sum \lambda_i)$ PDF. $\square$
+      </div>
+
+      <div class="callout callout-india">
+        This is the <strong>competing risks</strong> model. Suppose $n$ independent "events" can occur &#8212; each with its own Exponential rate. The time until the <em>first</em> event is Exp with rate equal to the sum. Applied to options: if there are multiple catalysts that could trigger a market move (RBI policy, earnings, global risk-off), each arriving at its own rate, the time until the first catalyst is Exp(total rate). This is why implied volatility aggregates across events.
+      </div>
+
+      <h3>Property 3 &#8212; Sum of Exponentials and the Gamma</h3>
+
+      <p>If $X_1, X_2 \sim \text{Exp}(\lambda)$ independent, what is the PDF of $X_1 + X_2$?</p>
+
+      <div class="callout callout-proof">
+        Using the convolution formula with $f_X(x) = \lambda e^{-\lambda x}$ for $x > 0$:
+        $$f_{X_1+X_2}(z) = \int_0^z \lambda e^{-\lambda x} \cdot \lambda e^{-\lambda(z-x)}\,dx = \lambda^2 \int_0^z e^{-\lambda z}\,dx = \lambda^2 z e^{-\lambda z}$$
+        This is the PDF of a <strong>Gamma(2, $\lambda$)</strong> distribution. More generally:
+        $$X_1 + X_2 + \cdots + X_n \sim \text{Gamma}(n, \lambda), \quad\text{with PDF } \frac{\lambda^n x^{n-1} e^{-\lambda x}}{(n-1)!}$$
+        Check $n=2$: $\frac{\lambda^2 x^1 e^{-\lambda x}}{1!} = \lambda^2 x e^{-\lambda x}$ &#8212; matches. $\square$
+      </div>
+
+      <div class="callout callout-intuition">
+        The sum of $n$ independent Exp($\lambda$) waiting times is the total time until the $n$th event. This is the Gamma distribution &#8212; it models aggregate waiting time in a Poisson process. The Exponential is the special case $n=1$.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 10</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch10 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$f(x) = 3x^2$ for $x \in [0,1]$, zero elsewhere. What is $P(X \leq 0.5)$?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$0.5$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$0.125$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$0.75$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$0.25$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $0.125$</strong><br/><br/>$P(X \leq 0.5) = \int_0^{0.5} 3x^2\,dx = [x^3]_0^{0.5} = (0.5)^3 = 0.125$. <span class="expl-ans">The CDF here is $F(x) = x^3$, a power-law that concentrates most probability near 1, not near 0.</span> Only 12.5% of the probability lies below the midpoint.</div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch10 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Can a PDF $f(x)$ take the value $f(x) = 5$ at some point $x$?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>No &#8212; probabilities can never exceed 1</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>Yes &#8212; $f(x)$ is a density, not a probability; it only needs $f(x) \geq 0$ and $\int f = 1$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Only if the distribution is uniform</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Only on infinite support intervals</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B</strong><br/><br/>$f(x)$ is probability per unit length, not probability itself. The constraint is $f(x) \geq 0$ everywhere and $\int_{-\infty}^\infty f(x)\,dx = 1$. There is no upper bound on $f(x)$ at any individual point. <span class="expl-ans">Example: Uniform$[0, \frac{1}{5}]$ has $f(x) = 5$ throughout &#8212; perfectly valid, since the total area is $5 \times \frac{1}{5} = 1$.</span></div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch10 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim \text{Exp}(2)$. You observe that $X > 3$. What is $P(X \leq 3.5 \mid X > 3)$?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$F(3.5) - F(3) = e^{-6} - e^{-7}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$F(3.5) = 1 - e^{-7}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>$P(X \leq 0.5) = 1 - e^{-1}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$0$ &#8212; $X > 3$ means $X$ can no longer be $\leq 3.5$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: C &#8212; $1 - e^{-1}$</strong><br/><br/>By the memoryless property: $P(X \leq a+t \mid X > a) = P(X \leq t)$. Here $a=3$, $t=0.5$:
+          $$P(X \leq 3.5 \mid X > 3) = P(X \leq 0.5) = 1 - e^{-2 \times 0.5} = 1 - e^{-1} \approx 0.632$$
+          <span class="expl-ans">The 3 units already waited are forgotten. We start fresh with Exp(2) from zero.</span></div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch10 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Three independent order streams arrive at rates $\lambda_1 = 1$, $\lambda_2 = 2$, $\lambda_3 = 3$ orders/sec (each Exponential). What is the distribution of the time until the <strong>first</strong> order arrives from any stream?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Exp(1) &#8212; use the slowest stream</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>Exp(6) &#8212; minimum of independent exponentials</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>Exp(2) &#8212; use the average rate</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Not exponential &#8212; minimum of different distributions is complex</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: B &#8212; Exp(6)</strong><br/><br/>Property 2: $\min(X_1, X_2, X_3) \sim \text{Exp}(\lambda_1 + \lambda_2 + \lambda_3) = \text{Exp}(1+2+3) = \text{Exp}(6)$. <span class="expl-ans">The combined rate is 6 orders/sec. The first order arrives 6 times faster than a single stream with rate 1.</span> This is why aggregating liquidity from multiple venues (NSE + BSE + SGX) dramatically reduces average waiting time for execution.</div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch10 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_1, X_2, X_3$ are independent Exp($\lambda$). The PDF of $X_1 + X_2 + X_3$ is $\frac{\lambda^3 x^2 e^{-\lambda x}}{2}$. What is the name of this distribution, and what is its relationship to the Exponential?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>Normal distribution &#8212; by the Central Limit Theorem</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>Poisson distribution &#8212; since exponentials model Poisson inter-arrivals</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>Gamma(3, $\lambda$) &#8212; sum of $n$ independent Exp($\lambda$) gives Gamma($n$, $\lambda$)</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>Another Exponential with rate $3\lambda$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: C &#8212; Gamma(3, $\lambda$)</strong><br/><br/>The sum of $n$ independent Exp($\lambda$) RVs follows Gamma($n$, $\lambda$) with PDF $\frac{\lambda^n x^{n-1} e^{-\lambda x}}{(n-1)!}$. For $n=3$: $\frac{\lambda^3 x^2 e^{-\lambda x}}{2!} = \frac{\lambda^3 x^2 e^{-\lambda x}}{2}$ &#8212; exactly what we have. <span class="expl-ans">Gamma(3, $\lambda$) is the waiting time until the 3rd event in a Poisson process with rate $\lambda$.</span> Option D is wrong: the minimum of exponentials gives another exponential, but the <em>sum</em> does not.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch9.html" class="ch-nav-btn">&#8592; Chapter 9: More Discrete Distributions</a>
+      <a href="M_Pr_Ch11.html" class="ch-nav-btn primary">Next: Moments &amp; Expectations &#8594;</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Integration complete. Probability delivered.","PDF evaluated, area computed, correct.","Memoryless property applied perfectly.","Density times length equals probability. You got it.","Convolution resolved. Gamma distribution identified.","The past has no effect. Neither do wrong answers on you.","Exponential, Gamma, continuous &#8212; all in your toolkit now.","Rigorous and right."];
+const wrongMsgs=["Check whether it is density or probability &#8212; different rules.","Re-read the memoryless property proof.","Integrate, don\'t sum. This is a continuous distribution.","The minimum theorem: rates add. Review Property 2.","Recalibrate. Check the formula above.","PDF vs PMF distinction &#8212; re-read the watch-out box."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

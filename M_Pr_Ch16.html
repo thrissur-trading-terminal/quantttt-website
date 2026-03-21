@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 16: Poisson Process — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 16</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:57%"></div></div>
+      <span class="tb-prog-lbl">16 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch13.html"><div class="si-num">&#x2713;</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch14.html"><div class="si-num">&#x2713;</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch15.html"><div class="si-num">&#x2713;</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 16</span>
+      </div>
+      <h1 class="chapter-title">The Poisson Process</h1>
+      <p class="chapter-subtitle">We have studied the Poisson distribution as a formula. Now we derive it from physical assumptions about how random events arrive over time. The Poisson process is a complete probabilistic model of arrivals &#8212; and it unifies three distributions: Poisson (counts), Exponential (first waiting time), and Gamma ($k$-th waiting time).</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>What the Poisson Process Models</h3>
+
+      <p>Any process where discrete events arrive randomly over time or space: phone calls at a call centre, cars at a toll plaza, insurance claims in a year, typos on a page, orders arriving at an exchange.</p>
+
+      <div class="callout callout-definition">
+        A <strong>Poisson Process</strong> with rate $\lambda > 0$ satisfies three assumptions:
+        <br/><br/>
+        <strong>A1. Independence:</strong> The number of arrivals in non-overlapping time intervals are independent.
+        <br/><br/>
+        <strong>A2. Stationarity:</strong> $P(\text{exactly 1 arrival in } [t, t+\Delta t]) = \lambda\Delta t$ for any $t$.
+        <br/><br/>
+        <strong>A3. Rare doubles:</strong> $P(\text{more than 1 arrival in } [t, t+\Delta t]) = O(\Delta t)$, meaning this probability divided by $\Delta t$ goes to 0 as $\Delta t \to 0$.
+      </div>
+
+      <div class="callout callout-india">
+        In algorithmic trading on NSE, order arrivals from multiple market participants follow a Poisson process under normal conditions. $\lambda$ is the order arrival rate (orders/second). The Poisson process assumption underlies every limit order book model, execution quality analysis, and market impact estimation used in Indian HFT.
+      </div>
+
+      <h3>Deriving the Poisson PMF from First Principles</h3>
+
+      <p>Let $p_x(t) = P(X_t = x)$ = probability of exactly $x$ arrivals in time $t$. Initial conditions: $p_0(0) = 1$, $p_x(0) = 0$ for $x > 0$.</p>
+
+      <div class="callout callout-proof">
+        <strong>Step 1 — Differential equation for $p_0(t)$:</strong>
+        <br/><br/>
+        In $[0, t+\Delta t]$, zero arrivals requires zero in $[0,t]$ AND zero in $[t, t+\Delta t]$:
+        $$p_0(t+\Delta t) = p_0(t)\cdot(1 - \lambda\Delta t - O(\Delta t))$$
+        Rearranging and dividing by $\Delta t$, then taking $\Delta t \to 0$:
+        $$p_0'(t) = -\lambda p_0(t) \implies \frac{p_0'(t)}{p_0(t)} = -\lambda$$
+        Integrating: $\log p_0(t) = -\lambda t + C$. At $t=0$: $C=0$. Therefore:
+        $$\boxed{p_0(t) = e^{-\lambda t}}$$
+      </div>
+
+      <div class="callout callout-proof">
+        <strong>Step 2 — Differential equation for $p_x(t)$, $x \geq 1$:</strong>
+        <br/><br/>
+        Exactly $x$ arrivals in $[0, t+\Delta t]$ happens two ways:
+        — $x$ arrivals in $[0,t]$, then 0 in $[t,t+\Delta t]$, or
+        — $x-1$ arrivals in $[0,t]$, then 1 in $[t,t+\Delta t]$
+        $$p_x(t+\Delta t) = p_x(t)(1-\lambda\Delta t) + p_{x-1}(t)\cdot\lambda\Delta t + O(\Delta t)$$
+        Taking $\Delta t \to 0$:
+        $$p_x'(t) = -\lambda p_x(t) + \lambda p_{x-1}(t) \qquad \cdots (*)$$
+      </div>
+
+      <div class="callout callout-proof">
+        <strong>Step 3 — Solve recursively:</strong>
+        <br/><br/>
+        <em>For $x=1$:</em> $p_1'(t) + \lambda p_1(t) = \lambda e^{-\lambda t}$. Multiply by integrating factor $e^{\lambda t}$:
+        $$\frac{d}{dt}[e^{\lambda t}p_1(t)] = \lambda \implies e^{\lambda t}p_1(t) = \lambda t + C$$
+        At $t=0$: $p_1(0) = 0 \Rightarrow C=0$. So $p_1(t) = e^{-\lambda t}\lambda t = e^{-\lambda t}\frac{(\lambda t)^1}{1!}$.
+        <br/><br/>
+        <em>For $x=2$:</em> $p_2'(t) + \lambda p_2(t) = \lambda e^{-\lambda t}\lambda t$. Same method:
+        $$\frac{d}{dt}[e^{\lambda t}p_2(t)] = \lambda^2 t \implies e^{\lambda t}p_2(t) = \frac{\lambda^2 t^2}{2} \implies p_2(t) = e^{-\lambda t}\frac{(\lambda t)^2}{2!}$$
+        <br/>
+        By induction: $p_x(t) = e^{-\lambda t}\dfrac{(\lambda t)^x}{x!}$. $\square$
+        <br/><br/>
+        <strong>Conclusion:</strong> $X_t \sim \text{Poi}(\lambda t)$.
+      </div>
+
+      <h3>Worked Examples</h3>
+
+      <div class="worked">
+        <div class="worked-title">&#x1F4CB; Insurance Claims</div>
+        <p>An insurer covers 5000 persons. Historical rate: 10 claims per 10000 persons/year, so $\lambda = 0.001$ claims/person/year. With $t = 5000$ persons, $\lambda t = 5$.</p>
+        $$P(\text{3 claims}) = e^{-5}\frac{5^3}{3!} = e^{-5} \times \frac{125}{6} \approx e^{-5} \times 20.83$$
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">&#x1F4D6; Book Errors</div>
+        <p>500 pages, 300 errors → rate $\lambda = 300/500 = 0.6$ errors/page. For $t = 10$ pages: $\lambda t = 6$.</p>
+        $$P(\text{0 errors in 10 pages}) = e^{-6}\frac{6^0}{0!} = e^{-6} \approx 0.00248$$
+      </div>
+
+      <h3>Poisson → Exponential → Gamma: The Waiting Time Trinity</h3>
+
+      <div class="callout callout-theorem">
+        If arrivals follow a Poisson process with rate $\lambda$:
+        <br/><br/>
+        <strong>Waiting time for the 1st arrival:</strong> $W_1 \sim \text{Exp}(\lambda)$
+        <br/><br/>
+        <strong>Waiting time for the $k$th arrival:</strong> $W_k \sim \Gamma(\lambda, k)$
+      </div>
+
+      <div class="callout callout-proof">
+        <strong>First arrival:</strong> $P(W_1 \leq t) = P(\text{at least 1 arrival in } [0,t]) = 1 - P(\text{0 arrivals}) = 1 - e^{-\lambda t}$.
+        Differentiating: $f_{W_1}(t) = \lambda e^{-\lambda t}$ &#8212; the Exp$(\lambda)$ PDF. $\square$
+        <br/><br/>
+        <strong>$k$th arrival:</strong> $F_{W_k}(t) = P(W_k \leq t) = P(\text{at least } k \text{ arrivals in } [0,t]) = 1 - \sum_{i=0}^{k-1}e^{-\lambda t}\frac{(\lambda t)^i}{i!}$.
+        Differentiating (via the product rule telescoping):
+        $$f_{W_k}(t) = \frac{d}{dt}\left[-e^{-\lambda t} - \sum_{i=1}^{k-1}e^{-\lambda t}\frac{(\lambda t)^i}{i!}\right]$$
+        Each term $\frac{d}{dt}\left[e^{-\lambda t}\frac{(\lambda t)^i}{i!}\right] = \lambda e^{-\lambda t}\frac{(\lambda t)^{i-1}}{(i-1)!} - \lambda e^{-\lambda t}\frac{(\lambda t)^i}{i!}$ — a telescoping difference.
+        Summing: everything cancels except the last positive term:
+        $$f_{W_k}(t) = \lambda e^{-\lambda t}\frac{(\lambda t)^{k-1}}{(k-1)!} = \frac{\lambda^k}{\Gamma(k)}e^{-\lambda t}t^{k-1} \qquad \square$$
+        This is the $\Gamma(\lambda, k)$ PDF.
+      </div>
+
+      <div class="callout callout-intuition">
+        This is not a coincidence &#8212; it's the fundamental link between three distributions:
+        <br/><br/>
+        The <strong>Poisson</strong> counts events in a fixed time. The <strong>Exponential</strong> times the first event. The <strong>Gamma</strong>$(k)$ times the $k$th event. They are all faces of the same process, viewed from different angles.
+        <br/><br/>
+        Equivalently: since $W_k = T_1 + T_2 + \cdots + T_k$ where $T_i$ are iid Exp$(\lambda)$ inter-arrival times, and the sum of $k$ independent Exp$(\lambda)$ is $\Gamma(\lambda, k)$ &#8212; this is the reproductive property of the Gamma in action.
+      </div>
+
+      <div class="callout callout-india">
+        On NSE, if large institutional orders arrive at rate $\lambda = 3$/second (Poisson), then: the time until the next large order is Exp(3) (mean = 1/3 second). The time until the 10th large order is $\Gamma(3, 10)$ (mean = 10/3 ≈ 3.3 seconds). This is exactly the model used to estimate optimal VWAP execution windows.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 16</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch16 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Orders arrive at an exchange at rate $\lambda = 4$ per second. What is the expected number of orders in 3 seconds?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$4$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$12$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$4/3$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$3$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $12$</strong><br/><br/>$X_t \sim \text{Poi}(\lambda t)$ with $\lambda = 4$, $t = 3$. So $\lambda t = 12$ and $E(X_3) = 12$. <span class="expl-ans">The Poisson process scales linearly in time &#8212; double the time, double the expected count.</span></div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch16 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Same exchange, $\lambda = 4$/sec. What is $P(\text{0 orders in the next 0.5 seconds})$?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$e^{-4}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$e^{-2}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$e^{-0.5}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$1 - e^{-2}$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; $e^{-2}$</strong><br/><br/>$\lambda t = 4 \times 0.5 = 2$. $P(X=0) = e^{-2}\frac{2^0}{0!} = e^{-2} \approx 0.135$. <span class="expl-ans">About 13.5% chance of a 0.5-second quiet period &#8212; not unusual at rate 4.</span> Option D is $P(\text{at least 1 arrival})$ &#8212; the complement.</div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch16 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">If arrivals are Poisson with rate $\lambda$, what is the distribution of the waiting time until the <strong>first</strong> arrival?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Poisson($\lambda$)</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>Exp($\lambda$) &#8212; derived from $P(W_1 \leq t) = 1 - e^{-\lambda t}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>Uniform$(0, 1/\lambda)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$\Gamma(\lambda, 2)$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: B &#8212; Exp($\lambda$)</strong><br/><br/>$P(W_1 \leq t) = 1 - e^{-\lambda t}$. Differentiating: $f_{W_1}(t) = \lambda e^{-\lambda t}$ &#8212; the Exp($\lambda$) PDF. <span class="expl-ans">Mean waiting time = $1/\lambda$. If orders arrive at 4/sec, expect to wait 0.25 seconds for the next one.</span></div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch16 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Large Nifty block orders arrive at rate $\lambda = 3$/min. What is the expected time until the <strong>5th</strong> block order, and what is its distribution?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Exp(15); mean = $1/15$ min</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>$\Gamma(3, 5)$; mean = $5/3$ min</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>Poi(15); mean = 15 orders</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$\Gamma(3, 3)$; mean = $1$ min</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: B &#8212; $\Gamma(3, 5)$, mean $= 5/3$ min</strong><br/><br/>Waiting time for the $k$th arrival in a Poisson($\lambda$) process follows $\Gamma(\lambda, k)$. Here $\lambda=3$, $k=5$: $W_5 \sim \Gamma(3, 5)$. Mean $= k/\lambda = 5/3 \approx 1.67$ minutes. <span class="expl-ans">This equals $5 \times \frac{1}{\lambda}$ &#8212; five independent Exp(3) inter-arrival times.</span></div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch16 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">An insurance company has claim rate $\lambda = 0.002$ per policy per year. They insure 8000 policies. What is the probability of <strong>exactly 20 claims</strong> in a year?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$e^{-8000} \cdot \frac{8000^{20}}{20!}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>$\binom{8000}{20}(0.002)^{20}(0.998)^{7980}$ &#8212; Binomial exact</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>$e^{-16}\frac{16^{20}}{20!}$ &#8212; Poisson with $\lambda t = 0.002 \times 8000 = 16$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$e^{-20}\frac{20^{16}}{16!}$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: C &#8212; $e^{-16}\frac{16^{20}}{20!}$</strong><br/><br/>$\lambda t = 0.002 \times 8000 = 16$. The number of claims follows Poi(16). $P(X=20) = e^{-16}\frac{16^{20}}{20!}$. <span class="expl-ans">Option B (Binomial) is technically correct but computationally impractical &#8212; this is exactly the regime where Poisson approximates Binomial (large $n$, small $p$, moderate $np$).</span> The Poisson process formulation gives the exact model, not just an approximation.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch15.html" class="ch-nav-btn">&#8592; Chapter 15: CF, PGF &amp; Cumulants</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Poisson process, Exponential, Gamma &#8212; all connected.","$\\lambda t$ is the key parameter. You computed it.","Waiting time derivation understood. Exp($\\lambda$) confirmed.","$\\Gamma(\\lambda, k)$ is the $k$th waiting time. Correct.","$\\lambda t = 16$. Poisson applied correctly.","The trinity: Poisson counts, Exp waits for 1, Gamma waits for $k$.","Arrival process modelled. Rate estimated. Answer found.","From first principles to Poisson PMF. Mastered."];
+const wrongMsgs=["$\\lambda t$ is the Poisson parameter &#8212; rate times time.","$P(X=0) = e^{-\\lambda t}$, not $e^{-\\lambda}$.","Waiting time for 1st arrival is Exp($\\lambda$), not Poisson.","$k$th arrival time is $\\Gamma(\\lambda, k)$ with mean $k/\\lambda$.","Compute $\\lambda t$ first: rate per unit $\\times$ number of units.","Re-read the Poisson-Exponential-Gamma connection above."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

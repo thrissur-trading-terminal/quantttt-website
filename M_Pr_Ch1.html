@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Probability Theory — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]
+  });"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.tb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); text-decoration: none; }
+.tb-logo span { color: var(--orange); }
+.tb-sep { color: var(--border); font-size: 1.2rem; }
+.tb-breadcrumb { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+.tb-breadcrumb span { color: var(--orange); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.tb-progress-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.tb-progress-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.tb-progress-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.tb-progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 3px; transition: width 0.4s; }
+.tb-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.tb-home:hover { color: var(--navy); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  background: var(--off);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.5rem 1.4rem 0.4rem;
+  margin-top: 0.8rem;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1.4rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.85rem;
+  color: var(--muted);
+  border-left: 3px solid transparent;
+  text-decoration: none;
+}
+.sidebar-item:hover { background: rgba(232,114,42,0.06); color: var(--navy); }
+.sidebar-item.active { color: var(--orange); border-left-color: var(--orange); background: rgba(232,114,42,0.07); font-weight: 600; }
+.sidebar-item.done { color: var(--green); }
+.sidebar-item.done .si-num { background: var(--green); color: white; }
+.sidebar-item.locked { opacity: 0.4; cursor: not-allowed; }
+.si-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  flex-shrink: 0; color: var(--muted);
+}
+.sidebar-item.active .si-num { background: var(--orange); color: white; }
+.si-mcq-badge {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  background: rgba(232,114,42,0.1); color: var(--orange);
+  padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+/* ── CONTENT ── */
+.content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  max-width: 800px;
+  padding: 3rem 3.5rem 6rem;
+}
+
+/* chapter header */
+.chapter-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.chapter-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; align-items: center; }
+.ch-tag { font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.65rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ch-tag-b { background: rgba(30,158,94,0.1); color: var(--green); }
+.ch-tag-i { background: rgba(232,114,42,0.1); color: var(--orange); }
+.ch-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+.chapter-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--navy); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 0.6rem; }
+.chapter-subtitle { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+
+/* body text */
+.content-body h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 2rem 0 0.8rem; letter-spacing: 0.01em; }
+.content-body p { font-size: 1rem; line-height: 1.85; color: #2a2a3e; margin-bottom: 1.2rem; }
+.content-body p strong { color: var(--navy); font-weight: 600; }
+
+/* callout boxes */
+.callout { border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.5rem 0; font-size: 0.93rem; line-height: 1.75; }
+.callout-intuition { background: rgba(232,114,42,0.07); border-left: 3px solid var(--orange); }
+.callout-intuition::before { content: '💡 Intuition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-definition { background: rgba(45,37,96,0.05); border-left: 3px solid var(--navy); }
+.callout-definition::before { content: '📐 Definition'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy2); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-india { background: rgba(30,158,94,0.06); border-left: 3px solid var(--green); }
+.callout-india::before { content: '🇮🇳 India Context'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; font-weight: 600; }
+.callout-warning { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+.callout-warning::before { content: '⚠ Common Mistake'; display: block; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; font-weight: 600; }
+
+/* math display */
+.math-block { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+
+/* divider */
+.content-divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* ── MCQ SECTION ── */
+.mcq-section { margin-top: 3rem; }
+.mcq-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.mcq-header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+.mcq-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--off); padding: 0.2rem 0.6rem; border-radius: 4px; }
+
+.mcq-card {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s;
+}
+.mcq-card-header {
+  background: var(--navy);
+  padding: 0.7rem 1.2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.mcq-dots { display: flex; gap: 5px; }
+.mcq-dot { width: 9px; height: 9px; border-radius: 50%; }
+.mcq-dot-r { background: #ff5f56; } .mcq-dot-y { background: #ffbd2e; } .mcq-dot-g { background: #27c93f; }
+.mcq-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.35); }
+.mcq-diff { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--orange); }
+
+.mcq-body { padding: 1.5rem; }
+.mcq-question {
+  font-family: 'Shadows Into Light Two', cursive;
+  font-size: 1.1rem; line-height: 1.9;
+  color: var(--text);
+  margin-bottom: 1.3rem;
+}
+.mcq-question strong { color: var(--orange); font-style: normal; }
+
+.mcq-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+.opt {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.18s; font-size: 0.9rem;
+  background: var(--white);
+  user-select: none;
+}
+.opt:hover { border-color: var(--orange); background: var(--light); }
+.opt.correct { border-color: var(--green); background: rgba(30,158,94,0.06); color: var(--green); }
+.opt.wrong { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+.opt-ltr {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600;
+  background: var(--off); border: 1px solid var(--border);
+  flex-shrink: 0; color: var(--navy); transition: all 0.18s;
+}
+.opt.correct .opt-ltr { background: var(--green); color: white; border-color: var(--green); }
+.opt.wrong .opt-ltr { background: #dc2626; color: white; border-color: #dc2626; }
+
+.mcq-feedback {
+  display: none; border-radius: 8px; padding: 0.75rem 1rem;
+  font-family: 'Shadows Into Light Two', cursive;
+  font-size: 1rem; font-weight: 600; text-align: center; margin-bottom: 1rem;
+}
+.mcq-explanation {
+  display: none; background: rgba(30,158,94,0.05);
+  border: 1.5px solid rgba(30,158,94,0.2);
+  border-radius: 10px; padding: 1.2rem;
+  font-size: 0.87rem; line-height: 1.8; color: var(--muted);
+  margin-bottom: 1rem;
+}
+.mcq-explanation.show { display: block; }
+.mcq-explanation strong { color: var(--navy); }
+.expl-ans { color: var(--green); font-weight: 700; }
+
+.mcq-check-btn {
+  background: var(--orange); color: white; border: none;
+  padding: 0.8rem 1.5rem; border-radius: 8px;
+  font-weight: 700; font-size: 0.88rem; cursor: pointer;
+  transition: all 0.2s; font-family: 'Barlow', sans-serif;
+  width: 100%;
+}
+.mcq-check-btn:hover:not(:disabled) { background: var(--orange2); transform: translateY(-1px); }
+.mcq-check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.ch-nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.ch-nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ch-nav-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.ch-nav-btn.primary:hover { background: var(--orange2); color: white; }
+.ch-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 2rem 1.5rem 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quant<span>ttt</span> <span style="font-size:0.6rem;font-weight:400;color:var(--muted);letter-spacing:0.01em;font-family:'Barlow',sans-serif;"> — an initiative by Thrissur Trading Terminal</span></a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">Mathematics › <span>Probability Theory</span></div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">Progress</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" id="progressFill" style="width:3%"></div></div>
+      <span class="tb-progress-label" id="progressText">1 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item active" href="M_Pr_Ch1.html"><div class="si-num">1</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch2.html"><div class="si-num">2</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch3.html"><div class="si-num">3</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch4.html"><div class="si-num">4</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch4b.html"><div class="si-num">4B</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch5.html"><div class="si-num">5</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch6.html"><div class="si-num">6</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch7.html"><div class="si-num">7</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch8.html"><div class="si-num">8</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch9.html"><div class="si-num">9</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch10.html"><div class="si-num">10</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch11.html"><div class="si-num">11</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12.html"><div class="si-num">12</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch12b.html"><div class="si-num">12B</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch13.html"><div class="si-num">13</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch14.html"><div class="si-num">14</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch15.html"><div class="si-num">15</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content" id="mainContent">
+
+  <!-- CHAPTER 1 -->
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-b">Beginner</span>
+      <span class="ch-num">Chapter 01 of 30</span>
+    </div>
+    <h1 class="chapter-title">Introduction &amp; Sample Space</h1>
+    <p class="chapter-subtitle">Before we price a single option or model a single stock, we need to speak the language of uncertainty. That language is probability.</p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>Why Probability? Why Now?</h3>
+    <p>
+      You've been told that trading is about charts, gut feelings, or "reading the market." Some of that has merit. But if you want to understand <strong>why</strong> an option is priced the way it is, why Nifty behaves the way it does on expiry days, or why your stop-loss gets hit in ways that feel statistically impossible — you need probability.
+    </p>
+    <p>
+      Not the probability of flipping coins (we'll get there, briefly). The deep kind — the kind that tells you <em>how to reason about the future given incomplete information.</em> That's what we're building here, from the ground up.
+    </p>
+
+    <div class="callout callout-intuition">
+      Probability is not about predicting the future. It is about <strong>quantifying our uncertainty</strong> about the future. A quant who says "Nifty has a 65% chance of closing above 24,000 today" isn't predicting — they're assigning a coherent number to their uncertainty. That number can be traded on.
+    </div>
+
+    <h3>The Experiment and the Sample Space</h3>
+    <p>
+      Everything in probability starts with an <strong>experiment</strong> — any process whose outcome is uncertain. Flipping a coin. Rolling a die. Observing whether Nifty closes up or down today. Checking if a Reliance call option expires in the money.
+    </p>
+    <p>
+      The <strong>sample space</strong> $\Omega$ (capital omega) is the set of <em>all possible outcomes</em> of an experiment. Not the outcomes you expect — <em>all</em> outcomes.
+    </p>
+
+    <div class="callout callout-definition">
+      The <strong>sample space</strong> $\Omega$ is the set of all possible outcomes of a random experiment. Each individual outcome $\omega \in \Omega$ is called a <strong>sample point</strong> or <strong>elementary event</strong>.
+    </div>
+
+    <h3>Examples — From Simple to Financial</h3>
+
+    <p><strong>Example 1 — A coin flip:</strong></p>
+    <div class="math-block">
+      $$\Omega = \{H, T\}$$
+    </div>
+
+    <p><strong>Example 2 — A single die roll:</strong></p>
+    <div class="math-block">
+      $$\Omega = \{1, 2, 3, 4, 5, 6\}$$
+    </div>
+
+    <p><strong>Example 3 — Nifty closing direction tomorrow:</strong></p>
+    <div class="math-block">
+      $$\Omega = \{\text{Up}, \text{Down}, \text{Unchanged}\}$$
+    </div>
+
+    <p><strong>Example 4 — Nifty closing price tomorrow (continuous):</strong></p>
+    <div class="math-block">
+      $$\Omega = (0, \infty)$$
+    </div>
+    <p>
+      Here the sample space is uncountably infinite — Nifty could close at 23,847.35 or 24,002.10 or any positive real number. This is the kind of sample space that matters in options pricing.
+    </p>
+
+    <div class="callout callout-india">
+      When we model Nifty 50 as a continuous random variable, we are saying: the closing price tomorrow lives somewhere in $(0, \infty)$, and our job is to assign probabilities to ranges of that space. The Black-Scholes model assumes Nifty follows a specific distribution over this sample space — more on that when we get to Finance.
+    </div>
+
+    <h3>Events — Subsets of the Sample Space</h3>
+    <p>
+      An <strong>event</strong> is any subset of the sample space $\Omega$. We say an event $A$ <em>occurs</em> if the actual outcome of the experiment belongs to $A$.
+    </p>
+
+    <div class="callout callout-definition">
+      An <strong>event</strong> $A$ is a subset of $\Omega$: $A \subseteq \Omega$. The event $A$ occurs if and only if the observed outcome $\omega \in A$.
+    </div>
+
+    <p>Some important special events:</p>
+    <p>
+      The <strong>certain event</strong> is $\Omega$ itself — it always occurs. The <strong>impossible event</strong> is $\emptyset$ (the empty set) — it never occurs. These seem trivial, but they anchor the entire axiom system we'll build in Chapter 2.
+    </p>
+
+    <h3>Set Operations on Events</h3>
+    <p>
+      Since events are sets, we can combine them using set operations. These map directly to everyday probabilistic language:
+    </p>
+
+    <div class="math-block">
+      $$A \cup B \quad \text{(A or B)} \qquad A \cap B \quad \text{(A and B)} \qquad A^c \quad \text{(not A)}$$
+    </div>
+
+    <p>
+      <strong>Union</strong> $A \cup B$: the event that $A$ occurs, or $B$ occurs, or both. <br/>
+      <strong>Intersection</strong> $A \cap B$: the event that both $A$ and $B$ occur. <br/>
+      <strong>Complement</strong> $A^c$: the event that $A$ does <em>not</em> occur.
+    </p>
+
+    <div class="callout callout-warning">
+      Students often confuse "mutually exclusive" with "independent." Mutually exclusive means $A \cap B = \emptyset$ — the two events cannot both happen. Independent means knowing $A$ occurred tells you nothing about $B$. These are <strong>very different</strong> concepts. We will treat independence carefully in Chapter 3.
+    </div>
+
+    <h3>Finite vs Infinite Sample Spaces</h3>
+    <p>
+      When $\Omega$ is finite or countably infinite (like the set of integers), we call it a <strong>discrete</strong> sample space. When $\Omega$ is uncountably infinite (like an interval of real numbers), we call it <strong>continuous</strong>.
+    </p>
+    <p>
+      This distinction matters enormously for how we assign probabilities. For discrete spaces, we can sometimes just list and count. For continuous spaces, we need measure theory — but we'll build the intuition first and bring in the heavy machinery carefully.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of it this way: if you can list every possible outcome (even if the list is infinitely long), it's discrete. If even between two outcomes there are infinitely many others — like between ₹24,000.00 and ₹24,000.01 for Nifty — it's continuous.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <div class="mcq-header-title">Practice Problems</div>
+      <span class="mcq-count">2 questions · Chapter 01</span>
+    </div>
+
+    <!-- MCQ 1 -->
+    <div class="mcq-card" id="mcq1">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch01 / q01</span>
+        <span class="mcq-diff">★ Easy</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          A trader is watching whether a Nifty 50 call option expires <strong>in the money (ITM)</strong>, <strong>at the money (ATM)</strong>, or <strong>out of the money (OTM)</strong> on expiry day. She decides to model this as a probability experiment. What is the correct sample space $\Omega$ for this experiment?
+        </p>
+        <div class="mcq-options" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$\Omega = \{ITM, OTM\}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">B</div><span>$\Omega = \{0, 1\}$ where 1 means profit</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">C</div><span>$\Omega = \{ITM, ATM, OTM\}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$\Omega = \mathbb{R}$ (all real numbers)</span></div>
+        </div>
+        <div class="mcq-feedback" id="q1feedback"></div>
+        <div class="mcq-explanation" id="q1expl">
+          <strong>Answer: C — $\Omega = \{ITM, ATM, OTM\}$</strong><br/><br/>
+          The sample space must include <strong>all possible outcomes</strong> of the experiment. The experiment here is observing the moneyness at expiry — three distinct, exhaustive possibilities: the option finishes in the money, at the money, or out of the money.<br/><br/>
+          Option A is wrong because it ignores the ATM case. Option B encodes the wrong experiment (it's asking about profit, not moneyness). Option D would be appropriate if we were modelling the Nifty closing <em>price</em> itself — a continuous quantity — but the experiment here is about the moneyness <em>category</em>.
+        </div>
+        <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1', 'C')">Select an answer first</button>
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="mcq-card" id="mcq2">
+      <div class="mcq-card-header">
+        <div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div>
+        <span class="mcq-id">probability / ch01 / q02</span>
+        <span class="mcq-diff">★★ Medium</span>
+      </div>
+      <div class="mcq-body">
+        <p class="mcq-question">
+          Let $\Omega = \{1, 2, 3, 4, 5, 6\}$ be the sample space for a die roll. Define events $A = \{2, 4, 6\}$ (even) and $B = \{4, 5, 6\}$ (greater than 3). Which of the following correctly identifies $A \cap B$?
+        </p>
+        <div class="mcq-options" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$\{2, 4, 5, 6\}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$\{4, 6\}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$\{2, 5\}$</span></div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$\emptyset$</span></div>
+        </div>
+        <div class="mcq-feedback" id="q2feedback"></div>
+        <div class="mcq-explanation" id="q2expl">
+          <strong>Answer: B — $\{4, 6\}$</strong><br/><br/>
+          $A \cap B$ is the event that <strong>both</strong> A and B occur — i.e., outcomes that are <em>even AND greater than 3</em>.<br/><br/>
+          $A = \{2, 4, 6\}$ and $B = \{4, 5, 6\}$. The elements common to both sets are $4$ and $6$.<br/>
+          $$A \cap B = \{4, 6\}$$<br/>
+          Option A is $A \cup B = \{2, 4, 5, 6\}$ — the union, not the intersection. Option C has no logic supporting it. Option D would mean the events are mutually exclusive — but they clearly share outcomes 4 and 6.
+        </div>
+        <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2', 'B')">Select an answer first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <span class="ch-nav-btn disabled">← Previous</span>
+    <a href="M_Pr_Ch2.html" class="ch-nav-btn primary">Next: Random Experiments & Classical Probability →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎯 Spot on! Even Kolmogorov would nod.",
+  "✨ Sample space navigated perfectly!",
+  "🏆 Set theory bows before you.",
+  "🔥 Nailed it! The probability gods are pleased.",
+  "💡 Brilliant! You've tamed the sample space.",
+  "🎓 Textbook perfect — and we mean that literally.",
+  "📈 Your rigour just went up a notch. Nicely done!",
+  "🧮 First principles, flawlessly applied.",
+  "🌟 That's the kind of clarity that gets you on a quant desk.",
+  "🎉 Correct! Even Bertrand's Paradox is less confusing now."
+];
+const wrongMsgs = [
+  "🌀 Close, but the intersection of 'correct' and 'your answer' is empty here.",
+  "⚛️ Even Schrödinger's cat chose the right option.",
+  "📐 Euclid would weep — but he'd also explain it patiently. Re-read the definition.",
+  "📉 Circuit breaker triggered. Recalibrate!",
+  "🏦 The SEBI exam would mark this wrong. Let's fix it.",
+  "💹 Arbitrage detected between your answer and reality.",
+  "😰 Don't panic — re-read the callout boxes above.",
+  "🤔 The sample space of correct answers doesn't include this one. Try again!"
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+  // Re-render KaTeX in options
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'opts'));
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+
+  const btn = document.getElementById(qid + 'btn');
+
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    // Highlight correct
+    opts.forEach(o => {
+      const ltr = o.querySelector('.opt-ltr').textContent.trim();
+      if (ltr === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+// Re-render KaTeX after page load
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>

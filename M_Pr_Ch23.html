@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 23: Order Statistics — Applications — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 23</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:80%"></div></div>
+      <span class="tb-prog-lbl">23 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch13.html"><div class="si-num">&#x2713;</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch14.html"><div class="si-num">&#x2713;</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch15.html"><div class="si-num">&#x2713;</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch16.html"><div class="si-num">&#x2713;</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch17.html"><div class="si-num">&#x2713;</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch18.html"><div class="si-num">&#x2713;</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch19.html"><div class="si-num">&#x2713;</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch20.html"><div class="si-num">&#x2713;</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch21.html"><div class="si-num">&#x2713;</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch22.html"><div class="si-num">&#x2713;</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 23</span>
+      </div>
+      <h1 class="chapter-title">Order Statistics — Applications</h1>
+      <p class="chapter-subtitle">Three applications of order statistics: computing moments of min/max from $U(0,1)$, the joint PDF of two order statistics, and the deep Exponential spacing theorem — which shows that successive gaps $X_{(r+1)}-X_{(r)}$ are independent Exponentials, yielding a harmonic-series formula for the expected range.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Min and Max of $U(0,1)$: Moments</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X_1,\ldots,X_n$ iid $U(0,1)$. Find $E(X_{(1)})$ and $E(X_{(n)})$.</div>
+        <p><strong>Minimum:</strong> $f_{(1)}(x) = n(1-x)^{n-1}$. This is $\beta_1(1,n)$. Directly:</p>
+        $$E(X_{(1)}) = \int_0^1 x\cdot n(1-x)^{n-1}\,dx = n\cdot B(2,n) = n\cdot\frac{1!\,(n-1)!}{(n+1)!} = \frac{1}{n+1}$$
+        <p><strong>Maximum:</strong> $f_{(n)}(x) = nx^{n-1}$. This is $\beta_1(n,1)$.</p>
+        $$E(X_{(n)}) = \int_0^1 x\cdot nx^{n-1}\,dx = n\int_0^1 x^n\,dx = \frac{n}{n+1}$$
+        <p><strong>Expected Range:</strong></p>
+        $$E(X_{(n)}-X_{(1)}) = \frac{n}{n+1}-\frac{1}{n+1} = \frac{n-1}{n+1}$$
+      </div>
+
+      <div class="callout callout-intuition">
+        General formula for $U(0,1)$: $E(X_{(r)}) = r/(n+1)$. The $n+1$ equally spaced quantile points $\frac{1}{n+1}, \frac{2}{n+1}, \ldots, \frac{n}{n+1}$ are the expected order statistics of a $U(0,1)$ sample of size $n$.
+      </div>
+
+      <h3>Joint PDF of Two Order Statistics</h3>
+
+      <div class="callout callout-theorem">
+        For $1\leq r < s\leq n$, the joint PDF of $(X_{(r)}, X_{(s)})$ at $(x,y)$ with $x < y$ is:
+        $$f_{r,s}(x,y) = \frac{n!}{(r-1)!(s-r-1)!(n-s)!}[F(x)]^{r-1}[F(y)-F(x)]^{s-r-1}[1-F(y)]^{n-s}f(x)f(y)$$
+        <strong>Intuition:</strong> $r-1$ observations below $x$, one at $x$, $s-r-1$ between $x$ and $y$, one at $y$, $n-s$ above $y$.
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Verify Range Formula: $U(0,1)$ via Joint PDF of Min and Max</div>
+        <p>For $r=1$, $s=n$: $s-r-1 = n-2$ observations between min and max.</p>
+        $$f_{1,n}(x,y) = n(n-1)(y-x)^{n-2}\cdot 1\cdot 1 = n(n-1)(y-x)^{n-2}, \quad 0<x<y<1$$
+        <p>$E(X_{(n)}-X_{(1)})$: substitute $g(x,y)=y-x$:</p>
+        $$= n(n-1)\int_0^1\int_x^1(y-x)^{n-1}\,dy\,dx = n(n-1)\int_0^1\frac{(1-x)^n}{n}\,dx = (n-1)\cdot\frac{1}{n+1} = \frac{n-1}{n+1}\checkmark$$
+      </div>
+
+      <h3>Exponential Spacings: A Deep Theorem</h3>
+
+      <div class="callout callout-theorem">
+        If $X_1,\ldots,X_n$ are iid $\text{Exp}(\lambda)$, then for each $r=1,\ldots,n-1$:
+        <br/><br/>
+        <strong>(1)</strong> $X_{(r)}$ and $X_{(r+1)}-X_{(r)}$ are <strong>independent</strong>.
+        <br/><br/>
+        <strong>(2)</strong> $X_{(r+1)}-X_{(r)} \sim \text{Exp}((n-r)\lambda)$.
+      </div>
+
+      <div class="callout callout-proof">
+        The joint PDF of $(X_{(r)}, X_{(r+1)})$ at $(x,y)$ with $0<x<y$ (0 observations between them):
+        $$f_{r,r+1}(x,y) = \frac{n!}{(r-1)!(n-r-1)!}[F(x)]^{r-1}f(x)\,f(y)[1-F(y)]^{n-r-1}$$
+        Substituting Exp$(\lambda)$: $f(x)=\lambda e^{-\lambda x}$, $1-F(x)=e^{-\lambda x}$:
+        $$f_{r,r+1}(x,y) = \frac{n!}{(r-1)!(n-r-1)!}\lambda^2(1-e^{-\lambda x})^{r-1}e^{-\lambda x}\,e^{-\lambda y}(e^{-\lambda y})^{n-r-1}$$
+        Set $U = X_{(r+1)}-X_{(r)} = y-x$, $V = X_{(r)} = x$. Then $x=v$, $y=u+v$, $J=1$:
+        $$f_{U,V}(u,v) \propto (1-e^{-\lambda v})^{r-1}e^{-\lambda v(r)} \cdot (n-r)\lambda e^{-(n-r)\lambda u}$$
+        The first factor depends only on $v$ &#8212; it is the PDF of $X_{(r)}$. The second factor $(n-r)\lambda e^{-(n-r)\lambda u}$ depends only on $u$ &#8212; it is the PDF of Exp$((n-r)\lambda)$.
+        Since the joint PDF factorises, $U$ and $V$ are independent, and $U\sim\text{Exp}((n-r)\lambda)$. $\square$
+      </div>
+
+      <h3>Expected Range of Exp$(\lambda)$ Sample: Harmonic Sum</h3>
+
+      <div class="worked">
+        <div class="worked-title">Telescoping to prove $E(\text{Range}) = \frac{1}{\lambda}\left(1+\frac{1}{2}+\cdots+\frac{1}{n-1}\right)$</div>
+        <p>Telescope the range using successive spacings:</p>
+        $$X_{(n)}-X_{(1)} = \sum_{r=1}^{n-1}(X_{(r+1)}-X_{(r)})$$
+        <p>By linearity of expectation and the spacing theorem:</p>
+        $$E(X_{(n)}-X_{(1)}) = \sum_{r=1}^{n-1}E(X_{(r+1)}-X_{(r)}) = \sum_{r=1}^{n-1}\frac{1}{(n-r)\lambda} = \frac{1}{\lambda}\sum_{r=1}^{n-1}\frac{1}{n-r} = \frac{1}{\lambda}\left(1+\frac{1}{2}+\cdots+\frac{1}{n-1}\right)$$
+        <strong>Verification:</strong>
+        <br/>$n=3$: $E(\text{Range}) = \frac{1}{\lambda}(1+\frac{1}{2}) = \frac{3}{2\lambda}$ ✓ (matches direct calculation)
+        <br/>$n=4$: $E(\text{Range}) = \frac{1}{\lambda}(1+\frac{1}{2}+\frac{1}{3}) = \frac{11}{6\lambda}$ ✓
+      </div>
+
+      <div class="callout callout-india">
+        The harmonic sum $H_{n-1} = 1+\frac{1}{2}+\cdots+\frac{1}{n-1}$ governs how the expected range of iid Exponential observations grows with sample size. In order-flow analysis on NSE: if institutional orders arrive as a Poisson process (iid Exp inter-arrivals), the expected spread between the earliest and latest order in a batch of $n$ grows as $H_{n-1}/\lambda$. This models the "order footprint" &#8212; how detectably spread out a large institutional execution is in time.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 23</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch23 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_1,\ldots,X_9$ iid $U(0,1)$. What is $E(X_{(9)})$, the expected maximum?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$9/10$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$9/10$ &#8212; using $E(X_{(r)}) = r/(n+1) = 9/10$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$8/9$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$1$ &#8212; the maximum of many uniforms approaches 1</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $9/10$</strong><br/><br/>$E(X_{(r)}) = r/(n+1)$. With $r=n=9$ and $n+1=10$: $E(X_{(9)}) = 9/10$. <span class="expl-ans">Answers A and B say the same thing &#8212; B is correct for the right reason. The formula is $r/(n+1)$, not $r/n$.</span> Option D is the limit as $n\to\infty$ but not a finite-$n$ expected value.</div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch23 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_1,\ldots,X_n$ iid $U(0,1)$. What is the expected range $E(X_{(n)}-X_{(1)})$?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$1 - 1/n$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$(n-1)/(n+1)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$(n-1)/n$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$n/(n+1)$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; $(n-1)/(n+1)$</strong><br/><br/>$E(\text{Range}) = E(X_{(n)})-E(X_{(1)}) = \frac{n}{n+1}-\frac{1}{n+1} = \frac{n-1}{n+1}$. <span class="expl-ans">For $n=2$: expected range $=1/3$. For $n=10$: $9/11\approx 0.82$. As $n\to\infty$: expected range $\to 1$ (makes sense — more samples cover more of $[0,1]$).</span></div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch23 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_1,\ldots,X_n$ iid Exp$(\lambda)$. The spacing $X_{(r+1)}-X_{(r)}$ follows which distribution?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>Exp$(\lambda)$ &#8212; same as the original variables</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Exp$(r\lambda)$ &#8212; depends on the position $r$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>Exp$((n-r)\lambda)$ &#8212; depends on how many observations are above</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Exp$(n\lambda)$ &#8212; same as the minimum</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: C &#8212; Exp$((n-r)\lambda)$</strong><br/><br/>The spacing theorem: $X_{(r+1)}-X_{(r)}\sim\text{Exp}((n-r)\lambda)$. <span class="expl-ans">Intuition: given that $X_{(r)}=x$, there are $n-r$ observations still above $x$, competing to be the next arrival. The minimum of $n-r$ iid Exp$(\lambda)$ variables above $x$ is Exp$((n-r)\lambda)$.</span> This is the memoryless property in action.</div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch23 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_1,X_2,X_3$ iid Exp$(2)$. What is $E(\text{Range}) = E(X_{(3)}-X_{(1)})$?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$\frac{1}{2}\cdot\frac{2}{3} = \frac{1}{3}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>$\frac{1}{2}\cdot\frac{3}{2} = \frac{3}{4}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>$\frac{3}{2}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$\frac{1}{4}$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: B &#8212; $\frac{3}{4}$</strong><br/><br/>$E(\text{Range}) = \frac{1}{\lambda}(1+\frac{1}{2}+\cdots+\frac{1}{n-1})$ with $\lambda=2$, $n=3$: $= \frac{1}{2}(1+\frac{1}{2}) = \frac{1}{2}\cdot\frac{3}{2} = \frac{3}{4}$. <span class="expl-ans">Alternatively: $E(X_{(3)}) = \frac{4}{2\lambda} - \frac{6}{2\cdot 2\lambda} + \frac{3}{3\lambda} - \frac{1}{4\lambda}$... computed from the max PDF. The harmonic formula is much cleaner.</span></div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch23 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">For the Exponential spacing theorem, the joint PDF of $(X_{(r)}, X_{(r+1)}-X_{(r)})$ factorises. What does this factorisation prove?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>That $X_{(r)}$ and $X_{(r+1)}$ have the same distribution</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>That the range is always Exponential</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>That $X_{(r)}$ and $X_{(r+1)}-X_{(r)}$ are independent, and identifies the marginal distribution of each</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>That the joint PDF equals zero outside the support</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: C</strong><br/><br/>If $f_{U,V}(u,v) = g(v)\cdot h(u)$, then by definition $U$ and $V$ are independent with marginal PDFs proportional to $g$ and $h$. <span class="expl-ans">In this case, $g(v)$ is exactly the PDF of $X_{(r)}\sim\Gamma(\lambda,r)$... wait, it's the PDF of the Exp $r$th order statistic. And $h(u)=(n-r)\lambda e^{-(n-r)\lambda u}$ is Exp$((n-r)\lambda)$.</span> This is the standard criterion for independence: joint = product of marginals.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch22.html" class="ch-nav-btn">&#8592; Chapter 22: Order Statistics</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["$E(X_{(r)}) = r/(n+1)$ for uniform. Applied correctly.","Range formula $(n-1)/(n+1)$. Correct.","Spacing theorem: Exp$((n-r)\\lambda)$. The key result.","Harmonic range formula applied. Clean computation.","Factorisation implies independence AND identifies marginals.","Order statistics applications mastered.","Joint PDF, range, spacings &#8212; all connected.","Harmonic series from Exponential spacings. Beautiful."];
+const wrongMsgs=["$E(X_{(r)}) = r/(n+1)$, not $r/n$. The denominator is $n+1$.","$E(\\text{Range}) = E(X_{(n)})-E(X_{(1)}) = \\frac{n}{n+1}-\\frac{1}{n+1} = \\frac{n-1}{n+1}$.","Spacing theorem: $X_{(r+1)}-X_{(r)}\\sim\\text{Exp}((n-r)\\lambda)$. $n-r$ not $r$.","Use $E(\\text{Range}) = \\frac{1}{\\lambda}\\sum_{k=1}^{n-1}\\frac{1}{k}$ with $n=3$, $\\lambda=2$.","Factorisation of joint PDF: $f(u,v)=g(v)h(u)$ means independence.","Re-read the spacing theorem proof above."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

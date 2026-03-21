@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 30: CLT — Proof &amp; Applications — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 24</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:100%"></div></div>
+      <span class="tb-prog-lbl">30 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch13.html"><div class="si-num">&#x2713;</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch14.html"><div class="si-num">&#x2713;</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch15.html"><div class="si-num">&#x2713;</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch16.html"><div class="si-num">&#x2713;</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch17.html"><div class="si-num">&#x2713;</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch18.html"><div class="si-num">&#x2713;</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch19.html"><div class="si-num">&#x2713;</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch20.html"><div class="si-num">&#x2713;</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch21.html"><div class="si-num">&#x2713;</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch22.html"><div class="si-num">&#x2713;</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch23.html"><div class="si-num">&#x2713;</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch24.html"><div class="si-num">&#x2713;</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch25.html"><div class="si-num">&#x2713;</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch26.html"><div class="si-num">&#x2713;</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch27.html"><div class="si-num">&#x2713;</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch28.html"><div class="si-num">&#x2713;</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch29.html"><div class="si-num">&#x2713;</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 30</span>
+      </div>
+      <h1 class="chapter-title">CLT — Proof &amp; Applications</h1>
+      <p class="chapter-subtitle">The final chapter of the course. We prove that the Gamma distribution also converges to Normal (showing CLT holds for continuous distributions), give a complete MGF-based proof of the Lindberg-Lévy CLT for iid sequences, contrast CLT with WLLN, and solve three practical problems — dice, grading, and Poisson sums.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Gamma Distribution Converges to $N(0,1)$</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X\sim\Gamma(\lambda,\alpha)$. Show the standardised version converges to $N(0,1)$ as $\alpha\to\infty$.</div>
+        <p>$E(X)=\alpha/\lambda$, $\text{Var}(X)=\alpha/\lambda^2$. Standardise: $Y = \frac{X-\alpha/\lambda}{\sqrt{\alpha}/\lambda} = \frac{\lambda X-\alpha}{\sqrt{\alpha}}$. By the linear MGF rule with $a=\lambda/\sqrt{\alpha}$, $b=-\sqrt{\alpha}$:</p>
+        $$\log M_Y(t) = -\sqrt{\alpha}\,t + \log M_X\!\left(\frac{\lambda t}{\sqrt{\alpha}}\right)$$
+        MGF of $\Gamma(\lambda,\alpha)$ is $(1-t/\lambda)^{-\alpha}$, so at $\lambda t/\sqrt{\alpha}$:
+        $$\log M_X\!\left(\frac{\lambda t}{\sqrt{\alpha}}\right) = -\alpha\log\!\left(1-\frac{t}{\sqrt{\alpha}}\right)$$
+        Expanding $\log(1-u) = -u - u^2/2 - u^3/3 - \cdots$ with $u=t/\sqrt{\alpha}$:
+        $$= -\alpha\left(-\frac{t}{\sqrt{\alpha}} - \frac{t^2}{2\alpha} - \frac{t^3}{3\alpha^{3/2}}-\cdots\right) = \sqrt{\alpha}\,t + \frac{t^2}{2} + \frac{t^3}{3\sqrt{\alpha}}+\cdots$$
+        Therefore:
+        $$\log M_Y(t) = -\sqrt{\alpha}\,t + \sqrt{\alpha}\,t + \frac{t^2}{2} + O(\alpha^{-1/2}) = \frac{t^2}{2} + O(\alpha^{-1/2})$$
+        $$\therefore\lim_{\alpha\to\infty}M_Y(t) = e^{t^2/2} = \text{MGF of }N(0,1) \qquad\square$$
+        <p>CLT is not just a Bernoulli/Poisson phenomenon — it holds for <strong>every</strong> distribution with finite mean and variance.</p>
+      </div>
+
+      <h3>Lindberg-Lévy CLT: Complete Proof</h3>
+
+      <div class="callout callout-theorem">
+        <strong>Lindberg-Lévy CLT:</strong> Let $X_1,X_2,\ldots$ be iid with $E(X_i)=m$ and $\text{Var}(X_i)=s^2<\infty$. Then:
+        $$Z_n = \frac{S_n - nm}{s\sqrt{n}}\xrightarrow{d}N(0,1)$$
+      </div>
+
+      <div class="callout callout-proof">
+        Write $Z_n = \sum_{i=1}^n\frac{X_i-m}{s\sqrt{n}}$ — a sum of $n$ iid random variables, each with mean 0 and variance $1/n$.
+        <br/><br/>
+        Let $W = (X-m)/s$ (mean 0, variance 1). Then $Z_n = \frac{1}{\sqrt{n}}\sum_{i=1}^n W_i$, so the MGF of each term is $M_W(t/\sqrt{n})$.
+        <br/><br/>
+        Expand $M_W(t/\sqrt{n})$ using moments $\mu_1'=E(W)=0$, $\mu_2'=E(W^2)=1$:
+        $$M_W\!\left(\frac{t}{\sqrt{n}}\right) = 1 + \underbrace{\mu_1'\cdot\frac{t}{\sqrt{n}}}_{=0} + \mu_2'\cdot\frac{t^2}{2n} + O(n^{-3/2}) = 1+\frac{t^2}{2n}+O(n^{-3/2})$$
+        Since $Z_n$ is a sum of $n$ independent terms: $M_{Z_n}(t) = \left[M_W(t/\sqrt{n})\right]^n$.
+        $$\log M_{Z_n}(t) = n\log\!\left(1+\frac{t^2}{2n}+O(n^{-3/2})\right) = n\cdot\left(\frac{t^2}{2n}+O(n^{-3/2})\right)\to\frac{t^2}{2}$$
+        using $\log(1+u)\approx u$ for small $u$. Therefore $M_{Z_n}(t)\to e^{t^2/2}$ = MGF of $N(0,1)$. $\square$
+      </div>
+
+      <div class="callout callout-intuition">
+        <strong>Why the first-order term vanishes:</strong> Centering at the mean (subtracting $m$) makes $\mu_1'=0$, killing the $O(1/\sqrt{n})$ term. The $O(1/n)$ term multiplied by $n$ gives the surviving $t^2/2$. Higher terms die faster. This structure is universal — it works for any distribution with finite variance.
+        <br/><br/>
+        <strong>Historical note:</strong> De Moivre stated this for Bernoulli in 1733. Laplace generalised it in the early 19th century. Liapounov gave the first rigorous proof in 1901. Lindberg (1922) proved the most general version (independent but not necessarily iid).
+      </div>
+
+      <h3>WLLN vs CLT: What Each Theorem Says</h3>
+
+      <div class="callout callout-definition">
+        Both study $\bar{X}_n = S_n/n$, but they ask different questions:
+        <br/><br/>
+        <strong>WLLN:</strong> $\bar{X}_n\xrightarrow{P}\mu$. Convergence in probability to a single value. Tells you where the average lands.
+        <br/><br/>
+        <strong>CLT:</strong> $P(S_n\leq x)\to F(x)$ where $F$ is Normal. Convergence in distribution. Tells you the shape of uncertainty around that landing point.
+        <br/><br/>
+        Together: $\bar{X}_n\approx N(\mu, \sigma^2/n)$ for large $n$. The mean is $\mu$ (LLN); the spread is $\sigma/\sqrt{n}$ (CLT).
+      </div>
+
+      <h3>Identifying Distributions from CLT</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X_i$ iid with $E(X_i)=0$, $\text{Var}(X_i)=1$, and $S_n/\sqrt{n}$ has the same distribution for all $n$. What is the distribution of each $X_i$?</div>
+        <p>By CLT: $S_n/\sqrt{n}\xrightarrow{d}N(0,1)$. If $S_n/\sqrt{n}$ has the same distribution for all $n$, then it must equal $N(0,1)$ for all $n$, including $n=1$: $X_1\sim N(0,1)$. So all $X_i\sim N(0,1)$.</p>
+        <p>This is the characterisation of the Normal: the only distribution stable under normalised sums of iid copies is the Normal itself.</p>
+      </div>
+
+      <h3>Three Worked Problems</h3>
+
+      <div class="worked">
+        <div class="worked-title">Problem 1 — Fair Die: $P(\text{six appears} \geq 147\text{ in }1000\text{ tosses})$</div>
+        <p>$X\sim\text{Bin}(1000, 1/6)$. $E(X)=1000/6=500/3\approx166.7$, $\text{Var}(X)=1000\cdot\frac{1}{6}\cdot\frac{5}{6}=\frac{2500}{18}\approx138.9$.</p>
+        <p>By CLT: $Z = (X-500/3)/\sqrt{2500/18}\sim N(0,1)$ approximately.</p>
+        $$z = \frac{147-500/3}{\sqrt{2500/18}} = \frac{147\times3-500}{3\times\sqrt{2500/18}} = \frac{441-500}{\sqrt{250\times5}} = \frac{-59}{\sqrt{1250}}\approx\frac{-59}{35.36}\approx-1.67$$
+        <p>$P(X\geq 147) = P(Z\geq-1.67)\approx1-0.05 = \mathbf{95\%}$.</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Problem 2 — Teacher Grading: $P(S_{100}\geq 110\text{ hours})$</div>
+        <p>$X_i$ = time per script: $E(X_i)=1$, $\text{Var}(X_i)=0.26$. $S_{100}=\sum_{i=1}^{100}X_i$.</p>
+        <p>$E(S_{100})=100$, $\text{Var}(S_{100})=100\times0.26=26$, $\text{SD}=\sqrt{26}\approx5.1$.</p>
+        $$z = \frac{110-100}{\sqrt{26}} = \frac{10}{5.1}\approx 1.96$$
+        <p>By CLT: $P(S_{100}\geq110) = P(Z\geq1.96)\approx \mathbf{0.025}$ (2.5%).</p>
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">Problem 3 — Poisson Sums: $P\!\left(150\leq\sum_{i=1}^{75}X_i\leq170\right)$ where $X_i$ iid Poi$(2)$</div>
+        <p>$\sum_{i=1}^{75}X_i\sim\text{Poi}(150)$. $E=\text{Var}=150$, $\text{SD}=\sqrt{150}\approx12.25$.</p>
+        $$z_1 = \frac{150-150}{\sqrt{150}}=0, \qquad z_2 = \frac{170-150}{\sqrt{150}} = \frac{20}{\sqrt{150}}\approx1.63$$
+        <p>$P(150\leq X\leq170) = P(0\leq Z\leq1.63) = \Phi(1.63)-\Phi(0)\approx0.95-0.50 = \mathbf{0.45}$.</p>
+      </div>
+
+      <div class="callout callout-india">
+        This completes the NPTEL Advanced Probability Theory sequence. The arc of 30 lectures — from sigma-fields through Borel-Cantelli to order statistics, modes of convergence, LLN, and CLT — is exactly the mathematical foundation of modern quantitative finance. Every option pricing model, every strategy backtest, every risk metric rests on this structure. The CLT in particular explains why Normal approximations pervade derivatives pricing despite returns being non-Normal: as time steps shrink and trade counts grow, the Central Limit Theorem pushes the aggregate distribution toward Gaussian.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 30</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch30 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">In the Lindberg-Lévy proof, why does the first-order term $\mu_1' t/\sqrt{n}$ in the MGF expansion vanish?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Because $t/\sqrt{n}\to 0$ as $n\to\infty$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>Because $\mu_1' = E(X_i-m) = 0$ — we centred by subtracting the mean</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>Because the $X_i$ are identically distributed</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Because MGFs don't have odd-order terms</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B</strong><br/><br/>We work with $(X_i-m)/s$ which has mean zero. $\mu_1'=E(W)=0$ kills the linear term. <span class="expl-ans">This is why centering is essential — without subtracting the mean, the $O(1/\sqrt{n})$ term would survive and the MGF would not converge to $e^{t^2/2}$. The second-order term $\mu_2'\cdot t^2/(2n)=t^2/(2n)$ then multiplied by $n$ gives the surviving $t^2/2$.</span></div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch30 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_i$ iid Exp$(1)$ ($\mu=1$, $\sigma^2=1$). For large $n$, what is $P(\bar{X}_{100}\leq 1.1)$ approximately?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$\Phi(0.1)$ &#8212; use CLT directly without scaling</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$\Phi(1)$ &#8212; since $z=(1.1-1)/(1/\sqrt{100})=0.1\times10=1$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>Cannot apply CLT — Exponential is not Normal</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$\Phi(10)$ &#8212; standardise by dividing by $\sigma^2=1$ not $\sigma=1$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; $\Phi(1)\approx 0.841$</strong><br/><br/>$\bar{X}_{100}\approx N(1, 1/100)$ by CLT. $z = (1.1-1)/(1/\sqrt{100}) = 0.1/(0.1) = 1$. So $P(\bar{X}_{100}\leq 1.1)\approx\Phi(1)\approx 0.841$. <span class="expl-ans">CLT applies to any distribution with finite mean and variance — Exponential qualifies perfectly. The original distribution being non-Normal is irrelevant; CLT guarantees the average is approximately Normal.</span></div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch30 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">What is the key mathematical difference between what WLLN and CLT prove about $\bar{X}_n$?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>WLLN requires iid; CLT does not</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>CLT requires finite variance; WLLN does not</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>WLLN gives convergence in probability to a constant; CLT gives convergence in distribution to $N(0,1)$ after rescaling</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>They prove the same thing using different techniques</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: C</strong><br/><br/>WLLN: $\bar{X}_n\xrightarrow{P}\mu$ (one point). CLT: $(\bar{X}_n-\mu)/(\sigma/\sqrt{n})\xrightarrow{d}N(0,1)$ (a distribution). <span class="expl-ans">WLLN tells you where; CLT tells you how spread out. The CLT cannot be stated without the $\sqrt{n}$ rescaling — without it, the standardised sum collapses to the point $\mu$ by WLLN.</span></div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch30 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">In the teacher grading problem: 100 scripts, $\mu=1$ hr, $\sigma^2=0.26$ hr$^2$. Compute $P(S_{100}\geq 110)$ using CLT.</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$P(Z\geq 0.51)\approx 0.305$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$P(Z\geq 10)\approx 0$ &#8212; divide by variance, not SD</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>$P(Z\geq 1.96)\approx 0.025$, since $z = 10/\sqrt{26}\approx1.96$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$P(Z\geq 1.0)\approx 0.159$, since $z=10/10=1$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: C &#8212; $P(Z\geq1.96)\approx 0.025$</strong><br/><br/>$\text{Var}(S_{100})=100\times0.26=26$, $\text{SD}=\sqrt{26}\approx5.1$. $z=(110-100)/5.1\approx1.96$. <span class="expl-ans">$P(N(0,1)\geq1.96)=0.025$. There is only a 2.5% chance the teacher takes more than 110 hours. Note: SD of $S_n$ is $\sigma\sqrt{n}=\sqrt{0.26}\times10\approx5.1$, not $\sigma^2\cdot n=26$.</span></div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch30 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_i$ iid Poi$(2)$, $n=75$. Find $P\!\left(\sum_{i=1}^{75}X_i\leq 160\right)$ approximately using CLT.</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$\Phi(0.82)\approx 0.794$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">B</div><span>$\Phi(0.816)\approx 0.793$, since $z=(160-150)/\sqrt{150}\approx0.82$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">C</div><span>$\Phi(10)\approx 1$ &#8212; divide by variance 150 not SD $\sqrt{150}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>Cannot apply CLT to Poisson sums</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: B &#8212; $\Phi(0.82)\approx 0.793$</strong><br/><br/>$\sum X_i\sim\text{Poi}(150)$ with mean 150 and variance 150. $z=(160-150)/\sqrt{150}=10/12.25\approx0.82$. <span class="expl-ans">$P(\sum X_i\leq160)\approx\Phi(0.82)\approx0.793$. CLT applies perfectly to Poisson sums — in fact Poi$(\lambda)\xrightarrow{d}N(\lambda,\lambda)$ for large $\lambda$, which is exactly what we showed in Ch29.</span></div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','B')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch29.html" class="ch-nav-btn">&#8592; Chapter 29: CLT — Introduction</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Centering kills $\\mu_1'$: the key structural reason CLT works.","CLT applies to Exp$(1)$: $z=(1.1-1)/(0.1)=1$. Applied.","WLLN: one point. CLT: full distribution shape. Distinction clear.","$\\text{SD}(S_{100})=\\sqrt{26}\\approx5.1$. $z=1.96$. Grading problem solved.","$\\sum X_i\\sim\\text{Poi}(150)$. $z=(160-150)/\\sqrt{150}\\approx0.82$. CLT applied.","The full 30-lecture sequence: from sigma-fields to CLT. Complete.","Gamma also converges to Normal. CLT is truly universal.","Lindberg-Lévy: the definitive theorem. Mastered."];
+const wrongMsgs=["$\\mu_1'=E(X_i-m)=0$: centering at the mean kills the linear term.","$z=(1.1-1)/(1/\\sqrt{100})=1$. CLT applies to any finite-variance distribution.","WLLN: convergence in probability. CLT: convergence in distribution.","$\\text{SD}=\\sqrt{\\text{Var}(S_{100})}=\\sqrt{26}\\approx5.1$, not $0.26$ or $26$.","$\\sum_{i=1}^{75}X_i\\sim\\text{Poi}(150)$. $z=10/\\sqrt{150}\\approx0.82$.","Re-read the CLT proof above."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

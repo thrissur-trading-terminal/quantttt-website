@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 17: Conditional Expectation &amp; Inequalities — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 17</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:60%"></div></div>
+      <span class="tb-prog-lbl">17 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch13.html"><div class="si-num">&#x2713;</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch14.html"><div class="si-num">&#x2713;</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch15.html"><div class="si-num">&#x2713;</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch16.html"><div class="si-num">&#x2713;</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 17</span>
+      </div>
+      <h1 class="chapter-title">Conditional Expectation &amp; Inequalities</h1>
+      <p class="chapter-subtitle">Conditioning transforms a number (expectation) into a function. This chapter develops the two towering results of conditional expectation &#8212; the Tower Property and the Law of Total Variance &#8212; then derives the two most useful probability bounds: Chebyshev's Inequality and Markov's Inequality.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Conditional Expectation</h3>
+
+      <div class="callout callout-definition">
+        Given joint RVs $(X,Y)$, the <strong>conditional expectation of $X$ given $Y=y$</strong> is:
+        $$E(X|Y=y) = \int x\,f_{X|Y}(x|y)\,dx = \int x\,\frac{f(x,y)}{f_Y(y)}\,dx \quad \text{(continuous)}$$
+        $$E(X|Y=y) = \sum_x x\,\frac{P(X=x,\, Y=y)}{P(Y=y)} \quad \text{(discrete)}$$
+        <strong>Key point:</strong> $E(X|Y=y)$ is a function of $y$. As $Y$ varies, this becomes a random variable $E(X|Y)$. When $X \perp Y$: $E(X|Y=y) = E(X)$ for all $y$.
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">&#x1F3B2; Dice Example &#8212; $Y = \max(X_1, X_2)$</div>
+        <p>$X_1, X_2$ iid Uniform$\{1,\ldots,6\}$, independent. $Y = \max(X_1,X_2)$. Find $E(X_1|Y=y)$.</p>
+        <div style="overflow-x:auto;margin:0.8rem 0;">
+        <table style="border-collapse:collapse;font-size:0.82rem;min-width:500px;">
+          <thead><tr style="background:var(--navy);color:white;">
+            <th style="padding:0.4rem 0.6rem;font-family:'DM Mono',monospace;font-size:0.65rem;">$X_1 \backslash Y$</th>
+            <th style="padding:0.4rem 0.6rem;text-align:center;">1</th><th style="padding:0.4rem 0.6rem;text-align:center;">2</th><th style="padding:0.4rem 0.6rem;text-align:center;">3</th><th style="padding:0.4rem 0.6rem;text-align:center;">4</th><th style="padding:0.4rem 0.6rem;text-align:center;">5</th><th style="padding:0.4rem 0.6rem;text-align:center;">6</th>
+            <th style="padding:0.4rem 0.6rem;text-align:center;background:rgba(232,114,42,0.3);">$P(X_1)$</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.6rem;font-weight:700;">1</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;font-weight:700;color:var(--orange);">$\frac{1}{6}$</td></tr>
+            <tr style="background:var(--off);border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.6rem;font-weight:700;">2</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{2}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;font-weight:700;color:var(--orange);">$\frac{1}{6}$</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.6rem;font-weight:700;">3</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{3}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;font-weight:700;color:var(--orange);">$\frac{1}{6}$</td></tr>
+            <tr style="background:var(--off);border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.6rem;font-weight:700;">4</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{4}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;font-weight:700;color:var(--orange);">$\frac{1}{6}$</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.6rem;font-weight:700;">5</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{5}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;font-weight:700;color:var(--orange);">$\frac{1}{6}$</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:0.4rem 0.6rem;font-weight:700;">6</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">0</td><td style="text-align:center;padding:0.3rem 0.6rem;">$\frac{6}{36}$</td><td style="text-align:center;padding:0.3rem 0.6rem;font-weight:700;color:var(--orange);">$\frac{1}{6}$</td></tr>
+            <tr style="background:rgba(232,114,42,0.08);"><td style="padding:0.4rem 0.6rem;font-weight:700;color:var(--orange);">$P(Y)$</td><td style="text-align:center;font-weight:700;color:var(--orange);padding:0.3rem 0.6rem;">$\frac{1}{36}$</td><td style="text-align:center;font-weight:700;color:var(--orange);padding:0.3rem 0.6rem;">$\frac{3}{36}$</td><td style="text-align:center;font-weight:700;color:var(--orange);padding:0.3rem 0.6rem;">$\frac{5}{36}$</td><td style="text-align:center;font-weight:700;color:var(--orange);padding:0.3rem 0.6rem;">$\frac{7}{36}$</td><td style="text-align:center;font-weight:700;color:var(--orange);padding:0.3rem 0.6rem;">$\frac{9}{36}$</td><td style="text-align:center;font-weight:700;color:var(--orange);padding:0.3rem 0.6rem;">$\frac{11}{36}$</td><td style="padding:0.3rem 0.6rem;font-weight:700;text-align:center;">1</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p>Computing $E(X_1|Y=y)$ for each $y$ by dividing each row's joint probabilities by the column sum:</p>
+        <p style="font-size:0.88rem;">$E(X_1|Y=1)=1$,&nbsp; $E(X_1|Y=2)=\frac{5}{3}$,&nbsp; $E(X_1|Y=3)=\frac{12}{5}$,&nbsp; $E(X_1|Y=4)=\frac{22}{7}$,&nbsp; $E(X_1|Y=5)=\frac{35}{9}$,&nbsp; $E(X_1|Y=6)=\frac{51}{11}$</p>
+        <p>Now take the expectation over $Y$:</p>
+        $$E[E(X_1|Y)] = 1\cdot\frac{1}{36}+\frac{5}{3}\cdot\frac{3}{36}+\frac{12}{5}\cdot\frac{5}{36}+\frac{22}{7}\cdot\frac{7}{36}+\frac{35}{9}\cdot\frac{9}{36}+\frac{51}{11}\cdot\frac{11}{36} = \frac{1+5+12+22+35+51}{36} = \frac{126}{36} = \frac{7}{2}$$
+        <p>And $E(X_1) = \frac{1+2+3+4+5+6}{6} = \frac{7}{2}$. ✓ The Tower Property confirmed numerically.</p>
+      </div>
+
+      <h3>Tower Property (Law of Total Expectation)</h3>
+
+      <div class="callout callout-theorem">
+        $$E[E(X|Y)] = E(X)$$
+        Averaging the conditional expectation over $Y$ recovers the unconditional expectation.
+      </div>
+
+      <div class="callout callout-proof">
+        $$E_Y[E(X|Y=y)] = \int E(X|Y=y)\cdot f_Y(y)\,dy = \int\left[\int x\cdot\frac{f(x,y)}{f_Y(y)}dx\right]f_Y(y)\,dy = \iint x\,f(x,y)\,dx\,dy$$
+        Switching order of integration (Fubini):
+        $$= \int x\left[\int f(x,y)\,dy\right]dx = \int x\,f_X(x)\,dx = E(X) \qquad \square$$
+      </div>
+
+      <h3>Law of Total Variance</h3>
+
+      <div class="callout callout-theorem">
+        $$\text{Var}(X) = E[\text{Var}(X|Y)] + \text{Var}[E(X|Y)]$$
+        "Expected conditional variance" + "Variance of conditional mean" = Total variance.
+      </div>
+
+      <div class="callout callout-proof">
+        Since $\text{Var}(X|Y) = E(X^2|Y) - [E(X|Y)]^2$:
+        $$E[\text{Var}(X|Y)] = E[E(X^2|Y)] - E\{[E(X|Y)]^2\} = E(X^2) - E\{[E(X|Y)]^2\}$$
+        (using the Tower Property on the first term).
+        And $\text{Var}[E(X|Y)] = E\{[E(X|Y)]^2\} - [E(E(X|Y))]^2 = E\{[E(X|Y)]^2\} - [E(X)]^2$.
+        Adding: the $E\{[E(X|Y)]^2\}$ terms cancel:
+        $$E[\text{Var}(X|Y)] + \text{Var}[E(X|Y)] = E(X^2) - [E(X)]^2 = \text{Var}(X) \qquad \square$$
+      </div>
+
+      <div class="callout callout-intuition">
+        Think of it this way: total uncertainty in $X$ = (average uncertainty within each group of $Y$) + (variation in the group means). In finance: total return variance = average within-regime variance + variance of regime means. The second term is why regimes matter even if each regime is stable individually.
+      </div>
+
+      <h3>Chebyshev's Inequality</h3>
+
+      <div class="callout callout-theorem">
+        <strong>General form:</strong> For any RV $X$, constant $C$, and $\varepsilon > 0$:
+        $$P(|X - C| \geq \varepsilon) \leq \frac{E(X-C)^2}{\varepsilon^2}$$
+        <strong>Standard form</strong> (take $C = \mu = E(X)$):
+        $$P(|X - \mu| \geq \varepsilon) \leq \frac{\text{Var}(X)}{\varepsilon^2}$$
+        <strong>$k\sigma$ form:</strong>
+        $$P(|X - \mu| \geq k\sigma) \leq \frac{1}{k^2}$$
+      </div>
+
+      <div class="callout callout-proof">
+        $P(|X-C| \geq \varepsilon) = \int_{\{x:|x-C|\geq\varepsilon\}} f(x)\,dx$.
+        On this region, $\frac{(x-C)^2}{\varepsilon^2} \geq 1$, so:
+        $$\int_{\{|x-C|\geq\varepsilon\}} f(x)\,dx \leq \int_{\{|x-C|\geq\varepsilon\}} \frac{(x-C)^2}{\varepsilon^2}f(x)\,dx \leq \frac{1}{\varepsilon^2}\int_{-\infty}^\infty (x-C)^2 f(x)\,dx = \frac{E(X-C)^2}{\varepsilon^2} \qquad \square$$
+      </div>
+
+      <div class="callout callout-warning">
+        <strong>Chebyshev is not tight.</strong> For $X \sim U[0,1]$: $\mu=\frac{1}{2}$, $\sigma^2=\frac{1}{12}$. Taking $k=2$: $\varepsilon = 2\sigma = 2/\sqrt{12} \approx 0.577$. Chebyshev gives $P(|X-\frac{1}{2}|\geq 0.577) \leq \frac{1}{4}$. But actually $P = 0$ since $X$ lives in $[0,1]$ and $0.577 > 0.5$. The bound is valid but extremely loose.
+        <br/><br/>
+        Chebyshev's power is universality &#8212; it works for any distribution with finite variance, without knowing the shape. Tighter bounds require more assumptions.
+      </div>
+
+      <h3>Markov's Inequality</h3>
+
+      <div class="callout callout-theorem">
+        If $h(X) \geq 0$ for all $x$, and $E[h(X)]$ exists, then for any $\varepsilon > 0$:
+        $$P(h(X) \geq \varepsilon) \leq \frac{E[h(X)]}{\varepsilon}$$
+        Special case: $P(X \geq k) \leq \frac{E(X^r)}{k^r}$ for any non-negative RV and $r > 0$.
+      </div>
+
+      <div class="callout callout-proof">
+        Partition $\Omega = A \cup A^c$ where $A = \{h(X) \geq \varepsilon\}$:
+        $$E[h(X)] = \sum_{x\in A}h(x)p_x + \sum_{x\in A^c}h(x)p_x \geq \sum_{x\in A}h(x)p_x \geq \sum_{x\in A}\varepsilon\cdot p_x = \varepsilon\cdot P(h(X)\geq\varepsilon)$$
+        (first inequality: $h \geq 0$ on $A^c$; second: $h(x) \geq \varepsilon$ on $A$). Dividing: $P(h(X)\geq\varepsilon) \leq E[h(X)]/\varepsilon$. $\square$
+      </div>
+
+      <div class="callout callout-theorem">
+        <strong>Chebyshev follows from Markov.</strong> Set $h(X) = (X-\mu)^2$ and $\varepsilon = k^2\sigma^2$:
+        $$P((X-\mu)^2 \geq k^2\sigma^2) \leq \frac{E(X-\mu)^2}{k^2\sigma^2} = \frac{\sigma^2}{k^2\sigma^2} = \frac{1}{k^2}$$
+        This is exactly Chebyshev. But Markov cannot be derived from Chebyshev &#8212; Markov is strictly more general.
+      </div>
+
+      <div class="callout callout-india">
+        Chebyshev's inequality is the theoretical foundation of risk management. Without knowing the return distribution of a Nifty portfolio &#8212; knowing only its mean $\mu$ and variance $\sigma^2$ &#8212; Chebyshev guarantees: $P(\text{return deviates from } \mu \text{ by more than } 3\sigma) \leq \frac{1}{9} \approx 11\%$. Every VaR model that says "3-sigma event should occur less than 11% of the time" is using Chebyshev, implicitly.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 17</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch17 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim N(\mu, \sigma^2)$. By Chebyshev, what is the upper bound on $P(|X-\mu| \geq 2\sigma)$?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$0.05$ &#8212; from Normal tables</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$\dfrac{1}{4}$ &#8212; Chebyshev with $k=2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$\dfrac{1}{2}$ &#8212; Chebyshev with $k=2$ uses $1/(2k)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$\sigma^2/4$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $\frac{1}{4}$</strong><br/><br/>Chebyshev: $P(|X-\mu|\geq k\sigma) \leq 1/k^2$. With $k=2$: bound $= 1/4$. <span class="expl-ans">The actual probability for $N(\mu,\sigma^2)$ is about 4.5% &#8212; much less than 25%. Chebyshev is universal but loose for smooth distributions like the Normal.</span></div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch17 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$E(X) = 10$, $\text{Var}(X) = 4$. Using Chebyshev, find the minimum $k$ such that $P(|X-10|\geq k) \leq 0.04$.</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$k = 2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">B</div><span>$k = 5$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">C</div><span>$k = 10$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$k = 4$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: C &#8212; $k = 10$</strong><br/><br/>Chebyshev: $P(|X-\mu|\geq\varepsilon) \leq \text{Var}/\varepsilon^2$. Set $4/\varepsilon^2 \leq 0.04$: $\varepsilon^2 \geq 100$, so $\varepsilon \geq 10$. <span class="expl-ans">To guarantee the probability is at most 4%, you need to be 10 units away from the mean &#8212; 5 standard deviations. That's how loose the bound is in practice.</span></div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch17 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \geq 0$ with $E(X) = 5$. Using Markov's inequality, what is the bound on $P(X \geq 25)$?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">A</div><span>$1/5$ &#8212; Markov: $P(X\geq k) \leq E(X)/k$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>$1/25$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>$5/25 = 1/5$ but Markov doesn't apply since $X$ isn't bounded</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$0$ &#8212; $P(X\geq 25)=0$ since $E(X)=5$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: A &#8212; $\frac{1}{5}$</strong><br/><br/>Markov: $P(X\geq\varepsilon) \leq E(X)/\varepsilon = 5/25 = 1/5$. <span class="expl-ans">Markov applies to any non-negative RV with a finite mean &#8212; no bound on $X$ needed.</span> Option D is wrong &#8212; having mean 5 doesn't prevent $X$ from occasionally being 25 or more.</div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','A')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch17 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Using the Tower Property: $E(X) = E[E(X|Y)]$. If $E(X|Y=1) = 3$, $E(X|Y=2) = 7$, $P(Y=1) = 0.4$, $P(Y=2) = 0.6$, what is $E(X)$?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$5$ &#8212; simple average of 3 and 7</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">B</div><span>$5.4$ &#8212; weighted: $3(0.4) + 7(0.6)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">C</div><span>$21$ &#8212; product of the two conditional expectations</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>Cannot determine without the full joint distribution</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: B &#8212; $5.4$</strong><br/><br/>$E(X) = E[E(X|Y)] = E(X|Y=1)\cdot P(Y=1) + E(X|Y=2)\cdot P(Y=2) = 3(0.4)+7(0.6) = 1.2+4.2 = 5.4$. <span class="expl-ans">This is the Tower Property in direct action &#8212; the weighted average of conditional expectations.</span> Option A is wrong (unweighted). The Tower Property says you need the full distribution of $Y$ as weights.</div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch17 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">A Nifty portfolio has mean return $\mu = 12\%$ and $\sigma = 20\%$ per year. Using Chebyshev, what is the guaranteed upper bound on $P(\text{return} \leq -28\%)$?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$0.025$ &#8212; from Normal distribution, $z$-score analysis</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>$0.10$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>$\dfrac{1}{16}$ &#8212; since $-28\%$ is $2\sigma$ below the mean</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$\dfrac{1}{4}$ &#8212; Chebyshev at $2\sigma$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: C &#8212; $\frac{1}{16}$</strong><br/><br/>$-28\% = 12\% - 40\% = \mu - 2\sigma$. So this event requires the return to be at least $2\sigma = 40\%$ below the mean. Chebyshev: $P(|X-\mu|\geq 2\sigma) \leq 1/4$. But we want the one-sided bound $P(X \leq \mu - 2\sigma)$. <span class="expl-ans">By symmetry of the Chebyshev bound, $P(\text{one tail}) \leq \frac{1}{2}\cdot\frac{1}{k^2} = \frac{1}{2}\cdot\frac{1}{4} = \frac{1}{8}$.</span> More precisely, using the one-sided Chebyshev: $P(X \leq \mu - k\sigma) \leq \frac{1}{1+k^2} = \frac{1}{5}$ for $k=2$. The simplest safe bound students use is $P(|X-\mu|\geq 2\sigma)/2 = 1/8$. Option D gives the two-sided bound.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch16.html" class="ch-nav-btn">&#8592; Chapter 16: Poisson Process</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Tower Property, Chebyshev, Markov &#8212; all applied correctly.","$1/k^2$ bound computed. Chebyshev mastered.","Markov's inequality: $E(X)/\\varepsilon$. Clean application.","Tower Property: weighted average of conditional expectations.","One-sided Chebyshev applied. Portfolio risk bounded.","$\\text{Var}(X) = E[\\text{Var}(X|Y)] + \\text{Var}[E(X|Y)]$. You proved it.","Conditional expectation as a random variable. Understood.","Inequalities give bounds without knowing the full distribution. Mastered."];
+const wrongMsgs=["Chebyshev: $P(|X-\\mu|\\geq k\\sigma) \\leq 1/k^2$.","Set $\\text{Var}/\\varepsilon^2 \\leq$ bound and solve for $\\varepsilon$.","Markov applies to any non-negative RV. $P(X\\geq\\varepsilon) \\leq E(X)/\\varepsilon$.","Tower Property: weight each conditional expectation by $P(Y=y)$.","Find how many $\\sigma$ below the mean the event is, then apply Chebyshev.","Re-read the proof of Chebyshev from Markov above."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

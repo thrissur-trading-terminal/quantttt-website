@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 14: Moment Generating Functions — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 14</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:50%"></div></div>
+      <span class="tb-prog-lbl">14 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch13.html"><div class="si-num">&#x2713;</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch14.html"><div class="si-num">14</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch15.html"><div class="si-num">15</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch16.html"><div class="si-num">16</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch17.html"><div class="si-num">17</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch18.html"><div class="si-num">18</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch19.html"><div class="si-num">19</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 14</span>
+      </div>
+      <h1 class="chapter-title">Moment Generating Functions</h1>
+      <p class="chapter-subtitle">A distribution is characterised by infinitely many moments. The moment generating function (MGF) packages all of them into a single function — and differentiating it at zero pulls out any moment you want. It also provides the cleanest proofs that sums of independent distributions stay within the same family.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Moments of a Distribution</h3>
+
+      <div class="callout callout-definition">
+        The <strong>$r$-th raw moment</strong> of $X$: $\mu'_r = E(X^r)$
+        <br/><br/>
+        The <strong>$r$-th central moment</strong>: $\mu_r = E[(X - E(X))^r]$
+        <br/><br/>
+        Key instances: $\mu'_0 = 1$, $\mu'_1 = E(X)$ (mean), $\mu_1 = 0$, $\mu_2 = \text{Var}(X)$.
+        <br/><br/>
+        $\mu_3$ measures <strong>skewness</strong> (asymmetry); $\mu_4$ measures <strong>kurtosis</strong> (peakedness). Two distributions can have the same mean and variance yet differ in shape &#8212; higher moments capture this.
+      </div>
+
+      <div class="callout callout-intuition">
+        Raw and central moments are interconvertible. Since $\mu'_1 = \mu$ (the mean):
+        $$\mu_2 = \mu'_2 - (\mu'_1)^2 \qquad \mu_3 = \mu'_3 - 3\mu'_2\mu'_1 + 2(\mu'_1)^3$$
+        So knowing all raw moments gives all central moments, and vice versa. Two distributions are identical if and only if all their moments match ($\mu'_r$ for all $r = 1,2,3,\ldots$). Hence the power of a function that generates all moments at once.
+      </div>
+
+      <h3>Definition of the MGF</h3>
+
+      <div class="callout callout-definition">
+        The <strong>Moment Generating Function (MGF)</strong> of $X$ is:
+        $$M_X(t) = E(e^{tX}), \quad \text{for } t \in (-h, h) \text{ for some } h > 0$$
+        Expanding $e^{tX}$ as a power series and using linearity of expectation:
+        $$M_X(t) = E\!\left[1 + tX + \frac{t^2X^2}{2!} + \cdots\right] = 1 + t\mu'_1 + \frac{t^2}{2!}\mu'_2 + \cdots + \frac{t^k}{k!}\mu'_k + \cdots$$
+        The $k$-th raw moment $\mu'_k$ is the coefficient of $t^k/k!$ in the expansion.
+      </div>
+
+      <div class="callout callout-theorem">
+        <strong>Extracting moments by differentiation:</strong>
+        $$\mu'_k = M_X^{(k)}(0) = \left.\frac{d^k}{dt^k}M_X(t)\right|_{t=0}$$
+        Differentiating $k$ times and setting $t=0$ kills all but the $\mu'_k$ term.
+      </div>
+
+      <h3>MGFs of Named Distributions</h3>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Bernoulli($p$)</div>
+          <div class="prop-card-name">$M(t) = q + pe^t$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>$M(t) = e^{t\cdot 0}\cdot q + e^{t\cdot 1}\cdot p = q + pe^t$. Expanding: $1 + pt + \frac{p}{2!}t^2 + \cdots$, so $\mu'_1 = p$, $\mu'_2 = p$.</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Binomial($n,p$)</div>
+          <div class="prop-card-name">$M(t) = (q + pe^t)^n$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>$M(t) = \sum_{x=0}^n \binom{n}{x}(pe^t)^x q^{n-x} = (q+pe^t)^n$ by the binomial theorem.</p>
+          <p><strong>Verification:</strong> $M'(0) = n(q+p)^{n-1}\cdot p = np$. ✓ &nbsp; $M''(0) = n(n-1)p^2 + np = E(X^2)$. ✓</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Poisson($\lambda$)</div>
+          <div class="prop-card-name">$M(t) = e^{\lambda(e^t - 1)}$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>$M(t) = e^{-\lambda}\sum_{x=0}^\infty\frac{(\lambda e^t)^x}{x!} = e^{-\lambda}\cdot e^{\lambda e^t} = e^{\lambda(e^t-1)}$.</p>
+          <p><strong>Verification:</strong> $M'(t) = e^{\lambda(e^t-1)}\cdot\lambda e^t$. At $t=0$: $M'(0) = \lambda$. ✓</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Geometric($p$)</div>
+          <div class="prop-card-name">$M(t) = \dfrac{pe^t}{1-qe^t}$ &nbsp; (for $t < -\log q$)</div>
+        </div>
+        <div class="prop-card-body">
+          <p>$M(t) = \sum_{x=1}^\infty e^{tx}pq^{x-1} = pe^t\sum_{x=1}^\infty(qe^t)^{x-1} = \frac{pe^t}{1-qe^t}$, valid when $qe^t &lt; 1$.</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">Exp($\lambda$)</div>
+          <div class="prop-card-name">$M(t) = \dfrac{\lambda}{\lambda-t}$ &nbsp; (for $t &lt; \lambda$)</div>
+        </div>
+        <div class="prop-card-body">
+          <p>$M(t) = \lambda\int_0^\infty e^{tx}e^{-\lambda x}dx = \lambda\int_0^\infty e^{-(\lambda-t)x}dx = \frac{\lambda}{\lambda-t}$, converges iff $t &lt; \lambda$.</p>
+          <p>Series: $\frac{\lambda}{\lambda-t} = \sum_{k=0}^\infty \frac{t^k}{\lambda^k}$, so $\mu'_k = \frac{k!}{\lambda^k}$. &nbsp; Check: $\mu'_1 = 1/\lambda$ ✓, $\mu'_2 = 2/\lambda^2$ ✓.</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">$N(0,1)$</div>
+          <div class="prop-card-name">$M(t) = e^{t^2/2}$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>Complete the square: $x^2 - 2tx = (x-t)^2 - t^2$. So $M(t) = \frac{e^{t^2/2}}{\sqrt{2\pi}}\int_{-\infty}^\infty e^{-(x-t)^2/2}dx = e^{t^2/2}$.</p>
+          <p>Expanding $e^{t^2/2}$: all odd moments are 0. $\mu'_2 = 1$, $\mu'_4 = 3$, $\mu'_6 = 15$. &nbsp; Generally $\mu'_{2k} = (2k-1)!! = 1\cdot3\cdot5\cdots(2k-1)$.</p>
+        </div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-card-header">
+          <div class="prop-card-badge" style="width:auto;border-radius:6px;padding:0 8px;font-size:0.68rem;">$N(\mu,\sigma^2)$</div>
+          <div class="prop-card-name">$M(t) = e^{\mu t + \frac{1}{2}\sigma^2 t^2}$</div>
+        </div>
+        <div class="prop-card-body">
+          <p>Write $X = \mu + \sigma Z$ where $Z \sim N(0,1)$. Then $M_X(t) = E(e^{t(\mu+\sigma Z)}) = e^{\mu t}M_Z(\sigma t) = e^{\mu t}\cdot e^{\sigma^2 t^2/2}$.</p>
+          <p>Expanding confirms $M'(0) = \mu$ and $M''(0) - (M'(0))^2 = \sigma^2$. The MGF encodes both parameters directly.</p>
+        </div>
+      </div>
+
+      <h3>Properties and Applications</h3>
+
+      <div class="callout callout-theorem">
+        <strong>Property 1 &#8212; Scaling:</strong> $M_{cX}(t) = M_X(ct)$
+        <br/><br/>
+        <strong>Property 2 &#8212; Independence:</strong> If $X \perp Y$:
+        $$M_{X+Y}(t) = E(e^{t(X+Y)}) = E(e^{tX})E(e^{tY}) = M_X(t)\cdot M_Y(t)$$
+        The MGF of a sum of independent RVs is the <strong>product</strong> of their MGFs.
+        <br/><br/>
+        <strong>Uniqueness Theorem:</strong> If two RVs have the same MGF in a neighbourhood of $t=0$, they have the same distribution.
+      </div>
+
+      <div class="worked">
+        <div class="worked-title">&#x2211; Reproductive Properties via MGF &#8212; The Cleanest Proofs</div>
+        <p><strong>Binomial:</strong> $X_i \sim \text{Ber}(p)$ independent. Each has MGF $q+pe^t$. Sum of $n$ independent Bernoullis:</p>
+        $$M_{X_1+\cdots+X_n}(t) = (q+pe^t)^n$$
+        <p>By uniqueness, $X_1+\cdots+X_n \sim \text{Bin}(n,p)$. ✓ &nbsp; This is the cleanest proof that Binomial = sum of Bernoullis.</p>
+        <p><strong>Poisson:</strong> $X \sim \text{Poi}(\lambda_1)$, $Y \sim \text{Poi}(\lambda_2)$ independent:</p>
+        $$M_{X+Y}(t) = e^{\lambda_1(e^t-1)}\cdot e^{\lambda_2(e^t-1)} = e^{(\lambda_1+\lambda_2)(e^t-1)}$$
+        <p>By uniqueness, $X+Y \sim \text{Poi}(\lambda_1+\lambda_2)$. ✓</p>
+        <p><strong>Normal:</strong> $X_i \sim N(\mu_i,\sigma_i^2)$ independent:</p>
+        $$M_{\sum X_i}(t) = \prod e^{\mu_i t + \frac{1}{2}\sigma_i^2 t^2} = e^{(\sum\mu_i)t + \frac{1}{2}(\sum\sigma_i^2)t^2}$$
+        <p>By uniqueness, $\sum X_i \sim N(\sum\mu_i, \sum\sigma_i^2)$. ✓ &nbsp; This is why the Normal is closed under addition — proved definitively in one line.</p>
+      </div>
+
+      <div class="callout callout-india">
+        In options pricing, the log-return distribution's MGF is directly related to the Laplace transform of the payoff. The MGF of Nifty log-returns (approximately Normal) is $e^{\mu t + \frac{1}{2}\sigma^2 t^2}$ &#8212; and this is exactly the function you exponentiate to get the risk-neutral price of a binary option. The Black-Scholes formula is a direct consequence of the Normal MGF evaluated at complex values of $t$.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 14</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch14 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$M_X(t) = e^{3t + 8t^2}$. What distribution does $X$ follow, and what are its mean and variance?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>Poisson(3); mean = 3, variance = 3</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$N(3, 16)$; mean = 3, variance = 16</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$N(3, 8)$; mean = 3, variance = 8</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>Exp(3); mean = 1/3</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $N(3,16)$</strong><br/><br/>The Normal MGF is $e^{\mu t + \frac{1}{2}\sigma^2 t^2}$. Matching: $\mu = 3$ and $\frac{1}{2}\sigma^2 = 8 \Rightarrow \sigma^2 = 16$. <span class="expl-ans">So $X \sim N(3,16)$, mean 3, variance 16.</span> Option C incorrectly reads $\sigma^2 = 8$ directly from the coefficient without the factor of $\frac{1}{2}$.</div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch14 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">For $X \sim \text{Exp}(\lambda)$, the $k$-th raw moment is $\mu'_k = k!/\lambda^k$. What is $E(X^3)$ for $X \sim \text{Exp}(2)$?</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$3/8$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>$3/4$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$6$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>$1/8$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; $3/4$</strong><br/><br/>$\mu'_3 = 3!/\lambda^3 = 6/8 = 3/4$. <span class="expl-ans">The MGF of Exp(2) is $\frac{2}{2-t}$, and expanding as a power series gives coefficients $k!/2^k$ for $t^k/k!$.</span> Option C gives $3! = 6$ without dividing by $\lambda^3$.</div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch14 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim \text{Poi}(3)$ and $Y \sim \text{Poi}(5)$ are independent. What is $P(X+Y = 0)$?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>$e^{-3} \cdot e^{-5}$ &#8212; multiply the individual zero-probabilities</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">B</div><span>$e^{-8}$ &#8212; since $X+Y \sim \text{Poi}(8)$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">C</div><span>$e^{-3} + e^{-5}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>Cannot determine without the joint distribution</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: B &#8212; $e^{-8}$</strong><br/><br/>By the MGF product property: $M_{X+Y}(t) = e^{3(e^t-1)}\cdot e^{5(e^t-1)} = e^{8(e^t-1)}$. By uniqueness, $X+Y \sim \text{Poi}(8)$. So $P(X+Y=0) = e^{-8}$. <span class="expl-ans">Note: Option A gives the same numerical answer ($e^{-3}\cdot e^{-5} = e^{-8}$), but for the wrong reason &#8212; it assumes independence and multiplies probabilities directly, which happens to work for the zero event but not in general.</span></div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch14 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X \sim N(0,1)$. Using the MGF $e^{t^2/2}$, what is $E(X^4)$?</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>$1$ &#8212; all even moments of $N(0,1)$ equal 1</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$2$ &#8212; $\mu'_4 = (t^2/2)^2 = t^4/4$ so coefficient is $1/4$... $\times 4! = 6$?</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>$3$ &#8212; coefficient of $t^4/4!$ in $e^{t^2/2}$ is 3</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$0$ &#8212; all moments of $N(0,1)$ beyond the second are zero</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: C &#8212; $3$</strong><br/><br/>Expand $e^{t^2/2} = 1 + \frac{t^2}{2} + \frac{1}{2!}\left(\frac{t^2}{2}\right)^2 + \cdots = 1 + \frac{t^2}{2} + \frac{t^4}{8} + \cdots$. The coefficient of $t^4/4!$ is $\mu'_4$: $\frac{t^4}{8} = \frac{t^4}{4!}\cdot\mu'_4$, so $\mu'_4 = \frac{4!}{8} = \frac{24}{8} = 3$. <span class="expl-ans">This is the famous result: the fourth moment of $N(0,1)$ equals 3, meaning the normal distribution has kurtosis $\mu_4/\sigma^4 = 3$. "Excess kurtosis" subtracts this baseline.</span></div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch14 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X_1, X_2, \ldots, X_{20} \sim \text{Bin}(5, 0.3)$ are iid. What is the distribution of $S = X_1+\cdots+X_{20}$, and what is $E(S)$?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$N(30, 21)$ &#8212; by CLT, sum of iid variables is approximately Normal</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">B</div><span>$\text{Bin}(100, 0.3)$; $E(S) = 30$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">C</div><span>$\text{Bin}(20, 0.3^5)$; $E(S) = 20\times 0.3^5$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$\text{Poi}(30)$; Binomial approximates Poisson for large $n$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: B &#8212; $\text{Bin}(100, 0.3)$</strong><br/><br/>Each $X_i$ has MGF $(0.7 + 0.3e^t)^5$. The sum of 20 independent copies: $M_S(t) = [(0.7+0.3e^t)^5]^{20} = (0.7+0.3e^t)^{100}$. By uniqueness, $S \sim \text{Bin}(100, 0.3)$. So $E(S) = 100 \times 0.3 = 30$. <span class="expl-ans">This is the MGF proof of the Binomial reproductive property in action &#8212; exponents simply add.</span> Option A is approximately correct by CLT but not exact. The exact distribution is Bin(100, 0.3).</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','B')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch13.html" class="ch-nav-btn">&#8592; Chapter 13: Joint Distributions</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["MGF identified, moments extracted. Clean.","$\\mu'_k = M^{(k)}(0)$. You applied it perfectly.","Uniqueness theorem invoked correctly.","$E(X^4)=3$ for $N(0,1)$. The kurtosis baseline.","Reproductive property via MGF: exponents add.","Differentiate, set $t=0$, collect moment. Mastered.","Generating functions generated the right answer.","Power series, probability, precision. All correct."];
+const wrongMsgs=["Check the factor of 1/2 in the Normal MGF: $e^{\\mu t + \\frac{1}{2}\\sigma^2 t^2}$.","$\\mu'_k = k!/\\lambda^k$ for Exp. Don't forget the $k!$.","Use the MGF product property, then uniqueness theorem.","Expand $e^{t^2/2}$ as a power series and read off the $t^4/4!$ coefficient.","MGF exponents add when distributions are the same family with the same $p$.","Re-read the differentiation property: $M^{(k)}(0) = E(X^k)$."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>

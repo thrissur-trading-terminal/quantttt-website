@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ch 20: Functions of Two Random Variables — quantttt.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{--white:#FFFFFF;--off:#F7F5F2;--orange:#E8722A;--orange2:#F28C42;--navy:#2D2560;--navy2:#3D3480;--green:#1E9E5E;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--light:#fdf6f0;--sidebar-w:280px;--topbar-h:60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.tb-left{display:flex;align-items:center;gap:0.8rem;min-width:0;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.tb-logo .lo{color:var(--navy);}.tb-logo .la{color:var(--orange);}
+.tb-logo .ls{font-size:0.58rem;font-weight:400;color:var(--muted);font-family:'Barlow',sans-serif;}
+.tb-sep{color:var(--border);margin:0 0.1rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;}.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb .bc-cur{color:var(--orange);}
+.tb-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+.tb-prog-wrap{display:flex;align-items:center;gap:0.5rem;}
+.tb-prog-lbl{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.tb-prog-bar{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;white-space:nowrap;}
+.tb-home:hover{color:var(--navy);}
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.done{color:var(--green);}.sidebar-item.done .si-num{background:var(--green);color:white;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-label{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.9;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.8;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-theorem{background:rgba(99,102,241,0.05);border-left:3px solid #6366f1;}
+.callout-theorem::before{content:'📋 Theorem';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#6366f1;margin-bottom:0.5rem;font-weight:600;}
+.callout-proof{background:var(--off);border:1px solid var(--border);border-radius:10px;}
+.callout-proof::before{content:'∎ Proof';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 India Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.worked{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0;}
+.worked-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;}
+.worked p{font-size:0.93rem;margin-bottom:0.8rem;color:#2a2a3e;line-height:1.8;}
+.worked p:last-child{margin-bottom:0;}
+/* diagram */
+.diagram{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin:1.2rem 0;text-align:center;}
+.diagram svg{display:block;margin:auto;}
+/* algebra grid */
+.alg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin:1rem 0;}
+.alg-item{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.65rem 1rem;font-size:0.88rem;color:var(--navy);}
+.alg-item .alg-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;}
+/* props list */
+.prop-list{counter-reset:props;list-style:none;margin:1rem 0;}
+.prop-list li{counter-increment:props;display:flex;gap:0.8rem;margin-bottom:1rem;font-size:0.93rem;line-height:1.8;color:#2a2a3e;}
+.prop-list li::before{content:counter(props);min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:0.1rem;}
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+/* MCQ */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--off);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem;}
+.mcq-card-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.mcq-dots{display:flex;gap:5px;}
+.mcq-dot{width:9px;height:9px;border-radius:50%;}
+.mcq-dot-r{background:#ff5f56;}.mcq-dot-y{background:#ffbd2e;}.mcq-dot-g{background:#27c93f;}
+.mcq-id{font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.35);}
+.mcq-diff{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.mcq-body{padding:1.5rem;}
+.mcq-question{font-family:'Shadows Into Light Two',cursive;font-size:1.1rem;line-height:1.9;color:var(--text);margin-bottom:1.3rem;}
+.mcq-options{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;}
+.opt{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.18s;font-size:0.9rem;background:var(--white);user-select:none;}
+.opt:hover{border-color:var(--orange);background:var(--light);}
+.opt.correct{border-color:var(--green);background:rgba(30,158,94,0.06);color:var(--green);}
+.opt.wrong{border-color:#dc2626;background:rgba(220,38,38,0.05);color:#dc2626;}
+.opt-ltr{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:600;background:var(--off);border:1px solid var(--border);flex-shrink:0;color:var(--navy);transition:all 0.18s;}
+.opt.correct .opt-ltr{background:var(--green);color:white;border-color:var(--green);}
+.opt.wrong .opt-ltr{background:#dc2626;color:white;border-color:#dc2626;}
+.mcq-feedback{display:none;border-radius:8px;padding:0.75rem 1rem;font-family:'Shadows Into Light Two',cursive;font-size:1rem;font-weight:600;text-align:center;margin-bottom:1rem;}
+.mcq-explanation{display:none;background:rgba(30,158,94,0.05);border:1.5px solid rgba(30,158,94,0.2);border-radius:10px;padding:1.2rem;font-size:0.87rem;line-height:1.8;color:var(--muted);margin-bottom:1rem;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+.expl-ans{color:var(--green);font-weight:700;}
+.mcq-check-btn{background:var(--orange);color:white;border:none;padding:0.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;font-family:'Barlow',sans-serif;width:100%;}
+.mcq-check-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.mcq-check-btn:disabled{opacity:0.4;cursor:default;}
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);color:white;}
+@media(max-width:900px){.sidebar{display:none;}.content{margin-left:0;padding:2rem 1.5rem 5rem;}.alg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="tb-logo">
+      <span class="lo">quant</span><span class="la">ttt</span>
+      <span class="ls"> — an initiative by Thrissur Trading Terminal</span>
+    </a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="M_Pr.html">Probability Theory</a> › <span class="bc-cur">Chapter 20</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-prog-wrap">
+      <span class="tb-prog-lbl">Progress</span>
+      <div class="tb-prog-bar"><div class="tb-prog-fill" style="width:70%"></div></div>
+      <span class="tb-prog-lbl">20 / 30</span>
+    </div>
+    <a href="M_Pr.html" class="tb-home">← All Chapters</a>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section-label">Probability Theory</div>
+  <a class="sidebar-item done" href="M_Pr_Ch1.html"><div class="si-num">&#x2713;</div>Introduction & Sample Space<span class="si-badge">2 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch2.html"><div class="si-num">&#x2713;</div>Random Experiments & Classical Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch3.html"><div class="si-num">&#x2713;</div>Sigma-Fields, Measures & Prob. Spaces<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4.html"><div class="si-num">&#x2713;</div>Properties of Probability Measures<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch4b.html"><div class="si-num">&#x2713;</div>Geometric Probability<span class="si-badge">3 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch5.html"><div class="si-num">&#x2713;</div>Conditional Probability<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch6.html"><div class="si-num">&#x2713;</div>Bayes' Theorem<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch7.html"><div class="si-num">&#x2713;</div>Random Variables & CDF<span class="si-badge">4 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch8.html"><div class="si-num">&#x2713;</div>Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch9.html"><div class="si-num">&#x2713;</div>More Discrete Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch10.html"><div class="si-num">&#x2713;</div>Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch11.html"><div class="si-num">&#x2713;</div>Named Continuous Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12.html"><div class="si-num">&#x2713;</div>Expectation<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch12b.html"><div class="si-num">&#x2713;</div>Variance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch13.html"><div class="si-num">&#x2713;</div>Joint Distributions & Covariance<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch14.html"><div class="si-num">&#x2713;</div>Moment Generating Functions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch15.html"><div class="si-num">&#x2713;</div>CF, PGF & Cumulants<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch16.html"><div class="si-num">&#x2713;</div>The Poisson Process<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch17.html"><div class="si-num">&#x2713;</div>Conditional Expectation & Inequalities<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch18.html"><div class="si-num">&#x2713;</div>Bivariate Normal Distribution<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item done" href="M_Pr_Ch19.html"><div class="si-num">&#x2713;</div>Functions of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item active" href="M_Pr_Ch20.html"><div class="si-num">20</div>Functions of Two Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch21.html"><div class="si-num">21</div>The t and F Distributions<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch22.html"><div class="si-num">22</div>Order Statistics<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch23.html"><div class="si-num">23</div>Order Statistics — Applications<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch24.html"><div class="si-num">24</div>Convergence of Random Variables<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch25.html"><div class="si-num">25</div>Convergence II — PMF Theorem & Prob.<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch26.html"><div class="si-num">26</div>Almost Sure Convergence & The Hierarchy<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch27.html"><div class="si-num">27</div>Laws of Large Numbers<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch28.html"><div class="si-num">28</div>LLN — Converse, SLLN & Catalogue<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch29.html"><div class="si-num">29</div>Central Limit Theorem — Introduction<span class="si-badge">5 MCQ</span></a>
+  <a class="sidebar-item" href="M_Pr_Ch30.html"><div class="si-num">30</div>CLT — Proof & Applications<span class="si-badge">5 MCQ</span></a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="ch-tag ch-tag-i">Advanced</span>
+        <span class="ch-num-label">Chapter 20</span>
+      </div>
+      <h1 class="chapter-title">Functions of Two Random Variables</h1>
+      <p class="chapter-subtitle">The Jacobian method extends the change-of-variable technique to two dimensions. Introduce an auxiliary variable, compute the $2\times 2$ Jacobian determinant, get the joint PDF, then marginalise. Four worked examples derive the Rayleigh, Cauchy, $\chi^2_{(2)}$, and Laplace distributions from scratch.</p>
+    </div>
+
+    <div class="content-body">
+
+      <h3>Recap: Rayleigh Distribution</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X\sim\text{Exp}(1)$, find PDF of $Y=\sqrt{X}$</div>
+        <p>Since $X>0$, $h(x)=\sqrt{x}$ is monotone increasing. $h^{-1}(y)=y^2$, $|dx/dy|=2y$.</p>
+        $$g(y) = e^{-y^2}\cdot 2y = 2ye^{-y^2}, \quad y>0$$
+        <p>This is the <strong>Rayleigh distribution</strong>. General form ($X\sim\text{Exp}(1/\alpha)$):</p>
+        $$g(y) = \frac{2y}{\alpha}e^{-y^2/\alpha}, \quad y>0,\; \alpha>0$$
+      </div>
+
+      <h3>The 2D Jacobian Theorem</h3>
+
+      <div class="callout callout-definition">
+        Let $(X,Y)$ have joint PDF $f(x,y)$. Define $U=h_1(X,Y)$ and $V=h_2(X,Y)$ with unique inverse $x=g_1(u,v)$, $y=g_2(u,v)$.
+        <br/><br/>
+        The <strong>Jacobian</strong> is:
+        $$J = \left|\det\begin{pmatrix}\dfrac{\partial x}{\partial u} & \dfrac{\partial x}{\partial v} \\[6pt] \dfrac{\partial y}{\partial u} & \dfrac{\partial y}{\partial v}\end{pmatrix}\right|$$
+        Then the joint PDF of $(U,V)$ is:
+        $$g(u,v) = f(g_1(u,v),\; g_2(u,v))\cdot J$$
+        Marginal: $f_U(u) = \int g(u,v)\,dv$.
+      </div>
+
+      <div class="callout callout-intuition">
+        This is the 2D analogue of the 1D formula $g(y) = f(h^{-1}(y))|dx/dy|$. The $|dx/dy|$ becomes the Jacobian determinant. The one-to-one requirement replaces monotonicity. Same structure, one dimension up.
+      </div>
+
+      <h3>Example 1 &#8212; Gamma Sum via Jacobian</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X\sim\Gamma(\lambda,\alpha)$, $Y\sim\Gamma(\lambda,\beta)$ independent. Find PDF of $U=X+Y$.</div>
+        <p><strong>Step 1 — auxiliary variable:</strong> $U=X+Y$, $V=X$. Inverse: $x=v$, $y=u-v$.</p>
+        <p><strong>Step 2 — Jacobian:</strong> $J = \begin{vmatrix}0 & 1 \\ 1 & -1\end{vmatrix} = |{-1}| = 1$</p>
+        <p><strong>Step 3 — joint PDF:</strong></p>
+        $$g(u,v) = \frac{\lambda^\alpha}{\Gamma(\alpha)}e^{-\lambda v}v^{\alpha-1}\cdot\frac{\lambda^\beta}{\Gamma(\beta)}e^{-\lambda(u-v)}(u-v)^{\beta-1}\cdot 1, \quad 0 < v < u$$
+        <p><strong>Step 4 — marginalise:</strong> Substitute $z=v/u$:</p>
+        $$f_U(u) = \frac{\lambda^{\alpha+\beta}}{\Gamma(\alpha)\Gamma(\beta)}e^{-\lambda u}u^{\alpha+\beta-1}\underbrace{\int_0^1 z^{\alpha-1}(1-z)^{\beta-1}dz}_{B(\alpha,\beta) = \Gamma(\alpha)\Gamma(\beta)/\Gamma(\alpha+\beta)}$$
+        $$= \frac{\lambda^{\alpha+\beta}}{\Gamma(\alpha+\beta)}e^{-\lambda u}u^{\alpha+\beta-1} \implies U\sim\Gamma(\lambda,\alpha+\beta) \qquad \square$$
+        <p>The Jacobian method gives the same reproductive property we proved via MGF &#8212; by a completely different route.</p>
+      </div>
+
+      <h3>Example 2 &#8212; $X^2+Y^2$ from $N(0,1)$ iid</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X,Y$ iid $N(0,1)$. Find PDF of $Z=X^2+Y^2$.</div>
+        <p><strong>Polar coordinates:</strong> $X=R\cos\theta$, $Y=R\sin\theta$, $R\in[0,\infty)$, $\theta\in[0,2\pi)$.</p>
+        <p><strong>Jacobian:</strong> $J = \begin{vmatrix}\cos\theta & -R\sin\theta \\ \sin\theta & R\cos\theta\end{vmatrix} = R\cos^2\theta + R\sin^2\theta = R$</p>
+        <p><strong>Joint PDF in $(R,\theta)$:</strong></p>
+        $$g(R,\theta) = \frac{1}{2\pi}e^{-(R^2\cos^2\theta+R^2\sin^2\theta)/2}\cdot R = \frac{R}{2\pi}e^{-R^2/2}$$
+        <p><strong>Marginal of $R$:</strong> integrate $\theta\in[0,2\pi]$: $f(R) = Re^{-R^2/2}$ (Rayleigh).</p>
+        <p><strong>Apply 1D change of variable</strong> $Z=R^2$: $dR/dZ = 1/(2\sqrt{Z})$:
+        $$f(z) = \sqrt{z}\,e^{-z/2}\cdot\frac{1}{2\sqrt{z}} = \frac{1}{2}e^{-z/2} \qquad (z>0)$$
+        This is $\chi^2_{(2)} = \Gamma(\frac{1}{2},1)$. ✓</p>
+      </div>
+
+      <h3>Example 3 &#8212; Ratio $X/Y$ of iid Normals = Cauchy</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X,Y$ iid $N(0,1)$. Find PDF of $U=X/Y$.</div>
+        <p><strong>Auxiliary:</strong> $U=X/Y$, $V=Y$. Inverse: $X=UV$, $Y=V$.</p>
+        <p><strong>Jacobian:</strong> $J = \begin{vmatrix}v & u \\ 0 & 1\end{vmatrix} = |v|$</p>
+        <p><strong>Joint PDF:</strong> $g(u,v) = \frac{1}{2\pi}e^{-(u^2v^2+v^2)/2}\cdot|v| = \frac{|v|}{2\pi}e^{-v^2(u^2+1)/2}$</p>
+        <p><strong>Marginalise over $v\in(-\infty,\infty)$:</strong> using symmetry ($|v|$ is even in $v$):</p>
+        $$f_U(u) = \frac{1}{\pi}\int_0^\infty v\,e^{-v^2(u^2+1)/2}\,dv$$
+        Substitute $z = v^2(u^2+1)/2$: $\int_0^\infty e^{-z}dz = 1$:
+        $$f_U(u) = \frac{1}{\pi}\cdot\frac{1}{1+u^2}, \quad -\infty < u < \infty$$
+        <p>This is the <strong>Cauchy$(1,0)$</strong> distribution. The ratio of two independent standard Normals is Cauchy. ✓</p>
+      </div>
+
+      <h3>Example 4 &#8212; Sum and Difference of iid Exp(1)</h3>
+
+      <div class="worked">
+        <div class="worked-title">$X,Y$ iid $\text{Exp}(1)$. Find PDFs of $Z=X+Y$ and $W=X-Y$.</div>
+        <p><strong>Setup:</strong> $Z=X+Y$, $W=X-Y$. Inverse: $X=(Z+W)/2$, $Y=(Z-W)/2$. $J=1/2$.</p>
+        <p><strong>Joint PDF</strong> ($z>0$, $w\in(-z,z)$ since $X,Y\geq 0$):</p>
+        $$g(z,w) = e^{-(z+w)/2}\cdot e^{-(z-w)/2}\cdot\frac{1}{2} = \frac{1}{2}e^{-z}$$
+        <p><strong>Marginal of $Z$:</strong> integrate $w\in(-z,z)$:</p>
+        $$f_Z(z) = \frac{1}{2}e^{-z}\cdot 2z = ze^{-z} \implies Z\sim\Gamma(1,2) \qquad \checkmark$$
+        <p><strong>Marginal of $W$:</strong> two cases:</p>
+        $$f_W(w) = \frac{1}{2}\int_{|w|}^\infty e^{-z}\,dz = \frac{1}{2}e^{-|w|}, \quad w\in(-\infty,\infty)$$
+        <p>This is the <strong>Laplace (double exponential)</strong> distribution! $X-Y$ where $X,Y$ are iid Exp(1) is Laplace. ✓</p>
+      </div>
+
+      <div class="callout callout-india">
+        The ratio distribution result (Example 3) explains why the $t$-statistic has heavy tails. A $t$ distribution arises as a ratio involving Normal and $\chi^2$ variables &#8212; and heavy-tailed ratio distributions are generic. In NSE options: the ratio of two risk factors (e.g., two correlated underlying moves) often has Cauchy-like tails, which is why simple Normal assumptions systematically underestimate tail risk in spread options.
+      </div>
+
+    </div>
+
+    <hr class="content-divider"/>
+
+    <div class="mcq-section">
+      <div class="mcq-header">
+        <div class="mcq-header-title">Practice Problems</div>
+        <span class="mcq-count">5 questions &middot; Chapter 20</span>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch20 / q01</span><span class="mcq-diff">&#9733; Easy</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$U = X+Y$, $V = X$. What is the Jacobian $J$?</p>
+          <div class="mcq-options" id="q1opts">
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">A</div><span>$J = 2$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',true)"><div class="opt-ltr">B</div><span>$J = 1$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">C</div><span>$J = 0$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q1',false)"><div class="opt-ltr">D</div><span>$J = -1$ &#8212; the determinant is $-1$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q1feedback"></div>
+          <div class="mcq-explanation" id="q1expl"><strong>Answer: B &#8212; $J=1$</strong><br/><br/>Inverse: $x=v$, $y=u-v$. The Jacobian matrix is $\begin{pmatrix}\partial x/\partial u & \partial x/\partial v \\ \partial y/\partial u & \partial y/\partial v\end{pmatrix} = \begin{pmatrix}0 & 1 \\ 1 & -1\end{pmatrix}$. Det $= 0(-1)-1(1)=-1$. <span class="expl-ans">$J = |-1| = 1$. The absolute value is taken, so $J=1$.</span> Option D is the determinant before taking the absolute value.</div>
+          <button class="mcq-check-btn" id="q1btn" disabled onclick="checkOpt('q1','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch20 / q02</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X,Y$ iid $N(0,1)$. The distribution of $X/Y$ is:</p>
+          <div class="mcq-options" id="q2opts">
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">A</div><span>$N(0,2)$ &#8212; ratio of two Normals is Normal</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',true)"><div class="opt-ltr">B</div><span>Cauchy$(1,0)$ &#8212; derived via Jacobian method</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">C</div><span>$\chi^2_{(2)}$ &#8212; related to the sum of squares</span></div>
+            <div class="opt" onclick="pickOpt(this,'q2',false)"><div class="opt-ltr">D</div><span>Uniform$(−1,1)$ &#8212; bounded between $-1$ and $1$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q2feedback"></div>
+          <div class="mcq-explanation" id="q2expl"><strong>Answer: B &#8212; Cauchy$(1,0)$</strong><br/><br/>The Jacobian calculation gives $f_U(u) = \frac{1}{\pi(1+u^2)}$. <span class="expl-ans">This has no finite mean and no finite variance &#8212; even though each of $X$ and $Y$ has mean 0 and variance 1.</span> The ratio operation introduces catastrophic tail heaviness. This is why ratios of financial quantities (price-to-earnings, leverage ratios) can behave very differently from their components.</div>
+          <button class="mcq-check-btn" id="q2btn" disabled onclick="checkOpt('q2','B')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch20 / q03</span><span class="mcq-diff">&#9733;&#9733; Medium</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">Why do we introduce an auxiliary variable $V=h_2(X,Y)$ when finding the PDF of $U=h_1(X,Y)$?</p>
+          <div class="mcq-options" id="q3opts">
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">A</div><span>To make the problem harder and more interesting</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">B</div><span>Because $U$ alone cannot have a PDF &#8212; it needs a partner variable</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',true)"><div class="opt-ltr">C</div><span>To create a 2D transformation $(x,y)\to(u,v)$ with a well-defined Jacobian, then marginalise over $v$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q3',false)"><div class="opt-ltr">D</div><span>$V$ must equal $Y$ always &#8212; it cannot be anything else</span></div>
+          </div>
+          <div class="mcq-feedback" id="q3feedback"></div>
+          <div class="mcq-explanation" id="q3expl"><strong>Answer: C</strong><br/><br/>To use the Jacobian theorem, we need a bijective map from $(x,y)$ to some 2D space $(u,v)$. The auxiliary $V$ is chosen for mathematical convenience &#8212; simple inverse, easy integration. <span class="expl-ans">After finding the joint PDF $g(u,v)$, we integrate out $v$ to get the marginal $f_U(u)$.</span> $V$ is a mathematical tool, not an object of interest.</div>
+          <button class="mcq-check-btn" id="q3btn" disabled onclick="checkOpt('q3','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch20 / q04</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">$X,Y$ iid $\text{Exp}(1)$. The distribution of $W=X-Y$ is:</p>
+          <div class="mcq-options" id="q4opts">
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">A</div><span>Exp(1) &#8212; difference of exponentials is exponential</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">B</div><span>$\Gamma(1,2)$ &#8212; same as the sum</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',true)"><div class="opt-ltr">C</div><span>Laplace: $f(w) = \frac{1}{2}e^{-|w|}$, $w\in\mathbb{R}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q4',false)"><div class="opt-ltr">D</div><span>$N(0,2)$ &#8212; differences of exponentials approach Normal</span></div>
+          </div>
+          <div class="mcq-feedback" id="q4feedback"></div>
+          <div class="mcq-explanation" id="q4expl"><strong>Answer: C &#8212; Laplace</strong><br/><br/>From the joint $g(z,w) = \frac{1}{2}e^{-z}$, marginalising over $z\in(|w|,\infty)$: $f_W(w) = \frac{1}{2}e^{-|w|}$. <span class="expl-ans">The difference of two iid Exponentials is the Laplace (double exponential) distribution &#8212; symmetric around 0 with exponential tails on both sides.</span> This is a non-obvious result that falls out cleanly from the Jacobian method.</div>
+          <button class="mcq-check-btn" id="q4btn" disabled onclick="checkOpt('q4','C')">Select an answer first</button>
+        </div>
+      </div>
+
+      <div class="mcq-card">
+        <div class="mcq-card-header"><div class="mcq-dots"><div class="mcq-dot mcq-dot-r"></div><div class="mcq-dot mcq-dot-y"></div><div class="mcq-dot mcq-dot-g"></div></div><span class="mcq-id">probability / ch20 / q05</span><span class="mcq-diff">&#9733;&#9733;&#9733; Hard</span></div>
+        <div class="mcq-body">
+          <p class="mcq-question">For $X=R\cos\theta$, $Y=R\sin\theta$ (polar coordinates), what is the Jacobian $J$?</p>
+          <div class="mcq-options" id="q5opts">
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">A</div><span>$J = 1$ &#8212; polar transformation is area-preserving</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">B</div><span>$J = R^2$ &#8212; volume element in 2D polar</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',true)"><div class="opt-ltr">C</div><span>$J = R$ &#8212; from $\det\begin{pmatrix}\cos\theta & -R\sin\theta \\ \sin\theta & R\cos\theta\end{pmatrix}$</span></div>
+            <div class="opt" onclick="pickOpt(this,'q5',false)"><div class="opt-ltr">D</div><span>$J = \sin\theta\cos\theta$</span></div>
+          </div>
+          <div class="mcq-feedback" id="q5feedback"></div>
+          <div class="mcq-explanation" id="q5expl"><strong>Answer: C &#8212; $J=R$</strong><br/><br/>$\det\begin{pmatrix}\cos\theta & -R\sin\theta \\ \sin\theta & R\cos\theta\end{pmatrix} = R\cos^2\theta + R\sin^2\theta = R$. <span class="expl-ans">This is why the area element in polar coordinates is $r\,dr\,d\theta$ rather than $dr\,d\theta$.</span> The Jacobian $R$ appears explicitly in the PDF calculation: $g(R,\theta) = \frac{R}{2\pi}e^{-R^2/2}$, which after integrating $\theta$ gives the Rayleigh distribution $f(R) = Re^{-R^2/2}$.</div>
+          <button class="mcq-check-btn" id="q5btn" disabled onclick="checkOpt('q5','C')">Select an answer first</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chapter-nav">
+      <a href="M_Pr_Ch19.html" class="ch-nav-btn">&#8592; Chapter 19: Functions of Random Variables</a>
+      <a href="M_Pr.html" class="ch-nav-btn primary">&#8617; Back to All Chapters</a>
+    </div>
+
+
+</main>
+</div>
+
+
+<script>
+const correctMsgs=["Jacobian computed. Joint PDF found. Marginal extracted.","Cauchy from Normal ratio. The heavy tail connection.","Auxiliary variable purpose understood. Clean methodology.","Laplace from Exp difference. Non-trivial result, cleanly derived.","Polar Jacobian = $R$. The area element explained.","Gamma sum verified via Jacobian. Two methods, one result.","The 2D change of variable: same structure as 1D.","Four distributions derived from scratch. Complete mastery."];
+const wrongMsgs=["Jacobian is the absolute value of the determinant.","Ratio of two Normals gives Cauchy, not Normal.","The auxiliary variable creates a 2D bijection &#8212; re-read the method.","Difference of exponentials: check cases $w>0$ and $w<0$ separately.","Polar Jacobian: expand the $2\\times 2$ determinant.","Re-read the Jacobian theorem statement above."];
+const state={};
+function pickOpt(el,qid,correct){
+  if(state[qid]?.done)return;
+  if(!state[qid])state[qid]={};
+  state[qid].picked={el,correct};
+  document.querySelectorAll('#'+qid+'opts .opt').forEach(o=>o.style.borderColor='');
+  el.style.borderColor='var(--orange)';
+  const btn=document.getElementById(qid+'btn');
+  btn.disabled=false;btn.textContent='Check Answer';
+}
+function checkOpt(qid,correctLetter){
+  const s=state[qid];
+  if(!s?.picked||s.done)return;
+  s.done=true;
+  const opts=document.querySelectorAll('#'+qid+'opts .opt');
+  opts.forEach(o=>{o.style.borderColor='';o.onclick=null;});
+  const feedback=document.getElementById(qid+'feedback');
+  feedback.style.display='block';
+  document.getElementById(qid+'expl').classList.add('show');
+  const btn=document.getElementById(qid+'btn');
+  if(s.picked.correct){
+    s.picked.el.classList.add('correct');
+    feedback.textContent=correctMsgs[Math.floor(Math.random()*correctMsgs.length)];
+    feedback.style.background='rgba(30,158,94,0.1)';feedback.style.color='var(--green)';feedback.style.border='1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent='Correct! Keep going';btn.style.background='var(--green)';
+  }else{
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o=>{if(o.querySelector('.opt-ltr').textContent.trim()===correctLetter)o.classList.add('correct');});
+    feedback.textContent=wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+    feedback.style.background='rgba(220,38,38,0.06)';feedback.style.color='#dc2626';feedback.style.border='1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent='See Explanation Above';btn.style.background='#dc2626';
+  }
+  if(window.renderMathInElement)renderMathInElement(document.getElementById(qid+'expl'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+</script>
+</body>
+</html>
