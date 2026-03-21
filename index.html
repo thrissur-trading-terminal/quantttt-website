@@ -334,36 +334,44 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
   </div>
   <p class="section-sub" style="margin-bottom:2.5rem;">Four pillars. One goal: make you think quantitatively. Start with Math — everything else builds on it.</p>
 
-  <!-- PILLAR CARDS -->
-  <!-- CHANGE 1: Programming card activated -->
+  <!-- PILLAR CARDS — each navigates directly to its live module -->
   <div class="pillar-grid">
-    <div class="pillar-card pillar-active" onclick="togglePillar('math')">
+
+    <!-- MATHEMATICS -->
+    <div class="pillar-card" onclick="togglePillar('math')">
       <div class="pillar-icon">∑</div>
       <div class="pillar-label">Mathematics</div>
       <div class="pillar-desc">Probability, Stochastic Processes, Linear Algebra, Calculus</div>
       <div class="pillar-status active-status">● Active</div>
     </div>
+
+    <!-- FINANCE -->
     <div class="pillar-card" onclick="togglePillar('finance')">
       <div class="pillar-icon">₹</div>
       <div class="pillar-label">Finance</div>
       <div class="pillar-desc">BSM, Heston, Greeks, Vol Models, NPTEL courses</div>
       <div class="pillar-status active-status">● Active</div>
     </div>
+
+    <!-- PROGRAMMING -->
     <div class="pillar-card" onclick="togglePillar('programming')">
       <div class="pillar-icon">&lt;/&gt;</div>
       <div class="pillar-label">Programming</div>
       <div class="pillar-desc">Algorithms, DSA, and low-latency systems for quant developers</div>
       <div class="pillar-status active-status">● Active</div>
     </div>
+
+    <!-- MACHINE LEARNING -->
     <div class="pillar-card" onclick="togglePillar('ml')">
       <div class="pillar-icon">⚙</div>
       <div class="pillar-label">Machine Learning</div>
       <div class="pillar-desc">Mathematical ML, Deep Learning, Reinforcement Learning</div>
       <div class="pillar-status active-status">● Active</div>
     </div>
+
   </div>
 
-  <!-- MATH SUBTOPICS (expanded by default) -->
+  <!-- MATHEMATICS PANEL -->
   <div class="subtopics-panel" id="panel-math">
     <div class="subtopics-header">
       <span class="section-label" style="margin:0;">Mathematics — Choose a track</span>
@@ -378,33 +386,33 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
         <h4>Probability Theory</h4>
         <p>Sample spaces, axioms, Bayes' theorem, random variables, distributions, limit theorems — the language of uncertainty. Built for traders.</p>
         <div class="sub-footer">
-          <span class="topic-count">12 chapters</span>
+          <span class="topic-count">30 chapters</span>
           <span class="topic-arrow">Start Learning →</span>
         </div>
       </a>
 
       <a href="M_St.html" class="sub-card sub-active">
         <div class="sub-top">
-          <span class="sub-tag tag-i">Intermediate &rarr; Advanced</span>
-          <span class="sub-live">&#x25CF; Live</span>
+          <span class="sub-tag tag-i">Intermediate → Advanced</span>
+          <span class="sub-live">● Live</span>
         </div>
         <h4>Stochastic Processes</h4>
-        <p>Markov chains, Poisson processes, Brownian motion, martingales. Where the maths starts to smell like money.</p>
+        <p>Markov chains, Poisson processes, renewal theory, CTMCs, Brownian motion — where the maths starts to smell like money.</p>
         <div class="sub-footer">
           <span class="topic-count">12 chapters</span>
-          <span class="topic-arrow">Start Learning &rarr;</span>
+          <span class="topic-arrow">Start Learning →</span>
         </div>
       </a>
 
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-a">Advanced</span>
-          <span class="sub-coming">🔒 2026</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>Linear Algebra</h4>
         <p>Vectors, matrices, decompositions, PCA, least squares — the engine behind every ML algorithm in finance.</p>
         <div class="sub-footer">
-          <span class="topic-count">12 modules</span>
+          <span class="topic-count">Coming 2026</span>
           <span class="topic-arrow" style="opacity:0.3;">→</span>
         </div>
       </div>
@@ -412,12 +420,12 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-a">Advanced</span>
-          <span class="sub-coming">🔒 2026</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>Multivariable Calculus</h4>
         <p>Partial derivatives, chain rule, multiple integrals, vector identities — the language of optimisation.</p>
         <div class="sub-footer">
-          <span class="topic-count">8 modules</span>
+          <span class="topic-count">Coming 2026</span>
           <span class="topic-arrow" style="opacity:0.3;">→</span>
         </div>
       </div>
@@ -425,7 +433,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
     </div>
   </div>
 
-  <!-- FINANCE SUBTOPICS (hidden by default) -->
+  <!-- FINANCE PANEL -->
   <div class="subtopics-panel" id="panel-finance" style="display:none;">
     <div class="subtopics-header">
       <span class="section-label" style="margin:0;">Finance — Choose a track</span>
@@ -440,7 +448,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
         <h4>Option Pricing</h4>
         <p>From Black-Scholes to Heston — GBM, PDE derivation, Greeks, implied volatility, stochastic volatility, characteristic functions, calibration.</p>
         <div class="sub-footer">
-          <span class="topic-count">6 chapters</span>
+          <span class="topic-count">8 chapters</span>
           <span class="topic-arrow">Start Learning →</span>
         </div>
       </a>
@@ -448,7 +456,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-a">Advanced</span>
-          <span class="sub-coming">🔒 Coming Soon</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>Fixed Income &amp; Rates</h4>
         <p>Bond pricing, yield curves, duration, convexity, interest rate models — the other half of every derivatives desk.</p>
@@ -461,7 +469,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-a">Advanced</span>
-          <span class="sub-coming">🔒 Coming Soon</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>Portfolio Theory</h4>
         <p>Mean-variance optimisation, CAPM, factor models, risk parity — rigorous treatment of how capital gets allocated.</p>
@@ -474,7 +482,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-a">Advanced</span>
-          <span class="sub-coming">🔒 Coming Soon</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>Market Microstructure</h4>
         <p>Order books, bid-ask spreads, price impact, execution algorithms — what actually happens inside NSE every millisecond.</p>
@@ -487,8 +495,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
     </div>
   </div>
 
-  <!-- PROGRAMMING SUBTOPICS (hidden by default) -->
-  <!-- CHANGE 2: New panel-programming added -->
+  <!-- PROGRAMMING PANEL -->
   <div class="subtopics-panel" id="panel-programming" style="display:none;">
     <div class="subtopics-header">
       <span class="section-label" style="margin:0;">Programming — Choose a track</span>
@@ -500,7 +507,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
           <span class="sub-tag tag-b">Undergraduate → Advanced</span>
           <span class="sub-live">● Live</span>
         </div>
-        <h4>Algorithms and Data Structures</h4>
+        <h4>Introduction to Algorithms</h4>
         <p>Correctness proofs, asymptotic analysis, sorting, hashing, trees, graphs, shortest paths, dynamic programming — the algorithmic foundation every quant developer needs.</p>
         <div class="sub-footer">
           <span class="topic-count">13 chapters</span>
@@ -513,7 +520,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
           <span class="sub-tag tag-a">Graduate</span>
           <span class="sub-live">● Live</span>
         </div>
-        <h4>Algorithm Design and Analysis</h4>
+        <h4>Design of Algorithms</h4>
         <p>Randomised algorithms, network flow, linear programming, NP-completeness, approximation algorithms — the graduate-level toolkit for hard problems.</p>
         <div class="sub-footer">
           <span class="topic-count">13 chapters</span>
@@ -524,10 +531,10 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-a">Advanced</span>
-          <span class="sub-coming">🔒 Coming Soon</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>C++ for Low-Latency Systems</h4>
-        <p>Memory model, cache efficiency, RAII, lock-free data structures, order book implementation — the language of high-frequency trading, taught from first principles.</p>
+        <p>Memory model, cache efficiency, RAII, lock-free data structures, order book implementation — the language of high-frequency trading.</p>
         <div class="sub-footer">
           <span class="topic-count">Coming 2026</span>
           <span class="topic-arrow" style="opacity:0.3;">→</span>
@@ -537,7 +544,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
     </div>
   </div>
 
-  <!-- ML SUBTOPICS (hidden by default) -->
+  <!-- MACHINE LEARNING PANEL -->
   <div class="subtopics-panel" id="panel-ml" style="display:none;">
     <div class="subtopics-header">
       <span class="section-label" style="margin:0;">Machine Learning — Choose a track</span>
@@ -552,7 +559,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
         <h4>Mathematical Foundations of ML</h4>
         <p>Probabilistic framing, ERM, MLE, MAP, EM algorithm, bias-variance tradeoff, SVMs, neural networks — built from scratch with full rigour.</p>
         <div class="sub-footer">
-          <span class="topic-count">8 chapters</span>
+          <span class="topic-count">13 chapters</span>
           <span class="topic-arrow">Start Learning →</span>
         </div>
       </a>
@@ -560,7 +567,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-i">Intermediate</span>
-          <span class="sub-coming">🔒 Coming Soon</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>Deep Learning</h4>
         <p>Backpropagation, CNNs, RNNs, LSTMs, attention mechanisms, transformers — and what they're actually doing mathematically.</p>
@@ -573,7 +580,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       <div class="sub-card sub-soon">
         <div class="sub-top">
           <span class="sub-tag tag-a">Advanced</span>
-          <span class="sub-coming">🔒 Coming Soon</span>
+          <span class="sub-coming">🔒 Coming 2026</span>
         </div>
         <h4>Reinforcement Learning</h4>
         <p>MDPs, Q-learning, policy gradients, multi-armed bandits — with direct applications to algorithmic trading and portfolio optimisation.</p>
@@ -585,9 +592,6 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
 
     </div>
   </div>
-
-  <!-- Coming Soon Toast -->
-  <div class="coming-toast" id="coming-toast">🚧 This pillar is being built. Check back soon!</div>
 
 </section>
 
@@ -690,7 +694,7 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
     </div>
   </div>
   <div class="foot-contact" style="font-size:1.7rem;color:rgba(255,255,255,0.65);margin-top:0.6rem;font-family:'Barlow',sans-serif;font-style:italic;line-height:1.7;">
-    Spotted a typo or bad example? Found a bug in the proof worse than O(n²)? Think our greedy choice was suboptimal? Don't just backtrack &mdash; reach out &rarr; <a href="/cdn-cgi/l/email-protection#39484c58574d4d4d4d794356515654585055175057" style="color:rgba(255,255,255,0.9);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.35);"><span class="__cf_email__" data-cfemail="1c6d697d72686868685c66737473717d7570327572">[email&#160;protected]</span></a>
+    Spotted a typo or bad example? Found a bug in the proof worse than O(n²)? Think our greedy choice was suboptimal? Don't just backtrack &mdash; reach out &rarr; <a href="/cdn-cgi/l/email-protection#512024303f25252525112b3e393e3c30383d7f383f" style="color:rgba(255,255,255,0.9);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.35);"><span class="__cf_email__" data-cfemail="dbaaaebab5afafafaf9ba1b4b3b4b6bab2b7f5b2b5">[email&#160;protected]</span></a>
   </div>
 </footer>
 
@@ -815,4 +819,11 @@ footer { background: var(--navy); padding: 3rem 5%; display: flex; justify-conte
       });
     }
 
-    const bt
+    const btn = document.getElementById('checkBtn');
+    btn.textContent = 'Done ✓';
+    btn.disabled = true;
+    btn.style.background = picked.correct ? 'var(--green)' : '#dc2626';
+  }
+</script>
+</body>
+</html>
