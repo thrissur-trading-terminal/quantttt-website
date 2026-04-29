@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Market Making &amp; Fill Probability — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+  --bid:     #1565c0;
+  --ask:     #b71c1c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-a{background:rgba(45,37,96,0.08);color:var(--navy2);}
+.ch-num-badge{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.content-body ul{margin:0 0 1.2rem 1.5rem;line-height:2;font-size:0.97rem;color:#2a2a3e;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 NSE Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-source{background:rgba(45,37,96,0.04);border-left:3px solid var(--navy2);}
+.callout-source::before{content:'📖 Source';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+.math-block.boxed{border:2px solid var(--navy);background:rgba(45,37,96,0.03);}
+.eq-ref{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);float:right;margin-top:0.3rem;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* ── FILL PROBABILITY CURVE ── */
+.fill-curve-wrap{margin:2rem 0;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.fill-curve-header{background:var(--off);padding:0.75rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.fill-curve-title{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+.fill-curve-body{padding:1.2rem;background:var(--white);}
+.fill-curve-canvas-wrap{position:relative;height:220px;}
+canvas#fillCurve{width:100%;height:100%;}
+.fill-curve-axis-x{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);margin-top:4px;padding:0 8px;}
+.fill-curve-legend{display:flex;gap:1.5rem;margin-top:0.8rem;flex-wrap:wrap;}
+.fc-legend-item{display:flex;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);}
+.fc-legend-dot{width:12px;height:3px;border-radius:2px;}
+
+/* ── OPTIMAL DEPTH TABLE ── */
+.depth-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.88rem;}
+.depth-table th{background:var(--navy);color:white;font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;padding:0.65rem 1rem;text-align:left;}
+.depth-table td{padding:0.7rem 1rem;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.82rem;}
+.depth-table tr:nth-child(even) td{background:var(--off);}
+.depth-table td.kappa{color:var(--navy);font-weight:700;}
+.depth-table td.delta{color:var(--orange);font-weight:700;}
+.depth-table td.prob{color:var(--green);}
+.depth-table td.profit{color:var(--bid);}
+.depth-table td.expected{color:var(--ask);}
+.depth-table tr.optimal td{background:rgba(232,114,42,0.07)!important;border-top:2px solid var(--orange);border-bottom:2px solid var(--orange);}
+
+/* ── PROFIT TRADEOFF ── */
+.tradeoff-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.tradeoff-card{background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:1.1rem 1.2rem;}
+.tradeoff-label{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;}
+.tradeoff-label.bid{color:var(--bid);}
+.tradeoff-label.ask{color:var(--ask);}
+.tradeoff-text{font-size:0.88rem;line-height:1.65;color:#2a2a3e;}
+.tradeoff-text strong{color:var(--navy);}
+
+/* ── MCQ ── */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.2rem;}
+.mcq-q{padding:1.2rem 1.4rem;background:var(--white);}
+.mcq-q-text{font-size:0.97rem;line-height:1.75;color:var(--text);margin-bottom:1rem;}
+.mcq-opts{display:flex;flex-direction:column;gap:0.5rem;}
+.opt{border:1.5px solid var(--border);border-radius:8px;padding:0.7rem 1rem;cursor:pointer;display:flex;align-items:flex-start;gap:0.7rem;font-size:0.9rem;transition:border-color 0.15s,background 0.15s;}
+.opt:hover{border-color:var(--orange);background:rgba(232,114,42,0.03);}
+.opt.correct{border-color:var(--green)!important;background:rgba(30,158,94,0.06)!important;}
+.opt.wrong{border-color:#dc2626!important;background:rgba(220,38,38,0.05)!important;}
+.opt-ltr{width:22px;height:22px;border-radius:50%;background:var(--off);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.mcq-actions{padding:0.8rem 1.4rem;background:var(--off);border-top:1px solid var(--border);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.check-btn{background:var(--navy);color:white;border:none;border-radius:7px;padding:0.5rem 1.2rem;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;transition:background 0.2s;}
+.check-btn:hover{background:var(--navy2);}
+.check-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.mcq-feedback{font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border-radius:6px;display:none;}
+.mcq-explanation{background:rgba(45,37,96,0.04);border-radius:8px;padding:1rem 1.2rem;margin:0.8rem 1.4rem 1rem;font-size:0.88rem;line-height:1.75;display:none;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.7rem 1.2rem;border-radius:8px;text-decoration:none;color:var(--muted);border:1.5px solid var(--border);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);}
+.ch-nav-btn.disabled{opacity:0.35;pointer-events:none;}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.2rem 4rem;}
+  .tradeoff-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span></a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Home</a> ›
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_MMI.html">Market Microstructure</a> ›
+      <span>Ch 3</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">3 / 5</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:60%"></div></div>
+    </div>
+    <a href="F_MMI.html" class="tb-home">← Back to module</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="sidebar-section-label">F_MMI — Market Microstructure</div>
+  <a href="F_MMI_Ch1.html" class="sidebar-item">
+    <span class="si-num">1</span> The Limit Order Book
+  </a>
+  <a href="F_MMI_Ch2.html" class="sidebar-item">
+    <span class="si-num">2</span> Microprice &amp; Imbalance
+  </a>
+  <a href="F_MMI_Ch3.html" class="sidebar-item active">
+    <span class="si-num">3</span> Market Making &amp; Fill Probability
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <div class="sidebar-item locked">
+    <span class="si-num">4</span> Liquidity Traders &amp; Price Impact
+  </div>
+  <div class="sidebar-item locked">
+    <span class="si-num">5</span> Reading the Live Book
+  </div>
+  <div class="sidebar-section-label" style="margin-top:1.5rem;">Resources</div>
+  <a href="https://github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API" target="_blank" class="sidebar-item">
+    <span>🔗</span> Open Source Dashboard
+  </a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-a">Advanced</span>
+      <span class="ch-num-badge">Chapter 03 · F_MMI</span>
+    </div>
+    <h1 class="chapter-title">Market Making &amp; Fill Probability</h1>
+    <p class="chapter-subtitle">
+      A market maker posts limit orders and waits. The deeper she posts, the more she earns per trade — but the less often she trades. This chapter derives the exact mathematics of that trade-off, and the optimal depth that maximises expected profit.
+    </p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>3.1 The Market Maker's Problem</h3>
+
+    <p>
+      A <strong>market maker (MM)</strong> profits by intermediating between buyers and sellers. She posts a sell limit order on the ask side at $S_t + \delta^+$ and a buy limit order on the bid side at $S_t - \delta^-$, where $S_t$ is the current midprice and $\delta^\pm > 0$ are her chosen depths away from the mid.
+    </p>
+
+    <p>
+      Her profit per completed round trip is $\delta^+ + \delta^-$ — she buys at the bid and sells at the ask, capturing the spread she creates. But she only captures this profit if her orders actually get <strong>filled</strong> — and fill probability falls sharply as she posts deeper into the book.
+    </p>
+
+    <div class="callout callout-definition">
+      The MM's core optimisation: choose depths $\delta^+$ (ask side) and $\delta^-$ (bid side) to maximise expected profit per trade, balancing a higher margin per trade (deeper posting) against a lower probability of being filled (also deeper posting). These two effects work in opposite directions — finding the optimum requires a precise model of fill probability as a function of depth.
+    </div>
+
+    <div class="callout callout-source">
+      Cartea, Jaimungal &amp; Penalva (2015), Chapter 2, Section 2.1.4 — <em>Market Making using Limit Orders</em>, pp. 28–30. The static version of the Ho &amp; Stoll (1981) model, simplified to isolate the core depth-vs-probability trade-off.
+    </div>
+
+    <h3>3.2 Fill Probability — The Exponential Model</h3>
+
+    <p>
+      If we model the distribution of resting limit orders in the LOB as exponential with parameter $\kappa^\pm$, the probability that a buy limit order posted at depth $\delta^-$ below the mid gets filled — conditional on a market sell order arriving — is:
+    </p>
+
+    <div class="math-block boxed">
+      $$P(\delta) = e^{-\kappa \delta}$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 2, §2.1.4, p. 29 — used as $p_- P_-(\delta^-) = p_- e^{-\kappa^- \delta^-}$</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul>
+      <li>$\delta$ = depth of the limit order away from the midprice (in price units, e.g. Rs.)</li>
+      <li>$\kappa > 0$ = market liquidity parameter. Higher $\kappa$ means a thinner, faster book — fill probability drops more steeply with depth</li>
+      <li>$P(\delta) \in (0, 1]$ — at depth zero ($\delta = 0$) probability is 1; as $\delta \to \infty$ probability $\to 0$</li>
+      <li>$p_\pm$ = probability that a market order arrives at all (arrival rate, separate from fill probability)</li>
+    </ul>
+
+    <div class="callout callout-intuition">
+      Think of it this way: if the book is dense with resting orders, an incoming market order is likely to stop long before reaching your deep limit order. Your fill probability decays exponentially as you post further away. The parameter $\kappa$ is the speed of that decay — in a thin book (few resting orders between you and the touch), $\kappa$ is small and your deep orders still have a reasonable chance. In a dense book, $\kappa$ is large and posting deep is nearly hopeless.
+    </div>
+
+    <!-- FILL PROBABILITY CURVE WIDGET -->
+    <div class="fill-curve-wrap">
+      <div class="fill-curve-header">
+        <span class="fill-curve-title">Fill Probability $P(\delta) = e^{-\kappa\delta}$ — Interactive</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);">Depth $\delta$ in Rs. from midprice</span>
+      </div>
+      <div class="fill-curve-body">
+        <div style="display:flex;gap:1.5rem;margin-bottom:0.8rem;flex-wrap:wrap;">
+          <label style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;">
+            $\kappa$: <input type="range" id="kappaSlider" min="0.05" max="1.0" step="0.05" value="0.2" style="width:120px;accent-color:var(--orange);">
+            <span id="kappaVal" style="color:var(--orange);font-weight:700;">0.20</span>
+          </label>
+        </div>
+        <div class="fill-curve-canvas-wrap">
+          <canvas id="fillCurve"></canvas>
+        </div>
+        <div class="fill-curve-axis-x">
+          <span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>$\delta$ (Rs.)</span>
+        </div>
+        <div class="fill-curve-legend">
+          <div class="fc-legend-item"><div class="fc-legend-dot" style="background:var(--orange);"></div>$P(\delta)$ fill probability</div>
+          <div class="fc-legend-item"><div class="fc-legend-dot" style="background:var(--bid);"></div>$\delta \cdot P(\delta)$ expected profit (per trade)</div>
+          <div class="fc-legend-item" id="optDepthLegend"><div class="fc-legend-dot" style="background:var(--ask);"></div>Optimal depth $\delta^* = 1/\kappa$</div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);margin-top:0.6rem;">
+          Optimal depth: $\delta^* = 1/\kappa =$ <strong id="optDepthDisplay" style="color:var(--ask);">5.00 Rs.</strong> &nbsp;·&nbsp;
+          Fill probability at $\delta^*$: <strong id="fillAtOpt" style="color:var(--green);">36.8%</strong>
+        </div>
+      </div>
+    </div>
+
+    <h3>3.3 The MM's Optimisation Problem — Equation (2.3)</h3>
+
+    <p>
+      The MM's total expected profit per trade, considering both the bid and ask sides independently, is:
+    </p>
+
+    <div class="math-block boxed">
+      $$\max_{\delta^+,\,\delta^-} \mathbb{E}\left[\Pi(\delta^+, \delta^-)\right] = \max_{\delta^+,\,\delta^-} \left\{ p^+ e^{-\kappa^+ \delta^+} \delta^+ + p^- e^{-\kappa^- \delta^-} \delta^- \right\}$$
+      <div class="eq-ref">Cartea et al. (2015), Eq. (2.3), p. 29</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul>
+      <li>$p^+$ = probability a buy market order arrives (ask side fills)</li>
+      <li>$p^-$ = probability a sell market order arrives (bid side fills)</li>
+      <li>$\delta^+$ = depth of the sell limit order above midprice</li>
+      <li>$\delta^-$ = depth of the buy limit order below midprice</li>
+      <li>$e^{-\kappa^\pm \delta^\pm}$ = fill probability given a market order arrival</li>
+      <li>$p^\pm e^{-\kappa^\pm \delta^\pm} \cdot \delta^\pm$ = expected profit contribution from each side</li>
+    </ul>
+
+    <p>
+      Because the bid and ask sides are independent in this formulation, we can maximise each term separately. Taking the derivative with respect to $\delta^\pm$ and setting it to zero:
+    </p>
+
+    <div class="math-block">
+      $$\frac{d}{d\delta}\left[ \delta \cdot e^{-\kappa\delta} \right] = e^{-\kappa\delta} - \kappa\delta\, e^{-\kappa\delta} = e^{-\kappa\delta}(1 - \kappa\delta) = 0$$
+    </div>
+
+    <p>Since $e^{-\kappa\delta} > 0$ for all finite $\delta$, the solution is simply:</p>
+
+    <div class="math-block boxed">
+      $$\delta^{*,\pm} = \frac{1}{\kappa^\pm}$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 2, §2.1.4, p. 29 — "the optimal depth is equal to the mean depth in the LOB"</div>
+    </div>
+
+    <div class="callout callout-intuition">
+      The optimal depth equals the reciprocal of the liquidity parameter. This is elegant: $\kappa$ is the decay rate of fill probability — it is also the inverse of the mean depth in the LOB (under the exponential model). So the MM should post at the <em>average</em> depth of the book. Too shallow: fill probability is high but margin is low. Too deep: margin is high but fill probability collapses. The mean depth is the exact tipping point.
+    </div>
+
+    <h3>3.4 Fill Probability at the Optimal Depth</h3>
+
+    <p>Substituting $\delta^* = 1/\kappa$ back into the fill probability formula:</p>
+
+    <div class="math-block">
+      $$P(\delta^*) = e^{-\kappa \cdot (1/\kappa)} = e^{-1} \approx 0.368$$
+    </div>
+
+    <p>
+      This is a universal constant — regardless of the market, regardless of $\kappa$, a market maker posting at the optimal depth always faces a fill probability of exactly $e^{-1} \approx 36.8\%$. She expects to be filled on roughly 1 in 3 of her limit orders that face an incoming market order.
+    </p>
+
+    <div class="callout callout-warning">
+      This $e^{-1}$ result holds only under the exponential fill probability model. Real books are not perfectly exponential — depth clusters at round numbers (as we saw in Chapter 1 with the 12,415-lot cluster at Rs.24,450), large iceberg orders distort the shape, and fill probability at any given moment depends on queue position as well as depth. The model gives an analytically tractable benchmark; real-desk implementations use empirical fill probability curves estimated from historical data.
+    </div>
+
+    <h3>3.5 Sensitivity to $\kappa$ — A Worked Table</h3>
+
+    <p>
+      The table below shows how the optimal depth, fill probability at optimal depth (always $e^{-1}$), and expected profit change as the liquidity parameter $\kappa$ varies. We use the NIFTY Futures tick size of Rs.0.05 as the unit.
+    </p>
+
+    <table class="depth-table">
+      <thead>
+        <tr>
+          <th>$\kappa$ (Rs.$^{-1}$)</th>
+          <th>Opt. Depth $\delta^*$ (Rs.)</th>
+          <th>Opt. Depth (ticks)</th>
+          <th>$P(\delta^*)$</th>
+          <th>Expected Profit $\delta^* \cdot e^{-1}$ (Rs.)</th>
+          <th>Market character</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="kappa">0.05</td>
+          <td class="delta">20.00</td>
+          <td>400</td>
+          <td class="prob">36.8%</td>
+          <td class="profit">7.36</td>
+          <td style="font-size:0.78rem;color:var(--muted);">Very thin book — deep posting viable</td>
+        </tr>
+        <tr>
+          <td class="kappa">0.10</td>
+          <td class="delta">10.00</td>
+          <td>200</td>
+          <td class="prob">36.8%</td>
+          <td class="profit">3.68</td>
+          <td style="font-size:0.78rem;color:var(--muted);">Thin book</td>
+        </tr>
+        <tr class="optimal">
+          <td class="kappa">0.20</td>
+          <td class="delta">5.00</td>
+          <td>100</td>
+          <td class="prob">36.8%</td>
+          <td class="profit">1.84</td>
+          <td style="font-size:0.78rem;color:var(--orange);font-weight:600;">Typical NIFTY Futures mid-session</td>
+        </tr>
+        <tr>
+          <td class="kappa">0.50</td>
+          <td class="delta">2.00</td>
+          <td>40</td>
+          <td class="prob">36.8%</td>
+          <td class="profit">0.74</td>
+          <td style="font-size:0.78rem;color:var(--muted);">Dense book</td>
+        </tr>
+        <tr>
+          <td class="kappa">1.00</td>
+          <td class="delta">1.00</td>
+          <td>20</td>
+          <td class="prob">36.8%</td>
+          <td class="profit">0.37</td>
+          <td style="font-size:0.78rem;color:var(--muted);">Very dense book — near-touch posting only</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- WORKED EXAMPLE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">WORKED EXAMPLE — OPTIMAL DEPTH ON NIFTY FUTURES</span>
+        <span class="we-badge">NSE:NIFTY26MAYFUT · 29 Apr 2026</span>
+      </div>
+      <div class="we-body">
+        <p>
+          Suppose a market maker estimates $\kappa = 0.20$ for NIFTY26MAYFUT in the current session (a typical mid-session value). She has equal MO arrival probabilities: $p^+ = p^- = 0.5$.
+        </p>
+        <div class="we-step">Step 1 — Optimal posting depth</div>
+        <p>$$\delta^{*,\pm} = \frac{1}{\kappa} = \frac{1}{0.20} = \text{Rs.}5.00 = 100 \text{ ticks}$$</p>
+        <p>From the midprice of Rs.24,443.85, she posts:</p>
+        <p>
+          Buy LO at $24{,}443.85 - 5.00 = \text{Rs.}24{,}438.85$ (bid side, Level ~10 in our book)<br/>
+          Sell LO at $24{,}443.85 + 5.00 = \text{Rs.}24{,}448.85$ (ask side, Level ~7–8 in our book)
+        </p>
+        <div class="we-step">Step 2 — Fill probability at optimal depth</div>
+        <p>$$P(\delta^*) = e^{-0.20 \times 5.00} = e^{-1} \approx 0.368 = 36.8\%$$</p>
+        <div class="we-step">Step 3 — Expected profit per filled trade (one side)</div>
+        <p>$$\mathbb{E}[\text{profit per side}] = p^\pm \cdot e^{-\kappa \delta^*} \cdot \delta^* = 0.5 \times 0.368 \times 5.00 = \text{Rs.}0.92$$</p>
+        <div class="we-step">Step 4 — Total expected profit (both sides)</div>
+        <p>$$\mathbb{E}[\Pi] = \text{Rs.}0.92 + \text{Rs.}0.92 = \text{Rs.}1.84 \text{ per round trip}$$</p>
+        <p>At lot size 25, that is Rs.46 per completed round trip per lot. For a desk running 100 lots per side, that is Rs.4,600 per round trip — before considering inventory risk and adverse selection, which we cover in Chapter 4.</p>
+        <div class="we-answer">
+          <strong>Optimal depth = Rs.5.00 (100 ticks from mid) · Fill prob = 36.8% · Expected profit = Rs.1.84/round trip</strong><br/>
+          Look at the live order book from Chapter 1: at Rs.24,438.85 on the bid side, we are near Level 15–16 of the book. The 455-lot cluster at Rs.24,438.90 (Level 15) and 260-lot at Rs.24,438.80 (Level 16) confirm this is a populated region — consistent with other MMs posting at similar optimal depths.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>3.6 The Profit–Probability Trade-off</h3>
+
+    <p>
+      It is worth spending a moment to see exactly why posting at $\delta^* = 1/\kappa$ is optimal and not, say, half or double that depth.
+    </p>
+
+    <div class="tradeoff-row">
+      <div class="tradeoff-card">
+        <div class="tradeoff-label bid">If she posts too shallow ($\delta \ll 1/\kappa$)</div>
+        <div class="tradeoff-text">
+          Fill probability is high (close to 1), but margin per trade $\delta$ is tiny.
+          Expected profit $= \delta \cdot e^{-\kappa\delta} \approx \delta \cdot 1 = \delta$ — grows only linearly.
+          She trades frequently but earns almost nothing per trade.
+          In a real book, posting very close to the touch also exposes her to <strong>adverse selection</strong> — being picked off by informed traders (Chapter 4).
+        </div>
+      </div>
+      <div class="tradeoff-card">
+        <div class="tradeoff-label ask">If she posts too deep ($\delta \gg 1/\kappa$)</div>
+        <div class="tradeoff-text">
+          Margin $\delta$ is large, but fill probability $e^{-\kappa\delta} \to 0$ exponentially.
+          Expected profit $= \delta \cdot e^{-\kappa\delta} \to 0$ as the exponential decay dominates.
+          She almost never trades and earns nothing.
+          Her capital is tied up in deep orders that rarely execute.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The function $f(\delta) = \delta \cdot e^{-\kappa\delta}$ has a unique maximum at $\delta = 1/\kappa$ — as shown in the interactive chart above. This is the exact balance point. The maximum value is $f(1/\kappa) = (1/\kappa) \cdot e^{-1}$, confirming that expected profit at the optimum is $\delta^* / e$.
+    </p>
+
+    <div class="callout callout-india">
+      In NSE NIFTY Options, market makers face a fundamentally different $\kappa$ environment than Futures. ATM options have thin, fragmented books with large spreads — $\kappa$ is small, optimal depth is large (Rs.10–50 from mid), and expected profit per fill is high. But fill probability is lower and adverse selection risk is severe because options attract informed directional flow. This is why NSE options market making desks are smaller in number but much more selective in their quoting than the Futures desk.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <span class="mcq-header-title">Practice Problems</span>
+      <span class="mcq-count">4 questions</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          A market maker estimates $\kappa = 0.50$ for a NIFTY option. Using the exponential fill probability model, what is the optimal posting depth $\delta^*$ and the fill probability at that depth?
+        </div>
+        <div class="mcq-opts" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">A</span> $\delta^* = 0.50$ Rs., fill probability $= e^{-0.25} \approx 77.9\%$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><span class="opt-ltr">B</span> $\delta^* = 2.00$ Rs., fill probability $= e^{-1} \approx 36.8\%$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">C</span> $\delta^* = 2.00$ Rs., fill probability $= e^{-0.50} \approx 60.7\%$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">D</span> $\delta^* = 0.50$ Rs., fill probability $= e^{-1} \approx 36.8\%$</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q1btn" onclick="checkOpt('q1','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q1feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q1expl">
+        <strong>Explanation:</strong> Optimal depth: $\delta^* = 1/\kappa = 1/0.50 = 2.00$ Rs. Fill probability at optimal depth: $P(\delta^*) = e^{-\kappa \cdot \delta^*} = e^{-0.50 \times 2.00} = e^{-1} \approx 36.8\%$. This is a universal result — fill probability at the optimal depth is always $e^{-1} \approx 36.8\%$ regardless of $\kappa$. Option C uses $\delta^*$ correctly but computes fill probability at a different depth ($e^{-0.5}$ instead of $e^{-1}$). Option D confuses $\kappa$ with $\delta^*$.
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          The liquidity parameter $\kappa$ suddenly doubles from 0.20 to 0.40 (book becomes denser). Holding everything else fixed, what happens to the MM's optimal depth and expected profit per trade?
+        </div>
+        <div class="mcq-opts" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">A</span> Optimal depth doubles to Rs.10; expected profit doubles</div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><span class="opt-ltr">B</span> Optimal depth halves to Rs.2.50; expected profit halves</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">C</span> Optimal depth halves to Rs.2.50; fill probability drops below 36.8%</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">D</span> Optimal depth is unchanged; only fill probability changes</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q2btn" onclick="checkOpt('q2','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q2feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q2expl">
+        <strong>Explanation:</strong> $\delta^* = 1/\kappa$. If $\kappa$ doubles to 0.40, then $\delta^* = 1/0.40 = 2.50$ Rs. — exactly half the original Rs.5.00. Expected profit at the optimum is $\delta^*/e = 2.50/e \approx \text{Rs.}0.92$ — exactly half the original Rs.1.84. The fill probability remains $e^{-1} \approx 36.8\%$ always at the optimum. Option C is wrong because fill probability at the new optimum is still $e^{-1}$. A denser book forces the MM to post closer to the mid (lower $\delta^*$) and earns less per trade — the "competition effect" Cartea describes in Section 2.1.2.
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          A MM posts at depth Rs.3.00 with $\kappa = 0.20$. Compare her expected profit per MO arrival to the optimal depth of Rs.5.00. Is she above or below the optimum, and by how much?
+        </div>
+        <div class="mcq-opts" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">A</span> She is above the optimum. At Rs.3.00: expected profit $\approx$ Rs.1.65, vs Rs.1.84 at Rs.5.00</div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><span class="opt-ltr">B</span> She is below the optimum. At Rs.3.00: $3.00 \times e^{-0.6} \approx \text{Rs.}1.65$, vs $5.00 \times e^{-1} \approx \text{Rs.}1.84$ at the optimal depth</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">C</span> She is above the optimum. At Rs.3.00 she fills more often so total profit is higher</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">D</span> She is at the optimum because Rs.3.00 is the tick-rounded version of Rs.2.50</span></div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q3btn" onclick="checkOpt('q3','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q3feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q3expl">
+        <strong>Explanation:</strong> At Rs.3.00 with $\kappa = 0.20$: $f(3) = 3.00 \times e^{-0.20 \times 3.00} = 3.00 \times e^{-0.6} = 3.00 \times 0.549 = \text{Rs.}1.65$. At the optimum Rs.5.00: $f(5) = 5.00 \times e^{-1} = 5.00 \times 0.368 = \text{Rs.}1.84$. She is posting shallower than optimal — her fill rate is higher (54.9% vs 36.8%), but the margin per fill is too low. She earns Rs.1.65 instead of the maximum Rs.1.84 — leaving Rs.0.19 per MO arrival on the table. This is the "too shallow" case from Section 3.6: frequent fills but below-optimal margin.
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          Looking at the live NIFTY26MAYFUT order book from Chapter 1, bid Level 8 shows 7,475 lots at Rs.24,440.00 across 22 orders. What does this tell a <em>competing</em> market maker who wants to post a buy limit order near that price?
+        </div>
+        <div class="mcq-opts" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">A</span> She should post at exactly Rs.24,440.00 to join the large queue and maximise fill probability</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">B</span> She should post deeper (below Rs.24,440.00) to avoid competing with the wall</div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><span class="opt-ltr">C</span> She should post one tick above the wall at Rs.24,440.05 — getting price-time priority ahead of the 7,475-lot queue, improving her fill probability significantly without sacrificing much margin</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">D</span> Wall levels are irrelevant to the MM's depth choice in the exponential model</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q4btn" onclick="checkOpt('q4','C')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q4feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q4expl">
+        <strong>Explanation:</strong> Price-time priority means orders at a better price are filled first. A 7,475-lot queue at Rs.24,440.00 represents enormous queue depth — a competing MM joining the back of that queue has very poor expected queue position. By posting at Rs.24,440.05 (one tick better), she jumps the entire queue: any sell MO that reaches Rs.24,440.05 fills her order first, before touching the wall at Rs.24,440.00. The margin sacrifice is only Rs.0.05 (one tick = Rs.0.05 on NIFTY Futures), but the fill probability improvement is dramatic. This is a practical application of the exponential model: large resting orders at a level effectively push the local $\kappa$ lower just above that level (sparse between touch and the wall), making shallow posting above walls attractive. Option A is wrong because joining the back of a 7,475-lot queue means she is last in the execution queue. Option B wastes margin unnecessarily.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="chapter-nav">
+    <a href="F_MMI_Ch2.html" class="ch-nav-btn">← Microprice &amp; Imbalance</a>
+    <a href="F_MMI_Ch4.html" class="ch-nav-btn primary">Next: Liquidity Traders &amp; Price Impact →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── FILL PROBABILITY CURVE ──
+(function(){
+  const canvas = document.getElementById('fillCurve');
+  const slider = document.getElementById('kappaSlider');
+  const kappaVal = document.getElementById('kappaVal');
+  const optDepthDisplay = document.getElementById('optDepthDisplay');
+  const fillAtOpt = document.getElementById('fillAtOpt');
+
+  function draw(kappa){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height;
+    const pad = { top:16, right:16, bottom:24, left:44 };
+    const cW = W - pad.left - pad.right;
+    const cH = H - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    for(let i = 0; i <= 5; i++){
+      const y = pad.top + (i/5)*cH;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+cW, y); ctx.stroke();
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '10px DM Mono, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(((5-i)*20)+'%', pad.left-4, y+4);
+    }
+
+    const maxDelta = 10;
+    const steps = 200;
+    const optDelta = 1/kappa;
+
+    // Expected profit curve (blue) — scale to same axis as probability (max = e^-1 * optDelta)
+    const maxProfit = optDelta * Math.exp(-1);
+    ctx.beginPath();
+    ctx.strokeStyle = '#1565c0';
+    ctx.lineWidth = 2;
+    for(let i = 0; i <= steps; i++){
+      const d = (i/steps)*maxDelta;
+      const profit = d * Math.exp(-kappa*d);
+      const x = pad.left + (d/maxDelta)*cW;
+      const y = pad.top + cH - (profit/maxProfit)*cH;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // Fill probability curve (orange)
+    ctx.beginPath();
+    ctx.strokeStyle = '#E8722A';
+    ctx.lineWidth = 2.5;
+    for(let i = 0; i <= steps; i++){
+      const d = (i/steps)*maxDelta;
+      const p = Math.exp(-kappa*d);
+      const x = pad.left + (d/maxDelta)*cW;
+      const y = pad.top + cH - p*cH;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // Optimal depth line (red dashed)
+    if(optDelta <= maxDelta){
+      const xOpt = pad.left + (optDelta/maxDelta)*cW;
+      ctx.beginPath();
+      ctx.strokeStyle = '#b71c1c';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4,3]);
+      ctx.moveTo(xOpt, pad.top);
+      ctx.lineTo(xOpt, pad.top+cH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // label
+      ctx.fillStyle = '#b71c1c';
+      ctx.font = '10px DM Mono, monospace';
+      ctx.textAlign = 'center';
+      const labelX = Math.min(xOpt, pad.left+cW-30);
+      ctx.fillText('δ*='+optDelta.toFixed(1), labelX, pad.top+10);
+
+      // dot at P(δ*)
+      const pOpt = Math.exp(-1);
+      const yDot = pad.top + cH - pOpt*cH;
+      ctx.beginPath();
+      ctx.arc(xOpt, yDot, 5, 0, 2*Math.PI);
+      ctx.fillStyle = '#E8722A';
+      ctx.fill();
+    }
+
+    // Update displays
+    optDepthDisplay.textContent = optDelta.toFixed(2) + ' Rs.';
+    fillAtOpt.textContent = '36.8%';
+  }
+
+  slider.addEventListener('input', function(){
+    const k = parseFloat(this.value);
+    kappaVal.textContent = k.toFixed(2);
+    draw(k);
+  });
+
+  // Initial draw
+  setTimeout(() => draw(parseFloat(slider.value)), 100);
+  window.addEventListener('resize', () => draw(parseFloat(slider.value)));
+})();
+
+// ── MCQ ──
+const correctMsgs = [
+  "🎯 Exactly right. The MM would be pleased.",
+  "✨ Optimal. Literally.",
+  "🏆 Correct — depth and probability in balance.",
+  "🔥 Nailed it. $e^{-1}$ is universal.",
+  "💡 Spot on. Cartea Eq. (2.3) satisfied.",
+  "🎓 Textbook perfect — the FOC holds.",
+  "📈 Your market-making instinct is now quantified.",
+];
+const wrongMsgs = [
+  "🌀 Re-read Section 3.3 — note what $1/\\kappa$ means.",
+  "📐 Check the derivative. FOC sets $(1 - \\kappa\\delta) = 0$.",
+  "📉 Not quite. Remember fill probability at optimum is always $e^{-1}$.",
+  "🤔 Close. Think about which direction from the optimum you are.",
+  "📊 The exponential decay dominates for large $\\delta$. Try again.",
+];
+
+const state = {};
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>

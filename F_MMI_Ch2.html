@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Microprice &amp; Volume Imbalance — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+  --bid:     #1565c0;
+  --ask:     #b71c1c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+/* ── TOPBAR ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+/* ── LAYOUT ── */
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+/* ── CONTENT ── */
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+/* ── CHAPTER HEADER ── */
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-badge{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+/* ── BODY TEXT ── */
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+/* ── CALLOUTS ── */
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 NSE Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-source{background:rgba(45,37,96,0.04);border-left:3px solid var(--navy2);}
+.callout-source::before{content:'📖 Source';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+
+/* ── MATH BLOCK ── */
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+.math-block.boxed{border:2px solid var(--navy);background:rgba(45,37,96,0.03);}
+.eq-ref{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);float:right;margin-top:0.3rem;}
+
+/* ── WORKED EXAMPLE ── */
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+/* ── CONTENT DIVIDER ── */
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* ── COMPARISON TABLE ── */
+.compare-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.9rem;}
+.compare-table th{background:var(--navy);color:white;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;padding:0.7rem 1rem;text-align:left;}
+.compare-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.65;}
+.compare-table tr:nth-child(even) td{background:var(--off);}
+.compare-table td strong{color:var(--navy);}
+.compare-table td.bid{color:var(--bid);font-family:'DM Mono',monospace;font-size:0.85rem;}
+.compare-table td.ask{color:var(--ask);font-family:'DM Mono',monospace;font-size:0.85rem;}
+.compare-table td.val{color:var(--orange);font-family:'DM Mono',monospace;font-size:0.88rem;font-weight:700;}
+
+/* ── IMBALANCE METER ── */
+.imb-meter-wrap{margin:2rem 0;}
+.imb-meter-label{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.6rem;}
+.imb-meter{position:relative;height:28px;background:var(--off);border-radius:6px;border:1px solid var(--border);overflow:hidden;}
+.imb-meter-bid{position:absolute;left:0;top:0;bottom:0;background:rgba(21,101,192,0.25);border-radius:6px 0 0 6px;display:flex;align-items:center;padding-left:8px;}
+.imb-meter-ask{position:absolute;right:0;top:0;bottom:0;background:rgba(183,28,28,0.2);border-radius:0 6px 6px 0;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;}
+.imb-meter-center{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--border);transform:translateX(-50%);}
+.imb-meter-needle{position:absolute;top:0;bottom:0;width:3px;background:var(--orange);border-radius:2px;transform:translateX(-50%);transition:left 0.5s ease;}
+.imb-meter-text{font-family:'DM Mono',monospace;font-size:0.68rem;font-weight:700;}
+.imb-meter-text.bid{color:var(--bid);}
+.imb-meter-text.ask{color:var(--ask);}
+.imb-stats{display:flex;justify-content:space-between;margin-top:0.5rem;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.imb-stats strong{color:var(--orange);}
+
+/* ── LEVEL IMBALANCE BARS ── */
+.level-imb-wrap{margin:1.5rem 0;}
+.level-imb-row{display:grid;grid-template-columns:60px 1fr 60px;align-items:center;gap:0.5rem;margin-bottom:4px;}
+.level-imb-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);}
+.level-imb-label.right{text-align:right;}
+.level-imb-bar-wrap{position:relative;height:18px;background:var(--off);border-radius:3px;border:1px solid var(--border);}
+.level-imb-bar-bid{position:absolute;right:50%;top:0;bottom:0;background:rgba(21,101,192,0.3);border-radius:3px 0 0 3px;}
+.level-imb-bar-ask{position:absolute;left:50%;top:0;bottom:0;background:rgba(183,28,28,0.3);border-radius:0 3px 3px 0;}
+.level-imb-bar-mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border);transform:translateX(-50%);}
+.level-imb-val{position:absolute;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:0.6rem;font-weight:700;z-index:1;}
+
+/* ── MCQ ── */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.2rem;}
+.mcq-q{padding:1.2rem 1.4rem;background:var(--white);}
+.mcq-q-text{font-size:0.97rem;line-height:1.75;color:var(--text);margin-bottom:1rem;}
+.mcq-opts{display:flex;flex-direction:column;gap:0.5rem;}
+.opt{border:1.5px solid var(--border);border-radius:8px;padding:0.7rem 1rem;cursor:pointer;display:flex;align-items:flex-start;gap:0.7rem;font-size:0.9rem;transition:border-color 0.15s,background 0.15s;}
+.opt:hover{border-color:var(--orange);background:rgba(232,114,42,0.03);}
+.opt.correct{border-color:var(--green)!important;background:rgba(30,158,94,0.06)!important;}
+.opt.wrong{border-color:#dc2626!important;background:rgba(220,38,38,0.05)!important;}
+.opt-ltr{width:22px;height:22px;border-radius:50%;background:var(--off);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.mcq-actions{padding:0.8rem 1.4rem;background:var(--off);border-top:1px solid var(--border);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.check-btn{background:var(--navy);color:white;border:none;border-radius:7px;padding:0.5rem 1.2rem;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;transition:background 0.2s;}
+.check-btn:hover{background:var(--navy2);}
+.check-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.mcq-feedback{font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border-radius:6px;display:none;}
+.mcq-explanation{background:rgba(45,37,96,0.04);border-radius:8px;padding:1rem 1.2rem;margin:0.8rem 1.4rem 1rem;font-size:0.88rem;line-height:1.75;display:none;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+
+/* ── CHAPTER NAV ── */
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.7rem 1.2rem;border-radius:8px;text-decoration:none;color:var(--muted);border:1.5px solid var(--border);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);}
+.ch-nav-btn.disabled{opacity:0.35;pointer-events:none;}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.2rem 4rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span></a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Home</a> ›
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_MMI.html">Market Microstructure</a> ›
+      <span>Ch 2</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">2 / 5</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:40%"></div></div>
+    </div>
+    <a href="F_MMI.html" class="tb-home">← Back to module</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">F_MMI — Market Microstructure</div>
+  <a href="F_MMI_Ch1.html" class="sidebar-item">
+    <span class="si-num">1</span> The Limit Order Book
+  </a>
+  <a href="F_MMI_Ch2.html" class="sidebar-item active">
+    <span class="si-num">2</span> Microprice &amp; Imbalance
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <div class="sidebar-item locked">
+    <span class="si-num">3</span> Market Making &amp; Fill Probability
+  </div>
+  <div class="sidebar-item locked">
+    <span class="si-num">4</span> Liquidity Traders &amp; Price Impact
+  </div>
+  <div class="sidebar-item locked">
+    <span class="si-num">5</span> Reading the Live Book
+  </div>
+  <div class="sidebar-section-label" style="margin-top:1.5rem;">Resources</div>
+  <a href="https://github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API" target="_blank" class="sidebar-item">
+    <span>🔗</span> Open Source Dashboard
+  </a>
+</nav>
+
+<!-- CONTENT -->
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num-badge">Chapter 02 · F_MMI</span>
+    </div>
+    <h1 class="chapter-title">Microprice &amp; Volume Imbalance</h1>
+    <p class="chapter-subtitle">
+      The midprice treats both sides of the book as equal. They are not.
+      Microprice and volume imbalance are the first two calculations that tell you
+      which way the book is leaning — before price moves.
+    </p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>2.1 Why the Midprice Is Not Enough</h3>
+
+    <p>
+      In Chapter 1 we defined the midprice as $\frac{1}{2}(P_t^a + P_t^b)$. It is simple and useful, but it carries a hidden assumption: that the quantity at the best bid and the quantity at the best ask are equal, and therefore neither side is exerting more pressure than the other.
+    </p>
+
+    <p>
+      In practice, this is almost never true. At any given tick, one side of the book almost always has more volume at the touch than the other. When there are significantly more lots resting on the bid than on the ask, buyers outnumber sellers at the best price — and the "true" price is closer to the ask than the arithmetic mid would suggest.
+    </p>
+
+    <div class="callout callout-intuition">
+      Imagine two buyers and one seller standing at a market stall negotiating over a kilogram of mangoes. The arithmetic average of their offers is the midprice. But the <em>microprice</em> asks: with two buyers competing for one seller's stock, where does the transaction actually happen? Closer to the seller's ask — because buyers have more pressure to transact. The microprice captures this asymmetry mathematically.
+    </div>
+
+    <h3>2.2 The Microprice — Equation (3.3)</h3>
+
+    <p>
+      The <strong>microprice</strong> $S_t^*$ is the volume-weighted average of the best bid and ask prices, where each price is weighted by the quantity on the <em>opposite</em> side:
+    </p>
+
+    <div class="math-block boxed">
+      $$S_t^* = \frac{V_t^b}{V_t^b + V_t^a}\,P_t^a + \frac{V_t^a}{V_t^b + V_t^a}\,P_t^b$$
+      <div class="eq-ref">Cartea et al. (2015), Eq. (3.3), p. 46</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul style="margin:0 0 1.2rem 1.5rem;line-height:2;font-size:0.97rem;color:#2a2a3e;">
+      <li>$V_t^b$ = quantity (lots) resting at the best bid at time $t$</li>
+      <li>$V_t^a$ = quantity (lots) resting at the best ask at time $t$</li>
+      <li>$P_t^b$ = best bid price at time $t$</li>
+      <li>$P_t^a$ = best ask price at time $t$</li>
+      <li>$S_t^*$ = microprice — also called the <em>weighted midprice</em></li>
+    </ul>
+
+    <div class="callout callout-source">
+      First introduced conceptually in Chapter 1, p. 18: <em>"The brown solid line depicts a variation of the asset known as the microprice... used as a more subtle proxy for the asset's transaction cost-free price, as it measures the tendency that the price has to move either towards the bid or ask side as captured by number of shares posted."</em> Formalised as Equation (3.3) in Chapter 3, Section 3.2: Asset Prices and Returns Intraday, p. 46.
+    </div>
+
+    <p>
+      Notice that the bid quantity $V_t^b$ is used to weight the <em>ask</em> price, and the ask quantity $V_t^a$ is used to weight the <em>bid</em> price. This is the key insight: a large bid queue pulls the microprice <em>toward the ask</em>, reflecting upward pressure. A large ask queue pulls it <em>toward the bid</em>, reflecting downward pressure.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of the microprice as a see-saw balanced at the midprice. A heavy bid side (many buyers waiting) tips the see-saw upward — price is likely to move toward the ask. A heavy ask side tips it downward. The microprice is the exact tipping point given the current weights.
+    </div>
+
+    <!-- WORKED EXAMPLE: MICROPRICE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">WORKED EXAMPLE — MICROPRICE</span>
+        <span class="we-badge">NSE:NIFTY26MAYFUT · 29 Apr 2026 · 12:34:20 IST</span>
+      </div>
+      <div class="we-body">
+        <p>From the live snapshot used in Chapter 1:</p>
+        <p>
+          Best Bid: $P_t^b = \text{Rs.}24{,}442.80$, &nbsp; $V_t^b = 130$ lots<br/>
+          Best Ask: $P_t^a = \text{Rs.}24{,}444.90$, &nbsp; $V_t^a = 195$ lots
+        </p>
+        <div class="we-step">Step 1 — Total touch volume</div>
+        <p>$$V_t^b + V_t^a = 130 + 195 = 325 \text{ lots}$$</p>
+        <div class="we-step">Step 2 — Apply Equation (3.3)</div>
+        <p>
+          $$S_t^* = \frac{130}{325} \times 24{,}444.90 + \frac{195}{325} \times 24{,}442.80$$
+          $$= 0.4 \times 24{,}444.90 + 0.6 \times 24{,}442.80$$
+          $$= 9{,}777.96 + 14{,}665.68 = \text{Rs.}24{,}443.64$$
+        </p>
+        <div class="we-step">Step 3 — Compare to midprice</div>
+        <p>
+          $$\text{Midprice} = \frac{24{,}442.80 + 24{,}444.90}{2} = \text{Rs.}24{,}443.85$$
+        </p>
+        <div class="we-answer">
+          <strong>Microprice = Rs.24,443.64 &nbsp;·&nbsp; Midprice = Rs.24,443.85</strong><br/>
+          The microprice is <em>below</em> the midprice by Rs.0.21. Why? Because the ask side has more volume (195 lots) than the bid (130 lots) at the touch. The heavier ask queue pulls the microprice downward — suggesting mild selling pressure at this tick. Despite the large aggregate imbalance favouring buyers (TBQ 5,28,125 vs TSQ 2,20,415), the <em>touch</em> is momentarily ask-heavy.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>2.3 Spread in Basis Points</h3>
+
+    <p>
+      In Chapter 1 we computed the quoted spread in rupees: Rs.2.10. But rupee spreads are not comparable across instruments — a Rs.2.10 spread on a Rs.24,000 Futures contract is very different from a Rs.2.10 spread on a Rs.100 option. The solution is to normalise by the midprice and express in <strong>basis points (bps)</strong>.
+    </p>
+
+    <div class="math-block">
+      $$\text{Spread}_{bps} = \frac{P_t^a - P_t^b}{P_{mid}} \times 10{,}000$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 4, §4.3.1 — Spreads, p. 71</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul style="margin:0 0 1.2rem 1.5rem;line-height:2;font-size:0.97rem;color:#2a2a3e;">
+      <li>$P_t^a - P_t^b$ = quoted spread in rupees</li>
+      <li>$P_{mid} = \frac{1}{2}(P_t^a + P_t^b)$ = midprice</li>
+      <li>$10{,}000$ = conversion factor from decimal fraction to basis points (1 bps = 0.01%)</li>
+    </ul>
+
+    <!-- WORKED EXAMPLE: SPREAD BPS -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">WORKED EXAMPLE — SPREAD IN BASIS POINTS</span>
+        <span class="we-badge">NSE:NIFTY26MAYFUT · 29 Apr 2026</span>
+      </div>
+      <div class="we-body">
+        <p>Using the same snapshot: Spread = Rs.2.10, Midprice = Rs.24,443.85</p>
+        <div class="we-step">Computation</div>
+        <p>
+          $$\text{Spread}_{bps} = \frac{2.10}{24{,}443.85} \times 10{,}000 = 0.0000859 \times 10{,}000 = \mathbf{0.86 \text{ bps}}$$
+        </p>
+        <div class="we-answer">
+          <strong>Spread = 0.86 bps</strong><br/>
+          NIFTY Futures at 0.86 bps is extremely tight by any global standard — the US S&amp;P 500 Futures (ES) typically trade at 0.1–0.2 bps, while NSE single-stock Futures can be 5–20 bps. Comparing 0.86 bps (Futures) vs a typical NIFTY ATM option spread of 50–150 bps immediately shows why institutional desks prefer to hedge delta in Futures rather than options.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>2.4 Volume Imbalance — The Full 50-Level Signal</h3>
+
+    <p>
+      The microprice uses only Level 1 quantities. But we have 50 levels. <strong>Volume imbalance</strong> $\rho_t$ aggregates the entire visible book into a single directional signal.
+    </p>
+
+    <div class="math-block boxed">
+      $$\rho_t = \frac{V_t^b - V_t^a}{V_t^b + V_t^a} \in [-1, +1]$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 12, §12.2 — Intraday Features, p. 295</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul style="margin:0 0 1.2rem 1.5rem;line-height:2;font-size:0.97rem;color:#2a2a3e;">
+      <li>$V_t^b$ = total bid quantity across all observed price levels (TBQ)</li>
+      <li>$V_t^a$ = total ask quantity across all observed price levels (TSQ)</li>
+      <li>$\rho_t = +1$ means the entire visible book is on the bid side — maximum buy pressure</li>
+      <li>$\rho_t = -1$ means the entire visible book is on the ask side — maximum sell pressure</li>
+      <li>$\rho_t = 0$ means a perfectly balanced book</li>
+    </ul>
+
+    <div class="callout callout-source">
+      Cartea et al. (2015), Chapter 12 — <em>Order Imbalance</em>, Section 12.2 — <em>Intraday Features</em>, p. 295: <em>"We define limit order imbalance $\rho_t$ at time $t$ as the ratio of the quoted volume imbalance to the total quoted volume... This is a measure of the buy versus sell pressure on an asset and, as we will see, it contains predictive power on both the arrival rates of MOs, and the direction and size of future price movements."</em>
+    </div>
+
+    <p>
+      The volumes $V_t^b$ and $V_t^a$ in Cartea's formulation can be computed at-the-touch (Level 1 only), across the best $n$ levels, or across the full visible book. In our dashboard we use TBQ and TSQ — the full 50-level aggregates provided directly by the Fyers TBT WebSocket.
+    </p>
+
+    <!-- IMBALANCE METER WIDGET -->
+    <div class="imb-meter-wrap">
+      <div class="imb-meter-label">Live Imbalance Meter — NSE:NIFTY26MAYFUT · 29 Apr 2026 · 12:34:20 IST</div>
+      <div class="imb-meter">
+        <!-- bid fills ~70.6% of left half, ask ~29.4% of right half — but meter shows position of needle -->
+        <div class="imb-meter-bid" style="width:70.6%">
+          <span class="imb-meter-text bid">BID 5,28,125</span>
+        </div>
+        <div class="imb-meter-ask" style="width:29.4%">
+          <span class="imb-meter-text ask">ASK 2,20,415</span>
+        </div>
+        <div class="imb-meter-center"></div>
+        <!-- needle sits at (1 + rho)/2 * 100% = (1+0.413)/2 * 100 = 70.65% -->
+        <div class="imb-meter-needle" style="left:70.65%"></div>
+      </div>
+      <div class="imb-stats">
+        <span>← Sell pressure</span>
+        <span>$\rho_t = \mathbf{+0.413}$ &nbsp;|&nbsp; <strong>+41.3% imbalance</strong></span>
+        <span>Buy pressure →</span>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE: IMBALANCE -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">WORKED EXAMPLE — VOLUME IMBALANCE</span>
+        <span class="we-badge">NSE:NIFTY26MAYFUT · 29 Apr 2026</span>
+      </div>
+      <div class="we-body">
+        <p>From the live snapshot: TBQ = 5,28,125 lots, TSQ = 2,20,415 lots</p>
+        <div class="we-step">Apply the formula</div>
+        <p>
+          $$\rho_t = \frac{5{,}28{,}125 - 2{,}20{,}415}{5{,}28{,}125 + 2{,}20{,}415} = \frac{3{,}07{,}710}{7{,}48{,}540} = +0.411$$
+        </p>
+        <div class="we-step">Interpretation</div>
+        <p>
+          $\rho_t = +0.411$ means the bid side carries 41.1% more net volume than a neutral book would. Stated differently, the bid side has $\mathbf{2.39\times}$ more lots than the ask side:
+          $$\frac{\text{TBQ}}{\text{TSQ}} = \frac{5{,}28{,}125}{2{,}20{,}415} \approx 2.39$$
+        </p>
+        <div class="we-answer">
+          <strong>Volume Imbalance = +0.411 (+41.1%)</strong><br/>
+          This is a strongly bullish book at this snapshot. Cartea et al. (2015) demonstrate that imbalance has predictive power over <em>both</em> the direction of future price moves and the rate at which market orders arrive. A sustained positive imbalance of this magnitude on NIFTY Futures is consistent with the market expecting a further upside move within the next few minutes.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>2.5 Level Imbalance — Per-Level Decomposition</h3>
+
+    <p>
+      The aggregate imbalance $\rho_t$ tells us the overall book direction. But which specific price levels are driving it? The <strong>level imbalance</strong> decomposes the signal level by level:
+    </p>
+
+    <div class="math-block">
+      $$I_k = \frac{V_{bid,k} - V_{ask,k}}{V_{bid,k} + V_{ask,k}}, \qquad k = 1, 2, \ldots, 50$$
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul style="margin:0 0 1.2rem 1.5rem;line-height:2;font-size:0.97rem;color:#2a2a3e;">
+      <li>$V_{bid,k}$ = bid quantity at the $k$-th level</li>
+      <li>$V_{ask,k}$ = ask quantity at the $k$-th level</li>
+      <li>$I_k = +1$ means only bid volume at this level (no ask competition)</li>
+      <li>$I_k = -1$ means only ask volume at this level (no bid competition)</li>
+      <li>$I_k \approx 0$ means the level is evenly contested</li>
+    </ul>
+
+    <!-- LEVEL IMBALANCE VISUAL -->
+    <div class="level-imb-wrap" id="level-imb-container">
+      <div style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.8rem;">
+        Level Imbalance $I_k$ — Top 10 Levels · NIFTY26MAYFUT · 29 Apr 2026
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      Level 8 bid (Rs.24,440.00) has 7,475 lots against only 65 lots on the ask at that exact level — giving $I_8 = \frac{7475 - 65}{7475 + 65} = \frac{7410}{7540} \approx +0.983$. This near-perfect positive imbalance at a single level is the "support wall" pattern. A market maker seeing this will shade their bid quotes upward, expecting that level to absorb selling and provide a price floor.
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>2.6 Putting It Together — What Changes Between Midprice and Microprice?</h3>
+
+    <p>
+      The table below summarises the three price estimates for the same snapshot and what each one tells you:
+    </p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Quantity</th>
+          <th>Value</th>
+          <th>What It Tells You</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Midprice</strong></td>
+          <td class="val">Rs.24,443.85</td>
+          <td>Neutral geometric centre — no information about volume asymmetry</td>
+        </tr>
+        <tr>
+          <td><strong>Microprice</strong> (L1)</td>
+          <td class="val">Rs.24,443.64</td>
+          <td>Ask-heavy touch (195 vs 130 lots) — mild downward lean at the best prices</td>
+        </tr>
+        <tr>
+          <td><strong>Volume Imbalance</strong> $\rho_t$</td>
+          <td class="val">+0.411</td>
+          <td>Full 50-level book is bid-heavy — strong bullish aggregate signal</td>
+        </tr>
+        <tr>
+          <td><strong>Level Imbalance L8</strong> $I_8$</td>
+          <td class="val">+0.983</td>
+          <td>Near-total bid dominance at Rs.24,440 — institutional support wall</td>
+        </tr>
+        <tr>
+          <td><strong>Spread</strong></td>
+          <td class="val">0.86 bps</td>
+          <td>Extremely tight — crossing cost is negligible relative to any real edge</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-india">
+      On NSE, weekly NIFTY option expiries (Thursday) create a structural pattern where volume imbalance in the underlying Futures tends to spike in the final 30 minutes. Informed desks running short-volatility strategies (straddles, strangles) watch $\rho_t$ continuously — a sudden shift from +0.4 to -0.3 in the Futures book is a leading indicator of a directional break that will blow through their delta-neutral position before they can re-hedge.
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <span class="mcq-header-title">Practice Problems</span>
+      <span class="mcq-count">4 questions</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          A NIFTY Futures order book shows: Best Bid Rs.24,500 with 400 lots, Best Ask Rs.24,502 with 100 lots. Which of the following correctly computes the microprice $S_t^*$?
+        </div>
+        <div class="mcq-opts" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">A</span> $\frac{400 \times 24{,}500 + 100 \times 24{,}502}{400 + 100} = \text{Rs.}24{,}500.40$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><span class="opt-ltr">B</span> $\frac{400 \times 24{,}502 + 100 \times 24{,}500}{400 + 100} = \text{Rs.}24{,}501.60$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">C</span> $\frac{24{,}500 + 24{,}502}{2} = \text{Rs.}24{,}501$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">D</span> $\frac{100 \times 24{,}500 + 400 \times 24{,}502}{500} = \text{Rs.}24{,}501.60$</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q1btn" onclick="checkOpt('q1','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q1feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q1expl">
+        <strong>Explanation:</strong> The microprice formula weights each price by the quantity on the <em>opposite</em> side: $S_t^* = \frac{V^b}{V^b + V^a} P^a + \frac{V^a}{V^b + V^a} P^b$. With $V^b = 400$, $V^a = 100$: $S_t^* = \frac{400}{500} \times 24502 + \frac{100}{500} \times 24500 = 0.8 \times 24502 + 0.2 \times 24500 = 19601.6 + 4900 = \text{Rs.}24{,}501.60$. Note that the bid quantity (400) is larger, which pulls the microprice toward the ask (Rs.24,502). Option A uses the wrong weighting — bid qty weighting bid price (same side, not opposite). Option D is numerically identical to B but conceptually wrong in its description.
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          For the same book (Bid Rs.24,500 / 400 lots, Ask Rs.24,502 / 100 lots), compute the volume imbalance $\rho_t$ using only the touch quantities. What does the sign tell you?
+        </div>
+        <div class="mcq-opts" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">A</span> $\rho_t = -0.60$ — the ask is heavier, suggesting downward pressure</div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><span class="opt-ltr">B</span> $\rho_t = +0.60$ — the bid is heavier, suggesting upward pressure</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">C</span> $\rho_t = +0.80$ — bid has 4x the ask, so imbalance is 80%</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">D</span> $\rho_t = 0$ — the midprice is the fair value so the book is always balanced</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q2btn" onclick="checkOpt('q2','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q2feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q2expl">
+        <strong>Explanation:</strong> $\rho_t = \frac{400 - 100}{400 + 100} = \frac{300}{500} = +0.60$. The positive sign confirms the bid side is heavier — more buyers than sellers at the touch, consistent with upward price pressure. Option C is wrong: the ratio TBQ/TSQ = 4 does not equal the imbalance — the formula normalises to $[-1,+1]$ by dividing by the total, not by computing a ratio. Option D is wrong: the book is almost never balanced at exactly zero.
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          In the NIFTY26MAYFUT snapshot, the microprice (Rs.24,443.64) is <em>below</em> the midprice (Rs.24,443.85), yet the full-book volume imbalance is strongly positive (+41%). How can these two signals point in opposite directions?
+        </div>
+        <div class="mcq-opts" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">A</span> They cannot — one of the calculations must be wrong</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">B</span> The microprice is always more reliable, so the imbalance signal should be ignored</div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><span class="opt-ltr">C</span> The microprice uses only Level 1 quantities (130 bid vs 195 ask — ask-heavy at the touch), while volume imbalance uses all 50 levels (5,28,125 bid vs 2,20,415 ask — bid-heavy in aggregate). Different windows of the book can tell different stories at the same instant</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">D</span> Volume imbalance counts the number of orders, not quantities, so it measures something different</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q3btn" onclick="checkOpt('q3','C')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q3feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q3expl">
+        <strong>Explanation:</strong> This is one of the most important conceptual points in order book analysis. The microprice (Eq. 3.3) is a Level-1-only calculation — it only sees 130 bid lots vs 195 ask lots at the best prices. At that narrow window, the ask side is heavier, pulling the microprice below the midprice. But deeper in the book, from Level 2 onwards, the bid side dominates massively (the 7,475-lot wall at Level 8, for example), producing a strongly positive aggregate imbalance. Both signals are correct — they are just measuring different horizons of the book. A sophisticated trader uses both: microprice for short-term tick direction, full-book imbalance for the medium-term directional lean.
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          A NIFTY ATM straddle desk is delta-neutral. The NIFTY26MAYFUT book suddenly shifts from $\rho_t = +0.41$ to $\rho_t = -0.38$ within 30 seconds, while the futures price has not yet moved. What should the desk do, and why?
+        </div>
+        <div class="mcq-opts" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">A</span> Do nothing — the futures price hasn't moved so delta is still neutral</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">B</span> Buy more straddles to increase gamma exposure</div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><span class="opt-ltr">C</span> Prepare to re-hedge delta immediately — the sudden shift to negative imbalance is a leading indicator that a downward price move is imminent, before it appears in the futures price</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">D</span> Reduce position size since high imbalance always means a crash is coming</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q4btn" onclick="checkOpt('q4','C')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q4feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q4expl">
+        <strong>Explanation:</strong> Cartea et al. (2015) Ch. 12 establish that volume imbalance $\rho_t$ has <em>predictive power</em> over future price movements — it leads the price, not follows it. A rapid shift from +0.41 to -0.38 means ask-side volume has flooded the book — sellers are building up in front of the current price. The futures price will likely follow downward within seconds to minutes. A straddle desk delta-neutral at the current price will become delta-positive (net long delta) once price moves down, because the short put gains negative delta faster than the short call loses positive delta. The correct action is to pre-position the hedge. Option A is the classic mistake: waiting for price confirmation means re-hedging at worse levels.
+      </div>
+    </div>
+
+  </div><!-- end mcq -->
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <a href="F_MMI_Ch1.html" class="ch-nav-btn">← The Limit Order Book</a>
+    <a href="F_MMI_Ch3.html" class="ch-nav-btn primary">Next: Market Making &amp; Fill Probability →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── LEVEL IMBALANCE WIDGET ──
+(function(){
+  const bidQty = [130,195,65,65,390,455,520,7475,390,390];
+  const askQty = [195,3965,325,65,325,2015,65,65,585,195];
+  const bidPx  = [24442.8,24442.5,24441.2,24440.5,24440.3,24440.2,24440.1,24440.0,24439.9,24439.5];
+  const askPx  = [24444.9,24445.0,24445.1,24446.0,24447.0,24448.0,24448.1,24448.2,24448.4,24448.5];
+
+  const container = document.getElementById('level-imb-container');
+
+  for(let k = 0; k < 10; k++){
+    const bq = bidQty[k], aq = askQty[k];
+    const imb = (bq - aq) / (bq + aq + 1e-9);
+    const isPos = imb >= 0;
+
+    // bar width: |imb| * 50% of the half-bar
+    const halfPct = Math.abs(imb) * 50;
+
+    const row = document.createElement('div');
+    row.className = 'level-imb-row';
+
+    const leftLabel = document.createElement('div');
+    leftLabel.className = 'level-imb-label';
+    leftLabel.innerHTML = `<span style="color:var(--bid);font-weight:600">${bq}</span><br/><span style="font-size:0.58rem">${bidPx[k].toFixed(1)}</span>`;
+
+    const barWrap = document.createElement('div');
+    barWrap.className = 'level-imb-bar-wrap';
+
+    const mid = document.createElement('div');
+    mid.className = 'level-imb-bar-mid';
+    barWrap.appendChild(mid);
+
+    if(isPos){
+      const bar = document.createElement('div');
+      bar.className = 'level-imb-bar-bid';
+      bar.style.width = halfPct + '%';
+      barWrap.appendChild(bar);
+    } else {
+      const bar = document.createElement('div');
+      bar.className = 'level-imb-bar-ask';
+      bar.style.width = halfPct + '%';
+      barWrap.appendChild(bar);
+    }
+
+    // value label
+    const valEl = document.createElement('div');
+    valEl.className = 'level-imb-val';
+    valEl.style.color = isPos ? 'var(--bid)' : 'var(--ask)';
+    valEl.style.left = isPos ? (50 + halfPct/2) + '%' : (50 - halfPct/2) + '%';
+    valEl.style.fontSize = '0.6rem';
+    valEl.textContent = (imb >= 0 ? '+' : '') + imb.toFixed(2);
+    barWrap.appendChild(valEl);
+
+    // level label
+    const levelBadge = document.createElement('div');
+    levelBadge.style.cssText = 'position:absolute;left:4px;top:50%;transform:translateY(-50%);font-family:DM Mono,monospace;font-size:0.55rem;color:var(--muted);';
+    levelBadge.textContent = 'L' + (k+1);
+    barWrap.style.position = 'relative';
+    barWrap.appendChild(levelBadge);
+
+    const rightLabel = document.createElement('div');
+    rightLabel.className = 'level-imb-label right';
+    rightLabel.innerHTML = `<span style="color:var(--ask);font-weight:600">${aq}</span><br/><span style="font-size:0.58rem">${askPx[k].toFixed(1)}</span>`;
+
+    row.appendChild(leftLabel);
+    row.appendChild(barWrap);
+    row.appendChild(rightLabel);
+    container.appendChild(row);
+  }
+})();
+
+// ── MCQ LOGIC ──
+const correctMsgs = [
+  "🎯 Exactly right. The book doesn't lie.",
+  "✨ Clean read. Microprice mastered.",
+  "🏆 Correct — imbalance understood.",
+  "🔥 Nailed it. Cartea would approve.",
+  "💡 Spot on. That's the kind of edge that matters.",
+  "🎓 Textbook perfect — literally Eq. (3.3).",
+  "📈 Your market intuition just levelled up.",
+];
+const wrongMsgs = [
+  "🌀 Re-read Section 2.2 and try again.",
+  "📐 Check the formula — note which side weights which price.",
+  "📉 Not quite. The weighting is cross-directional.",
+  "🤔 Close, but not correct. One more try.",
+  "📊 Remember: bid qty weights the ask price, not the bid price.",
+];
+
+const state = {};
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>

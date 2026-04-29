@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Limit Order Book — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+  --bid:     #1565c0;
+  --ask:     #b71c1c;
+  --bid-bg:  #e3f0ff;
+  --ask-bg:  #ffeaea;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+/* ── TOPBAR ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+/* ── LAYOUT ── */
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+/* ── CONTENT ── */
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+/* ── CHAPTER HEADER ── */
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-i{background:rgba(232,114,42,0.1);color:var(--orange);}
+.ch-num-badge{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+/* ── BODY TEXT ── */
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+
+/* ── CALLOUTS ── */
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 NSE Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-source{background:rgba(45,37,96,0.04);border-left:3px solid var(--navy2);font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--muted);}
+.callout-source::before{content:'📖 Source';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+
+/* ── MATH BLOCK ── */
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+
+/* ── WORKED EXAMPLE ── */
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+/* ── CONTENT DIVIDER ── */
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* ── ORDER BOOK WIDGET ── */
+.ob-widget {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 2rem 0;
+  font-family: 'DM Mono', monospace;
+  box-shadow: 0 4px 24px rgba(45,37,96,0.07);
+}
+.ob-header {
+  background: var(--navy);
+  padding: 0.85rem 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ob-header-left { display: flex; flex-direction: column; gap: 0.2rem; }
+.ob-instrument { font-size: 0.82rem; font-weight: 700; color: white; letter-spacing: 0.04em; }
+.ob-ts { font-size: 0.65rem; color: rgba(255,255,255,0.4); }
+.ob-header-right { display: flex; gap: 1.5rem; }
+.ob-stat { text-align: right; }
+.ob-stat-label { font-size: 0.6rem; color: rgba(255,255,255,0.35); display: block; margin-bottom: 0.15rem; }
+.ob-stat-val { font-size: 0.82rem; font-weight: 700; }
+.ob-stat-val.bid { color: #64b5f6; }
+.ob-stat-val.ask { color: #ef9a9a; }
+
+.ob-cols-header {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 2px 80px 80px 1fr;
+  background: var(--off);
+  border-bottom: 1px solid var(--border);
+  padding: 0.4rem 0;
+}
+.ob-col-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0 0.8rem;
+}
+.ob-col-label.right { text-align: right; }
+.ob-col-label.center { text-align: center; }
+.ob-col-sep { background: var(--border); }
+
+.ob-rows { max-height: 460px; overflow-y: auto; background: var(--white); }
+.ob-rows::-webkit-scrollbar { width: 4px; }
+.ob-rows::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.ob-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 2px 80px 80px 1fr;
+  align-items: center;
+  min-height: 28px;
+  border-bottom: 1px solid rgba(229,231,235,0.4);
+  position: relative;
+}
+.ob-row:hover { background: rgba(45,37,96,0.02); }
+
+/* depth fill bars */
+.ob-bid-bar {
+  position: absolute;
+  right: 50%;
+  top: 0; bottom: 0;
+  background: rgba(21,101,192,0.08);
+  pointer-events: none;
+}
+.ob-ask-bar {
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  background: rgba(183,28,28,0.08);
+  pointer-events: none;
+}
+
+.ob-cell {
+  font-size: 0.72rem;
+  padding: 0 0.8rem;
+  z-index: 1;
+  position: relative;
+  white-space: nowrap;
+}
+.ob-cell.bid-orders { color: var(--muted); text-align: left; }
+.ob-cell.bid-qty { color: var(--bid); text-align: right; font-weight: 600; }
+.ob-cell.bid-price { color: var(--bid); text-align: right; font-weight: 700; font-size: 0.75rem; }
+.ob-cell.ask-price { color: var(--ask); text-align: left; font-weight: 700; font-size: 0.75rem; }
+.ob-cell.ask-qty { color: var(--ask); text-align: left; font-weight: 600; }
+.ob-cell.ask-orders { color: var(--muted); text-align: right; }
+.ob-cell.sep { background: var(--border); padding: 0; }
+
+/* special rows */
+.ob-row.highlight-bid .ob-bid-bar { background: rgba(21,101,192,0.18); }
+.ob-row.highlight-ask .ob-ask-bar { background: rgba(183,28,28,0.18); }
+.ob-row.iceberg-bid .ob-cell.bid-qty::after { content: ' ⬡'; font-size: 0.6rem; color: var(--orange); }
+.ob-row.iceberg-ask .ob-cell.ask-qty::after { content: ' ⬡'; font-size: 0.6rem; color: var(--orange); }
+
+.ob-spread-row {
+  background: rgba(45,37,96,0.04);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  padding: 0.3rem 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+.ob-spread-item { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+.ob-spread-item strong { color: var(--navy); }
+
+.ob-footer {
+  background: var(--off);
+  border-top: 1px solid var(--border);
+  padding: 0.7rem 1.3rem;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.ob-footer-stat { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+.ob-footer-stat strong { font-size: 0.75rem; }
+.ob-footer-stat strong.bid { color: var(--bid); }
+.ob-footer-stat strong.ask { color: var(--ask); }
+.ob-footer-stat strong.imb-pos { color: var(--green); }
+
+.ob-legend {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.6rem 1.3rem;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.ob-legend-item { display: flex; align-items: center; gap: 0.4rem; font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); }
+.ob-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+.ob-legend-dot.bid { background: rgba(21,101,192,0.25); }
+.ob-legend-dot.ask { background: rgba(183,28,28,0.25); }
+.ob-legend-dot.highlight-bid { background: rgba(21,101,192,0.5); }
+.ob-legend-dot.highlight-ask { background: rgba(183,28,28,0.5); }
+.ob-legend-icon { font-size: 0.65rem; color: var(--orange); }
+
+/* level indicator */
+.ob-level { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--border); padding: 0 0.4rem; }
+
+/* ── MCQ ── */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.2rem;}
+.mcq-q{padding:1.2rem 1.4rem;background:var(--white);}
+.mcq-q-text{font-size:0.97rem;line-height:1.75;color:var(--text);margin-bottom:1rem;}
+.mcq-opts{display:flex;flex-direction:column;gap:0.5rem;}
+.opt{border:1.5px solid var(--border);border-radius:8px;padding:0.7rem 1rem;cursor:pointer;display:flex;align-items:flex-start;gap:0.7rem;font-size:0.9rem;transition:border-color 0.15s,background 0.15s;}
+.opt:hover{border-color:var(--orange);background:rgba(232,114,42,0.03);}
+.opt.correct{border-color:var(--green)!important;background:rgba(30,158,94,0.06)!important;}
+.opt.wrong{border-color:#dc2626!important;background:rgba(220,38,38,0.05)!important;}
+.opt-ltr{width:22px;height:22px;border-radius:50%;background:var(--off);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.mcq-actions{padding:0.8rem 1.4rem;background:var(--off);border-top:1px solid var(--border);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.check-btn{background:var(--navy);color:white;border:none;border-radius:7px;padding:0.5rem 1.2rem;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;transition:background 0.2s;}
+.check-btn:hover{background:var(--navy2);}
+.check-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.mcq-feedback{font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border-radius:6px;display:none;}
+.mcq-explanation{background:rgba(45,37,96,0.04);border-radius:8px;padding:1rem 1.2rem;margin:0.8rem 1.4rem 1rem;font-size:0.88rem;line-height:1.75;display:none;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+
+/* ── CHAPTER NAV ── */
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.7rem 1.2rem;border-radius:8px;text-decoration:none;color:var(--muted);border:1.5px solid var(--border);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);}
+.ch-nav-btn.disabled{opacity:0.35;pointer-events:none;}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.2rem 4rem;}
+  .ob-cols-header,.ob-row{grid-template-columns:1fr 70px 70px 2px 70px 70px 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span></a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Home</a> ›
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_MMI.html">Market Microstructure</a> ›
+      <span>Ch 1</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">1 / 5</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:20%"></div></div>
+    </div>
+    <a href="F_MMI.html" class="tb-home">← Back to module</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">F_MMI — Market Microstructure</div>
+  <a href="F_MMI_Ch1.html" class="sidebar-item active">
+    <span class="si-num">1</span> The Limit Order Book
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <div class="sidebar-item locked">
+    <span class="si-num">2</span> Microprice &amp; Imbalance
+  </div>
+  <div class="sidebar-item locked">
+    <span class="si-num">3</span> Market Making &amp; Fill Probability
+  </div>
+  <div class="sidebar-item locked">
+    <span class="si-num">4</span> Liquidity Traders &amp; Price Impact
+  </div>
+  <div class="sidebar-item locked">
+    <span class="si-num">5</span> Reading the Live Book
+  </div>
+  <div class="sidebar-section-label" style="margin-top:1.5rem;">Resources</div>
+  <a href="https://github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API" target="_blank" class="sidebar-item">
+    <span>🔗</span> Open Source Dashboard
+  </a>
+</nav>
+
+<!-- CONTENT -->
+<main class="content">
+
+  <!-- CHAPTER HEADER -->
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-i">Intermediate</span>
+      <span class="ch-num-badge">Chapter 01 · F_MMI</span>
+    </div>
+    <h1 class="chapter-title">The Limit Order Book</h1>
+    <p class="chapter-subtitle">
+      The order book is the operating system of every modern exchange.
+      Before microprice, before market making, before any calculation — you must understand the structure that generates all market data.
+    </p>
+  </div>
+
+  <div class="content-body">
+
+    <!-- SECTION 1 -->
+    <h3>1.1 What Is the Limit Order Book?</h3>
+
+    <p>
+      Every trade on NSE, NASDAQ, or any modern electronic exchange is governed by a <strong>Limit Order Book (LOB)</strong> — a continuously updated record of all outstanding buy and sell orders, organised by price and time.
+    </p>
+
+    <p>
+      When you place a <strong>limit order</strong> (LO), you specify a price. Your order joins a queue at that price, waiting for a counterparty. When you place a <strong>market order</strong> (MO), you demand immediate execution — and you pay whatever price the resting limit orders are willing to offer.
+    </p>
+
+    <div class="callout callout-definition">
+      The LOB is defined on a fixed discrete grid of prices called <strong>price levels</strong>. The distance between adjacent price levels is the <strong>tick size</strong>. In India, NIFTY Futures have a tick size of Rs.0.05. The LOB keeps track of all limit orders and applies a matching algorithm to pair incoming market orders with resting limit orders.
+    </div>
+
+    <div class="callout callout-source">
+      Cartea, Jaimungal &amp; Penalva (2015), Chapter 1, Section 1.4 — <em>The Limit Order Book</em>, pp. 14–16.
+    </div>
+
+    <h3>1.2 Price-Time Priority</h3>
+
+    <p>
+      Orders at the same price level are executed in <strong>time priority</strong> — first in, first out. An incoming limit order joins the queue at its price level at the back. An incoming market order is matched against the front of the queue at the best available price. If the market order is larger than the available quantity at the best price, it <strong>walks the book</strong> — consuming level after level until it is fully filled or cancelled.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of each price level as a checkout queue at a supermarket. The best bid is the queue where buyers are waiting to be served. The best ask is where sellers wait. A market buy order goes straight to the seller's queue and takes from the front. If that queue runs out, it moves to the next queue (next price level), paying a slightly higher price. This is "walking the book."
+    </div>
+
+    <h3>1.3 The Quoted Spread and Midprice</h3>
+
+    <p>
+      Two of the most fundamental quantities in any LOB are defined by the best bid and best ask prices alone.
+    </p>
+
+    <p>The <strong>quoted spread</strong> is the cost of a round trip — buying at the ask and selling at the bid immediately:</p>
+
+    <div class="math-block">
+      $$\text{Quoted Spread}_t = P_t^a - P_t^b$$
+    </div>
+
+    <p>where $P_t^b$ is the best bid price and $P_t^a$ is the best ask price at time $t$.</p>
+
+    <p>The <strong>midprice</strong> is the arithmetic average of the best bid and ask, used as a proxy for the "true" underlying price of the asset — the price that would prevail in a frictionless market with no spread:</p>
+
+    <div class="math-block">
+      $$\text{Midprice}_t = \frac{1}{2}\left(P_t^a + P_t^b\right)$$
+    </div>
+
+    <div class="callout callout-source">
+      Cartea et al. (2015), p. 16 — both equations appear on this page, unnumbered. The midprice is described as a proxy for "the true underlying price of the asset — the price for the asset if there were no explicit or implicit trading costs."
+    </div>
+
+    <div class="callout callout-india">
+      On NSE, the minimum quoted spread for NIFTY Futures is one tick = Rs.0.05. However, at any given moment the actual spread may be several ticks wide, especially during low-liquidity periods (first 15 minutes of session, or post-news). The midprice is used as the settlement reference price in most intraday P&amp;L calculations.
+    </div>
+
+    <!-- WORKED EXAMPLE: SPREAD + MID -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">WORKED EXAMPLE — QUOTED SPREAD &amp; MIDPRICE</span>
+        <span class="we-badge">NSE:NIFTY26MAYFUT · 29 Apr 2026</span>
+      </div>
+      <div class="we-body">
+        <p>From the live snapshot at 12:34:20 IST:</p>
+        <p>Best Bid $P_t^b = \text{Rs.}24{,}442.80$ &nbsp;·&nbsp; Best Ask $P_t^a = \text{Rs.}24{,}444.90$</p>
+        <div class="we-step">Step 1 — Quoted Spread</div>
+        <p>$$\text{Quoted Spread} = 24{,}444.90 - 24{,}442.80 = \text{Rs.}2.10$$</p>
+        <p>That is $2.10 / 0.05 = \mathbf{42\ \text{ticks}}$ — a wider-than-minimum spread, indicating a moment of moderate liquidity at the touch.</p>
+        <div class="we-step">Step 2 — Midprice</div>
+        <p>$$\text{Midprice} = \frac{1}{2}(24{,}444.90 + 24{,}442.80) = \frac{49{,}887.70}{2} = \text{Rs.}24{,}443.85$$</p>
+        <div class="we-answer">
+          <strong>Quoted Spread = Rs.2.10 (42 ticks) &nbsp;·&nbsp; Midprice = Rs.24,443.85</strong><br/>
+          The midprice of Rs.24,443.85 is the neutral reference — it does not tell us whether price will go up or down. That requires the microprice, which we derive in Chapter 2 using the volumes at each side.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <!-- SECTION 2: LIVE ORDER BOOK -->
+    <h3>1.4 A Real 50-Level Order Book</h3>
+
+    <p>
+      NSE, via the Fyers TBT (Tick-By-Tick) WebSocket, exposes <strong>50 price levels</strong> on each side of the book — 50 bid rows and 50 ask rows, each with a price, a total quantity, and the number of individual orders at that level. Most trading platforms show only the top 5 levels. Below is an actual 50-level snapshot.
+    </p>
+
+    <p>
+      Study the book carefully. Each row is one price level. The <strong>depth bars</strong> behind each row are proportional to the quantity at that level. Highlighted rows carry unusually large volume. The <strong>⬡ symbol</strong> flags levels where high quantity is concentrated in very few orders — a potential iceberg.
+    </p>
+
+    <!-- ORDER BOOK WIDGET -->
+    <div class="ob-widget">
+      <div class="ob-header">
+        <div class="ob-header-left">
+          <span class="ob-instrument">NSE:NIFTY26MAYFUT</span>
+          <span class="ob-ts">Wednesday, 29 April 2026 · 12:34:20 IST · Snapshot #live</span>
+        </div>
+        <div class="ob-header-right">
+          <div class="ob-stat">
+            <span class="ob-stat-label">TOTAL BID QTY</span>
+            <span class="ob-stat-val bid">5,28,125</span>
+          </div>
+          <div class="ob-stat">
+            <span class="ob-stat-label">TOTAL ASK QTY</span>
+            <span class="ob-stat-val ask">2,20,415</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spread row -->
+      <div class="ob-spread-row">
+        <span class="ob-spread-item">Best Bid <strong>Rs.24,442.80</strong></span>
+        <span class="ob-spread-item">Spread <strong>Rs.2.10 · 42 ticks</strong></span>
+        <span class="ob-spread-item">Mid <strong>Rs.24,443.85</strong></span>
+        <span class="ob-spread-item">Best Ask <strong>Rs.24,444.90</strong></span>
+      </div>
+
+      <!-- Column headers -->
+      <div class="ob-cols-header">
+        <span class="ob-col-label">ORDERS</span>
+        <span class="ob-col-label right">QTY</span>
+        <span class="ob-col-label right">BID Rs.</span>
+        <span class="ob-col-sep"></span>
+        <span class="ob-col-label">ASK Rs.</span>
+        <span class="ob-col-label">QTY</span>
+        <span class="ob-col-label right">ORDERS</span>
+      </div>
+
+      <!-- Book rows -->
+      <div class="ob-rows" id="ob-rows"></div>
+
+      <div class="ob-legend">
+        <div class="ob-legend-item"><div class="ob-legend-dot bid"></div>Bid depth</div>
+        <div class="ob-legend-item"><div class="ob-legend-dot ask"></div>Ask depth</div>
+        <div class="ob-legend-item"><div class="ob-legend-dot highlight-bid"></div>Large bid level</div>
+        <div class="ob-legend-item"><div class="ob-legend-dot highlight-ask"></div>Large ask level</div>
+        <div class="ob-legend-item"><span class="ob-legend-icon">⬡</span>Potential iceberg (high qty, few orders)</div>
+      </div>
+
+      <div class="ob-footer">
+        <div class="ob-footer-stat">Total Bid Qty <strong class="bid">5,28,125</strong></div>
+        <div class="ob-footer-stat">Total Ask Qty <strong class="ask">2,20,415</strong></div>
+        <div class="ob-footer-stat">Imbalance <strong class="imb-pos">+41.3%</strong></div>
+        <div class="ob-footer-stat">Tick Size <strong>Rs.0.05</strong></div>
+        <div class="ob-footer-stat">Lot Size <strong>25</strong></div>
+      </div>
+    </div>
+
+    <div class="callout callout-intuition">
+      Look at <strong>Bid Level 8 (Rs.24,440.00)</strong>: 7,475 lots across only 22 orders = 340 lots per order on average. Compare this to <strong>Ask Level 18 (Rs.24,450.00)</strong>: 12,415 lots across 116 orders = 107 lots per order. The bid wall is a concentrated institutional position; the ask cluster at the round number is fragmented retail. These two structures behave very differently under pressure — we quantify this in Chapter 2 and Chapter 3.
+    </div>
+
+    <h3>1.5 What You Are Looking At — A Field Guide</h3>
+
+    <p>Each row in the order book contains three pieces of information per side:</p>
+
+    <p>
+      <strong>Price</strong> — the level at which these orders are resting. Bid prices decrease as you go down (level 1 is the best, most expensive bid); ask prices increase (level 1 is the cheapest ask).
+    </p>
+    <p>
+      <strong>Quantity</strong> — the total number of lots (contracts) resting at this price level. For NIFTY Futures, each lot = 25 units. 7,475 lots = 1,86,875 units of notional exposure.
+    </p>
+    <p>
+      <strong>Order Count</strong> — how many individual orders make up that quantity. This is unique to the Fyers TBT feed and most platforms do not display it. It is crucial for detecting iceberg orders and estimating the resilience of each level.
+    </p>
+
+    <div class="callout callout-warning">
+      The order book is a <em>snapshot</em>, not a promise. Any resting limit order can be cancelled in microseconds. Large visible quantity does not guarantee that it will absorb an incoming market order — it might evaporate before your order reaches it. This phenomenon, called <strong>quote stuffing</strong> or <strong>layering</strong>, is one reason why the midprice alone is an insufficient guide to execution.
+    </div>
+
+    <div class="callout callout-india">
+      NSE uses <strong>price-time priority</strong> with no hidden order types at the exchange level (unlike some US venues). This means the order count you see from the Fyers TBT feed is the true count of visible orders — there are no exchange-native icebergs in the NSE LOB. Any "iceberg" pattern you detect (high qty, few orders) is a single large participant posting a big block, not a hidden order type.
+    </div>
+
+  </div><!-- end content-body -->
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ SECTION -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <span class="mcq-header-title">Practice Problems</span>
+      <span class="mcq-count">4 questions</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          From the NIFTY26MAYFUT snapshot above: Best Bid = Rs.24,442.80, Best Ask = Rs.24,444.90. Which of the following correctly computes the midprice?
+        </div>
+        <div class="mcq-opts" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">A</span> $\frac{24{,}444.90}{2} = \text{Rs.}12{,}222.45$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><span class="opt-ltr">B</span> $\frac{24{,}442.80 + 24{,}444.90}{2} = \text{Rs.}24{,}443.85$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">C</span> $24{,}444.90 - 24{,}442.80 = \text{Rs.}2.10$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">D</span> $\frac{24{,}444.90 - 24{,}442.80}{2} = \text{Rs.}1.05$</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q1btn" onclick="checkOpt('q1','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q1feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q1expl">
+        <strong>Explanation:</strong> The midprice is $\frac{1}{2}(P_t^a + P_t^b) = \frac{1}{2}(24{,}444.90 + 24{,}442.80) = Rs.24{,}443.85$. Option C computes the spread (Rs.2.10), and Option D is half the spread (Rs.1.05). Option A incorrectly divides only the ask price.
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          The quoted spread in the snapshot is Rs.2.10. NIFTY Futures have a tick size of Rs.0.05. How many ticks wide is this spread, and what does it imply?
+        </div>
+        <div class="mcq-opts" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">A</span> 21 ticks — this is the minimum possible spread for NIFTY Futures</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">B</span> 2 ticks — spreads are always measured in whole rupees</div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><span class="opt-ltr">C</span> 42 ticks — wider than minimum, indicating moderate spread at this moment</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">D</span> 42 ticks — this is always the minimum spread for NIFTY Futures</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q2btn" onclick="checkOpt('q2','C')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q2feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q2expl">
+        <strong>Explanation:</strong> $2.10 \div 0.05 = 42$ ticks. The minimum possible spread is 1 tick = Rs.0.05. A 42-tick spread means there is a gap of 42 price levels between the best bid and the best ask — this is wider than minimum and suggests that at this moment, there is no liquidity between Rs.24,442.80 and Rs.24,444.90. The minimum spread of 1 tick only occurs when the book is extremely tight (very liquid conditions).
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          A market sell order for 600 lots arrives. Looking at the bid side of the book above, the top levels are: L1 = 130 lots at Rs.24,442.80, L2 = 195 lots at Rs.24,442.50, L3 = 65 lots at Rs.24,441.20. What happens?
+        </div>
+        <div class="mcq-opts" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">A</span> The entire order fills at Rs.24,442.80 since the MO gets the best bid</div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><span class="opt-ltr">B</span> The order walks the book: 130 lots at Rs.24,442.80, 195 lots at Rs.24,442.50, 65 lots at Rs.24,441.20, then continues to deeper levels for the remaining 210 lots</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">C</span> The order is rejected because 600 lots exceeds the visible depth</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">D</span> The order fills 390 lots (130+195+65) and the remaining 210 lots are cancelled</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q3btn" onclick="checkOpt('q3','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q3feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q3expl">
+        <strong>Explanation:</strong> Market orders walk the book by price-time priority. The MO consumes L1 (130 lots at Rs.24,442.80), then L2 (195 lots at Rs.24,442.50), then L3 (65 lots at Rs.24,441.20) — 390 lots consumed so far. The remaining 210 lots continue walking to L4, L5, and so on until fully filled. The order is <em>not</em> cancelled — a standard market order on NSE will fill completely, accepting whatever prices are available. (Only an IOC — Immediate or Cancel — order would cancel the unfilled portion.)
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          Bid Level 8 shows: price Rs.24,440.00 · qty 7,475 lots · orders 22. Ask Level 18 shows: price Rs.24,450.00 · qty 12,415 lots · orders 116. Which statement best describes the structural difference between these two levels?
+        </div>
+        <div class="mcq-opts" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">A</span> The ask level is stronger because it has more total lots</div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><span class="opt-ltr">B</span> The bid level is more concentrated (340 lots/order) suggesting a single institutional position; the ask level is fragmented (107 lots/order) suggesting many retail participants at a round number</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">C</span> Both levels are equivalent since the order count doesn't affect price impact</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">D</span> The bid level is more fragile because fewer orders means less commitment</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q4btn" onclick="checkOpt('q4','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q4feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q4expl">
+        <strong>Explanation:</strong> Average size per order at Bid L8: $7475 \div 22 = 340$ lots/order. At Ask L18: $12415 \div 116 = 107$ lots/order. The bid concentration (340 lots per order) across only 22 orders points to a small number of large participants — likely a systematic strategy or institutional desk providing support at Rs.24,440. The ask fragmentation at Rs.24,450 (the round number) across 116 orders is typical retail behaviour. Crucially, Option D is wrong: fewer orders with high quantity per order is <em>more</em> resilient, not less — it takes a very large incoming MO to consume a single 340-lot order. In contrast, the ask side's 116 small orders can begin cancelling rapidly under pressure, making that level fragile despite the higher total quantity.
+      </div>
+    </div>
+
+  </div><!-- end mcq-section -->
+
+  <!-- CHAPTER NAV -->
+  <div class="chapter-nav">
+    <span class="ch-nav-btn disabled">← Previous</span>
+    <a href="F_MMI_Ch2.html" class="ch-nav-btn primary">Next: Microprice &amp; Volume Imbalance →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── ORDER BOOK DATA ──
+const BIDS = {
+  prices: [24442.8,24442.5,24441.2,24440.5,24440.3,24440.2,24440.1,24440.0,24439.9,24439.5,24439.3,24439.2,24439.1,24439.0,24438.9,24438.8,24438.7,24438.6,24438.5,24438.4,24438.3,24438.2,24438.1,24438.0,24437.9,24437.8,24437.7,24437.6,24437.5,24437.4,24437.3,24437.2,24437.1,24437.0,24436.9,24436.8,24436.6,24436.5,24436.4,24436.3,24436.0,24435.9,24435.7,24435.6,24435.4,24435.3,24435.2,24435.0,24434.9,24434.8],
+  qty:    [130,195,65,65,390,455,520,7475,390,390,65,325,195,65,455,260,390,65,845,845,455,650,650,650,195,195,390,130,325,780,65,195,650,65,65,650,260,195,455,195,65,65,130,195,390,65,65,130,65,65],
+  orders: [1,1,20,1,5,4,2,22,3,2,1,5,3,1,6,4,4,5,6,5,2,3,2,2,3,2,1,2,4,3,1,2,1,1,1,1,3,1,2,3,1,2,2,3,4,1,1,2,1,1]
+};
+const ASKS = {
+  prices: [24444.9,24445.0,24445.1,24446.0,24447.0,24448.0,24448.1,24448.2,24448.4,24448.5,24448.9,24449.0,24449.4,24449.5,24449.7,24449.8,24449.9,24450.0,24450.3,24450.4,24450.7,24450.9,24451.0,24451.5,24451.8,24451.9,24452.0,24452.5,24452.7,24453.9,24453.9,24454.0,24454.1,24454.3,24454.4,24454.5,24454.8,24454.9,24455.0,24455.2,24455.4,24455.6,24455.8,24456.0,24456.2,24456.4,24456.6,24456.9,24457.0,24457.1],
+  qty:    [195,3965,325,65,325,2015,65,65,585,195,130,3575,65,195,65,650,585,12415,260,325,130,65,1690,130,650,65,325,65,65,130,325,585,65,65,65,195,195,1040,1040,130,65,65,130,130,65,65,65,65,65,65],
+  orders: [2,10,1,1,4,19,1,1,6,2,1,20,1,3,1,3,7,116,1,2,2,1,18,2,1,2,4,1,1,2,6,6,2,1,1,2,2,15,15,2,1,1,2,2,1,1,1,1,1,1]
+};
+
+(function buildOrderBook(){
+  const maxBidQty = Math.max(...BIDS.qty);
+  const maxAskQty = Math.max(...ASKS.qty);
+  const globalMax = Math.max(maxBidQty, maxAskQty);
+
+  const container = document.getElementById('ob-rows');
+
+  for(let i = 0; i < 50; i++){
+    const row = document.createElement('div');
+    row.className = 'ob-row';
+
+    const bidQty   = BIDS.qty[i];
+    const bidPx    = BIDS.prices[i];
+    const bidOrd   = BIDS.orders[i];
+    const askQty   = ASKS.qty[i];
+    const askPx    = ASKS.prices[i];
+    const askOrd   = ASKS.orders[i];
+
+    // Bar widths — each side gets 50% of the row
+    const bidPct = (bidQty / globalMax) * 50;
+    const askPct = (askQty / globalMax) * 50;
+
+    // Highlight thresholds
+    const bidHighlight = bidQty >= 2000;
+    const askHighlight = askQty >= 2000;
+    if(bidHighlight) row.classList.add('highlight-bid');
+    if(askHighlight) row.classList.add('highlight-ask');
+
+    // Iceberg: qty/orders > 250 AND orders <= 5
+    const bidIceberg = bidOrd <= 5 && (bidQty / bidOrd) > 250;
+    const askIceberg = askOrd <= 5 && (askQty / askOrd) > 250;
+    if(bidIceberg) row.classList.add('iceberg-bid');
+    if(askIceberg) row.classList.add('iceberg-ask');
+
+    // Depth bars
+    const bidBar = document.createElement('div');
+    bidBar.className = 'ob-bid-bar';
+    bidBar.style.width = bidPct + '%';
+    row.appendChild(bidBar);
+
+    const askBar = document.createElement('div');
+    askBar.className = 'ob-ask-bar';
+    askBar.style.width = askPct + '%';
+    row.appendChild(askBar);
+
+    row.innerHTML += `
+      <span class="ob-cell bid-orders">${bidOrd} ord</span>
+      <span class="ob-cell bid-qty">${bidQty.toLocaleString('en-IN')}</span>
+      <span class="ob-cell bid-price">${bidPx.toFixed(1)}</span>
+      <span class="ob-cell sep"></span>
+      <span class="ob-cell ask-price">${askPx.toFixed(1)}</span>
+      <span class="ob-cell ask-qty">${askQty.toLocaleString('en-IN')}</span>
+      <span class="ob-cell ask-orders">${askOrd} ord</span>
+    `;
+
+    // Re-append bars so they sit behind text
+    row.insertBefore(bidBar, row.firstChild);
+    row.insertBefore(askBar, row.children[1]);
+
+    container.appendChild(row);
+  }
+})();
+
+// ── MCQ LOGIC ──
+const correctMsgs = [
+  "🎯 Exactly right. The book doesn't lie.",
+  "✨ Clean read. You understand the structure.",
+  "🏆 Correct — and that's the kind of insight that matters on a live desk.",
+  "🔥 Nailed it. The LOB approves.",
+  "💡 Spot on. Cartea would agree.",
+  "🎓 Textbook perfect — literally.",
+  "📈 Your market intuition just levelled up.",
+  "🧮 Price-time priority satisfied. Well done.",
+];
+const wrongMsgs = [
+  "🌀 Re-read Section 1.3 and try again.",
+  "📐 The formula disagrees. Check your working.",
+  "📉 Not quite — look at the definition again.",
+  "🤔 Close, but not correct. One more try.",
+  "📊 The order book has more to teach here. Try again.",
+];
+
+const state = {};
+
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>

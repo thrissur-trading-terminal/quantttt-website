@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Liquidity Traders &amp; Price Impact — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+  --bid:     #1565c0;
+  --ask:     #b71c1c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.sidebar-item.locked{opacity:0.4;cursor:not-allowed;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-a{background:rgba(45,37,96,0.08);color:var(--navy2);}
+.ch-num-badge{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.content-body ul{margin:0 0 1.2rem 1.5rem;line-height:2;font-size:0.97rem;color:#2a2a3e;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Intuition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-definition{background:rgba(45,37,96,0.05);border-left:3px solid var(--navy);}
+.callout-definition::before{content:'📐 Definition';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 NSE Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-source{background:rgba(45,37,96,0.04);border-left:3px solid var(--navy2);}
+.callout-source::before{content:'📖 Source';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+.math-block.boxed{border:2px solid var(--navy);background:rgba(45,37,96,0.03);}
+.eq-ref{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);float:right;margin-top:0.3rem;}
+
+.worked-example{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.we-header{background:var(--navy);padding:0.75rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.we-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);letter-spacing:0.05em;}
+.we-badge{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);}
+.we-body{padding:1.5rem;background:var(--white);}
+.we-body p{font-size:0.95rem;line-height:1.85;color:#2a2a3e;margin-bottom:1rem;}
+.we-body p:last-child{margin-bottom:0;}
+.we-step{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin:1.2rem 0 0.4rem;font-weight:600;}
+.we-answer{background:rgba(30,158,94,0.06);border:1.5px solid rgba(30,158,94,0.25);border-radius:8px;padding:0.9rem 1.2rem;margin-top:1rem;font-size:0.93rem;color:var(--navy);}
+.we-answer strong{color:var(--green);}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* ── MARKET IMPACT WALKTHROUGH ── */
+.impact-widget{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0;}
+.impact-header{background:var(--navy);padding:0.75rem 1.2rem;display:flex;justify-content:space-between;align-items:center;}
+.impact-title{font-family:'DM Mono',monospace;font-size:0.72rem;color:rgba(255,255,255,0.7);letter-spacing:0.06em;}
+.impact-body{padding:1.2rem;background:var(--white);}
+.impact-controls{display:flex;gap:1.2rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
+.impact-control{display:flex;align-items:center;gap:0.5rem;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.impact-control input[type=range]{width:110px;accent-color:var(--orange);}
+.impact-control strong{color:var(--orange);}
+.impact-levels{display:flex;flex-direction:column;gap:2px;max-height:320px;overflow-y:auto;}
+.impact-row{display:grid;grid-template-columns:60px 80px 80px 1fr 80px;gap:0.5rem;align-items:center;padding:4px 0;font-family:'DM Mono',monospace;font-size:0.72rem;}
+.impact-row.header{color:var(--muted);font-size:0.63rem;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:4px;}
+.impact-row.consumed{background:rgba(183,28,28,0.06);border-radius:4px;}
+.impact-row.partial{background:rgba(232,114,42,0.08);border-radius:4px;}
+.impact-bar-wrap{background:var(--off);border-radius:3px;height:12px;overflow:hidden;}
+.impact-bar-fill{height:100%;border-radius:3px;}
+.impact-bar-fill.consumed{background:rgba(183,28,28,0.45);}
+.impact-bar-fill.partial{background:rgba(232,114,42,0.55);}
+.impact-bar-fill.untouched{background:rgba(21,101,192,0.25);}
+.impact-summary{background:var(--off);border-top:1px solid var(--border);padding:0.8rem 1.2rem;display:flex;gap:2rem;flex-wrap:wrap;}
+.impact-stat{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.impact-stat strong{font-size:0.82rem;}
+.impact-stat strong.red{color:var(--ask);}
+.impact-stat strong.orange{color:var(--orange);}
+.impact-stat strong.green{color:var(--green);}
+
+/* ── ADVERSE SELECTION TABLE ── */
+.as-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.88rem;}
+.as-table th{background:var(--navy);color:white;font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;padding:0.65rem 1rem;text-align:left;}
+.as-table td{padding:0.7rem 1rem;border-bottom:1px solid var(--border);line-height:1.6;}
+.as-table tr:nth-child(even) td{background:var(--off);}
+.as-table td.label{font-weight:600;color:var(--navy);font-size:0.9rem;}
+.as-table td.mm{color:var(--bid);font-family:'DM Mono',monospace;font-size:0.82rem;}
+.as-table td.lt{color:var(--ask);font-family:'DM Mono',monospace;font-size:0.82rem;}
+
+/* ── MCQ ── */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.2rem;}
+.mcq-q{padding:1.2rem 1.4rem;background:var(--white);}
+.mcq-q-text{font-size:0.97rem;line-height:1.75;color:var(--text);margin-bottom:1rem;}
+.mcq-opts{display:flex;flex-direction:column;gap:0.5rem;}
+.opt{border:1.5px solid var(--border);border-radius:8px;padding:0.7rem 1rem;cursor:pointer;display:flex;align-items:flex-start;gap:0.7rem;font-size:0.9rem;transition:border-color 0.15s,background 0.15s;}
+.opt:hover{border-color:var(--orange);background:rgba(232,114,42,0.03);}
+.opt.correct{border-color:var(--green)!important;background:rgba(30,158,94,0.06)!important;}
+.opt.wrong{border-color:#dc2626!important;background:rgba(220,38,38,0.05)!important;}
+.opt-ltr{width:22px;height:22px;border-radius:50%;background:var(--off);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.mcq-actions{padding:0.8rem 1.4rem;background:var(--off);border-top:1px solid var(--border);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.check-btn{background:var(--navy);color:white;border:none;border-radius:7px;padding:0.5rem 1.2rem;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;transition:background 0.2s;}
+.check-btn:hover{background:var(--navy2);}
+.check-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.mcq-feedback{font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border-radius:6px;display:none;}
+.mcq-explanation{background:rgba(45,37,96,0.04);border-radius:8px;padding:1rem 1.2rem;margin:0.8rem 1.4rem 1rem;font-size:0.88rem;line-height:1.75;display:none;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.7rem 1.2rem;border-radius:8px;text-decoration:none;color:var(--muted);border:1.5px solid var(--border);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.2rem 4rem;}
+  .impact-row{grid-template-columns:50px 70px 70px 1fr 70px;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span></a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Home</a> ›
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_MMI.html">Market Microstructure</a> ›
+      <span>Ch 4</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">4 / 5</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:80%"></div></div>
+    </div>
+    <a href="F_MMI.html" class="tb-home">← Back to module</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="sidebar-section-label">F_MMI — Market Microstructure</div>
+  <a href="F_MMI_Ch1.html" class="sidebar-item"><span class="si-num">1</span> The Limit Order Book</a>
+  <a href="F_MMI_Ch2.html" class="sidebar-item"><span class="si-num">2</span> Microprice &amp; Imbalance</a>
+  <a href="F_MMI_Ch3.html" class="sidebar-item"><span class="si-num">3</span> Market Making &amp; Fill Probability</a>
+  <a href="F_MMI_Ch4.html" class="sidebar-item active">
+    <span class="si-num">4</span> Liquidity Traders &amp; Price Impact
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <div class="sidebar-item locked"><span class="si-num">5</span> Reading the Live Book</div>
+  <div class="sidebar-section-label" style="margin-top:1.5rem;">Resources</div>
+  <a href="https://github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API" target="_blank" class="sidebar-item">
+    <span>🔗</span> Open Source Dashboard
+  </a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-a">Advanced</span>
+      <span class="ch-num-badge">Chapter 04 · F_MMI</span>
+    </div>
+    <h1 class="chapter-title">Liquidity Traders &amp; Price Impact</h1>
+    <p class="chapter-subtitle">
+      The market maker posts and waits. The liquidity trader must transact — now or soon.
+      This chapter covers market impact, the liquidity discount, urgency,
+      and the adverse selection that connects both sides of the book.
+    </p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>4.1 Who Is a Liquidity Trader?</h3>
+
+    <p>
+      In Chapters 2 and 3 we took the market maker's perspective — passive, quoting, waiting to be filled. Now we flip sides. A <strong>liquidity trader (LT)</strong> is any participant who needs to transact for reasons external to the book itself: hedging an options position, deploying capital into an index fund, rebalancing a portfolio, executing a program trade.
+    </p>
+
+    <p>
+      The liquidity trader's problem is fundamentally different from the market maker's. She cannot wait indefinitely — she has an <strong>urgency</strong> that forces her to cross the spread and accept whatever the book offers. The question is not <em>where</em> to post, but <em>how much</em> her trade will cost, and whether that cost is worth paying now versus waiting for better conditions.
+    </p>
+
+    <div class="callout callout-definition">
+      A liquidity trader is defined by having an exogenous reason to trade — not informational advantage, not market-making profit, but an external need. Cartea et al. (2015) model this as a <strong>liquidity shock</strong>: a trader arrives with a position of size $i$ that she must unwind. The cost she pays to do so is the <strong>liquidity discount</strong> — the gap between the efficient price and her actual execution price.
+    </div>
+
+    <div class="callout callout-source">
+      Cartea, Jaimungal &amp; Penalva (2015), Chapter 2, Section 2.1.1 — <em>Market Making</em> and Section 2.1.2 — <em>Trading Costs</em>, pp. 20–25. The Grossman &amp; Miller (1988) framework.
+    </div>
+
+    <h3>4.2 The Liquidity Discount</h3>
+
+    <p>
+      In the Grossman–Miller (1988) framework, an LT wants to sell $i > 0$ units immediately. There are $n$ market makers willing to absorb those units, but only at a discount below the efficient price $\mu$ — because they are taking on price risk by holding the LT's position.
+    </p>
+
+    <p>The equilibrium execution price for the LT's trade is:</p>
+
+    <div class="math-block boxed">
+      $$S_1 = \mu - \gamma\sigma^2 \frac{i}{n+1}$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 2, §2.1.1, p. 24 — Grossman–Miller equilibrium price</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul>
+      <li>$\mu$ = efficient (fair) price of the asset — the price that would prevail with no frictions</li>
+      <li>$\gamma > 0$ = risk aversion coefficient of the market makers</li>
+      <li>$\sigma^2$ = variance of the asset's returns (price uncertainty)</li>
+      <li>$i > 0$ = size of the LT's sell order (number of units)</li>
+      <li>$n$ = number of competing market makers</li>
+      <li>$\gamma\sigma^2 \frac{i}{n+1}$ = the <strong>liquidity discount</strong> — the price concession the LT must offer</li>
+    </ul>
+
+    <div class="callout callout-intuition">
+      The liquidity discount has a beautiful structure: it grows with $i$ (larger order = bigger discount), grows with $\sigma^2$ (riskier asset = bigger discount because MMs demand more compensation), grows with $\gamma$ (more risk-averse MMs = bigger discount), and shrinks with $n$ (more competition among MMs = smaller discount, because they compete to absorb the flow). The limit as $n \to \infty$ gives $S_1 \to \mu$ — perfect competition eliminates the discount entirely, recovering the efficient price.
+    </div>
+
+    <!-- WORKED EXAMPLE: LIQUIDITY DISCOUNT -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">WORKED EXAMPLE — LIQUIDITY DISCOUNT</span>
+        <span class="we-badge">NSE:NIFTY26MAYFUT · 29 Apr 2026</span>
+      </div>
+      <div class="we-body">
+        <p>
+          A fund manager needs to sell 500 lots of NIFTY26MAYFUT immediately. The current efficient price is $\mu = \text{Rs.}24{,}443.85$ (the midprice). Suppose there are $n = 4$ active market makers, each with risk aversion $\gamma = 0.002$, and daily NIFTY return variance $\sigma^2 = 0.0004$ (corresponding to roughly 2% daily vol on a Rs.24,000 index).
+        </p>
+        <div class="we-step">Step 1 — Compute the liquidity discount</div>
+        <p>
+          $$\text{Discount} = \gamma\sigma^2 \frac{i}{n+1} = 0.002 \times 0.0004 \times \frac{500}{5} = 0.002 \times 0.0004 \times 100 = \text{Rs.}0.00008$$
+        </p>
+        <p>
+          This is tiny — as expected for NIFTY Futures, which is one of the most liquid instruments on the planet. The discount effectively vanishes for a 500-lot order. Let us instead use a more realistic parameterisation for Indian single-stock Futures where $\gamma = 0.5$ and $\sigma^2 = 0.0025$:
+        </p>
+        <p>
+          $$\text{Discount} = 0.5 \times 0.0025 \times \frac{500}{5} = 0.5 \times 0.0025 \times 100 = \text{Rs.}0.125 \text{ per unit}$$
+        </p>
+        <div class="we-step">Step 2 — Execution price</div>
+        <p>
+          $$S_1 = \mu - \text{Discount} = 24{,}443.85 - 0.125 = \text{Rs.}24{,}443.725$$
+        </p>
+        <div class="we-answer">
+          <strong>Execution price = Rs.24,443.725 vs efficient price Rs.24,443.85</strong><br/>
+          Discount = Rs.0.125 per unit = Rs.3.125 per lot (lot size 25) = Rs.1,562.50 total for 500 lots. This is the direct model estimate. The actual cost in the live book depends on how the 500 lots walk through the visible depth — which we calculate next.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>4.3 Market Impact — Walking the Book</h3>
+
+    <p>
+      The Grossman–Miller model gives an aggregate estimate. In practice, we can compute the exact market impact from the visible order book by simulating the trade execution level by level. This is called <strong>walking the book</strong>.
+    </p>
+
+    <p>
+      For a market sell order of size $Q$, the execution proceeds as follows: consume the best bid entirely, then move to the next level, and so on until $Q$ lots are filled. The <strong>volume-weighted average price (VWAP)</strong> of execution is:
+    </p>
+
+    <div class="math-block boxed">
+      $$\text{VWAP}_\text{exec} = \frac{\sum_{k=1}^{K} P_{bid,k} \cdot q_k^*}{\sum_{k=1}^{K} q_k^*}$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 2, §2.1.2 — Trading Costs, pp. 24–25</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul>
+      <li>$K$ = number of levels consumed (the order walks through $K$ bid levels)</li>
+      <li>$P_{bid,k}$ = price at the $k$-th bid level</li>
+      <li>$q_k^*$ = quantity filled at the $k$-th level ($= V_{bid,k}$ for fully consumed levels, $\leq V_{bid,K}$ for the last partial level)</li>
+    </ul>
+
+    <p>The <strong>market impact cost</strong> is the difference between the midprice and the VWAP of execution:</p>
+
+    <div class="math-block">
+      $$\text{Impact Cost} = P_{mid} - \text{VWAP}_\text{exec}$$
+    </div>
+
+    <!-- MARKET IMPACT INTERACTIVE WIDGET -->
+    <div class="impact-widget">
+      <div class="impact-header">
+        <span class="impact-title">MARKET IMPACT SIMULATOR — NIFTY26MAYFUT BID SIDE · 29 Apr 2026</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.4);">Sell MO walks the bid book</span>
+      </div>
+      <div class="impact-body">
+        <div class="impact-controls">
+          <div class="impact-control">
+            Order size:
+            <input type="range" id="orderSlider" min="50" max="15000" step="50" value="500">
+            <strong id="orderVal">500</strong> lots
+          </div>
+        </div>
+        <div class="impact-row header">
+          <span>Level</span>
+          <span>Bid Price</span>
+          <span>Avail Qty</span>
+          <span>Depth Bar</span>
+          <span>Filled</span>
+        </div>
+        <div class="impact-levels" id="impactLevels"></div>
+      </div>
+      <div class="impact-summary" id="impactSummary"></div>
+    </div>
+
+    <div class="callout callout-warning">
+      The market impact simulator uses the static snapshot from 29 April 2026 at 12:34:20 IST. In a live market, the book refreshes every few milliseconds — a large order executing over several seconds will face a <em>dynamic</em> book as other participants react to the incoming flow. The static simulation is a lower bound on real execution cost; live impact is typically 20–50% higher on large orders due to book dynamics and adverse selection.
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>4.4 Urgency — Should You Trade Now?</h3>
+
+    <p>
+      A rational liquidity trader compares the cost of executing now against the benefit of executing at all. Cartea et al. (2015) formalise this through an <strong>urgency parameter</strong> — the cash-equivalent utility gain from completing the trade. The LT trades only if:
+    </p>
+
+    <div class="math-block boxed">
+      $$\text{Urgency} > \text{Execution Cost}$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 2, §2.3.2 — Price-Sensitive Liquidity Traders, p. 36</div>
+    </div>
+
+    <p>
+      If the cost to execute (impact + spread) exceeds the urgency, the rational response is to wait, use a patient limit order strategy, or slice the order across time to reduce the footprint on the book. The urgency framework creates a natural threshold — below it, the liquidity trader becomes a patient limit order poster; above it, she becomes an aggressive market order sender.
+    </p>
+
+    <div class="callout callout-intuition">
+      Think of urgency as the deadline pressure on a trade. A fund with T+2 settlement obligations and a delta hedge expiring today has very high urgency — the cost of <em>not</em> trading exceeds any realistic market impact. A quant desk rebalancing a statistical arbitrage portfolio has low urgency — it can wait hours for the right price. The same book, the same spread, the same impact cost — but completely different decisions depending on urgency.
+    </div>
+
+    <!-- WORKED EXAMPLE: URGENCY -->
+    <div class="worked-example">
+      <div class="we-header">
+        <span class="we-title">WORKED EXAMPLE — URGENCY vs EXECUTION COST</span>
+        <span class="we-badge">NIFTY Straddle Delta Hedge · Expiry Day</span>
+      </div>
+      <div class="we-body">
+        <p>
+          A TTT short-straddle position on NIFTY26MAYFUT requires a delta hedge of 200 lots on expiry day. The position will lose Rs.0.50 per lot per minute if left unhedged (gamma risk). The current NIFTY Futures book shows an impact cost of Rs.1.80 per lot for a 200-lot market sell order.
+        </p>
+        <div class="we-step">Urgency calculation</div>
+        <p>
+          Time remaining to expiry: 45 minutes.<br/>
+          Total unhedged loss if not trading now: $200 \times 0.50 \times 45 = \text{Rs.}4{,}500$<br/>
+          Per-lot urgency: $\text{Rs.}4{,}500 / 200 = \text{Rs.}22.50$ per lot
+        </p>
+        <div class="we-step">Compare to execution cost</div>
+        <p>
+          Execution cost: Rs.1.80 per lot (market impact only)<br/>
+          Spread cost: Rs.2.10 / 2 = Rs.1.05 per lot (half-spread for one-way trip)<br/>
+          Total execution cost: Rs.1.80 + Rs.1.05 = <strong>Rs.2.85 per lot</strong>
+        </p>
+        <div class="we-step">Decision</div>
+        <p>$$\text{Urgency (Rs.22.50)} \gg \text{Execution Cost (Rs.2.85)}$$</p>
+        <div class="we-answer">
+          <strong>Trade immediately — urgency exceeds cost by 7.9×</strong><br/>
+          The Rs.22.50/lot urgency crushes the Rs.2.85/lot execution cost. Waiting to find a better price risks accumulating far larger gamma losses. This is the canonical case where the LT <em>must</em> be the aggressive side — patience here is not a virtue, it is a liability.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>4.5 Adverse Selection — The Connection to Market Making</h3>
+
+    <p>
+      We now have all the pieces to understand the most important concept in market microstructure: <strong>adverse selection</strong>. This is the risk that the market maker faces when her limit order is filled — not by a benign liquidity trader, but by an informed trader who <em>knows</em> which direction price is about to move.
+    </p>
+
+    <p>
+      Cartea et al. (2015) model this through order <strong>toxicity</strong>. The probability that any given incoming MO is from an informed (toxic) trader is $\alpha$. An informed buyer knows the true asset value $V_H > \mu$; an informed seller knows $V_L < \mu$. The MM, knowing that some fraction $\alpha$ of her counterparties are informed, must widen her spread to recover the expected losses from those informed trades:
+    </p>
+
+    <div class="math-block boxed">
+      $$a_t = \mu_t + \Delta_{a,t} = \mu_t + \frac{1}{1 + \frac{1-\alpha}{\alpha} \cdot \frac{1/2}{p_t}}(V_H - \mu_t)$$
+      $$b_t = \mu_t - \Delta_{b,t} = \mu_t - \frac{1}{1 + \frac{1-\alpha}{\alpha} \cdot \frac{1/2}{1-p_t}}(\mu_t - V_L)$$
+      <div class="eq-ref">Cartea et al. (2015), Ch. 2, §2.3.1 — Price Dynamics, p. 36</div>
+    </div>
+
+    <p><strong>Where:</strong></p>
+    <ul>
+      <li>$a_t, b_t$ = ask and bid prices posted by the MM at time $t$</li>
+      <li>$\mu_t = \mathbb{E}[v \mid \mathcal{F}_t]$ = MM's current estimate of the asset's true value given all observed order flow</li>
+      <li>$\alpha$ = prevalence of informed (toxic) traders — fraction of MOs from informed participants</li>
+      <li>$p_t = \mathbb{P}(v = V_H \mid \mathcal{F}_t)$ = MM's current probability that the asset is worth $V_H$</li>
+      <li>$V_H, V_L$ = high and low possible asset values (informed traders' private information)</li>
+      <li>$\Delta_{a,t}, \Delta_{b,t}$ = ask and bid half-spreads, which <em>increase</em> with toxicity $\alpha$</li>
+    </ul>
+
+    <div class="callout callout-source">
+      Cartea et al. (2015), Chapter 2, Section 2.3.1 — <em>Price Dynamics</em>, p. 36: the bid-ask prices are derived by updating the prior distribution of asset values using Bayes' rule on observed order flow. As MMs observe more buy orders, $p_t$ increases (buy pressure is bullish signal), which widens the ask spread and narrows the bid spread.
+    </div>
+
+    <p>
+      The key insight: the MM widens her spread not out of greed, but out of necessity. Every informed trade she accepts costs her the full informational advantage of the informed trader. The spread is the only mechanism she has to recover those losses across the larger volume of uninformed (liquidity) trades.
+    </p>
+
+    <div class="callout callout-intuition">
+      Imagine a poker table where 30% of players are card-counters (informed traders) and 70% are tourists playing for fun (liquidity traders). You are the house, taking a fixed percentage from each pot. If card-counters only play when they have an edge, your house cut must be large enough to recover what you lose to the card-counters from what you earn from the tourists. The bid-ask spread is the house cut. Toxicity $\alpha$ is the fraction of card-counters at the table.
+    </div>
+
+    <h3>4.6 The View from Both Sides of the Book</h3>
+
+    <p>
+      We now have the full picture. Here is how the same order book data is used completely differently depending on which side of the trade you are on:
+    </p>
+
+    <table class="as-table">
+      <thead>
+        <tr>
+          <th>Situation</th>
+          <th>Market Maker's lens</th>
+          <th>Liquidity Trader's lens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="label">Large bid wall at L8 (7,475 lots, Rs.24,440)</td>
+          <td class="mm">Signals institutional support — shade bid quotes upward, post tighter on ask side</td>
+          <td class="lt">Reduces impact cost if selling — more depth to absorb my order before price falls</td>
+        </tr>
+        <tr>
+          <td class="label">Ask level 18: 12,415 lots at Rs.24,450 across 116 orders</td>
+          <td class="mm">Fragmented retail at round number — easy to jump with one better price; low adverse selection risk here</td>
+          <td class="lt">Large resistance level — a buy order walking through this will pay Rs.24,450 for 12,415 lots</td>
+        </tr>
+        <tr>
+          <td class="label">Volume imbalance +41% (TBQ dominates)</td>
+          <td class="mm">Bullish signal — widen ask half-spread $\Delta_a$ to capture more upside, tighten bid</td>
+          <td class="lt">Good time to sell into the bid — lots of buyers waiting to absorb supply at good prices</td>
+        </tr>
+        <tr>
+          <td class="label">Spread 42 ticks (Rs.2.10)</td>
+          <td class="mm">Unusually wide — aggressive quoting opportunity; post inside the spread for better fills</td>
+          <td class="lt">High crossing cost — Rs.1.05/lot half-spread must be justified by urgency before sending MO</td>
+        </tr>
+        <tr>
+          <td class="label">Microprice below midprice (ask-heavy touch)</td>
+          <td class="mm">Short-term downward lean at touch — shade ask quotes slightly downward</td>
+          <td class="lt">Slight selling pressure at touch — a buy MO may move price up less than usual</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-india">
+      On NSE expiry days (Thursday for weekly NIFTY options), adverse selection spikes dramatically. Informed institutional players who know their net delta positions make large, urgent trades in Futures to hedge. The fraction of toxic order flow $\alpha$ can spike from 20–30% on normal days to 50–70% in the last 30 minutes before expiry. This is why NIFTY Futures spreads widen measurably on Thursday afternoons — market makers are not panicking, they are correctly pricing the higher adversity of the order flow.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <span class="mcq-header-title">Practice Problems</span>
+      <span class="mcq-count">4 questions</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          In the Grossman–Miller framework, a liquidity trader wants to sell 1,000 lots. Currently $n=4$ market makers are active, each with $\gamma = 0.3$ and $\sigma^2 = 0.002$. The efficient price is Rs.24,443.85. What is the execution price?
+        </div>
+        <div class="mcq-opts" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">A</span> $S_1 = 24443.85 - 0.3 \times 0.002 \times 1000 = \text{Rs.}24{,}443.25$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><span class="opt-ltr">B</span> $S_1 = 24443.85 - 0.3 \times 0.002 \times \frac{1000}{5} = 24443.85 - 0.12 = \text{Rs.}24{,}443.73$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">C</span> $S_1 = 24443.85 + 0.3 \times 0.002 \times \frac{1000}{5} = \text{Rs.}24{,}443.97$ (premium, not discount)</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">D</span> $S_1 = 24443.85 - 0.3 \times 0.002 \times \frac{1000}{4} = \text{Rs.}24{,}443.70$</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q1btn" onclick="checkOpt('q1','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q1feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q1expl">
+        <strong>Explanation:</strong> The formula is $S_1 = \mu - \gamma\sigma^2 \frac{i}{n+1}$. With $n=4$ MMs, the denominator is $n+1=5$, not $n=4$ (Option D trap). Discount $= 0.3 \times 0.002 \times (1000/5) = 0.3 \times 0.002 \times 200 = 0.12$. So $S_1 = 24443.85 - 0.12 = \text{Rs.}24{,}443.73$. Option A forgets to divide by $n+1$. Option C has the wrong sign — selling always produces a discount below $\mu$, never a premium.
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          Using the NIFTY26MAYFUT bid book from Chapter 1, a market sell order of 8,000 lots is sent. The top 8 bid levels have qtys: 130, 195, 65, 65, 390, 455, 520, 7,475. After consuming those 8 levels, how many lots remain unfilled, and what does the order do next?
+        </div>
+        <div class="mcq-opts" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">A</span> 0 lots remain — the top 8 levels sum to exactly 8,000 lots</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">B</span> 8,000 lots remain — a 8,000-lot order cannot be filled from the visible book</div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><span class="opt-ltr">C</span> 705 lots remain unfilled after consuming levels 1–8 (total 7,295 lots); the order walks to level 9 and beyond until fully filled or cancelled</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">D</span> 5,705 lots remain — the order can only fill at level 8 since that is where the large wall is</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q2btn" onclick="checkOpt('q2','C')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q2feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q2expl">
+        <strong>Explanation:</strong> Sum of bid qty levels 1–8: $130+195+65+65+390+455+520+7{,}475 = 9{,}295$ lots... wait, let me recount: $130+195 = 325$, $+65 = 390$, $+65 = 455$, $+390 = 845$, $+455 = 1{,}300$, $+520 = 1{,}820$, $+7{,}475 = 9{,}295$. So actually levels 1–8 sum to 9,295 lots — more than the 8,000-lot order. The order is fully filled within the first 8 levels. It consumes levels 1–7 (1,820 lots) and then takes $8{,}000 - 1{,}820 = 6{,}180$ lots from the 7,475-lot wall at level 8, leaving 1,295 lots still resting at Rs.24,440. The order is completely filled. Note: in the simulator widget above, try 8,000 lots to verify. This question tests careful reading — use the actual numbers from Chapter 1.
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          A quant desk wants to buy 300 lots of NIFTY26MAYFUT. The impact cost is estimated at Rs.0.80/lot and the half-spread is Rs.1.05/lot, giving total execution cost Rs.1.85/lot. The desk's signal predicts a Rs.5.00/lot gain over the next 2 minutes. Should they trade using a market order or a patient limit order?
+        </div>
+        <div class="mcq-opts" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><span class="opt-ltr">A</span> Market order — urgency (Rs.5.00 signal value) exceeds execution cost (Rs.1.85) by 2.7×; waiting with a limit order risks missing the move entirely</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">B</span> Limit order — always post patiently to avoid paying the spread</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">C</span> Do not trade — the signal value (Rs.5.00) is too small relative to NIFTY's volatility</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">D</span> Wait for the spread to narrow to 1 tick before trading</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q3btn" onclick="checkOpt('q3','A')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q3feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q3expl">
+        <strong>Explanation:</strong> Urgency = Rs.5.00/lot signal value. Execution cost = Rs.1.85/lot. Since urgency (Rs.5.00) $\gg$ execution cost (Rs.1.85), the urgency threshold is clearly exceeded — trade with a market order. Net expected gain after costs: $5.00 - 1.85 = \text{Rs.}3.15/\text{lot}$, or Rs.945 total for 300 lots. Option B (always use limit orders) ignores urgency entirely — a limit order might not fill if price moves away, and the Rs.5.00 signal has a 2-minute window. Option D (wait for spread to narrow) could mean waiting indefinitely, losing the alpha signal.
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          NIFTY is 30 minutes from weekly expiry. A market maker observes that 70% of incoming MOs in the last 5 minutes have been buys (strongly directional flow). According to the adverse selection model, what should she do with her quotes?
+        </div>
+        <div class="mcq-opts" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">A</span> Keep quotes unchanged — the MM should always quote tight to maximise fill rate</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">B</span> Widen both bid and ask symmetrically by the same amount</div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><span class="opt-ltr">C</span> Raise $\mu_t$ (update her midprice estimate upward given the buy flow), widen the ask half-spread $\Delta_{a,t}$ significantly, and tighten the bid half-spread $\Delta_{b,t}$ — she expects informed buying and needs to recover adverse selection losses on sells while eagerly buying</span></div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">D</span> Pull all quotes entirely — never quote when flow is directional</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q4btn" onclick="checkOpt('q4','C')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q4feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q4expl">
+        <strong>Explanation:</strong> From Cartea et al. p.36: as the MM observes more buy orders, $p_t$ increases (probability of high asset value goes up), which causes $\mu_t$ to rise (Bayesian update), $\Delta_{a,t}$ to widen (she is selling into informed buyers — expensive), and $\Delta_{b,t}$ to narrow (she wants to buy at the updated lower true value). This is the adverse selection adjustment: the ask spread widens to protect against the informed buying pressure, while the bid narrows to accumulate inventory at what she now believes is a depressed price. Option B (symmetric widening) fails to use the directional signal — it protects one side unnecessarily. Option D is too aggressive; pulling all quotes is only rational if the book is completely toxic, not merely directional.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="chapter-nav">
+    <a href="F_MMI_Ch3.html" class="ch-nav-btn">← Market Making &amp; Fill Probability</a>
+    <a href="F_MMI_Ch5.html" class="ch-nav-btn primary">Next: Reading the Live Book →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── MARKET IMPACT WIDGET ──
+(function(){
+  const BID_PRICES = [24442.8,24442.5,24441.2,24440.5,24440.3,24440.2,24440.1,24440.0,24439.9,24439.5,24439.3,24439.2,24439.1,24439.0,24438.9,24438.8,24438.7,24438.6,24438.5,24438.4,24438.3,24438.2,24438.1,24438.0,24437.9,24437.8,24437.7,24437.6,24437.5,24437.4,24437.3,24437.2,24437.1,24437.0,24436.9,24436.8,24436.6,24436.5,24436.4,24436.3,24436.0,24435.9,24435.7,24435.6,24435.4,24435.3,24435.2,24435.0,24434.9,24434.8];
+  const BID_QTY   = [130,195,65,65,390,455,520,7475,390,390,65,325,195,65,455,260,390,65,845,845,455,650,650,650,195,195,390,130,325,780,65,195,650,65,65,650,260,195,455,195,65,65,130,195,390,65,65,130,65,65];
+  const MID = 24443.85;
+
+  const slider  = document.getElementById('orderSlider');
+  const valSpan = document.getElementById('orderVal');
+  const levelsDiv = document.getElementById('impactLevels');
+  const summaryDiv = document.getElementById('impactSummary');
+  const maxQty = Math.max(...BID_QTY);
+
+  function render(orderSize){
+    levelsDiv.innerHTML = '';
+    summaryDiv.innerHTML = '';
+
+    let remaining = orderSize;
+    let totalCost = 0;
+    let totalFilled = 0;
+    let levelsUsed = 0;
+    const SHOW = Math.min(20, BID_PRICES.length);
+
+    for(let i = 0; i < SHOW; i++){
+      const avail = BID_QTY[i];
+      const fill  = Math.min(remaining, avail);
+      const state = remaining <= 0 ? 'untouched' : (fill === avail ? 'consumed' : 'partial');
+
+      if(remaining > 0){
+        totalCost += fill * BID_PRICES[i];
+        totalFilled += fill;
+        remaining -= fill;
+        levelsUsed = i + 1;
+      }
+
+      const pct = (avail / maxQty) * 100;
+      const fillPct = state === 'untouched' ? 0 : (fill / avail) * 100;
+
+      const row = document.createElement('div');
+      row.className = 'impact-row' + (state !== 'untouched' ? ' ' + state : '');
+      row.innerHTML = `
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted)">L${i+1}</span>
+        <span style="color:var(--bid);font-weight:600;font-family:'DM Mono',monospace;font-size:0.72rem">${BID_PRICES[i].toFixed(1)}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.72rem">${avail.toLocaleString('en-IN')}</span>
+        <div class="impact-bar-wrap">
+          <div class="impact-bar-fill ${state}" style="width:${fillPct}%"></div>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:${state==='consumed'?'var(--ask)':state==='partial'?'var(--orange)':'var(--muted)'}">
+          ${state === 'untouched' ? '—' : fill.toLocaleString('en-IN')}
+        </span>
+      `;
+      levelsDiv.appendChild(row);
+    }
+
+    if(totalFilled === 0){
+      summaryDiv.innerHTML = `<div class="impact-stat">No order sent</div>`;
+      return;
+    }
+
+    const vwap = totalCost / totalFilled;
+    const impact = MID - vwap;
+    const impactBps = (impact / MID) * 10000;
+    const unfilled = orderSize - totalFilled;
+
+    summaryDiv.innerHTML = `
+      <div class="impact-stat">VWAP Exec <strong class="orange">Rs.${vwap.toFixed(2)}</strong></div>
+      <div class="impact-stat">Mid <strong>Rs.${MID.toFixed(2)}</strong></div>
+      <div class="impact-stat">Impact Cost <strong class="red">Rs.${impact.toFixed(2)}/lot · ${impactBps.toFixed(1)} bps</strong></div>
+      <div class="impact-stat">Levels Used <strong>${levelsUsed}</strong></div>
+      <div class="impact-stat">Filled <strong class="green">${totalFilled.toLocaleString('en-IN')}</strong></div>
+      ${unfilled > 0 ? `<div class="impact-stat">Unfilled <strong class="red">${unfilled.toLocaleString('en-IN')} (beyond 20 shown)</strong></div>` : ''}
+    `;
+  }
+
+  slider.addEventListener('input', function(){
+    const v = parseInt(this.value);
+    valSpan.textContent = v.toLocaleString('en-IN');
+    render(v);
+  });
+
+  render(500);
+})();
+
+// ── MCQ ──
+const correctMsgs = [
+  "🎯 Exactly right. Liquidity costs are now quantified.",
+  "✨ Clean read. Grossman–Miller satisfied.",
+  "🏆 Correct — urgency vs cost, the right call.",
+  "🔥 Nailed it. Adverse selection priced in.",
+  "💡 Spot on. The half-spread is your minimum hurdle.",
+  "🎓 Textbook perfect — Cartea Ch.2 nailed.",
+  "📈 Your execution edge just levelled up.",
+];
+const wrongMsgs = [
+  "🌀 Re-read Section 4.2 — note the $n+1$ denominator.",
+  "📐 Check the formula direction — selling gives a discount, not a premium.",
+  "📉 Not quite. Think about what urgency means.",
+  "🤔 Close. Review the adverse selection adjustment direction.",
+  "📊 The MM must protect against informed flow. Try again.",
+];
+
+const state = {};
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>

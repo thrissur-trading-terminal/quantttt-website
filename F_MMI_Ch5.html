@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/google_analytics.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Reading the Live Book — quan(t)⁴.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<style>
+:root {
+  --white:   #FFFFFF;
+  --off:     #F7F5F2;
+  --orange:  #E8722A;
+  --orange2: #F28C42;
+  --navy:    #2D2560;
+  --navy2:   #3D3480;
+  --green:   #1E9E5E;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --light:   #fdf6f0;
+  --sidebar-w: 280px;
+  --topbar-h: 60px;
+  --bid:     #1565c0;
+  --ask:     #b71c1c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--topbar-h);background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);text-decoration:none;}
+.tb-logo .acc{color:var(--orange);}
+.tb-logo sup{color:var(--orange);font-size:0.65em;vertical-align:super;}
+.tb-sep{color:var(--border);font-size:1.2rem;}
+.tb-breadcrumb{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.tb-breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.tb-breadcrumb a:hover{color:var(--orange);}
+.tb-breadcrumb span{color:var(--orange);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.tb-progress-wrap{display:flex;align-items:center;gap:0.6rem;}
+.tb-progress-label{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.tb-progress-bar{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.tb-progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:3px;}
+.tb-home{font-size:0.82rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.tb-home:hover{color:var(--navy);}
+
+.layout{display:flex;padding-top:var(--topbar-h);min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--topbar-h);left:0;bottom:0;overflow-y:auto;background:var(--off);border-right:1px solid var(--border);padding:1.5rem 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 1.4rem 0.4rem;margin-top:0.8rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.4rem;cursor:pointer;transition:background 0.15s,color 0.15s;font-size:0.85rem;color:var(--muted);border-left:3px solid transparent;text-decoration:none;}
+.sidebar-item:hover{background:rgba(232,114,42,0.06);color:var(--navy);}
+.sidebar-item.active{color:var(--orange);border-left-color:var(--orange);background:rgba(232,114,42,0.07);font-weight:600;}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;flex-shrink:0;color:var(--muted);}
+.sidebar-item.active .si-num{background:var(--orange);color:white;}
+.si-mcq-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;}
+
+.content{margin-left:var(--sidebar-w);flex:1;max-width:800px;padding:3rem 3.5rem 6rem;}
+
+.chapter-header{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.chapter-meta{display:flex;gap:0.6rem;margin-bottom:1rem;align-items:center;}
+.ch-tag{font-family:'DM Mono',monospace;font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.ch-tag-a{background:rgba(45,37,96,0.08);color:var(--navy2);}
+.ch-tag-cap{background:rgba(232,114,42,0.15);color:var(--orange);}
+.ch-num-badge{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.chapter-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);line-height:1.15;letter-spacing:-0.5px;margin-bottom:0.6rem;}
+.chapter-subtitle{font-size:1rem;color:var(--muted);line-height:1.7;}
+
+.content-body h3{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin:2.2rem 0 0.8rem;letter-spacing:0.01em;}
+.content-body p{font-size:1rem;line-height:1.85;color:#2a2a3e;margin-bottom:1.2rem;}
+.content-body p strong{color:var(--navy);font-weight:600;}
+.content-body ul{margin:0 0 1.2rem 1.5rem;line-height:2;font-size:0.97rem;color:#2a2a3e;}
+
+.callout{border-radius:10px;padding:1.2rem 1.4rem;margin:1.5rem 0;font-size:0.93rem;line-height:1.75;}
+.callout-intuition{background:rgba(232,114,42,0.07);border-left:3px solid var(--orange);}
+.callout-intuition::before{content:'💡 Insight';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:0.5rem;font-weight:600;}
+.callout-india{background:rgba(30,158,94,0.06);border-left:3px solid var(--green);}
+.callout-india::before{content:'🇮🇳 NSE Context';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem;font-weight:600;}
+.callout-warning{background:rgba(220,38,38,0.05);border-left:3px solid #dc2626;}
+.callout-warning::before{content:'⚠ Watch Out';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;margin-bottom:0.5rem;font-weight:600;}
+.callout-code{background:rgba(45,37,96,0.04);border-left:3px solid var(--navy2);}
+.callout-code::before{content:'🔗 Open Source';display:block;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy2);margin-bottom:0.5rem;font-weight:600;}
+
+.math-block{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1.5rem 0;overflow-x:auto;}
+.math-block.boxed{border:2px solid var(--navy);background:rgba(45,37,96,0.03);}
+.eq-ref{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);float:right;margin-top:0.3rem;}
+
+.content-divider{border:none;border-top:1px solid var(--border);margin:3rem 0;}
+
+/* ── SYNTHESIS CARD ── */
+.synth-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:1.2rem 0;}
+.synth-header{background:var(--navy);padding:0.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.synth-title{font-family:'DM Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.8);letter-spacing:0.05em;}
+.synth-ch{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--orange);}
+.synth-body{padding:1.2rem 1.4rem;background:var(--white);}
+.synth-formula{background:var(--off);border-radius:6px;padding:0.8rem 1rem;margin:0.7rem 0;overflow-x:auto;font-size:0.9rem;}
+.synth-reading{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-top:0.8rem;}
+.synth-col{border-radius:6px;padding:0.8rem 1rem;font-size:0.85rem;line-height:1.65;}
+.synth-col.mm{background:rgba(21,101,192,0.05);border:1px solid rgba(21,101,192,0.15);}
+.synth-col.lt{background:rgba(183,28,28,0.04);border:1px solid rgba(183,28,28,0.12);}
+.synth-col-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;}
+.synth-col-label.mm{color:var(--bid);}
+.synth-col-label.lt{color:var(--ask);}
+.synth-val{font-family:'DM Mono',monospace;font-size:0.8rem;font-weight:700;margin-bottom:0.3rem;}
+.synth-val.bid{color:var(--bid);}
+.synth-val.ask{color:var(--ask);}
+.synth-val.orange{color:var(--orange);}
+
+/* ── LIVE READING SECTION ── */
+.reading-step{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:flex-start;}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--orange);color:white;font-family:'DM Mono',monospace;font-size:0.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-body{flex:1;}
+.step-title{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:0.3rem;}
+.step-content{font-size:0.93rem;line-height:1.75;color:#2a2a3e;}
+.step-result{font-family:'DM Mono',monospace;font-size:0.8rem;background:var(--off);border:1px solid var(--border);border-radius:5px;padding:0.5rem 0.8rem;margin-top:0.5rem;display:inline-block;}
+.step-result.bullish{border-color:rgba(21,101,192,0.3);background:rgba(21,101,192,0.04);color:var(--bid);}
+.step-result.neutral{border-color:var(--border);color:var(--muted);}
+.step-result.bearish{border-color:rgba(183,28,28,0.3);background:rgba(183,28,28,0.04);color:var(--ask);}
+.step-result.positive{border-color:rgba(30,158,94,0.3);background:rgba(30,158,94,0.04);color:var(--green);}
+
+/* ── DASHBOARD PANEL MAP ── */
+.panel-map{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin:1.5rem 0;}
+.panel-card{border:1.5px solid var(--border);border-radius:10px;padding:1rem 1.1rem;}
+.panel-name{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;}
+.panel-formula{font-size:0.82rem;color:var(--navy);font-weight:600;margin-bottom:0.3rem;}
+.panel-reads{font-size:0.82rem;color:var(--muted);line-height:1.6;}
+.panel-ch{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--border);margin-top:0.4rem;}
+
+/* ── CODE BLOCK ── */
+.code-block{background:#0d1117;border-radius:8px;padding:1.2rem 1.4rem;margin:1.2rem 0;overflow-x:auto;font-family:'DM Mono',monospace;font-size:0.78rem;line-height:1.7;color:#c9d1d9;}
+.code-block .comment{color:#8b949e;}
+.code-block .keyword{color:#ff7b72;}
+.code-block .string{color:#a5d6ff;}
+.code-block .num{color:#79c0ff;}
+.code-block .fn{color:#d2a8ff;}
+.code-block .var{color:#ffa657;}
+
+/* ── GITHUB CARD ── */
+.github-card{background:var(--navy);border-radius:14px;padding:2rem 2.2rem;margin:2rem 0;display:flex;align-items:center;gap:2rem;flex-wrap:wrap;}
+.github-icon{font-size:2.5rem;flex-shrink:0;}
+.github-text h4{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:white;margin-bottom:0.3rem;}
+.github-text p{font-size:0.88rem;color:rgba(255,255,255,0.55);line-height:1.65;margin:0;}
+.github-btn{display:inline-block;margin-top:0.8rem;font-family:'DM Mono',monospace;font-size:0.75rem;padding:0.55rem 1.2rem;background:var(--orange);color:white;border-radius:7px;text-decoration:none;transition:background 0.2s;}
+.github-btn:hover{background:var(--orange2);}
+
+/* ── MODULE COMPLETE ── */
+.module-complete{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:16px;padding:2.5rem;margin:3rem 0;text-align:center;}
+.mc-icon{font-size:2.5rem;margin-bottom:1rem;}
+.mc-title{font-family:'Playfair Display',serif;font-size:1.8rem;color:white;margin-bottom:0.8rem;}
+.mc-text{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.75;max-width:500px;margin:0 auto 1.5rem;}
+.mc-stats{display:flex;justify-content:center;gap:3rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.mc-stat{text-align:center;}
+.mc-stat strong{display:block;font-family:'DM Mono',monospace;font-size:1.4rem;color:var(--orange);}
+.mc-stat span{font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;}
+
+/* ── MCQ ── */
+.mcq-section{margin-top:3rem;}
+.mcq-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem;}
+.mcq-header-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.mcq-count{font-family:'DM Mono',monospace;font-size:0.72rem;background:rgba(232,114,42,0.1);color:var(--orange);padding:0.2rem 0.6rem;border-radius:4px;}
+.mcq-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.2rem;}
+.mcq-q{padding:1.2rem 1.4rem;background:var(--white);}
+.mcq-q-text{font-size:0.97rem;line-height:1.75;color:var(--text);margin-bottom:1rem;}
+.mcq-opts{display:flex;flex-direction:column;gap:0.5rem;}
+.opt{border:1.5px solid var(--border);border-radius:8px;padding:0.7rem 1rem;cursor:pointer;display:flex;align-items:flex-start;gap:0.7rem;font-size:0.9rem;transition:border-color 0.15s,background 0.15s;}
+.opt:hover{border-color:var(--orange);background:rgba(232,114,42,0.03);}
+.opt.correct{border-color:var(--green)!important;background:rgba(30,158,94,0.06)!important;}
+.opt.wrong{border-color:#dc2626!important;background:rgba(220,38,38,0.05)!important;}
+.opt-ltr{width:22px;height:22px;border-radius:50%;background:var(--off);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.mcq-actions{padding:0.8rem 1.4rem;background:var(--off);border-top:1px solid var(--border);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.check-btn{background:var(--navy);color:white;border:none;border-radius:7px;padding:0.5rem 1.2rem;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;transition:background 0.2s;}
+.check-btn:hover{background:var(--navy2);}
+.check-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.mcq-feedback{font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border-radius:6px;display:none;}
+.mcq-explanation{background:rgba(45,37,96,0.04);border-radius:8px;padding:1rem 1.2rem;margin:0.8rem 1.4rem 1rem;font-size:0.88rem;line-height:1.75;display:none;}
+.mcq-explanation.show{display:block;}
+.mcq-explanation strong{color:var(--navy);}
+
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);}
+.ch-nav-btn{font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.7rem 1.2rem;border-radius:8px;text-decoration:none;color:var(--muted);border:1.5px solid var(--border);transition:all 0.2s;}
+.ch-nav-btn:hover{border-color:var(--orange);color:var(--orange);}
+.ch-nav-btn.primary{background:var(--orange);color:white;border-color:var(--orange);}
+.ch-nav-btn.primary:hover{background:var(--orange2);}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .content{margin-left:0;padding:2rem 1.2rem 4rem;}
+  .synth-reading{grid-template-columns:1fr;}
+  .panel-map{grid-template-columns:1fr;}
+  .mc-stats{gap:1.5rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-logo">quan<span class="acc">(t)<sup>4</sup></span></a>
+    <span class="tb-sep">/</span>
+    <div class="tb-breadcrumb">
+      <a href="index.html">Home</a> ›
+      <a href="Finance.html">Finance</a> ›
+      <a href="F_MMI.html">Market Microstructure</a> ›
+      <span>Ch 5</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tb-progress-wrap">
+      <span class="tb-progress-label">5 / 5</span>
+      <div class="tb-progress-bar"><div class="tb-progress-fill" style="width:100%"></div></div>
+    </div>
+    <a href="F_MMI.html" class="tb-home">← Back to module</a>
+  </div>
+</div>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="sidebar-section-label">F_MMI — Market Microstructure</div>
+  <a href="F_MMI_Ch1.html" class="sidebar-item"><span class="si-num">1</span> The Limit Order Book</a>
+  <a href="F_MMI_Ch2.html" class="sidebar-item"><span class="si-num">2</span> Microprice &amp; Imbalance</a>
+  <a href="F_MMI_Ch3.html" class="sidebar-item"><span class="si-num">3</span> Market Making &amp; Fill Probability</a>
+  <a href="F_MMI_Ch4.html" class="sidebar-item"><span class="si-num">4</span> Liquidity Traders &amp; Price Impact</a>
+  <a href="F_MMI_Ch5.html" class="sidebar-item active">
+    <span class="si-num">5</span> Reading the Live Book
+    <span class="si-mcq-badge">4 MCQ</span>
+  </a>
+  <div class="sidebar-section-label" style="margin-top:1.5rem;">Resources</div>
+  <a href="https://github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API" target="_blank" class="sidebar-item">
+    <span>🔗</span> Open Source Dashboard ↗
+  </a>
+</nav>
+
+<main class="content">
+
+  <div class="chapter-header">
+    <div class="chapter-meta">
+      <span class="ch-tag ch-tag-cap">Capstone</span>
+      <span class="ch-tag ch-tag-a">Advanced</span>
+      <span class="ch-num-badge">Chapter 05 · F_MMI</span>
+    </div>
+    <h1 class="chapter-title">Reading the Live Book</h1>
+    <p class="chapter-subtitle">
+      Every formula from Chapters 1–4, computed from a single real NIFTY snapshot, interpreted from both sides of the market.
+      Then: the open source dashboard that automates all of it — and the code behind every calculation.
+    </p>
+  </div>
+
+  <div class="content-body">
+
+    <h3>5.1 The Complete Formula Reference</h3>
+
+    <p>
+      Before reading the live book, here is every calculation from this module collected in one place — with its source, its Python implementation in the dashboard, and what it tells you.
+    </p>
+
+    <!-- SYNTH CARDS -->
+
+    <div class="synth-card">
+      <div class="synth-header">
+        <span class="synth-title">MIDPRICE</span>
+        <span class="synth-ch">Ch. 1 · Cartea p.16</span>
+      </div>
+      <div class="synth-body">
+        <div class="synth-formula">$$P_{mid} = \frac{1}{2}(P_t^a + P_t^b)$$</div>
+        <p style="font-size:0.88rem;color:var(--muted);margin:0 0 0.6rem;">Neutral geometric centre. No volume information. Used as the baseline reference for all other calculations.</p>
+        <div class="synth-reading">
+          <div class="synth-col mm"><div class="synth-col-label mm">Market Maker</div>Starting point for quote placement — post at $P_{mid} \pm \delta^*$</div>
+          <div class="synth-col lt"><div class="synth-col-label lt">Liquidity Trader</div>Benchmark for impact cost: VWAP$_{exec}$ vs $P_{mid}$</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="synth-card">
+      <div class="synth-header">
+        <span class="synth-title">MICROPRICE (Eq. 3.3)</span>
+        <span class="synth-ch">Ch. 2 · Cartea p.46</span>
+      </div>
+      <div class="synth-body">
+        <div class="synth-formula">$$S_t^* = \frac{V_t^b}{V_t^b + V_t^a}P_t^a + \frac{V_t^a}{V_t^b + V_t^a}P_t^b$$</div>
+        <p style="font-size:0.88rem;color:var(--muted);margin:0 0 0.6rem;">Volume-weighted mid using Level 1 quantities. Incorporates touch asymmetry. Leads price by 1–3 ticks on average.</p>
+        <div class="synth-reading">
+          <div class="synth-col mm"><div class="synth-col-label mm">Market Maker</div>Short-term direction signal at the touch — shade quotes toward microprice</div>
+          <div class="synth-col lt"><div class="synth-col-label lt">Liquidity Trader</div>More accurate entry benchmark than midprice for timing aggressive orders</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="synth-card">
+      <div class="synth-header">
+        <span class="synth-title">SPREAD IN BASIS POINTS</span>
+        <span class="synth-ch">Ch. 2 · Cartea p.71</span>
+      </div>
+      <div class="synth-body">
+        <div class="synth-formula">$$\text{Spread}_{bps} = \frac{P_t^a - P_t^b}{P_{mid}} \times 10{,}000$$</div>
+        <p style="font-size:0.88rem;color:var(--muted);margin:0 0 0.6rem;">Normalised crossing cost. Comparable across instruments and time. Minimum hurdle rate for any aggressive trade.</p>
+        <div class="synth-reading">
+          <div class="synth-col mm"><div class="synth-col-label mm">Market Maker</div>Profit opportunity when spread widens above typical — post inside spread aggressively</div>
+          <div class="synth-col lt"><div class="synth-col-label lt">Liquidity Trader</div>Half-spread bps must be smaller than signal strength (urgency) in bps</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="synth-card">
+      <div class="synth-header">
+        <span class="synth-title">VOLUME IMBALANCE</span>
+        <span class="synth-ch">Ch. 2 · Cartea p.295</span>
+      </div>
+      <div class="synth-body">
+        <div class="synth-formula">$$\rho_t = \frac{V_t^b - V_t^a}{V_t^b + V_t^a} \in [-1, +1]$$</div>
+        <p style="font-size:0.88rem;color:var(--muted);margin:0 0 0.6rem;">Full 50-level directional signal. Predictive power over future price direction and MO arrival rates. The most actionable single number from the book.</p>
+        <div class="synth-reading">
+          <div class="synth-col mm"><div class="synth-col-label mm">Market Maker</div>Skew quotes: positive $\rho_t$ → shade ask upward, tighten bid</div>
+          <div class="synth-col lt"><div class="synth-col-label lt">Liquidity Trader</div>$\rho_t > +0.3$ signals good time to sell into buyers; $< -0.3$ good to buy into sellers</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="synth-card">
+      <div class="synth-header">
+        <span class="synth-title">FILL PROBABILITY & OPTIMAL DEPTH (Eq. 2.3)</span>
+        <span class="synth-ch">Ch. 3 · Cartea p.29</span>
+      </div>
+      <div class="synth-body">
+        <div class="synth-formula">$$P(\delta) = e^{-\kappa\delta} \qquad \delta^{*} = \frac{1}{\kappa} \qquad P(\delta^*) = e^{-1} \approx 36.8\%$$</div>
+        <p style="font-size:0.88rem;color:var(--muted);margin:0 0 0.6rem;">Fill probability decays exponentially with depth. Optimal depth = reciprocal of liquidity parameter. Fill probability at optimum is always $e^{-1}$.</p>
+        <div class="synth-reading">
+          <div class="synth-col mm"><div class="synth-col-label mm">Market Maker</div>Post at $\delta^* = 1/\kappa$ — the unique profit-maximising depth. Never post deeper</div>
+          <div class="synth-col lt"><div class="synth-col-label lt">Liquidity Trader</div>Use to understand where MMs are likely resting — depth clusters near $1/\kappa$ from mid</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="synth-card">
+      <div class="synth-header">
+        <span class="synth-title">LIQUIDITY DISCOUNT & MARKET IMPACT</span>
+        <span class="synth-ch">Ch. 4 · Cartea pp.24–25</span>
+      </div>
+      <div class="synth-body">
+        <div class="synth-formula">$$S_1 = \mu - \gamma\sigma^2\frac{i}{n+1} \qquad \text{Impact} = P_{mid} - \text{VWAP}_{exec}$$</div>
+        <p style="font-size:0.88rem;color:var(--muted);margin:0 0 0.6rem;">Model estimate (Grossman–Miller) and empirical estimate (book walk) of execution cost. Grows with order size, volatility, and risk aversion; falls with MM competition.</p>
+        <div class="synth-reading">
+          <div class="synth-col mm"><div class="synth-col-label mm">Market Maker</div>Impact = revenue from absorbing LT flow. More competition (higher $n$) compresses this margin</div>
+          <div class="synth-col lt"><div class="synth-col-label lt">Liquidity Trader</div>Minimise impact by slicing orders, timing execution, and choosing when $\rho_t$ favours her direction</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>5.2 A Complete Book Reading — Step by Step</h3>
+
+    <p>
+      We now apply every formula to the live NIFTY26MAYFUT snapshot from 29 April 2026 at 12:34:20 IST in a structured 8-step reading. This is the exact sequence a trained desk analyst runs through when a new snapshot arrives.
+    </p>
+
+    <!-- STEP BY STEP READING -->
+    <div class="reading-step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Establish the Baseline</div>
+        <div class="step-content">Best Bid Rs.24,442.80 · Best Ask Rs.24,444.90. Compute midprice and spread.</div>
+        <div class="step-result neutral">
+          $P_{mid} = \frac{24442.80 + 24444.90}{2} = \text{Rs.}24{,}443.85$ &nbsp;·&nbsp; Spread = Rs.2.10 = 42 ticks = <strong>0.86 bps</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="reading-step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Compute the Microprice</div>
+        <div class="step-content">Touch quantities: Bid L1 = 130 lots, Ask L1 = 195 lots. Ask-heavy at the touch.</div>
+        <div class="step-result bearish">
+          $S_t^* = \frac{130}{325} \times 24444.90 + \frac{195}{325} \times 24442.80 = \text{Rs.}24{,}443.64$ &nbsp;·&nbsp;
+          Microprice <strong>Rs.0.21 below mid</strong> → mild downward lean at touch
+        </div>
+      </div>
+    </div>
+
+    <div class="reading-step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Read the Full-Book Imbalance</div>
+        <div class="step-content">TBQ = 5,28,125 · TSQ = 2,20,415. Full 50-level aggregate signal.</div>
+        <div class="step-result bullish">
+          $\rho_t = \frac{528125 - 220415}{528125 + 220415} = +0.411$ &nbsp;·&nbsp; <strong>Strongly bullish book</strong> · Bid side 2.4× heavier than ask
+        </div>
+      </div>
+    </div>
+
+    <div class="reading-step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Reconcile Steps 2 and 3</div>
+        <div class="step-content">Microprice says mild downward lean at the touch; full-book imbalance says strongly bullish. These are not contradictory — they speak different time horizons.</div>
+        <div class="step-result neutral">
+          Touch (L1): ask-heavy → price may dip 1–2 ticks short-term &nbsp;·&nbsp;
+          Full book: bid-heavy → price likely higher in next 1–5 minutes &nbsp;·&nbsp;
+          <strong>Net read: short-term dip into structural bid support</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="reading-step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-title">Locate the Structural Walls</div>
+        <div class="step-content">Scan for levels with unusually high qty or low order count (iceberg pattern). Two standouts: Bid L8 and Ask L18.</div>
+        <div class="step-result bullish">
+          <strong>Bid L8: Rs.24,440.00 · 7,475 lots · 22 orders</strong> → Avg 340 lots/order · Institutional support wall<br/>
+          <strong style="color:var(--ask)">Ask L18: Rs.24,450.00 · 12,415 lots · 116 orders</strong> → Avg 107 lots/order · Fragmented retail resistance
+        </div>
+      </div>
+    </div>
+
+    <div class="reading-step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <div class="step-title">Estimate Market Maker Optimal Posting Zone</div>
+        <div class="step-content">Assume $\kappa = 0.20$ (typical mid-session NIFTY Futures). Optimal depth $\delta^* = 1/0.20 = $ Rs.5.00 from mid.</div>
+        <div class="step-result neutral">
+          MM bid zone: $24443.85 - 5.00 = $ <strong>Rs.24,438.85</strong> (near L15–16 of bid book)<br/>
+          MM ask zone: $24443.85 + 5.00 = $ <strong>Rs.24,448.85</strong> (near L7–8 of ask book) &nbsp;·&nbsp;
+          Fill probability: 36.8%
+        </div>
+      </div>
+    </div>
+
+    <div class="reading-step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <div class="step-title">Compute Impact Cost for a Hypothetical 500-lot Sell</div>
+        <div class="step-content">Walk the bid book: L1 (130 lots @ Rs.24,442.80) → L2 (195 lots @ Rs.24,442.50) → … until 500 lots filled.</div>
+        <div class="step-result bearish">
+          VWAP$_{exec}$ ≈ <strong>Rs.24,441.85</strong> &nbsp;·&nbsp; Impact = Rs.24,443.85 − Rs.24,441.85 = <strong>Rs.2.00/lot</strong> = 0.82 bps
+          <br/>Total cost on 500 lots: Rs.1,000 · Per lot-of-25: Rs.50
+        </div>
+      </div>
+    </div>
+
+    <div class="reading-step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <div class="step-title">Form the Overall Assessment</div>
+        <div class="step-content">Synthesise all signals into an actionable view for both market participants.</div>
+        <div class="step-result positive">
+          <strong>For a Market Maker:</strong> Book strongly bullish in aggregate. Post bid closer to mid than usual (tighten bid), widen ask by 1–2 ticks. The Rs.24,440 wall provides a natural stop for inventory risk.
+          <br/><br/>
+          <strong style="color:var(--ask)">For a Liquidity Trader selling:</strong> Rs.2.00/lot impact is acceptable if urgency exceeds Rs.2.00 + Rs.1.05 half-spread = Rs.3.05. Strong buy imbalance (+41%) means good absorption — sell now while buyers are plentiful, before imbalance reverses.
+        </div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>5.3 The Dashboard — Every Panel Mapped to a Formula</h3>
+
+    <p>
+      The open source Thrissur Trading Terminal 50-depth dashboard computes all of the above automatically from the Fyers TBT WebSocket. Here is exactly which panel implements which formula:
+    </p>
+
+    <div class="panel-map">
+      <div class="panel-card">
+        <div class="panel-name">KPI — Best Bid / Ask / Mid</div>
+        <div class="panel-formula">$P_t^b$, $P_t^a$, $\frac{1}{2}(P_t^a+P_t^b)$</div>
+        <div class="panel-reads">Direct from WebSocket. Baseline for all calculations.</div>
+        <div class="panel-ch">Chapter 1 · Cartea p.16</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-name">KPI — Microprice</div>
+        <div class="panel-formula">$S_t^* = \frac{V_t^b P_t^a + V_t^a P_t^b}{V_t^b + V_t^a}$</div>
+        <div class="panel-reads">dashboard.py line 85. Updates every 500ms tick.</div>
+        <div class="panel-ch">Chapter 2 · Cartea Eq.(3.3) p.46</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-name">KPI — Spread bps</div>
+        <div class="panel-formula">$(P_t^a - P_t^b) / P_{mid} \times 10{,}000$</div>
+        <div class="panel-reads">dashboard.py lines 80–82. Normalised crossing cost per tick.</div>
+        <div class="panel-ch">Chapter 2 · Cartea p.71</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-name">KPI — Imbalance %</div>
+        <div class="panel-formula">$\rho_t = (TBQ - TSQ)/(TBQ + TSQ)$</div>
+        <div class="panel-reads">dashboard.py lines 88–90. Uses msg.tbq and msg.tsq directly.</div>
+        <div class="panel-ch">Chapter 2 · Cartea p.295</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-name">50-Level Depth Ladder</div>
+        <div class="panel-formula">$\{P_{bid,k}, V_{bid,k}\}_{k=1}^{50}$ and $\{P_{ask,k}, V_{ask,k}\}_{k=1}^{50}$</div>
+        <div class="panel-reads">All 50 levels plotted as diverging bar chart. Blue = bid, red = ask. Depth bars proportional to qty.</div>
+        <div class="panel-ch">Chapter 1 · Cartea pp.14–16</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-name">Cumulative Depth</div>
+        <div class="panel-formula">$CumBid_k = \sum_{i=1}^k V_{bid,i}$</div>
+        <div class="panel-reads">dashboard.py lines 98–99: np.cumsum(bq) and np.cumsum(aq). Walls appear as steep steps.</div>
+        <div class="panel-ch">Chapter 2 — derived metric</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-name">Level Imbalance (Top 10)</div>
+        <div class="panel-formula">$I_k = (V_{bid,k} - V_{ask,k})/(V_{bid,k} + V_{ask,k})$</div>
+        <div class="panel-reads">dashboard.py line 106: numpy element-wise. Epsilon guard for zero-depth levels.</div>
+        <div class="panel-ch">Chapter 2 — derived metric</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-name">Order Count Heatmap</div>
+        <div class="panel-formula">$bidordn_k$, $askordn_k$ direct; $V_k / N_k$ = avg lot size</div>
+        <div class="panel-reads">dashboard.py lines 75–76. Low $N_k$ + high $V_k$ = iceberg flag.</div>
+        <div class="panel-ch">Chapter 1 · Iceberg detection</div>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>5.4 The Code — Key Calculation Functions</h3>
+
+    <p>
+      Every formula above lives in the <code style="font-family:'DM Mono',monospace;background:var(--off);padding:2px 6px;border-radius:3px;font-size:0.88rem;">compute_metrics()</code> function in <code style="font-family:'DM Mono',monospace;background:var(--off);padding:2px 6px;border-radius:3px;font-size:0.88rem;">dashboard.py</code>. Here is the exact implementation, with formula references:
+    </p>
+
+    <div class="code-block">
+<span class="keyword">def</span> <span class="fn">compute_metrics</span>(msg):
+    bp = np.array(msg.bidprice)   <span class="comment"># 50 bid prices</span>
+    ap = np.array(msg.askprice)   <span class="comment"># 50 ask prices</span>
+    bq = np.array(msg.bidqty)     <span class="comment"># 50 bid quantities</span>
+    aq = np.array(msg.askqty)     <span class="comment"># 50 ask quantities</span>
+    bo = np.array(msg.bidordn)    <span class="comment"># 50 bid order counts</span>
+    ao = np.array(msg.askordn)    <span class="comment"># 50 ask order counts</span>
+
+    <span class="comment"># ── Ch.1: Midprice & Spread ──────────────────────────────</span>
+    best_bid  = bp[<span class="num">0</span>]
+    best_ask  = ap[<span class="num">0</span>]
+    mid       = (best_bid + best_ask) / <span class="num">2</span>          <span class="comment"># Cartea p.16</span>
+    spread    = best_ask - best_bid
+    spread_bps = (spread / mid) * <span class="num">10000</span>          <span class="comment"># Cartea p.71</span>
+
+    <span class="comment"># ── Ch.2: Microprice (Eq. 3.3) ──────────────────────────</span>
+    micro = (bq[<span class="num">0</span>] * best_ask + aq[<span class="num">0</span>] * best_bid) \
+            / (bq[<span class="num">0</span>] + aq[<span class="num">0</span>])                      <span class="comment"># Cartea Eq.(3.3)</span>
+
+    <span class="comment"># ── Ch.2: Volume Imbalance ───────────────────────────────</span>
+    tbq = msg.tbq                                  <span class="comment"># Total bid qty (all 50 levels)</span>
+    tsq = msg.tsq                                  <span class="comment"># Total ask qty (all 50 levels)</span>
+    imbalance = (tbq - tsq) / (tbq + tsq)         <span class="comment"># Cartea p.295, ρ_t ∈ [-1,+1]</span>
+
+    <span class="comment"># ── Ch.2: Level Imbalance (top 10) ──────────────────────</span>
+    level_imb = (bq[:<span class="num">10</span>] - aq[:<span class="num">10</span>]) \
+                / (bq[:<span class="num">10</span>] + aq[:<span class="num">10</span>] + <span class="num">1e-9</span>)      <span class="comment"># ε guard for zero depth</span>
+
+    <span class="comment"># ── Cumulative depth ─────────────────────────────────────</span>
+    cum_bq = np.cumsum(bq)                         <span class="comment"># CumBid_k</span>
+    cum_aq = np.cumsum(aq)                         <span class="comment"># CumAsk_k</span>
+
+    <span class="keyword">return</span> <span class="fn">dict</span>(
+        mid=mid, spread=spread, spread_bps=spread_bps,
+        micro=micro, tbq=tbq, tsq=tsq, imbalance=imbalance,
+        level_imb=level_imb, cum_bq=cum_bq, cum_aq=cum_aq,
+        bp=bp, ap=ap, bq=bq, aq=aq, bo=bo, ao=ao,
+    )
+    </div>
+
+    <div class="callout callout-code">
+      The complete source code, README with all mathematical derivations, and installation instructions are on GitHub. Free, open source, MIT licensed. Requires only a Fyers API account to run.
+      <br/><br/>
+      <strong>Repository:</strong> <a href="https://github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API" target="_blank" style="color:var(--orange);">github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API ↗</a>
+    </div>
+
+    <!-- GITHUB CARD -->
+    <div class="github-card">
+      <div class="github-icon">⚡</div>
+      <div class="github-text">
+        <h4>50-Depth Order Book Dashboard</h4>
+        <p>Real-time NSE market microstructure dashboard. All 10 calculations from this module, live from Fyers TBT WebSocket. Python · Dash · Plotly.</p>
+        <a href="https://github.com/thrissur-trading-terminal/50-depth-orderbook-using-Fyers-API" target="_blank" class="github-btn">View on GitHub ↗</a>
+      </div>
+    </div>
+
+    <hr class="content-divider"/>
+
+    <h3>5.5 What This Module Has Not Covered</h3>
+
+    <p>
+      This module covers the foundational static models. Several important extensions exist in Cartea et al. (2015) and the broader literature:
+    </p>
+
+    <ul>
+      <li><strong>Dynamic inventory management</strong> — the full Avellaneda–Stoikov model (Chapters 10 of Cartea) where the MM's optimal depth changes continuously as her inventory accumulates risk</li>
+      <li><strong>Optimal liquidation</strong> — how a large order should be sliced across time (TWAP/VWAP strategies) to minimise market impact, with order imbalance as a state variable (Chapter 12 of Cartea)</li>
+      <li><strong>Informed trading and Kyle's lambda</strong> — the price impact parameter $\lambda$ from Kyle (1985), estimating how much price moves per unit of order flow</li>
+      <li><strong>High-frequency alpha signals</strong> — using order flow, imbalance, and microprice to build short-term predictive models (the full Chapter 12 treatment)</li>
+      <li><strong>Cross-asset microstructure</strong> — how Futures and Options books interact, lead-lag relationships between NIFTY Futures and ATM options order flow</li>
+    </ul>
+
+    <div class="callout callout-india">
+      For NSE-specific microstructure research: the SEBI Academic Research Programme has published several papers on NIFTY order book dynamics. The NSE's own EMERGE platform provides tick data access for academic researchers. The Fyers TBT WebSocket used in this module's dashboard is one of the few retail-accessible feeds providing the full 50-level book — most retail platforms cap at 5 levels.
+    </div>
+
+  </div>
+
+  <hr class="content-divider"/>
+
+  <!-- MCQ -->
+  <div class="mcq-section">
+    <div class="mcq-header">
+      <span class="mcq-header-title">Final Exam — All Chapters</span>
+      <span class="mcq-count">4 questions</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          In the live NIFTY26MAYFUT snapshot, the microprice (Rs.24,443.64) is below the midprice (Rs.24,443.85), yet volume imbalance $\rho_t = +0.411$ is strongly positive. A market maker uses the microprice for 1-second quoting and $\rho_t$ for 5-minute inventory skewing. Which of the following correctly describes her combined strategy?
+        </div>
+        <div class="mcq-opts" id="q1opts">
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">A</span> Post symmetrically around the midprice — contradictory signals cancel each other out</div>
+          <div class="opt" onclick="pickOpt(this,'q1',true)"><span class="opt-ltr">B</span> Post ask slightly below midprice (toward microprice) for the immediate tick, while skewing the inventory position long over the next 5 minutes in response to the +41% imbalance — using both signals on their respective time horizons</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">C</span> Ignore the microprice since the full-book signal is more reliable — always use $\rho_t$</div>
+          <div class="opt" onclick="pickOpt(this,'q1',false)"><span class="opt-ltr">D</span> Pull all quotes — conflicting signals mean the book is too uncertain to quote</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q1btn" onclick="checkOpt('q1','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q1feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q1expl">
+        <strong>Explanation:</strong> The key insight from Chapter 2 is that microprice and volume imbalance operate on different time horizons — they are not contradictory. The microprice (Level 1 only, ask-heavy touch) gives a 1-tick short-term lean downward. The full-book $\rho_t = +0.411$ gives a 1–5 minute bullish signal. A sophisticated MM uses both simultaneously: she sets her immediate ask quote slightly below mid (toward microprice) to be more competitive at the touch, while allowing her bid-side inventory to build (skewing long) because the medium-term book is bullish. Options A and D treat the signals as contradictory — they are not. Option C discards the microprice entirely, losing a valuable short-term signal.
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          A market maker with $\kappa = 0.20$ is posting at depth Rs.5.00. Suddenly, a large participant places 15,000 lots on the ask side at Rs.24,448 (near the MM's ask posting zone), raising $\kappa$ locally to 0.40 on the ask side. What should the MM do?
+        </div>
+        <div class="mcq-opts" id="q2opts">
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">A</span> Keep posting at Rs.5.00 depth — $\kappa$ changes don't affect the optimal strategy</div>
+          <div class="opt" onclick="pickOpt(this,'q2',true)"><span class="opt-ltr">B</span> Move her ask limit order to the new optimal depth of Rs.2.50 (= $1/0.40$) — post closer to mid on the ask side to get ahead of the dense queue, while keeping the bid at Rs.5.00 depth</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">C</span> Move both bid and ask to Rs.2.50 depth symmetrically</div>
+          <div class="opt" onclick="pickOpt(this,'q2',false)"><span class="opt-ltr">D</span> Cancel the ask order entirely — too much competition</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q2btn" onclick="checkOpt('q2','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q2feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q2expl">
+        <strong>Explanation:</strong> The optimal depth formula $\delta^* = 1/\kappa$ applies independently to each side. The new ask-side $\kappa = 0.40$ gives $\delta^{*,+} = 1/0.40 = \text{Rs.}2.50$ — half the original depth. The MM should move her ask order closer to mid to get better queue position ahead of the dense order flow at Rs.24,448. The bid side is unchanged ($\kappa^- = 0.20$ still, $\delta^{*,-} = \text{Rs.}5.00$). Option C over-adjusts — the bid side liquidity didn't change. Option D is too conservative; a denser book on the ask side means more MO flow hitting ask orders, which actually increases expected fills even at a shallower depth.
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          The order count heatmap shows Ask Level 20 (Rs.24,450.00) has 12,415 lots across 116 orders. Ask Level 4 (Rs.24,445.00) has 3,965 lots across 10 orders. A liquidity trader needs to buy 4,000 lots. From a market impact perspective, which statement is correct?
+        </div>
+        <div class="mcq-opts" id="q3opts">
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">A</span> Level 20 is more expensive to cross because it has more total lots</div>
+          <div class="opt" onclick="pickOpt(this,'q3',true)"><span class="opt-ltr">B</span> The trader should cross Level 4 first (3,965 lots at Rs.24,445.00), then the book will likely refresh before she needs to reach Level 20 — and Level 20 may partially cancel under buying pressure since many of its 116 small orders are fragile retail quotes</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">C</span> Both levels are equivalent since their total notional is similar</div>
+          <div class="opt" onclick="pickOpt(this,'q3',false)"><span class="opt-ltr">D</span> Level 20 is cheaper to cross because it has more participants sharing the risk</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q3btn" onclick="checkOpt('q3','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q3feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q3expl">
+        <strong>Explanation:</strong> This is an application of the order count / iceberg analysis from Chapter 1. Level 4 (Rs.24,445.00) has 3,965 lots across only 10 orders = 397 lots/order — large, concentrated orders that won't cancel easily under normal conditions. Level 20 (Rs.24,450.00) has 12,415 lots across 116 orders = 107 lots/order — highly fragmented retail quotes that are much more likely to cancel if they see a large buy order approaching (adverse selection from the quote-poster's side). The trader should buy aggressively through Level 4, which will likely stay put. By the time she needs Level 20's liquidity, many of those 116 small orders may have cancelled, making the level cheaper or thinner than it appears. Option A incorrectly assumes total lots = impact. Option D misreads order count as "shared risk" — each of the 116 orders at Level 20 is an individual participant who can cancel independently.
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card">
+      <div class="mcq-q">
+        <div class="mcq-q-text">
+          Using the compute_metrics() function in dashboard.py: the level_imbalance for Level 8 ($I_8$) is computed as $(V_{bid,8} - V_{ask,8}) / (V_{bid,8} + V_{ask,8} + \varepsilon)$ where $\varepsilon = 10^{-9}$. Level 8 has bid qty 7,475 and ask qty 65. A student says "the epsilon makes the result inaccurate — we should remove it." Is the student correct?
+        </div>
+        <div class="mcq-opts" id="q4opts">
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">A</span> Yes — the epsilon introduces a small error and should be removed for accuracy</div>
+          <div class="opt" onclick="pickOpt(this,'q4',true)"><span class="opt-ltr">B</span> No — the epsilon is a division-by-zero guard for levels where both bid and ask qty are zero (which can occur in illiquid instruments); at Level 8 the denominator is 7,540 so the epsilon $10^{-9}$ changes the result by less than $10^{-13}$ — completely negligible</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">C</span> Yes — epsilon should be replaced with the tick size Rs.0.05 for better numerical stability</div>
+          <div class="opt" onclick="pickOpt(this,'q4',false)"><span class="opt-ltr">D</span> It depends — epsilon is only needed for the bid side, not the ask side</div>
+        </div>
+      </div>
+      <div class="mcq-actions">
+        <button class="check-btn" id="q4btn" onclick="checkOpt('q4','B')" disabled>Select an option</button>
+        <div class="mcq-feedback" id="q4feedback"></div>
+      </div>
+      <div class="mcq-explanation" id="q4expl">
+        <strong>Explanation:</strong> At Level 8: $I_8 = (7475 - 65) / (7475 + 65 + 10^{-9}) = 7410 / 7540.000000001 \approx 0.98274$. Without epsilon: $7410/7540 \approx 0.98274$ — identical to 13 decimal places. The epsilon is $10^{-9}$, the denominator is $7540$ — the relative error introduced is $10^{-9}/7540 \approx 10^{-13}$, completely undetectable. The epsilon exists solely to prevent a division-by-zero NaN when <em>both</em> bid and ask qty are zero at a level (which happens on very illiquid instruments or at deep levels where neither side has resting orders). Removing it is risky — it would cause a runtime crash on those inputs. Option C suggests Rs.0.05 as an epsilon, which would actually introduce a meaningful error: $0.05/0 = \infty$ is avoided, but $0.05$ as additive epsilon for a denominator of 7,540 is still negligible — though using a dimensionless $10^{-9}$ is cleaner. Option D is wrong: the epsilon applies to the denominator $(V_{bid} + V_{ask})$ symmetrically.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODULE COMPLETE -->
+  <div class="module-complete">
+    <div class="mc-icon">🎓</div>
+    <h2 class="mc-title">Module Complete</h2>
+    <p class="mc-text">
+      You have completed F_MMI — Market Microstructure &amp; Implementation. Every formula in this module was derived from Cartea, Jaimungal &amp; Penalva (2015) and verified on live NSE data.
+    </p>
+    <div class="mc-stats">
+      <div class="mc-stat"><strong>5</strong><span>Chapters</span></div>
+      <div class="mc-stat"><strong>20</strong><span>Practice Problems</span></div>
+      <div class="mc-stat"><strong>10</strong><span>Calculations</span></div>
+      <div class="mc-stat"><strong>1</strong><span>Live Dashboard</span></div>
+    </div>
+    <a href="F_MMI.html" style="display:inline-block;font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.7rem 1.6rem;background:var(--orange);color:white;border-radius:8px;text-decoration:none;transition:background 0.2s;" onmouseover="this.style.background='#F28C42'" onmouseout="this.style.background='#E8722A'">← Back to Module Overview</a>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="F_MMI_Ch4.html" class="ch-nav-btn">← Liquidity Traders &amp; Price Impact</a>
+    <a href="F_MMI.html" class="ch-nav-btn primary">Module Overview →</a>
+  </div>
+
+</main>
+</div>
+
+<script>
+const correctMsgs = [
+  "🎯 Exactly right. You've read the book.",
+  "✨ All five chapters synthesised. Clean.",
+  "🏆 Correct — this is practitioner-level thinking.",
+  "🔥 Nailed it. The book has no secrets from you now.",
+  "💡 Spot on. That's the kind of read that matters on a live desk.",
+  "🎓 Module complete. Cartea would sign off on that.",
+  "📈 Your market microstructure edge is now quantified.",
+];
+const wrongMsgs = [
+  "🌀 Re-read the relevant chapter section and try again.",
+  "📐 Think about which time horizon the signal operates on.",
+  "📉 Not quite. Consider the interaction between the two signals.",
+  "🤔 Close. Review the order count vs quantity distinction.",
+  "📊 Think about what the epsilon guard actually does numerically.",
+];
+
+const state = {};
+function pickOpt(el, qid, correct) {
+  if (state[qid]?.done) return;
+  if (!state[qid]) state[qid] = {};
+  state[qid].picked = { el, correct };
+  document.querySelectorAll('#' + qid + 'opts .opt').forEach(o => o.style.borderColor = '');
+  el.style.borderColor = 'var(--orange)';
+  const btn = document.getElementById(qid + 'btn');
+  btn.disabled = false;
+  btn.textContent = 'Check Answer';
+}
+function checkOpt(qid, correctLetter) {
+  const s = state[qid];
+  if (!s?.picked || s.done) return;
+  s.done = true;
+  const opts = document.querySelectorAll('#' + qid + 'opts .opt');
+  opts.forEach(o => { o.style.borderColor = ''; o.onclick = null; });
+  const feedback = document.getElementById(qid + 'feedback');
+  feedback.style.display = 'block';
+  const expl = document.getElementById(qid + 'expl');
+  expl.classList.add('show');
+  const btn = document.getElementById(qid + 'btn');
+  if (s.picked.correct) {
+    s.picked.el.classList.add('correct');
+    const m = correctMsgs[Math.floor(Math.random() * correctMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(30,158,94,0.1)';
+    feedback.style.color = 'var(--green)';
+    feedback.style.border = '1.5px solid rgba(30,158,94,0.3)';
+    btn.textContent = '✓ Correct! Keep going ↓';
+    btn.style.background = 'var(--green)';
+  } else {
+    s.picked.el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-ltr').textContent.trim() === correctLetter) o.classList.add('correct');
+    });
+    const m = wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)];
+    feedback.textContent = m;
+    feedback.style.background = 'rgba(220,38,38,0.06)';
+    feedback.style.color = '#dc2626';
+    feedback.style.border = '1.5px solid rgba(220,38,38,0.2)';
+    btn.textContent = 'See Explanation Above ↑';
+    btn.style.background = '#dc2626';
+  }
+  if (window.renderMathInElement) renderMathInElement(document.getElementById(qid + 'expl'));
+}
+
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]
+    });
+  }
+});
+</script>
+</body>
+</html>
