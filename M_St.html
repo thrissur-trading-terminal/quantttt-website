@@ -115,9 +115,13 @@ body{background:var(--off);color:var(--text);font-family:'Barlow',sans-serif;min
 </div>
 
 <script>
+/**
+ * CHAPTER DATA:
+ * Updated Chapters 10, 11, and 12 to "live" status.
+ */
 const CHAPTERS = [
-  { id:1,  file:"M_St_Ch1.html",  title:"Probability Foundations",              status:"live", difficulty:"Beginner",     mcq:5 },
-  { id:2,  file:"M_St_Ch2.html",  title:"Distributions, Expectation & Limits",  status:"live", difficulty:"Beginner",     mcq:5 },
+  { id:1,  file:"M_St_Ch1.html",  title:"Probability Foundations",             status:"live", difficulty:"Beginner",     mcq:5 },
+  { id:2,  file:"M_St_Ch2.html",  title:"Distributions, Expectation & Limits", status:"live", difficulty:"Beginner",     mcq:5 },
   { id:3,  file:"M_St_Ch3.html",  title:"Markov Chains",                         status:"live", difficulty:"Intermediate", mcq:5 },
   { id:4,  file:"M_St_Ch4.html",  title:"DTMC II — Limiting Behaviour",          status:"live", difficulty:"Intermediate", mcq:5 },
   { id:5,  file:"M_St_Ch5.html",  title:"Bernoulli Random Process",              status:"live", difficulty:"Intermediate", mcq:5 },
@@ -125,17 +129,19 @@ const CHAPTERS = [
   { id:7,  file:"M_St_Ch7.html",  title:"CTMC I — Birth & Death Processes",      status:"live", difficulty:"Advanced",     mcq:4 },
   { id:8,  file:"M_St_Ch8.html",  title:"CTMC II — Kolmogorov Equations",        status:"live", difficulty:"Advanced",     mcq:4 },
   { id:9,  file:"M_St_Ch9.html",  title:"Renewal Theory",                        status:"live", difficulty:"Advanced",     mcq:4 },
-  { id:10, file:"M_St_Ch10.html", title:"Queueing Theory",                status:"live", difficulty:"Advanced", mcq:4 },
-  { id:11, file:"M_St_Ch11.html", title:"Martingales & Brownian Motion",  status:"live", difficulty:"Advanced", mcq:5 },
-  { id:12, file:"M_St_Ch12.html", title:"From Probability to Stochastics",status:"live", difficulty:"Advanced", mcq:5 },
+  { id:10, file:"M_St_Ch10.html", title:"Queueing Theory",                       status:"live", difficulty:"Advanced",     mcq:4 },
+  { id:11, file:"M_St_Ch11.html", title:"Martingales & Brownian Motion",         status:"live", difficulty:"Advanced",     mcq:5 },
+  { id:12, file:"M_St_Ch12.html", title:"From Probability to Stochastics",       status:"live", difficulty:"Advanced",     mcq:5 },
 ];
 
 (function(){
+  // Recalculate stats based on new "live" statuses
   const live  = CHAPTERS.filter(c => c.status === 'live').length;
   const total = CHAPTERS.length;
   const mcq   = CHAPTERS.reduce((s,c) => s + c.mcq, 0);
   const pct   = Math.round(live / total * 100);
 
+  // Update DOM elements
   document.getElementById('stat-live').textContent  = live;
   document.getElementById('stat-total').textContent = total;
   document.getElementById('stat-mcq').textContent   = mcq;
