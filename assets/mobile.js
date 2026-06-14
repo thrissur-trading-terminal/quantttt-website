@@ -78,6 +78,68 @@
   document.body.appendChild(nav);
 })();
 
+/* ── Practice bottom sheet (mobile only, index.html) ──────────
+   Converts #expl from an in-flow solution box into a fixed
+   slide-up bottom sheet, and makes #checkBtn sticky above the
+   mob-nav. All existing pick() / check() / done logic is untouched.
+
+   DOM changes (guarded by matchMedia so desktop is unaffected):
+   • .sheet-handle div injected as first child of #expl
+   • #feedback-msg reparented into #expl (after handle)
+   Sheet DOM order: [handle] [feedback-msg] [step-by-step solution]
+
+   Re-open after dismiss: tap any option (onclick = null after
+   check()) to re-add .show and review the solution. Does not
+   touch picked / done — the button stays disabled ("Done ✓").
+────────────────────────────────────────────────────────────── */
+(function () {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+  var expl        = document.getElementById('expl');
+  var checkBtn    = document.getElementById('checkBtn');
+  if (!expl || !checkBtn) return; // not on a page with the practice widget
+
+  var feedbackMsg = document.getElementById('feedback-msg');
+  var opts        = document.getElementById('opts');
+  var practice    = document.getElementById('practice');
+
+  // 1. Drag handle — injected as first child of the sheet
+  var handle = document.createElement('div');
+  handle.className = 'sheet-handle';
+  handle.setAttribute('role', 'button');
+  handle.setAttribute('aria-label', 'Dismiss solution');
+  handle.innerHTML = '<div class="sheet-handle-bar"></div>';
+  handle.addEventListener('click', function () { expl.classList.remove('show'); });
+  expl.insertBefore(handle, expl.firstChild);
+
+  // 2. Reparent #feedback-msg into sheet, just after the handle.
+  //    check() finds it via getElementById regardless of DOM position.
+  if (feedbackMsg) {
+    expl.insertBefore(feedbackMsg, handle.nextSibling);
+  }
+
+  // 3. Sticky #checkBtn: reveal when practice section enters viewport
+  if (practice && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      checkBtn.classList.toggle('mob-btn-visible', entries[0].isIntersecting);
+    }, { threshold: 0.05 }).observe(practice);
+  } else if (practice) {
+    // Fallback for browsers without IntersectionObserver
+    checkBtn.classList.add('mob-btn-visible');
+  }
+
+  // 4. Re-open sheet: tap any option after done to review the solution.
+  //    "Done" state is detected by the button being disabled with "Done ✓" text —
+  //    this mirrors what check() sets and avoids touching done / picked.
+  if (opts) {
+    opts.addEventListener('click', function () {
+      if (checkBtn.disabled && checkBtn.textContent.trim().indexOf('Done') === 0) {
+        expl.classList.add('show');
+      }
+    });
+  }
+})();
+
 /* ── KaTeX overflow: wrap .katex-display elements after render ──
    KaTeX is loaded via `defer` so it renders after DOM parsing.
    We wait for window `load` to ensure deferred scripts have run
