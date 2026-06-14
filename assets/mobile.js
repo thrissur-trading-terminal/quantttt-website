@@ -140,6 +140,32 @@
   }
 })();
 
+/* ── Pillar card stagger-in ─────────────────────────────────────
+   Mobile only (≤768px). IntersectionObserver fires once when
+   .pillar-grid first enters the viewport, adding 'pillars-visible'
+   which triggers the nth-child stagger animation in mobile.css.
+   Disconnects after first fire — subsequent scrolls past the grid
+   do not re-play the animation.
+   Fallback (no IntersectionObserver support): adds class immediately
+   so cards are never permanently hidden.
+────────────────────────────────────────────────────────────── */
+(function () {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+  var grid = document.querySelector('.pillar-grid');
+  if (!grid) return;
+  if (!('IntersectionObserver' in window)) {
+    grid.classList.add('pillars-visible');
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    if (entries[0].isIntersecting) {
+      grid.classList.add('pillars-visible');
+      io.disconnect();
+    }
+  }, { threshold: 0.2 });
+  io.observe(grid);
+})();
+
 /* ── KaTeX overflow: wrap .katex-display elements after render ──
    KaTeX is loaded via `defer` so it renders after DOM parsing.
    We wait for window `load` to ensure deferred scripts have run
