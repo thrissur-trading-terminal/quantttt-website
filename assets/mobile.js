@@ -167,26 +167,13 @@
 })();
 
 /* ── Pillar "genie" reveal (mobile only, index.html) ────────────
-   Wraps the existing togglePillar function to add .genie-in to the
-   newly-revealed panel after each tap. The void offsetWidth reflow
-   forces the browser to restart the animation on every tap, not just
-   the first. Desktop is unaffected (matchMedia guard). The original
-   togglePillar is called first so display:block is applied before we
-   read offsetWidth — order matters for the reflow trick to work.
+   Wraps togglePillar AFTER window load to guarantee index.html's
+   inline <script> (which declares the function) has already executed.
+   Function declarations are hoisted within their script block but
+   index.html's inline script runs after mobile.js — wrapping at
+   parse-time would be overwritten. The load event fires after all
+   scripts, so our wrapper installs last and sticks.
 ────────────────────────────────────────────────────────────── */
-(function () {
-  if (!window.matchMedia('(max-width: 768px)').matches) return;
-  var original = window.togglePillar;
-  if (typeof original !== 'function') return;
-  window.togglePillar = function (id) {
-    original(id);
-    var panel = document.getElementById('panel-' + id);
-    if (!panel) return;
-    panel.classList.remove('genie-in');
-    void panel.offsetWidth; // force reflow so CSS animation restarts
-    panel.classList.add('genie-in');
-  };
-})();
 
 /* ── KaTeX overflow: wrap .katex-display elements after render ──
    KaTeX is loaded via `defer` so it renders after DOM parsing.
@@ -194,6 +181,24 @@
    and renderMathInElement has completed before wrapping.
 ────────────────────────────────────────────────────────────── */
 window.addEventListener('load', function () {
+  // ── Genie reveal wrapper ──────────────────────────────────────
+  // Installed at load so index.html's inline togglePillar declaration
+  // has already run and we wrap the final version of the function.
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    var original = window.togglePillar;
+    if (typeof original === 'function') {
+      window.togglePillar = function (id) {
+        original(id);
+        var panel = document.getElementById('panel-' + id);
+        if (!panel) return;
+        panel.classList.remove('genie-in');
+        void panel.offsetWidth; // force reflow so CSS animation restarts
+        panel.classList.add('genie-in');
+      };
+    }
+  }
+
+  // ── KaTeX overflow: wrap .katex-display elements after render ──
   document.querySelectorAll('.katex-display').forEach(function (el) {
     if (el.parentElement && el.parentElement.classList.contains('katex-scroll')) return;
     var wrap = document.createElement('div');
