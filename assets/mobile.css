@@ -1,0 +1,277 @@
+/* ============================================================
+   mobile.css — shared mobile styles for quantttt.com
+   All mobile features live here; no per-file inline CSS.
+   Desktop (>768px) is unaffected unless explicitly noted.
+   ============================================================ */
+
+/* ── Dark mode token overrides (all widths) ──────────────────
+   Two layers:
+   1. @media (prefers-color-scheme: dark)  — system dark, CSS-only,
+      zero flash because mobile.css is in <head> before any paint.
+   2. [data-theme="dark/light"]  — manual toggle persisted in
+      localStorage; mobile.js sets the attribute synchronously
+      (before window.load) so most users see no flash on reload.
+
+   Token values override the :root block in each page's inline
+   <style>. This works because mobile.css is linked after the
+   inline block, so equal-specificity rules declared later win.
+──────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --white:  #0f0f1a;
+    --off:    #16162a;
+    --text:   #e8e8f0;
+    --muted:  #8888aa;
+    --border: #2a2a44;
+    --light:  #1a1a2e;
+  }
+}
+[data-theme="dark"] {
+  --white:  #0f0f1a;
+  --off:    #16162a;
+  --text:   #e8e8f0;
+  --muted:  #8888aa;
+  --border: #2a2a44;
+  --light:  #1a1a2e;
+}
+/* Explicit light — lets system-dark users opt back to light */
+[data-theme="light"] {
+  --white:  #ffffff;
+  --off:    #f7f5f2;
+  --text:   #1a1a2e;
+  --muted:  #6b7280;
+  --border: #e5e7eb;
+  --light:  #fdf6f0;
+}
+
+/* ── Dark mode component overrides (all widths) ──────────────
+   CSS variables cover most backgrounds and text colours.
+   These rules handle the hardcoded rgba() values that do not
+   use variables, and ensure KaTeX math remains legible.
+──────────────────────────────────────────────────────────── */
+
+/* Consolidate: apply the same rules for both system and manual dark */
+@media (prefers-color-scheme: dark) {
+  body                              { background: var(--white); color: var(--text); }
+  nav:not(.sidebar):not(.mob-nav),
+  .topbar                           { background: rgba(15,15,26,0.97) !important; }
+  .mob-nav                          { background: rgba(15,15,26,0.98); }
+  .content-body p, .derivation-body p,
+  .we-body p, .tq-text              { color: var(--text); }
+  .opt                              { background: var(--off); color: var(--text); }
+  /* KaTeX inherits colour from parent; set it explicitly so math is legible */
+  .katex                            { color: var(--text); }
+  /* Dark headers on cards */
+  .mcq-card-header, .we-header,
+  .terminal-header, .derivation-header { background: #1a1a38; }
+  /* KaTeX scroll fade: match dark bg */
+  .katex-scroll::after              { background: linear-gradient(to right, transparent, rgba(15,15,26,0.95)); }
+  .math-block .katex-scroll::after  { background: linear-gradient(to right, transparent, rgba(22,22,42,0.95)); }
+}
+[data-theme="dark"] body            { background: var(--white); color: var(--text); }
+[data-theme="dark"] nav:not(.sidebar):not(.mob-nav),
+[data-theme="dark"] .topbar         { background: rgba(15,15,26,0.97) !important; }
+[data-theme="dark"] .mob-nav        { background: rgba(15,15,26,0.98); }
+[data-theme="dark"] .content-body p,
+[data-theme="dark"] .derivation-body p,
+[data-theme="dark"] .we-body p,
+[data-theme="dark"] .tq-text        { color: var(--text); }
+[data-theme="dark"] .opt            { background: var(--off); color: var(--text); }
+[data-theme="dark"] .katex          { color: var(--text); }
+[data-theme="dark"] .mcq-card-header,
+[data-theme="dark"] .we-header,
+[data-theme="dark"] .terminal-header,
+[data-theme="dark"] .derivation-header { background: #1a1a38; }
+[data-theme="dark"] .katex-scroll::after             { background: linear-gradient(to right, transparent, rgba(15,15,26,0.95)); }
+[data-theme="dark"] .math-block .katex-scroll::after { background: linear-gradient(to right, transparent, rgba(22,22,42,0.95)); }
+
+/* Restore light mode nav/mob-nav when user explicitly chose light */
+[data-theme="light"] nav:not(.sidebar):not(.mob-nav),
+[data-theme="light"] .topbar        { background: rgba(255,255,255,0.97) !important; }
+[data-theme="light"] .mob-nav       { background: rgba(255,255,255,0.98); }
+
+@media (max-width: 768px) {
+
+  /* ── Bottom tab navigation ───────────────────────────────────
+     Injected into every page by mobile.js.
+
+     Decision: top-nav links (.nav-links, .nav-cta) are hidden on
+     mobile. The bottom bar covers the same destinations without
+     doubling up. The landing page logo stays visible in the top
+     nav for branding. Chapter topbars (breadcrumb, progress,
+     back link) are distinct enough to coexist with the bottom bar
+     and are intentionally left untouched.
+  ──────────────────────────────────────────────────────────── */
+  body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); } /* match mob-nav total height on notched devices */
+
+  /* Hide redundant top-nav links on index.html (no class on <nav> there) */
+  nav:not([class]) .nav-links,
+  nav:not([class]) .nav-cta { display: none; }
+
+  .mob-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    height: 56px;
+    display: flex; align-items: stretch;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border, #e5e7eb);
+    /* Safe area inset for iPhone home-bar */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mob-nav-tab {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+    text-decoration: none;
+    color: var(--muted, #6b7280);
+    font-family: 'DM Mono', monospace;
+    background: none; border: none; cursor: pointer; padding: 0;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-nav-tab:hover,
+  .mob-nav-tab:active      { color: var(--orange, #E8722A); }
+  .mob-nav-active          { color: var(--orange, #E8722A) !important; }
+  .mob-nav-icon            { font-size: 1.15rem; line-height: 1; }
+  .mob-nav-label {
+    font-size: 0.55rem;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Practice section: bottom sheet + sticky check button ───
+     #expl (.explanation) becomes a fixed slide-up bottom sheet.
+     #feedback-msg is reparented into the sheet by mobile.js
+     (getElementById still finds it — position in DOM is irrelevant
+     to JS id lookups).
+     #checkBtn is fixed above the mob-nav and revealed by an
+     IntersectionObserver when the practice section is in view.
+     pick() / check() / done in index.html's inline script are
+     completely untouched — this is purely a CSS re-presentation.
+  ──────────────────────────────────────────────────────────── */
+
+  /* Sheet — always in the render tree so CSS transition can animate.
+     Replaces display:none/block lifecycle with transform. */
+  .explanation {
+    display: flex !important; /* override display:none + display:block from inline CSS */
+    flex-direction: column;
+    /* Fixed bottom sheet, sitting above mob-nav */
+    position: fixed;
+    bottom: calc(56px + env(safe-area-inset-bottom));
+    left: 0; right: 0;
+    z-index: 290; /* above checkBtn(250), below mob-nav(300) */
+    max-height: 70vh;
+    overflow-y: auto;
+    /* Visual treatment */
+    background: var(--white, #fff);
+    border: none;
+    border-top: 1px solid var(--border, #e5e7eb);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+    padding: 0 1.5rem 1.5rem;
+    color: var(--text, #1a1a2e);
+    margin-bottom: 0;
+    /* Slide-up transition. Off-screen by default; .show slides it in. */
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .explanation.show {
+    transform: translateY(0);
+  }
+  /* Hide the sticky check button while the sheet is visible —
+     both occupy the same bottom position */
+  .explanation.show ~ #checkBtn {
+    transform: translateY(100%) !important;
+  }
+
+  /* Sticky check button — fixed above mob-nav.
+     Starts hidden; IntersectionObserver adds .mob-btn-visible
+     when the practice section scrolls into view. */
+  #checkBtn {
+    position: fixed;
+    bottom: calc(56px + env(safe-area-inset-bottom));
+    left: 0; right: 0;
+    margin: 0;
+    border-radius: 0;
+    padding: 1rem;
+    z-index: 250;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+  #checkBtn.mob-btn-visible {
+    transform: translateY(0);
+  }
+
+  /* Sheet drag handle (div.sheet-handle injected by mobile.js) */
+  .sheet-handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.75rem 0 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    /* Stays pinned to top of the sheet while content scrolls */
+    position: sticky;
+    top: 0;
+    background: var(--white, #fff);
+    border-radius: 16px 16px 0 0;
+    /* Bleed to full-width to cover the sheet's side padding */
+    margin: 0 -1.5rem;
+    z-index: 1;
+  }
+  .sheet-handle-bar {
+    width: 40px; height: 4px;
+    background: var(--border, #e5e7eb);
+    border-radius: 2px;
+    transition: background 0.15s;
+  }
+  .sheet-handle:hover .sheet-handle-bar,
+  .sheet-handle:active .sheet-handle-bar {
+    background: var(--muted, #6b7280);
+  }
+
+  /* ── Flexbox min-width fix ───────────────────────────────────
+     .layout is display:flex and .content is a flex item whose
+     min-width defaults to "auto" — meaning it cannot shrink below
+     its content's intrinsic width (~800px when a wide KaTeX equation
+     is present). Fix: set min-width:0 so the flex item can shrink
+     to fit the viewport, after which the overflow-x rules below and
+     on .callout/.formula-box correctly contain the wide equations.
+  ──────────────────────────────────────────────────────────── */
+  .layout .content { min-width: 0; }
+
+  /* ── KaTeX overflow fix ───────────────────────────────────────
+     mobile.js wraps each .katex-display in a .katex-scroll div
+     at window load, after KaTeX's deferred render completes.
+     Belt-and-suspenders: give the common equation containers
+     overflow-x:auto so wide equations don't escape the page even
+     before JS fires (pre-existing issue on main: these lacked any
+     overflow containment, causing horizontal page scroll at 375px).
+  ──────────────────────────────────────────────────────────── */
+  .callout, .formula-box, .derivation-body { overflow-x: auto; }
+
+  .katex-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  /* Right-edge gradient hints that the equation scrolls */
+  .katex-scroll::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 2.5rem;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.95));
+    pointer-events: none;
+  }
+  /* Inside .math-block the bg is --off (#F7F5F2), match it */
+  .math-block .katex-scroll::after {
+    background: linear-gradient(to right, transparent, rgba(247,245,242,0.95));
+  }
+  /* Let the wrapper control overflow; undo KaTeX's own rule */
+  .katex-scroll .katex-display {
+    margin: 0.25rem 0;
+    overflow-x: unset;
+  }
+
+}
