@@ -354,4 +354,14 @@
     transform-origin: top center;
   }
 
+  /* ── Reduced-motion overrides ─────────────────────────────────
+     Cards are opacity:0 by default (stagger) and panels animate
+     in via genieIn. For users who prefer reduced motion, skip both:
+     cards appear immediately, panels appear instantly on tap.
+  ──────────────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .pillar-card                { opacity: 1 !important; animation: none !important; }
+    .subtopics-panel.genie-in   { animation: none !important; }
+  }
+
 }
