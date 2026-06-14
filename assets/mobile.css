@@ -230,6 +230,23 @@
     background: var(--muted, #6b7280);
   }
 
+  /* ── Topbar: condense for mobile ─────────────────────────────
+     .tb-breadcrumb duplicates the chapter title + ch-num visible
+     in the content body immediately below — hide on mobile.
+     .tb-logo > span:not(.acc) targets the "— an initiative by
+     Thrissur Trading Terminal" tagline (unclassed inline span).
+     Using :not(.acc) rather than :last-child because some chapter
+     pages omit the tagline and have .acc as the only child span —
+     last-child would wrongly hide "(t)⁴" on those pages.
+     .tb-home ("← All Chapters") is kept — it's the only back-to-
+     course link not covered by the mob-nav.
+  ──────────────────────────────────────────────────────────── */
+  .tb-sep,
+  .tb-breadcrumb { display: none; }
+  /* Fragile if a new unclassed span is added to .tb-logo before the
+     tagline; revisit if .tb-logo's DOM structure changes. */
+  .tb-logo > span:not(.acc) { display: none; }
+
   /* ── Flexbox min-width fix ───────────────────────────────────
      .layout is display:flex and .content is a flex item whose
      min-width defaults to "auto" — meaning it cannot shrink below
