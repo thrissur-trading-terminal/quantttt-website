@@ -230,6 +230,16 @@
     background: var(--muted, #6b7280);
   }
 
+  /* ── Flexbox min-width fix ───────────────────────────────────
+     .layout is display:flex and .content is a flex item whose
+     min-width defaults to "auto" — meaning it cannot shrink below
+     its content's intrinsic width (~800px when a wide KaTeX equation
+     is present). Fix: set min-width:0 so the flex item can shrink
+     to fit the viewport, after which the overflow-x rules below and
+     on .callout/.formula-box correctly contain the wide equations.
+  ──────────────────────────────────────────────────────────── */
+  .layout .content { min-width: 0; }
+
   /* ── KaTeX overflow fix ───────────────────────────────────────
      mobile.js wraps each .katex-display in a .katex-scroll div
      at window load, after KaTeX's deferred render completes.
