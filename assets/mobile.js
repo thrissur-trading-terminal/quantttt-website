@@ -140,12 +140,65 @@
   }
 })();
 
+/* ── Pillar card stagger-in ─────────────────────────────────────
+   Mobile only (≤768px). IntersectionObserver fires once when
+   .pillar-grid first enters the viewport, adding 'pillars-visible'
+   which triggers the nth-child stagger animation in mobile.css.
+   Disconnects after first fire — subsequent scrolls past the grid
+   do not re-play the animation.
+   Fallback (no IntersectionObserver support): adds class immediately
+   so cards are never permanently hidden.
+────────────────────────────────────────────────────────────── */
+(function () {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+  var grid = document.querySelector('.pillar-grid');
+  if (!grid) return;
+  if (!('IntersectionObserver' in window)) {
+    grid.classList.add('pillars-visible');
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    if (entries[0].isIntersecting) {
+      grid.classList.add('pillars-visible');
+      io.disconnect();
+    }
+  }, { threshold: 0.2 });
+  io.observe(grid);
+})();
+
+/* ── Pillar "genie" reveal (mobile only, index.html) ────────────
+   Wraps togglePillar AFTER window load to guarantee index.html's
+   inline <script> (which declares the function) has already executed.
+   Function declarations are hoisted within their script block but
+   index.html's inline script runs after mobile.js — wrapping at
+   parse-time would be overwritten. The load event fires after all
+   scripts, so our wrapper installs last and sticks.
+────────────────────────────────────────────────────────────── */
+
 /* ── KaTeX overflow: wrap .katex-display elements after render ──
    KaTeX is loaded via `defer` so it renders after DOM parsing.
    We wait for window `load` to ensure deferred scripts have run
    and renderMathInElement has completed before wrapping.
 ────────────────────────────────────────────────────────────── */
 window.addEventListener('load', function () {
+  // ── Genie reveal wrapper ──────────────────────────────────────
+  // Installed at load so index.html's inline togglePillar declaration
+  // has already run and we wrap the final version of the function.
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    var original = window.togglePillar;
+    if (typeof original === 'function') {
+      window.togglePillar = function (id) {
+        original(id);
+        var panel = document.getElementById('panel-' + id);
+        if (!panel) return;
+        panel.classList.remove('genie-in');
+        void panel.offsetWidth; // force reflow so CSS animation restarts
+        panel.classList.add('genie-in');
+      };
+    }
+  }
+
+  // ── KaTeX overflow: wrap .katex-display elements after render ──
   document.querySelectorAll('.katex-display').forEach(function (el) {
     if (el.parentElement && el.parentElement.classList.contains('katex-scroll')) return;
     var wrap = document.createElement('div');

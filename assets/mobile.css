@@ -4,6 +4,14 @@
    Desktop (>768px) is unaffected unless explicitly noted.
    ============================================================ */
 
+/* ── Smooth scroll (all widths, respects reduced-motion) ─────
+   Paired with prefers-reduced-motion so users who have requested
+   reduced animation in their OS settings are unaffected.
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
 /* ── Dark mode token overrides (all widths) ──────────────────
    Two layers:
    1. @media (prefers-color-scheme: dark)  — system dark, CSS-only,
@@ -312,4 +320,54 @@
     overflow-x: unset;
   }
 
+  /* ── Pillar card stagger-in ───────────────────────────────────
+     .pillar-card starts opacity:0 on mobile. An IntersectionObserver
+     in mobile.js adds 'pillars-visible' to .pillar-grid on first
+     scroll-into-view (fires once, then disconnects). Each card
+     animates in with a staggered delay via nth-child.
+     Desktop (>768px): opacity:0 rule is absent — cards render normally.
+     @keyframes are defined at top level below (outside this block)
+     to avoid browser quirks with @keyframes inside @media.
+  ──────────────────────────────────────────────────────────── */
+  .pillar-grid .pillar-card { opacity: 0; }
+  .pillar-grid.pillars-visible .pillar-card:nth-child(1) { animation: pillarIn 0.45s cubic-bezier(0.22,1,0.36,1) 0ms   both; }
+  .pillar-grid.pillars-visible .pillar-card:nth-child(2) { animation: pillarIn 0.45s cubic-bezier(0.22,1,0.36,1) 80ms  both; }
+  .pillar-grid.pillars-visible .pillar-card:nth-child(3) { animation: pillarIn 0.45s cubic-bezier(0.22,1,0.36,1) 160ms both; }
+  .pillar-grid.pillars-visible .pillar-card:nth-child(4) { animation: pillarIn 0.45s cubic-bezier(0.22,1,0.36,1) 240ms both; }
+
+  /* ── Subtopics panel "genie" reveal ──────────────────────────
+     mobile.js wraps togglePillar (at window load, after inline scripts
+     run) to add .genie-in after each tap. The void offsetWidth reflow
+     ensures the animation re-triggers every tap, not just the first.
+     transform-origin:top center gives the sense of expanding from the
+     pillar card above. cubic-bezier(0.34,1.56,0.64,1) = slight bounce.
+     @keyframes genieIn defined at top level below.
+  ──────────────────────────────────────────────────────────── */
+  .subtopics-panel.genie-in {
+    animation: genieIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-origin: top center;
+  }
+
+}
+
+/* ── Animation keyframes (top-level to avoid @keyframes-in-@media quirks) */
+@keyframes pillarIn {
+  from { opacity: 0; transform: scale(0.9) translateY(16px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+@keyframes genieIn {
+  from { opacity: 0; transform: scale(0.92) translateY(-12px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ── Reduced-motion overrides (top-level, applies at all widths) ─
+   Cards are opacity:0 by default on mobile (stagger) and panels
+   animate in via genieIn. For users who prefer reduced motion, skip
+   both: cards appear immediately, panels appear instantly on tap.
+   Defined outside @media (max-width:768px) to avoid nested @media
+   parsing inconsistencies across browsers.
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .pillar-grid .pillar-card   { opacity: 1 !important; animation: none !important; }
+  .subtopics-panel.genie-in   { animation: none !important; }
 }
