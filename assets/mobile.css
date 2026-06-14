@@ -4,6 +4,92 @@
    Desktop (>768px) is unaffected unless explicitly noted.
    ============================================================ */
 
+/* ── Dark mode token overrides (all widths) ──────────────────
+   Two layers:
+   1. @media (prefers-color-scheme: dark)  — system dark, CSS-only,
+      zero flash because mobile.css is in <head> before any paint.
+   2. [data-theme="dark/light"]  — manual toggle persisted in
+      localStorage; mobile.js sets the attribute synchronously
+      (before window.load) so most users see no flash on reload.
+
+   Token values override the :root block in each page's inline
+   <style>. This works because mobile.css is linked after the
+   inline block, so equal-specificity rules declared later win.
+──────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --white:  #0f0f1a;
+    --off:    #16162a;
+    --text:   #e8e8f0;
+    --muted:  #8888aa;
+    --border: #2a2a44;
+    --light:  #1a1a2e;
+  }
+}
+[data-theme="dark"] {
+  --white:  #0f0f1a;
+  --off:    #16162a;
+  --text:   #e8e8f0;
+  --muted:  #8888aa;
+  --border: #2a2a44;
+  --light:  #1a1a2e;
+}
+/* Explicit light — lets system-dark users opt back to light */
+[data-theme="light"] {
+  --white:  #ffffff;
+  --off:    #f7f5f2;
+  --text:   #1a1a2e;
+  --muted:  #6b7280;
+  --border: #e5e7eb;
+  --light:  #fdf6f0;
+}
+
+/* ── Dark mode component overrides (all widths) ──────────────
+   CSS variables cover most backgrounds and text colours.
+   These rules handle the hardcoded rgba() values that do not
+   use variables, and ensure KaTeX math remains legible.
+──────────────────────────────────────────────────────────── */
+
+/* Consolidate: apply the same rules for both system and manual dark */
+@media (prefers-color-scheme: dark) {
+  body                              { background: var(--white); color: var(--text); }
+  nav:not(.sidebar),
+  .topbar                           { background: rgba(15,15,26,0.97) !important; }
+  .mob-nav                          { background: rgba(15,15,26,0.98); }
+  .content-body p, .derivation-body p,
+  .we-body p, .tq-text              { color: var(--text); }
+  .opt                              { background: var(--off); color: var(--text); }
+  /* KaTeX inherits colour from parent; set it explicitly so math is legible */
+  .katex                            { color: var(--text); }
+  /* Dark headers on cards */
+  .mcq-card-header, .we-header,
+  .terminal-header, .derivation-header { background: #1a1a38; }
+  /* KaTeX scroll fade: match dark bg */
+  .katex-scroll::after              { background: linear-gradient(to right, transparent, rgba(15,15,26,0.95)); }
+  .math-block .katex-scroll::after  { background: linear-gradient(to right, transparent, rgba(22,22,42,0.95)); }
+}
+[data-theme="dark"] body            { background: var(--white); color: var(--text); }
+[data-theme="dark"] nav:not(.sidebar),
+[data-theme="dark"] .topbar         { background: rgba(15,15,26,0.97) !important; }
+[data-theme="dark"] .mob-nav        { background: rgba(15,15,26,0.98); }
+[data-theme="dark"] .content-body p,
+[data-theme="dark"] .derivation-body p,
+[data-theme="dark"] .we-body p,
+[data-theme="dark"] .tq-text        { color: var(--text); }
+[data-theme="dark"] .opt            { background: var(--off); color: var(--text); }
+[data-theme="dark"] .katex          { color: var(--text); }
+[data-theme="dark"] .mcq-card-header,
+[data-theme="dark"] .we-header,
+[data-theme="dark"] .terminal-header,
+[data-theme="dark"] .derivation-header { background: #1a1a38; }
+[data-theme="dark"] .katex-scroll::after             { background: linear-gradient(to right, transparent, rgba(15,15,26,0.95)); }
+[data-theme="dark"] .math-block .katex-scroll::after { background: linear-gradient(to right, transparent, rgba(22,22,42,0.95)); }
+
+/* Restore light mode nav/mob-nav when user explicitly chose light */
+[data-theme="light"] nav:not(.sidebar),
+[data-theme="light"] .topbar        { background: rgba(255,255,255,0.97) !important; }
+[data-theme="light"] .mob-nav       { background: rgba(255,255,255,0.98); }
+
 @media (max-width: 768px) {
 
   /* ── Bottom tab navigation ───────────────────────────────────
