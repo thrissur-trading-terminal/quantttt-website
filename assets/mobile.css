@@ -150,6 +150,18 @@
      completely untouched — this is purely a CSS re-presentation.
   ──────────────────────────────────────────────────────────── */
 
+  /* ── Grid min-width fix (practice section) ───────────────────
+     Same root cause as .layout/.content: grid items default to
+     min-width:auto, preventing shrink below intrinsic content width
+     even when grid-template-columns:1fr is active. The inline CSS
+     collapses .problem-body to 1fr at ≤900px; this lets the items
+     actually shrink to fit, so .prob-formula's wide KaTeX equations
+     overflow relative to their container (where .katex-scroll handles
+     horizontal scroll) rather than expanding the page.
+  ──────────────────────────────────────────────────────────── */
+  .problem-body > .prob-left,
+  .problem-body > .prob-right { min-width: 0; }
+
   /* Sheet — always in the render tree so CSS transition can animate.
      Replaces display:none/block lifecycle with transform. */
   .explanation {
