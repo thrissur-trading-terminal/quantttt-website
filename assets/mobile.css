@@ -150,6 +150,14 @@
      completely untouched — this is purely a CSS re-presentation.
   ──────────────────────────────────────────────────────────── */
 
+  /* ── Chapter nav: stack prev/next buttons vertically ─────────
+     .chapter-nav is display:flex justify-content:space-between with
+     two long-title buttons (full chapter names). At 375px they
+     overlap. Stack to full-width column so each button is readable.
+  ──────────────────────────────────────────────────────────── */
+  .chapter-nav { flex-direction: column; gap: 0.5rem; }
+  .ch-nav-btn { width: 100%; justify-content: center; }
+
   /* ── Grid min-width fix (practice section) ───────────────────
      Same root cause as .layout/.content: grid items default to
      min-width:auto, preventing shrink below intrinsic content width
