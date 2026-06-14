@@ -102,7 +102,7 @@
      back link) are distinct enough to coexist with the bottom bar
      and are intentionally left untouched.
   ──────────────────────────────────────────────────────────── */
-  body { padding-bottom: 56px; } /* prevent bottom nav from covering content */
+  body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); } /* match mob-nav total height on notched devices */
 
   /* Hide redundant top-nav links on index.html (no class on <nav> there) */
   nav:not([class]) .nav-links,
